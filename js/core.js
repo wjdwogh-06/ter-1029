@@ -56,6 +56,14 @@ const FLAT=.25,UH=h=>{if(h<=1)return h;const u=(h-1)/FLAT;return u>=.998?20:1-3*
 /* sea lighthouses stand on rock islets raised from the seabed at the user's memo marks */
 const LH_SITES=[[491,898,'남쪽 바다 등대'],[250,892,'남서 등대'],[86,274,'서쪽 바다 등대'],[80,909,'땅끝 등대'],[563,453,'안쪽만 등대'],[563,68,'북쪽 바다 등대'],[928,527,'동쪽 바다 등대'],[836,889,'남동 등대']],LHS=LH_SITES.map(q=>({x:q[0],z:q[1],n:q[2]})),LH_TOP=1.5;
 const lhD=(x,z)=>{let b=1e9;for(const q of LH_SITES){const ex=x-q[0],ez=z-q[1];if(ex>20||ex<-20||ez>20||ez<-20)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};
+/* 기획자가 찍은 낚시 포인트. A=등대 앞바다(좋은 물고기), B=해안. 등대 한가운데(땅 위)에 찍힌 점은 water.js가 그 등대섬 바로 앞 물로 옮겨요 */
+const FISH_PTS_A=[[250,892,'메모2'],[80,909,'메모4'],[563,453,'메모5'],[928,527,'메모7'],[836,889,'메모8'],[479,903,'메모14'],[480,908,'메모15'],[239,892,'메모17'],[255,904,'메모19'],
+ [85,922,'항구2'],[91,910,'항구3'],[841,899,'항구5'],[914,524,'항구7'],[937,538,'항구9'],[76,281,'항구12'],[84,288,'항구13'],[575,74,'항구14'],[554,77,'항구15'],
+ [571,465,'항구16'],[557,465,'항구17'],[551,458,'항구18'],[553,446,'항구19'],[553,461,'항구20'],[574,460,'항구21']];
+const FISH_PTS_B=[[677,672],[681,669],[685,666],[727,641],[729,622],[760,622],[790,597],[804,572],[804,567],[785,508],[765,496],[719,475],[695,477],[639,536],[621,558],[599,591],
+ [580,590],[586,587],[513,581],[465,557],[457,574],[445,615],[457,522],[427,478],[418,455],[404,450],[402,447],[421,438],[442,375],[534,324],[537,322],[540,319],
+ [545,242],[509,197],[505,195],[456,189],[451,191],[363,218],[345,231],[345,236],[313,227],[318,227],[244,293],[217,302],[160,376],[157,379],[115,457],[127,493],
+ [182,582],[181,578],[207,656],[212,660],[219,664],[279,688],[273,690],[307,707],[359,753],[393,753],[431,775],[478,785],[516,766],[514,761],[597,728],[650,695]];
 function lhRock(x,z,h,sd){for(let i=0;i<LH_SITES.length;i++){const q=LH_SITES[i],ex=x-q[0],ez=z-q[1];if(ex>18||ex<-18||ez>18||ez<-18)continue;const d=Math.hypot(ex,ez),an=Math.atan2(ez,ex),w=1+.12*Math.sin(an*3+i*1.7)+.07*Math.sin(an*5+i)+(noise(x*.3+i*9,z*.3,sd+70)-.5)*.2,e=d/w;
   if(e>15)continue;const t=sm(6.6,14,e),pr=LH_TOP-5*Math.pow(t,.85)+(e>6.6?(noise(x*.6,z*.6+i*5,sd+71)-.5)*.5*(1-t):0);if(pr>h)h=pr}return h}
 function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const I=ISL[i],m=I.br||I.r*1.45;if(x-I.x>m||I.x-x>m||z-I.z>m||I.z-z>m)continue;const k=islK(I,x,z,sd);if(k>land){land=k;bi=i}}
@@ -91,15 +99,29 @@ const ITEMS={
  kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:60,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:40,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
  pistol:{n:'권총',ic:'pistol',ty:'gun',p:90,d:'가볍고 빠른 기본 총. 피해 16',one:1},rifle:{n:'볼트액션 소총',ic:'rifle',ty:'gun',p:260,d:'멀리서 한 발씩 강하게. 피해 48',one:1},
  smg:{n:'기관단총',ic:'smg',ty:'gun',p:420,d:'빠르게 쏟아붓는 연사. 피해 10',one:1},shotgun:{n:'산탄총',ic:'shotgun',ty:'gun',p:340,d:'가까울수록 강해요. 피해 9×6',one:1}};
-const FISH=[{id:'f_herring',n:'청어',w:[50,20],str:1,p:5,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
- {id:'f_char',n:'북극곤들매기',w:[16,6],str:2,p:10,food:24,cm:[30,58],back:0x55684f,belly:0xe0743a,len:.9,h:.3,w2:.19},
- {id:'f_cod',n:'대구',w:[18,40],str:2,p:12,food:28,cm:[45,95],back:0x8a7d55,belly:0xe8e0c8,len:1,h:.34,w2:.25},
- {id:'f_lump',n:'도치',w:[12,6],str:2,p:14,food:26,cm:[25,48],back:0x4f7a74,belly:0xa9c59a,len:.68,h:.52,w2:.38},
- {id:'f_salmon',n:'대서양연어',w:[4,16],str:3,p:22,food:34,cm:[55,100],back:0x7d8ea0,belly:0xf1e9e2,len:1.05,h:.32,w2:.21},
- {id:'f_halibut',n:'넙치',w:[0,10],str:4,p:34,food:42,cm:[60,150],back:0x6b5a43,belly:0xece4d8,len:.95,h:.64,w2:.13},
- {id:'f_shark',n:'그린란드상어',w:[0,1.4],str:5,p:140,food:60,cm:[180,420],back:0x55606b,belly:0x9aa3ab,len:1.35,h:.36,w2:.3,legend:1}];
-FISH.forEach(f=>{ITEMS[f.id]={n:f.n,ic:f.id,ty:'fish',food:6,p:f.p,d:`${f.legend?'전설의 물고기! ':''}날로 먹으면 배고픔 +6. 모닥불에 구우면 +${f.food}`};ITEMS['c'+f.id]={n:'구운 '+f.n,ic:'c'+f.id,ty:'food',food:f.food,p:Math.round(f.p*1.5),d:`잘 구운 ${f.n}. 배고픔 +${f.food}`}});
-ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:30,d:'물가에서 물을 바라보고 던져요. 깊은 곳일수록 큰 물고기가 물어요',one:1};
+/* 물고기. g=등급(FGRADE), k=생김새(water.js fishGeoK). old:1은 예전 물고기: 더 이상 낚이지 않고 저장 호환용으로 아이템만 남김 */
+const FGRADE=[['일반','#8C9AA6'],['희귀','#3D8BE0'],['영웅','#9B5BD6'],['전설','#F08A24']];
+const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:5,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
+ {id:'f_char',n:'북극곤들매기',old:1,str:2,p:10,food:24,cm:[30,58],back:0x55684f,belly:0xe0743a,len:.9,h:.3,w2:.19},
+ {id:'f_cod',n:'대구',old:1,str:2,p:12,food:28,cm:[45,95],back:0x8a7d55,belly:0xe8e0c8,len:1,h:.34,w2:.25},
+ {id:'f_lump',n:'도치',old:1,str:2,p:14,food:26,cm:[25,48],back:0x4f7a74,belly:0xa9c59a,len:.68,h:.52,w2:.38},
+ {id:'f_salmon',n:'연어',g:0,str:2,p:12,food:30,cm:[55,100],back:0x7d8ea0,belly:0xf1e9e2,len:1.05,h:.32,w2:.21},
+ {id:'f_halibut',n:'넙치',old:1,str:4,p:34,food:42,cm:[60,150],back:0x6b5a43,belly:0xece4d8,len:.95,h:.64,w2:.13},
+ {id:'f_shark',n:'그린란드상어',old:1,str:5,p:140,food:60,cm:[180,420],back:0x55606b,belly:0x9aa3ab,len:1.35,h:.36,w2:.3,legend:1},
+ {id:'f_anch',n:'멸치',g:0,k:'anch',str:1,p:3,food:10,cm:[8,16],back:0x4d7aa8,belly:0xe6eef4,len:.5,h:.13,w2:.09},
+ {id:'f_trout',n:'송어',g:0,k:'trout',str:2,p:8,food:22,cm:[28,60],back:0x6f7a4a,belly:0xeadfc0,len:.85,h:.26,w2:.17},
+ {id:'f_rainbow',n:'무지개송어',g:1,k:'rainbow',str:3,p:22,food:32,cm:[35,75],back:0x5d8a6c,belly:0xf3ece4,len:.95,h:.28,w2:.18},
+ {id:'f_flying',n:'날치',g:1,k:'flying',str:3,p:20,food:26,cm:[20,40],back:0x2f62b8,belly:0xe8f0f8,len:.78,h:.19,w2:.15},
+ {id:'f_tuna',n:'참치',g:0,k:'tuna',str:2,p:16,food:36,cm:[80,200],back:0x24406e,belly:0xdde6ee,len:1.25,h:.36,w2:.27},
+ {id:'f_jelly',n:'해파리',g:1,k:'jelly',str:3,p:24,food:20,cm:[25,70],back:0xf2a7dc,belly:0xffe1f3,len:.7,h:.5,w2:.7,cn:'데친 해파리'},
+ {id:'f_sword',n:'황새치',g:2,k:'sword',str:4,p:70,food:48,cm:[150,320],back:0x3c5878,belly:0xdfe6ec,len:1.35,h:.3,w2:.2},
+ {id:'f_hammer',n:'망치상어',g:3,k:'hammer',str:5,p:160,food:64,cm:[220,480],back:0x7a8994,belly:0xe7ebee,len:1.5,h:.34,w2:.3}];
+FISH.forEach(f=>{const gtag=f.old?'':`[${FGRADE[f.g][0]}] `;ITEMS[f.id]={n:f.n,ic:f.id,ty:'fish',food:6,p:f.p,d:`${gtag}${f.legend?'전설의 물고기! ':''}날로 먹으면 배고픔 +6. 모닥불에 구우면 +${f.food}`};ITEMS['c'+f.id]={n:f.cn||'구운 '+f.n,ic:'c'+f.id,ty:'food',food:f.food,p:Math.round(f.p*1.5),d:`잘 익힌 ${f.n}. 배고픔 +${f.food}`}});
+/* 낚시 구역: 포인트마다 나오는 물고기와 확률(%). 같은 등급 안에서는 똑같이 나눔. R=물고기 떼가 도는 반지름 */
+const FISH_ZONES={A:{n:'등대 앞바다',R:2.8,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
+ B:{n:'해안',R:2.2,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
+const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]===a.id)-FISH_ZONES.A.t.some(q=>q[0]===b.id))||a.g-b.g);
+ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:30,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
  pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
  smg:{dmg:10,cd:.095,range:15,ammo:'ammoS',spread:.07},shotgun:{dmg:9,pel:6,cd:.9,range:11,ammo:'ammoL',spread:.17}};

@@ -132,7 +132,7 @@ function findNear(ox,oz,fx,fz,reach){let best=null,bs=1e9;const con=(d,o)=>{if(d
 function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(P.auto&&P.auto.k!=='move')return P.auto;return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,2.5)}
 function worldTap(x,z){if(bmode||P.dead||busy)return;let e=null,bd=2.6;for(const o of enemies){if(o.dead)continue;const d=dist(x,z,o.x,o.z);if(d<bd){bd=d;e=o}}
  if(e&&curId()!=='rod'){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;P.auto=null;return}
- if(curId()==='rod'&&waterDepth(x,z)>.3&&WTR.st!=='swim'){const d=dist(P.x,P.z,x,z);if(fishing&&fishing.st!=='cast')return;if(d<=7.2&&d>=1.6){castAt(x,z);return}if(d>7.2){P.autoT=0;P.auto={k:'cast',x,z,rr:5.4};return}}const t=findNear(x,z,x,z,2.8);P.autoT=0;P.auto=t||(walk(x,z,.42,P)===null?{k:'move',x,z,rr:.5}:null);if(P.auto)sfx(700,.03,'sine',.02)}
+ if(curId()==='rod'&&waterDepth(x,z)>.05&&WTR.st!=='swim'){if(fishing&&fishing.st!=='cast')return;const sp=spotAt(x,z);if(sp){if(inWater()){fishWarn('물 안에서는 낚시할 수 없어요. 물 밖으로 나가요');return}const d=dist(P.x,P.z,x,z);if(d<=ROD_R&&d>=1.6){castAt(x,z,sp);return}if(d>ROD_R){P.autoT=0;P.auto={k:'cast',x,z,sp,rr:ROD_R-1.6};return}}else fishWarn('여기엔 물고기가 없어요. 물고기 그림자가 도는 곳에 던져요')}const t=findNear(x,z,x,z,2.8);P.autoT=0;P.auto=t||(walk(x,z,.42,P)===null?{k:'move',x,z,rr:.5}:null);if(P.auto)sfx(700,.03,'sine',.02)}
 const LOOT=[['ammoS',10,18],['ammoL',6,10],['can',1,2],['cloth',2,3],['powder',2,4],['bandage',1,1],['wood',4,8]];
 function interact(){const t=target;if(!t)return;
  if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=.42;P.rot=Math.atan2(o.x-P.x,o.z-P.z);
@@ -223,7 +223,7 @@ function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=d
  if(P.rollT>0){P.rollT-=dt;moveEnt(P,P.rdx*12*smul*dt,P.rdz*12*smul*dt);P.rot=Math.atan2(P.rdx,P.rdz)}
  else{const firing=(inp.fire||P.tapT>0)&&!bmode&&!swim&&!w.rod;if(P.moving||firing)P.auto=null;
   if(P.auto&&!P.moving){const t=P.auto,d=dist(P.x,P.z,t.x,t.z),reach=t.k==='move'?.5:t.rr+1.15;P.autoT+=dt;
-   if(t.k==='cast'&&(d<=reach||waterDepth(P.x+Math.sin(P.rot)*1.2,P.z+Math.cos(P.rot)*1.2)>.5)){P.auto=null;castAt(t.x,t.z)}
+   if(t.k==='cast'&&(d<=reach||waterDepth(P.x+Math.sin(P.rot)*.8,P.z+Math.cos(P.rot)*.8)>SHALLOW)){P.auto=null;castAt(t.x,t.z,t.sp)}
    else if(d>reach&&P.autoT<12){if(steer(P,t.x,t.z,5*smul,dt)){l=1;P.moving=true}else if(P.autoT>1.5&&!P.moving)P.auto=null}
    else if(t.k==='move'||P.autoT>=12)P.auto=null;else{P.rot=turn(P.rot,Math.atan2(t.x-P.x,t.z-P.z),dt*14);target=t;if(t.k==='o'){if(t.o.re>0)P.auto=null;else interact()}else{inp.actEdge=true;interact();inp.actEdge=false;P.auto=null}}}
   else if(P.moving){const sl=firing&&!w.melee?.62:1,n=Math.ceil(5*dt/.2);for(let i=0;i<n;i++)moveEnt(P,mx*5*sl*smul*dt/n,mz*5*sl*smul*dt/n)}
