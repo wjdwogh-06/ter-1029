@@ -102,7 +102,16 @@ function hurtPlayer(d){if(P.dead||P.inv>0||busy||DEV.on)return;if(fishing)endFis
 function die(){if(P.dead)return;if(INT.on)intOut();P.dead=true;S.hp=0;P.a.play('Death_A',{once:1,lock:9,force:1});setBuild(null);inp.fire=false;
  setTimeout(()=>fadeDo('쓰러졌어요… 가방을 그 자리에 떨어뜨렸어요',()=>{const keep={},bag={};for(const k in S.inv){if(k==='pistol'||k==='axe')keep[k]=S.inv[k];else bag[k]=S.inv[k]}if(keep.pistol)keep.ammoS=Math.min(12,bag.ammoS||0),bag.ammoS=(bag.ammoS||0)-keep.ammoS;
   if(Object.keys(bag).some(k=>bag[k]>0)){if(S.bag)for(const k in S.bag.inv)bag[k]=(bag[k]||0)+S.bag.inv[k];S.bag={x:P.x,z:P.z,inv:bag};placeBag()}for(const k in keep)if(!keep[k])delete keep[k];S.inv=keep;S.quick=S.quick.map(q=>q&&S.inv[q]?q:null);
-  P.x=S.home.x;P.z=S.home.z;unstuck();S.hp=70;S.hunger=Math.max(S.hunger,50);S.warm=80;P.dead=false;P.a.lock=0;P.a.play('Idle',{force:1});enemies.forEach(e=>{if(!e.raid)e.agg=0});toast('기지에서 깨어났어요. 지도에 가방 위치가 표시돼요')}),1600)}
+  const sp=portSpawn();P.x=sp.x;P.z=sp.z;P.rot=Math.atan2(sp.p.dx,sp.p.dz);unstuck();S.hp=70;S.hunger=Math.max(S.hunger,50);S.warm=80;P.dead=false;P.a.lock=0;P.a.play('Idle',{force:1});enemies.forEach(e=>{if(!e.raid)e.agg=0});toast(sp.p.n+' 앞에서 깨어났어요. 지도에 가방 위치가 표시돼요')}),1600)}
+/* respawn rule (기획자 결정): every death puts you in front of a random port, on clear land.
+   Tries ports in random order; on each one, walks rings of spots on the land side of the port and takes the first spot that is
+   walkable, on solid ground, out of every structure, and at least 2.5m from other players (multiplayer) and 10m from enemies. */
+function portSpawn(){const order=PORTS.map((p,i)=>i).sort(()=>Math.random()-.5),others=typeof NET!=='undefined'&&NET.on?[...NET.players.values()]:[];
+ for(const i of order){const p=PORTS[i],ix=-p.dx,iz=-p.dz,lx=-iz,lz=ix,base=p.town?13:7;
+  for(let ring=0;ring<6;ring++)for(let k=0;k<9;k++){const fw=base+ring*1.6+Math.random()*.8,side=(k%2?1:-1)*Math.ceil(k/2)*1.5+(Math.random()-.5)*.6,x=p.x+ix*fw+lx*side,z=p.z+iz*fw+lz*side;
+   if(hAt(x,z)<1||onDock(x,z)||walk(x,z,.6,P)!==null||structs.some(s=>Math.abs(s.x-x)<6&&Math.abs(s.z-z)<6&&inStruct(s,x,z,.7)))continue;
+   if(others.some(o=>dist(o.x,o.z,x,z)<2.5)||enemies.some(e=>!e.dead&&dist(e.x,e.z,x,z)<10))continue;return{x,z,p}}}
+ return{x:VIL.x,z:VIL.z,p:PORTS[0]}}
 function placeBag(){if(bagM){scene.remove(bagM);bagM=null}if(!S.bag)return;bagM=new THREE.Group();const m=mesh(GEO.sack);m.scale.setScalar(9);bagM.add(m);const g=glow(0x6cb8ff,3,.5);g.position.y=1.2;bagM.add(g);bagM.position.set(S.bag.x,surfY(S.bag.x,S.bag.z)+.1,S.bag.z);scene.add(bagM)}
 function attack(){const id=curId(),w=WEAP[id];if(P.cd>0)return;const y=groundY(P.x,P.z);
  if(w.melee){P.cd=w.cd;P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.36,force:1,speed:1.5});P.hitT=.16;P.hitW=w;sfx(260,.08,'triangle',.03,.6);return}

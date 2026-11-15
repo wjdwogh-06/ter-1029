@@ -4,25 +4,26 @@
    - 혼자 하기: 바로 내 머리 위에.  멀티: 서버를 거쳐 모두에게 → NET._c 가 CHAT.say(id, 글) 를 불러요.
    - 말풍선은 2D 오버레이(fctx)에 매 프레임 그려요: 줄바꿈(최대 3줄), 튀어나오는 등장, 흐려지며 사라짐.
    - 입력창이 열려 있으면 내 머리 위에 "입력 중" 점 세 개가 떠요. */
-const CHAT={open:false,max:60,b:new Map(),cool:0,font:'"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif',
+const CHAT={open:false,max:60,b:new Map(),cool:0,font:UIF,
  init(){const st=document.createElement('style');st.textContent=`
 #bChat{right:154px;top:114px;width:46px;height:46px}#bChat span{font-size:19px}
-#chatBar{position:absolute;left:50%;top:12px;transform:translateX(-50%);width:max(280px,min(500px,calc(100% - 520px)));display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border-radius:999px;background:rgba(16,24,36,.92);border:2px solid rgba(255,255,255,.2);box-shadow:0 12px 28px rgba(0,0,0,.45);z-index:40;animation:chatIn .16s ease-out}
+#chatBar{position:absolute;left:50%;top:12px;transform:translateX(-50%);width:max(280px,min(500px,calc(100% - 520px)));display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border-radius:999px;background:var(--pn);border:2.5px solid var(--bd);box-shadow:0 5px 0 rgba(120,86,52,.22),0 12px 26px rgba(40,24,12,.35);z-index:40;animation:chatIn .16s ease-out}
 #chatBar.hide{display:none}
 #ui.port #chatBar{top:226px;width:calc(100% - 24px)}
 @keyframes chatIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 #chatIn{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);font-family:inherit;font-size:16px;font-weight:700;padding:6px 0}
-#chatIn::placeholder{color:rgba(169,182,198,.75)}
+#chatIn::placeholder{color:var(--mut)}
 #chatN{font-size:12px;color:var(--mut);font-weight:800;flex:none;min-width:34px;text-align:right}
-#chatSend{width:40px;height:40px;border-radius:50%;border:0;background:var(--grn);display:flex;align-items:center;justify-content:center;flex:none;padding:0;box-shadow:0 3px 8px rgba(0,0,0,.3)}
-#chatSend:disabled{background:rgba(255,255,255,.16)}#chatSend svg{width:20px;height:20px;margin-left:2px}`;document.head.appendChild(st);
+#chatSend{width:40px;height:40px;border-radius:50%;border:0;background:var(--grn);display:flex;align-items:center;justify-content:center;flex:none;padding:0;box-shadow:0 3px 0 var(--grnD)}
+#chatSend:disabled{background:var(--pn3);box-shadow:none}#chatSend svg{width:20px;height:20px;margin-left:2px}`;document.head.appendChild(st);
   const ui=$('ui'),sh=$('shade'),bt=document.createElement('button');bt.id='bChat';bt.className='rb';bt.innerHTML='<span>💬</span>';ui.insertBefore(bt,sh);
-  const bar=document.createElement('div');bar.id='chatBar';bar.className='hide';bar.innerHTML=`<input id="chatIn" maxlength="${this.max}" placeholder="할 말을 쓰고 보내기" autocomplete="off" enterkeyhint="send"><span id="chatN">0/${this.max}</span><button id="chatSend" disabled><svg viewBox="0 0 24 24"><path d="M3 11.5 20.5 3.6c.6-.3 1.2.3.9.9L13.5 22c-.3.6-1.1.5-1.2-.1l-1.5-7.2-7.2-1.5c-.6-.1-.7-.9-.1-1.2Z" fill="#10261a"/></svg></button>`;ui.insertBefore(bar,sh);
+  const bar=document.createElement('div');bar.id='chatBar';bar.className='hide';bar.innerHTML=`<input id="chatIn" maxlength="${this.max}" placeholder="할 말을 쓰고 보내기" autocomplete="off" enterkeyhint="send"><span id="chatN">0/${this.max}</span><button id="chatSend" disabled><svg viewBox="0 0 24 24"><path d="M3 11.5 20.5 3.6c.6-.3 1.2.3.9.9L13.5 22c-.3.6-1.1.5-1.2-.1l-1.5-7.2-7.2-1.5c-.6-.1-.7-.9-.1-1.2Z" fill="#ffffff"/></svg></button>`;ui.insertBefore(bar,sh);
   const ci=$('chatIn'),sb=$('chatSend'),cnt=()=>{$('chatN').textContent=ci.value.length+'/'+this.max;sb.disabled=!ci.value.trim()};
   bt.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();this.toggle(!this.open)});
   sb.addEventListener('pointerdown',e=>{e.preventDefault();this.send()});
   ci.addEventListener('input',cnt);
   ci.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'&&!e.isComposing){e.preventDefault();this.send()}else if(e.key==='Escape')this.toggle(false)});ci.addEventListener('keyup',e=>e.stopPropagation());
+  if(document.fonts)document.fonts.ready.then(()=>this.b.forEach(o=>o.lines=null));   /* re-measure bubbles once the round font has loaded */
   addEventListener('keydown',e=>{if(e.code==='Enter'&&mode==='play'&&!panel&&!this.open&&document.activeElement!==ci){e.preventDefault();this.toggle(true)}});
   document.addEventListener('pointerdown',e=>{if(this.open&&!bar.contains(e.target)&&e.target!==bt&&!bt.contains(e.target))this.toggle(false)},true);this.cnt=cnt},
  toggle(on){const bar=$('chatBar'),ci=$('chatIn');if(on&&(mode!=='play'||panel))return;this.open=on;bar.classList.toggle('hide',!on);
@@ -44,9 +45,9 @@ const CHAT={open:false,max:60,b:new Map(),cool:0,font:'"Apple SD Gothic Neo","No
   const t=o.t,inT=clamp(t/.24,0,1),back=1+2.2*Math.pow(inT-1,3)+1.2*Math.pow(inT-1,2),sc=dots?1:lerp(o.from,1,back),out=dots?0:clamp((t-(o.life-.45))/.45,0,1);
   c.globalAlpha=dots?.92:Math.min(1,t/.1)*(1-out);c.translate(0,-out*9*k);c.scale(sc,sc);
   c.shadowColor='rgba(0,0,0,.28)';c.shadowBlur=9*k;c.shadowOffsetY=3*k;c.fillStyle='#ffffff';this.shape(c,w,h,r,tl,tw);c.fill();
-  c.shadowColor='transparent';c.lineWidth=1.2*k;c.strokeStyle='rgba(20,32,48,.16)';c.stroke();
-  const top=-tl-h;if(dots){for(let i=0;i<3;i++){const ph=(gt*3.2-i*.45)%3,a=ph<1?Math.sin(ph*Math.PI):0;c.fillStyle=`rgba(40,52,68,${.35+a*.55})`;c.beginPath();c.arc((i-1)*9*k,top+h/2-a*2.2*k,3.1*k,0,6.283);c.fill()}}
-  else{c.fillStyle='#1f2733';c.textAlign='center';c.textBaseline='middle';o.lines.forEach((l,i)=>c.fillText(l,0,top+py+lh*i+fs*.55))}
+  c.shadowColor='transparent';c.lineWidth=1.4*k;c.strokeStyle='rgba(120,86,52,.25)';c.stroke();
+  const top=-tl-h;if(dots){for(let i=0;i<3;i++){const ph=(gt*3.2-i*.45)%3,a=ph<1?Math.sin(ph*Math.PI):0;c.fillStyle=`rgba(91,61,43,${.35+a*.55})`;c.beginPath();c.arc((i-1)*9*k,top+h/2-a*2.2*k,3.1*k,0,6.283);c.fill()}}
+  else{c.fillStyle=UIC.tx;c.textAlign='center';c.textBaseline='middle';o.lines.forEach((l,i)=>c.fillText(l,0,top+py+lh*i+fs*.55))}
   c.restore()},
  draw(c,k,dt){this.cool=Math.max(0,this.cool-dt);if(this.open&&(panel||mode!=='play'))this.toggle(false);
   for(const[key,o]of this.b){o.t+=dt;if(o.t>=o.life){this.b.delete(key);continue}const a=this.anchor(key);if(!a)continue;const s=scr(a.x,groundY(a.x,a.z)+a.y,a.z);if(!s[2])continue;this.bubble(c,k,s[0],s[1],o,false)}

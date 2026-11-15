@@ -4,15 +4,15 @@ const NET={on:false,ws:null,id:0,name:'',players:new Map(),names:{},n:1,sendT:0,
  send(o){if(this.ws&&this.ws.readyState===1)this.ws.send(JSON.stringify(o))},
  init(){if(!window.MP)return;let tok=null;try{tok=localStorage.getItem('fi_tok');this.name=localStorage.getItem('fi_name')||''}catch(e){}
   /* name box on the title screen + chat log (the chat box itself is js/chat.js) */
-  const ni=document.createElement('input');ni.id='nameIn';ni.maxLength=12;ni.placeholder='이름 (12자까지)';ni.value=this.name;ni.style.cssText='width:min(70vw,270px);padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font:800 17px inherit;text-align:center;box-sizing:border-box';$('title').insertBefore(ni,$('tCont'));
-  const cb=document.createElement('div');cb.id='chat';cb.style.cssText='position:absolute;left:12px;bottom:92px;width:330px;pointer-events:none;font-size:13.5px;font-weight:700;line-height:1.45;text-shadow:0 1px 3px #000';$('ui').insertBefore(cb,$('shade'));
+  const ni=document.createElement('input');ni.id='nameIn';ni.maxLength=12;ni.placeholder='이름 (12자까지)';ni.value=this.name;ni.style.cssText='width:min(70vw,270px);padding:12px;border-radius:14px;border:2.5px solid #E2CDA8;background:#FBF4E6;color:#5B3D2B;font-family:inherit;font-size:17px;font-weight:800;text-align:center;box-sizing:border-box;box-shadow:0 4px 0 rgba(120,86,52,.25)';$('title').insertBefore(ni,$('tCont'));
+  const cb=document.createElement('div');cb.id='chat';cb.style.cssText='position:absolute;left:12px;bottom:92px;width:340px;pointer-events:none;font-size:13.5px;font-weight:800;line-height:1.35';$('ui').insertBefore(cb,$('shade'));
   this.connect(tok)},
  connect(tok){const ws=this.ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
   ws.onopen=()=>ws.send(JSON.stringify({t:'hi',tok,name:this.name}));
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}const h=this['_'+m.t];if(h)h.call(this,m)};
   ws.onclose=()=>{const was=this.on;this.on=false;this.players.forEach(p=>p.a.dispose());this.players.clear();if(was)toast('서버와 연결이 끊겼어요. 다시 연결하는 중…');setTimeout(()=>{let t=null;try{t=localStorage.getItem('fi_tok')}catch(e){}this.connect(t)},3000)}},
  say(s,col){this.log.push({s,col:col||'#fff',t:12});if(this.log.length>6)this.log.shift();this.drawLog()},
- drawLog(){const c=$('chat');if(c)c.innerHTML=this.log.map(l=>`<div style="color:${l.col};opacity:${Math.min(1,l.t/2)}">${l.s}</div>`).join('')},
+ drawLog(){const c=$('chat');if(c)c.innerHTML=this.log.map(l=>`<div style="opacity:${Math.min(1,l.t/2)}"><span style="display:inline-block;margin-top:3px;padding:3px 10px;border-radius:10px;background:rgba(59,42,32,.82);color:${l.col}">${l.s}</span></div>`).join('')},
  _full(){toast('서버가 가득 찼어요 (정원 초과)')},
  _yo(m){this.on=true;this.id=m.id;this.safe=m.safe;this.name=m.name;try{localStorage.setItem('fi_tok',m.tok);localStorage.setItem('fi_name',m.name)}catch(e){}
   m.who.forEach(w=>this.names[w[0]]=w[1]);this.n=m.who.length;S.time=m.time;S.day=m.day;
@@ -38,8 +38,9 @@ const NET={on:false,ws:null,id:0,name:'',players:new Map(),names:{},n:1,sendT:0,
   const rt=performance.now()-160;this.players.forEach(p=>{const b=p.buf;if(!b.length)return;let i=b.length-1;while(i>0&&b[i-1].t>rt)i--;const A=b[Math.max(0,i-1)],B=b[i],u=B.t>A.t?clamp((rt-A.t)/(B.t-A.t),0,1.3):1;
    p.x=lerp(A.x,B.x,u);p.z=lerp(A.z,B.z,u);p.r=turn(A.r,B.r,u);const n=p.hp<=0?'Death_A_Pose':p.na||'Idle';if(n!==p.anim&&CLIPS[n]){p.anim=n;p.a.lock=0;p.a.play(n,{force:1})}p.a.set(p.x,p.z,p.r);if(n==='Lie_Idle')p.a.root.position.y=-.55;p.a.mixer.update(dt)});
   let ch=false;for(const l of this.log){l.t-=dt;if(l.t<2)ch=true}if(this.log.length&&this.log[0].t<=0){this.log.shift();ch=true}if(ch)this.drawLog()},
- draw(c,k){if(!this.on)return;c.textAlign='center';this.players.forEach(p=>{const s=scr(p.x,groundY(p.x,p.z)+3.25,p.z);if(!s[2]||p.hp<=0)return;const n=this.names[p.id]||'?';c.font=`800 ${12.5*k}px sans-serif`;c.lineWidth=3;c.strokeStyle='#101820';c.strokeText(n,s[0],s[1]);c.fillStyle='#bfe9c8';c.fillText(n,s[0],s[1]);
-   const w=36*k;c.fillStyle='rgba(10,16,26,.8)';c.fillRect(s[0]-w/2-1,s[1]+4*k-1,w+2,5*k+2);c.fillStyle='#7BD88F';c.fillRect(s[0]-w/2,s[1]+4*k,w*clamp(p.hp/100,0,1),5*k)})}};
+ draw(c,k){if(!this.on)return;c.textAlign='center';this.players.forEach(p=>{const s=scr(p.x,groundY(p.x,p.z)+3.25,p.z);if(!s[2]||p.hp<=0)return;const n=this.names[p.id]||'?';uiPill(c,n,s[0],s[1]-4*k,11.5*k,NAMEC[p.id%NAMEC.length],'#fff');   /* name tag: a coloured pill per player, like Longvinter */
+   const w=32*k;c.fillStyle='rgba(59,42,32,.75)';c.fillRect(s[0]-w/2-1,s[1]+8*k-1,w+2,4*k+2);c.fillStyle='#45B864';c.fillRect(s[0]-w/2,s[1]+8*k,w*clamp(p.hp/100,0,1),4*k)})}};
+const NAMEC=['#F0A23A','#45B864','#E8609E','#7C6FE0','#4A9BE0','#E5534B','#2FB3A6'];
 /* ---- hooks into the single-player code ---- */
 {const _attack=attack;attack=function(){const was=P.cd;_attack();if(NET.on&&was<=0&&P.cd>0){const w=WEAP[curId()];if(w&&!w.rod)NET.send(w.melee?{t:'f',dx:Math.sin(P.rot),dz:Math.cos(P.rot)}:{t:'f',dx:P.adx,dz:P.adz})}};
  const _place=placeBuild;placeBuild=function(){const n=structs.length;_place();if(NET.on&&structs.length>n){const s=structs[structs.length-1];s.ref=Math.random().toString(36).slice(2);NET.send({t:'b',k:s.t,x:s.x,z:s.z,r:s.r||0,ref:s.ref})}};

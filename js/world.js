@@ -1,6 +1,14 @@
 'use strict';
 /* ===== world: renderer, assets, terrain, objects, structures, effects ===== */
 const cv=$('game');let R;
+/* ---- UI text on the canvas: one rounded font (assets/fonts, 나눔스퀘어라운드) and a Longvinter-style pill label ---- */
+const UIF='"NanumSquareRound","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif',UIC={pn:'#FBF4E6',pn3:'#E6D4B4',tx:'#5B3D2B',brn:'#5A3A2E',nav:'#2E3754',grn:'#45B864',red:'#E5534B',org:'#C9772B',ink:'#3B2A20'};
+if(document.fonts)['700','800'].forEach(w=>document.fonts.load(w+' 16px "NanumSquareRound"').catch(()=>{}));
+/* centred pill with text; y is the text's middle. bg/fg/bd = fill, text and outline colours */
+function uiPill(c,t,x,y,fs,bg,fg,bd,w8=800){c.save();c.font=`${w8} ${fs}px ${UIF}`;c.textAlign='center';c.textBaseline='middle';const w=c.measureText(t).width+fs*1.3,h=fs*1.75,r=h/2,l=x-w/2,tp=y-h/2;
+ c.beginPath();c.moveTo(l+r,tp);c.arcTo(l+w,tp,l+w,tp+h,r);c.arcTo(l+w,tp+h,l,tp+h,r);c.arcTo(l,tp+h,l,tp,r);c.arcTo(l,tp,l+w,tp,r);c.closePath();
+ c.shadowColor='rgba(40,24,12,.3)';c.shadowBlur=fs*.5;c.shadowOffsetY=fs*.15;c.fillStyle=bg;c.fill();c.shadowColor='transparent';if(bd){c.lineWidth=Math.max(1.5,fs*.13);c.strokeStyle=bd;c.stroke()}
+ c.fillStyle=fg;c.fillText(t,x,y+fs*.04);c.restore()}
 const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(36,1,.5,420);
 const hemi=new THREE.HemisphereLight(0xbfdcff,0x7a8a50,.6),sun=new THREE.DirectionalLight(0xffe2b0,1.15);
 const GEO={},C1=new THREE.Color(),C2=new THREE.Color(),dummy=new THREE.Object3D();

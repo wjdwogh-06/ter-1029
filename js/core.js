@@ -52,7 +52,7 @@ function islK(I,x,z,sd){if(I.sp){const d=spineD(I,x,z);if(d>1.32)return 0;const 
  const w=fbm(x*(t===2?.09:t===1?.022:.0085)+3+I.x,z*(t===2?.09:t===1?.022:.0085)+7,sd)+(t===0?(fbm(x*.028,z*.028+I.z,sd+7)-.5)*.34:0);
  return sm(1,.6,d0+(w-.5)*(t===2?.22:t===1?.4:.44))}
 /* land above the beach is squeezed into a narrow band (there is no jump): UH() gives back the "natural" height for colouring and plant choice */
-const FLAT=.9,UH=h=>{if(h<=1)return h;const u=(h-1)/FLAT;return u>=.998?20:1-3*Math.log(1-u)};
+const FLAT=.25,UH=h=>{if(h<=1)return h;const u=(h-1)/FLAT;return u>=.998?20:1-3*Math.log(1-u)};
 /* sea lighthouses stand on rock islets raised from the seabed at the user's memo marks */
 const LH_SITES=[[491,898,'남쪽 바다 등대'],[250,892,'남서 등대'],[86,274,'서쪽 바다 등대'],[80,909,'땅끝 등대'],[563,453,'안쪽만 등대'],[563,68,'북쪽 바다 등대'],[928,527,'동쪽 바다 등대'],[836,889,'남동 등대']],LHS=LH_SITES.map(q=>({x:q[0],z:q[1],n:q[2]})),LH_TOP=1.5;
 const lhD=(x,z)=>{let b=1e9;for(const q of LH_SITES){const ex=x-q[0],ez=z-q[1];if(ex>20||ex<-20||ez>20||ez<-20)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};
@@ -88,7 +88,7 @@ const ITEMS={
  ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:1.5,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:2.5,d:'소총, 산탄총, 기관총 진지용'},
  grenade:{n:'수류탄',ic:'grenade',ty:'throw',p:28,d:'던지면 주변에 큰 피해'},
  axe:{n:'손도끼',ic:'axe_m',ty:'tool',p:20,d:'나무와 바위를 빨리 캐요. 근접 14',one:1},
- kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:60,d:'어디든 펴면 내 기지(부활 지점)가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:40,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
+ kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:60,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:40,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
  pistol:{n:'권총',ic:'pistol',ty:'gun',p:90,d:'가볍고 빠른 기본 총. 피해 16',one:1},rifle:{n:'볼트액션 소총',ic:'rifle',ty:'gun',p:260,d:'멀리서 한 발씩 강하게. 피해 48',one:1},
  smg:{n:'기관단총',ic:'smg',ty:'gun',p:420,d:'빠르게 쏟아붓는 연사. 피해 10',one:1},shotgun:{n:'산탄총',ic:'shotgun',ty:'gun',p:340,d:'가까울수록 강해요. 피해 9×6',one:1}};
 const FISH=[{id:'f_herring',n:'청어',w:[50,20],str:1,p:5,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
@@ -121,7 +121,7 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
  forge:{n:'대장간',g:'blacksmith',s:3.8,bx:2.3,bz:2.2,hp:500,c:{wood:30,stone:30,scrap:10},d:'소총, 산탄총, 기관단총, 수류탄을 만드는 곳'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
- ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,d:'내 기지(부활 지점)가 돼요. 안에 들어갈 수 있어요'},
+ ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',6,1]]},

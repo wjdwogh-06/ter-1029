@@ -85,11 +85,11 @@ function updFishFx(dt){if(catchM){catchT-=dt;catchM.position.set(P.x,groundY(P.x
  bobM.visible=lineM.visible=true;bobM.position.set(bx,by,bz);bobM.rotation.z=f.st==='bite'?Math.sin(gt*30)*.5:0;
  const sag=f.st==='reel'?lerp(.5,.02,clamp(f.ten*1.4,0,1)):f.st==='cast'?0:.6,arr=lineM.geometry.attributes.position.array;for(let i=0;i<16;i++){const u=i/15;arr[i*3]=lerp(_tip.x,bx,u);arr[i*3+1]=lerp(_tip.y,by+.16,u)-Math.sin(u*Math.PI)*sag;arr[i*3+2]=lerp(_tip.z,bz,u)}lineM.geometry.attributes.position.needsUpdate=true}
 function drawFishUI(c,k){const f=fishing;if(!f)return;const y0=groundY(P.x,P.z),hp=scr(P.x,y0+2.9,P.z);
- if(f.st==='wait'){c.font=`700 ${12*k}px sans-serif`;c.lineWidth=3;c.strokeStyle='#101820';c.strokeText('입질을 기다려요…',hp[0],hp[1]);c.fillStyle='#dfe8f2';c.fillText('입질을 기다려요…',hp[0],hp[1])}
- if(f.st==='bite'){const s=1+Math.sin(gt*20)*.1;c.font=`900 ${40*k*s}px sans-serif`;c.lineWidth=6;c.strokeStyle='#5a3d25';c.strokeText('!',hp[0],hp[1]);c.fillStyle='#FFB547';c.fillText('!',hp[0],hp[1]);c.font=`800 ${14*k}px sans-serif`;c.lineWidth=3;c.strokeStyle='#101820';c.strokeText('지금 눌러요!',hp[0],hp[1]+20*k);c.fillStyle='#fff';c.fillText('지금 눌러요!',hp[0],hp[1]+20*k)}
- if(f.st==='reel'){const w=250*k,h=16*k,x=innerWidth/2-w/2,y=innerHeight*.2,thr=f.thr>0;c.fillStyle='rgba(16,24,36,.88)';rrect(c,x-14*k,y-34*k,w+28*k,92*k,14*k);c.fill();c.strokeStyle=thr?'#FF6B5E':'rgba(255,255,255,.18)';c.lineWidth=2;c.stroke();
-  c.font=`800 ${13*k}px sans-serif`;c.fillStyle=thr&&Math.sin(gt*18)>0?'#FF6B5E':'#F6EEDC';c.fillText(thr?'요동쳐요! 손을 떼세요':inp.fire?'좋아요, 계속 감아요':'꾹 눌러서 감아요',innerWidth/2,y-14*k);
-  c.fillStyle='rgba(255,255,255,.14)';rrect(c,x,y,w,h,h/2);c.fill();c.fillStyle='#6CB8FF';rrect(c,x,y,w*clamp(f.prog,0,1),h,h/2);c.fill();c.font=`${16*k}px sans-serif`;c.fillText('🐟',x+w*clamp(f.prog,0,1),y+h*.85);
-  const ty=y+h+14*k,th=10*k;c.fillStyle='rgba(255,255,255,.14)';rrect(c,x,ty,w,th,th/2);c.fill();const t=clamp(f.ten,0,1);c.fillStyle=t<.55?'#7BD88F':t<.8?'#FFB547':'#FF6B5E';rrect(c,x,ty,w*t,th,th/2);c.fill();
-  c.font=`700 ${11*k}px sans-serif`;c.textAlign='left';c.fillStyle='#A9B6C6';c.fillText('줄 긴장',x,ty+th+12*k);c.textAlign='right';c.fillText('당기기',x+w,y-2*k+0);c.textAlign='center'}}
+ if(f.st==='wait')uiPill(c,'입질을 기다려요…',hp[0],hp[1],12*k,UIC.pn,UIC.tx,UIC.pn3);
+ if(f.st==='bite'){const s=1+Math.sin(gt*20)*.1;c.font=`900 ${40*k*s}px ${UIF}`;c.lineWidth=6;c.strokeStyle=UIC.brn;c.strokeText('!',hp[0],hp[1]);c.fillStyle='#FFB547';c.fillText('!',hp[0],hp[1]);uiPill(c,'지금 눌러요!',hp[0],hp[1]+24*k,13*k,UIC.red,'#fff')}
+ if(f.st==='reel'){const w=250*k,h=16*k,x=innerWidth/2-w/2,y=innerHeight*.2,thr=f.thr>0;c.fillStyle=UIC.pn;rrect(c,x-14*k,y-34*k,w+28*k,92*k,16*k);c.fill();c.strokeStyle=thr?UIC.red:'#E2CDA8';c.lineWidth=2.5;c.stroke();
+  c.font=`800 ${13*k}px ${UIF}`;c.fillStyle=thr&&Math.sin(gt*18)>0?UIC.red:UIC.tx;c.fillText(thr?'요동쳐요! 손을 떼세요':inp.fire?'좋아요, 계속 감아요':'꾹 눌러서 감아요',innerWidth/2,y-14*k);
+  c.fillStyle='#E6D4B4';rrect(c,x,y,w,h,h/2);c.fill();c.fillStyle='#4A9BE0';rrect(c,x,y,w*clamp(f.prog,0,1),h,h/2);c.fill();c.font=`${16*k}px ${UIF}`;c.fillText('🐟',x+w*clamp(f.prog,0,1),y+h*.85);
+  const ty=y+h+14*k,th=10*k;c.fillStyle='#E6D4B4';rrect(c,x,ty,w,th,th/2);c.fill();const t=clamp(f.ten,0,1);c.fillStyle=t<.55?'#45B864':t<.8?'#F0A23A':'#E5534B';rrect(c,x,ty,w*t,th,th/2);c.fill();
+  c.font=`800 ${11*k}px ${UIF}`;c.textAlign='left';c.fillStyle='#A08368';c.fillText('줄 긴장',x,ty+th+12*k);c.textAlign='right';c.fillText('당기기',x+w,y-2*k+0);c.textAlign='center'}}
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}

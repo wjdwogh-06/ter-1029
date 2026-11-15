@@ -65,4 +65,4 @@ function buildPorts(){buildPortGeo();let sv=0;
 function updPorts(px,pz){const dk=dark()>.3;for(const p of PORTS)if(p.g)p.g.visible=Math.abs(p.x-px)<170&&Math.abs(p.z-pz)<170;
  for(const b of PBOATS){if(!b.p.g.visible)continue;b.m.position.y=b.y+Math.sin(gt*1.25+b.ph)*.05;b.m.rotation.z=Math.sin(gt*1.05+b.ph)*.045;b.m.rotation.x=Math.sin(gt*.8+b.ph*1.7)*.02}
  if(PLAMPS.length&&PLAMPS[0].visible!==dk)for(const s of PLAMPS)s.visible=dk}
-function drawPortLabels(c,k){for(const p of PORTS){const d=dist(p.x,p.z,P.x,P.z);if(d>(p.town?60:34))continue;const s=scr(p.x-p.dx*3,groundY(p.x,p.z)+(p.town?6.5:4.2),p.z-p.dz*3);if(!s[2])continue;const t='⚓ '+p.n;c.font=`900 ${(p.town?16:13.5)*k}px sans-serif`;c.textAlign='center';c.lineWidth=3.5;c.strokeStyle='#101820';c.strokeText(t,s[0],s[1]);c.fillStyle='#bfe6ff';c.fillText(t,s[0],s[1])}}
+function drawPortLabels(c,k){for(const p of PORTS){const d=dist(p.x,p.z,P.x,P.z);if(d>(p.town?60:34))continue;const s=scr(p.x-p.dx*3,groundY(p.x,p.z)+(p.town?6.5:4.2),p.z-p.dz*3);if(!s[2])continue;uiPill(c,'⚓ '+p.n,s[0],s[1],(p.town?14.5:12.5)*k,UIC.nav,'#fff','rgba(255,255,255,.18)')}}
