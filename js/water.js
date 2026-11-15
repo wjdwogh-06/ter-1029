@@ -2,7 +2,7 @@
 /* ===== water: wading, swimming, hot springs, fishing ===== */
 const SHALLOW=.08,DEEP=.62;
 const WTR={st:'land',depth:0,ph:0,mv:0,splT:0,ripT:0,edgeT:0,coldT:0,toldSwim:0,toldWade:0};
-let fishing=null,bobM=null,lineM=null,catchM=null,catchT=0;const ripples=[];
+let fishing=null,bobM=null,lineM=null,catchM=null,catchT=0,catchA=null;const ripples=[];
 const waterDepth=(x,z)=>onDock(x,z)?0:-hAt(x,z);
 function inSpring(x,z){for(const s of warmsrc)if(s.t==='spring'&&dist(s.x,s.z,x,z)<3.7)return s;return null}
 const surfY=(x,z)=>Math.max(groundY(x,z),.02);
@@ -84,13 +84,13 @@ function waterPose(dt){const a=P.a,r=a.root;r.rotation.order='YXZ';const sw=WTR.
  WTR.ripT-=dt;if(WTR.ripT<=0){WTR.ripT=P.moving?.22:.75;ripple(P.x+fx*.3,P.z+fz*.3,P.moving?1.1:.9)}
  if(P.moving){WTR.splT-=dt;if(WTR.splT<=0){WTR.splT=.26;const side=Math.sin(ph)>0?1:-1,hx=P.x+fx*.7+fz*side*.32,hz=P.z+fz*.7-fx*side*.32;puff(hx,.12,hz,0xe6f3ff,3,.7);if(Math.random()<.4)sfx(380+Math.random()*120,.07,'sine',.02,.5)}}}
 /* ---- fishing spots: 기획자가 찍은 포인트(core.js FISH_PTS_A/B)에서만 낚여요 ---- */
-const ROD_R=8,FCATCH=1.2;let FSP=[],FCB=null,fishWarnT=0;
+const ROD_R=8,FCATCH=1.5;let FSP=[],FCB=null,fishWarnT=0;
 const fhs=(i,k)=>{const v=Math.sin(i*127.1+k*311.7)*43758.5453;return v-Math.floor(v)};
 const FISHD={};FISH.forEach(f=>FISHD[f.id]=f);
 /* 떼 자리 맞추기(부팅 때 한 번, 지형·부두·배만 보고 정해서 누구에게나 같아요):
    떼가 도는 원 + 물고기 반 길이까지 물 깊이 FS_MIN 이상(물가 거품·모래·땅에 안 걸치게), 부두·배 밑 아님, 다른 떼와 안 겹침, 물가 땅에서 던질 수 있음.
    어기는 점만 기획자 좌표에서 가장 조금 옮겨요(등대 한가운데처럼 땅 위 점 포함). 옮긴 점은 ox,oz에 원래 좌표 */
-const FS_MIN=.22,FS_GAP=.6,FS_HALF=.45;
+const FS_MIN=.22,FS_GAP=.6,FS_HALF=.5;
 function fsWaterOK(x,z,R){const rr=R+FS_HALF;if(hAt(x,z)>-FS_MIN||onDock(x,z))return false;
  for(let a=0;a<20;a++){const an=a/20*Math.PI*2;for(const k of[1,.55]){const px=x+Math.cos(an)*rr*k,pz=z+Math.sin(an)*rr*k;if(hAt(px,pz)>-FS_MIN||onDock(px,pz))return false}}
  for(const b of PBOATS){const p=b.m.position,g=b.m.geometry,br=(g.boundingSphere?g.boundingSphere.radius:1.5)*b.m.scale.x*.8;if(dist(p.x,p.z,x,z)<rr+br)return false}return true}
@@ -105,8 +105,8 @@ function fishSpotsInit(){if(FSP.length)return;const all=[...FISH_PTS_A.map(q=>({
   if(!best){bs=-1e9;for(let r=0;r<=lim;r+=.5){const n=r?Math.max(16,Math.round(Math.PI*2*r/.5)):1;for(let i=0;i<n;i++){const an=i/n*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r;   /* 3) 넓은 얕은 여울: 거리 안에서 가장 깊은 쪽(겹침·던지기는 지킴) */
     if(!sepOK(x,z,s.R)||!fsLandOK(x,z,s.R))continue;let bad=0;for(const b of PBOATS)if(dist(b.m.position.x,b.m.position.z,x,z)<s.R+FS_HALF+1.5)bad=1;if(bad)continue;const sc=ringMin(x,z,s.R)-r*.02;if(sc>bs){bs=sc;best=[x,z]}}}s.adj='shallow'}
   if(best&&(best[0]!==s.x||best[1]!==s.z)){s.ox=s.x;s.oz=s.z;s.x=best[0];s.z=best[1]}placed.push(s)}
- all.forEach((s,i)=>{const A=s.zone==='A';s.dir=fhs(i,9)<.5?1:-1;s.gone=0;s.ripT=fhs(i,7)*2;s.jmpT=4+fhs(i,8)*8;s.fish=[];const n=A?4:5;
-  for(let j=0;j<n;j++){const r=s.R*(.45+.55*fhs(i,j*3+1));s.fish.push({r,w:s.dir*(A?.7:.85)*(.8+.4*fhs(i,j*3+2))/r,ph:j/n*Math.PI*2+fhs(i,j*3+3)*.8,sc:A?.7+.15*fhs(i,j+20):.55+.15*fhs(i,j+20)})}});
+ all.forEach((s,i)=>{const A=s.zone==='A';s.dir=fhs(i,9)<.5?1:-1;s.gone=0;s.ripT=fhs(i,7)*2;s.jmpT=4+fhs(i,8)*8;s.fish=[];const n=A?4:3,R=s.R;
+  for(let j=0;j<n;j++){const h=k=>fhs(i*7+j,k);s.fish.push({ax:R*(.5+.22*h(1)),az:R*(.5+.22*h(2)),bx:R*(.1+.14*h(3)),bz:R*(.1+.14*h(4)),w:s.dir*(.42+.22*h(5))*(A?.9:1),p:j/n*Math.PI*2+h(6)*.9,q:h(7)*6.3,ph:h(8)*6.3,sc:A?.8+.15*h(9):.65+.15*h(10)})}});
  FSP=all}
 const spotAt=(x,z)=>{let b=null,bd=1e9;for(const s of FSP){const d=dist(s.x,s.z,x,z);if(d<=s.R+FCATCH&&d<bd){bd=d;b=s}}return b};
 function fishWarn(m){if(gt-fishWarnT<1.4)return;fishWarnT=gt;toast(m)}
@@ -137,39 +137,48 @@ function updFishing(dt,press){const f=fishing;if(!f){if(press&&!P.moving)tryCast
   if(f.ten>=1){endFish('줄이 끊어졌어요! 요동칠 땐 손을 떼세요');sfx(140,.3,'sawtooth',.06,.5);buzz(200);return}
   if(f.prog<=0){endFish('물고기가 도망갔어요…');return}if(f.prog>=1)catchFish(f.fish)}}
 function catchFish(fi){const cm=Math.round(rand(fi.cm[0],fi.cm[1]));give(fi.id,1);S.st.fish++;const first=!S.caught[fi.id];S.caught[fi.id]=(S.caught[fi.id]||0)+1;S.best=S.best||{};const rec=!first&&cm>(S.best[fi.id]||0);if(cm>(S.best[fi.id]||0))S.best[fi.id]=cm;
- if(fishing&&fishing.spot)fishing.spot.gone=7;endFish();const g=fi.g||0,hx=P.x+Math.sin(P.rot)*1.5,hz=P.z+Math.cos(P.rot)*1.5;splash(hx,hz,8);if(g>=2)puff(P.x,groundY(P.x,P.z)+2.6,P.z,g>=3?0xffc24a:0xc59bff,g>=3?16:9,.8);
+ const g=fi.g||0,hx=fishing?fishing.vx:P.x+Math.sin(P.rot)*1.5,hz=fishing?fishing.vz:P.z+Math.cos(P.rot)*1.5;if(fishing&&fishing.spot)fishing.spot.gone=7;endFish();splash(hx,hz,10);ripple(hx,hz,1.6,1.1);if(g>=2)puff(P.x,groundY(P.x,P.z)+2.6,P.z,g>=3?0xffc24a:0xc59bff,g>=3?16:9,.8);
  FCB={f:fi,cm,first,rec,t:3.2};jingle([[523,659,784],[523,659,784,1047],[587,740,880,1175],[523,659,784,1047,1319,1568]][g]);buzz(g>=2?120:60);
- P.a.play('Cheer',{once:1,lock:1.3,force:1});if(catchM)scene.remove(catchM);catchM=mesh(GEO[fi.id],MATT);catchM.scale.setScalar(clamp(cm/60,.7,1.6));scene.add(catchM);catchT=1.6;hudDirty=true}
+ P.a.play('Cheer',{once:1,lock:1.3,force:1});if(catchM)scene.remove(catchM);catchM=mesh(GEO[fi.id],MATT);catchM.scale.setScalar(clamp(.9+cm/120,1.3,1.9));scene.add(catchM);catchT=2.2;catchA={t:0,T:.62,sx:hx,sz:hz,g};hudDirty=true}
 /* ---- 물고기 떼: 물속 그림자가 원을 그리며 돌아요(가까운 곳만, InstancedMesh 하나) ---- */
 const SCH={m:null,max:64};const _sm=new THREE.Matrix4(),_sq=new THREE.Quaternion(),_sv=new THREE.Vector3(),_ss=new THREE.Vector3(),_sy=new THREE.Vector3(0,1,0);
 function initSchools(){fishSpotsInit();if(SCH.m)return;const sh=new THREE.Shape();sh.moveTo(0,.5);sh.quadraticCurveTo(.22,.32,.19,0);sh.quadraticCurveTo(.13,-.25,.04,-.33);sh.lineTo(.21,-.55);sh.lineTo(0,-.44);sh.lineTo(-.21,-.55);sh.lineTo(-.04,-.33);sh.quadraticCurveTo(-.13,-.25,-.19,0);sh.quadraticCurveTo(-.22,.32,0,.5);
- const g=new THREE.ShapeGeometry(sh,4);g.rotateX(Math.PI/2);const m=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0x0a2140,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide}),SCH.max);
+ const g=new THREE.ShapeGeometry(sh,4);g.rotateX(Math.PI/2);const m=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0x06142a,transparent:true,opacity:.68,depthWrite:false,side:THREE.DoubleSide}),SCH.max);
  for(let i=0;i<SCH.max;i++)m.setColorAt(i,new THREE.Color(1,1,1));m.count=0;m.frustumCulled=false;m.renderOrder=3;scene.add(m);SCH.m=m}
+/* 물고기 한 마리 위치: 작은 원 + 엇갈린 흔들림(리사주) + 떼 전체가 천천히 돌아서, 같은 자리에서 자연스럽게 맴돌아요. 반지름 R 밖으로 안 나가요 */
+function fishPos(s,q,t){const a=q.w*t+q.p,x=q.ax*Math.sin(a)+q.bx*Math.sin(2.3*a+q.q),z=q.az*Math.cos(a)+q.bz*Math.sin(1.7*a+q.q*1.3),r=.07*t*s.dir,c=Math.cos(r),sn=Math.sin(r);return[s.x+x*c-z*sn,s.z+x*sn+z*c]}
 function updSchools(dt){const m=SCH.m;if(!m)return;let k=0;const vis=[];for(const s of FSP){const d=(s.x-camT.x)**2+(s.z-camT.z)**2;if(d<48*48)vis.push([d,s])}vis.sort((a,b)=>a[0]-b[0]);
  const f=fishing,seen=!INT.on;
  for(let vi=0;vi<vis.length&&seen;vi++){const s=vis[vi][1];s.gone=Math.max(0,s.gone-dt);
-  if(vi<3){s.ripT-=dt;if(s.ripT<=0){s.ripT=rand(.7,1.6);const q=s.fish[(Math.random()*s.fish.length)|0],a=q.ph+q.w*gt;ripple(s.x+Math.cos(a)*q.r,s.z+Math.sin(a)*q.r,.45,.9)}
-   s.jmpT-=dt;if(s.jmpT<=0){s.jmpT=rand(6,12);const q=s.fish[1],a=q.ph+q.w*gt;splash(s.x+Math.cos(a)*q.r,s.z+Math.sin(a)*q.r,3)}}
-  for(let j=0;j<s.fish.length&&k<SCH.max;j++){const q=s.fish[j];if(j===0&&s.gone>0&&!(f&&f.spot===s))continue;const a=q.ph+q.w*gt;let x=s.x+Math.cos(a)*q.r,z=s.z+Math.sin(a)*q.r,hx=-Math.sin(a)*Math.sign(q.w),hz=Math.cos(a)*Math.sign(q.w),wig=8;
+  if(vi<3){s.ripT-=dt;if(s.ripT<=0){s.ripT=rand(.7,1.6);const q=s.fish[(Math.random()*s.fish.length)|0],pp=fishPos(s,q,gt);ripple(pp[0],pp[1],.4,.9)}
+   s.jmpT-=dt;if(s.jmpT<=0){s.jmpT=rand(6,12);const pp=fishPos(s,s.fish[1],gt);splash(pp[0],pp[1],3)}}
+  for(let j=0;j<s.fish.length&&k<SCH.max;j++){const q=s.fish[j];if(j===0&&s.gone>0&&!(f&&f.spot===s))continue;const p0=fishPos(s,q,gt),p1=fishPos(s,q,gt+.06);let x=p0[0],z=p0[1],hx=p1[0]-x,hz=p1[1]-z,sp=Math.hypot(hx,hz)/.06,wig=7+sp*5;
    if(j===0&&f&&f.spot===s){let u=0;if(f.st==='wait'&&f.t>f.W-1)u=clamp(1-(f.W-f.t),0,1);else if(f.st==='bite')u=1;else if(f.st==='reel')u=1;
     if(u>0){u=u*u*(3-2*u);const tx=f.st==='reel'?f.vx:f.bx,tz=f.st==='reel'?f.vz:f.bz,ex=x,ez=z;x=lerp(x,tx-Math.sin(P.rot)*.25,u);z=lerp(z,tz-Math.cos(P.rot)*.25,u);if(f.st==='reel'||f.st==='bite'){hx=P.x-x;hz=P.z-z;if(f.st==='bite'){hx=-hx;hz=-hz}wig=f.thr>0?26:16}else{hx=tx-ex;hz=tz-ez}}}
-   const ry=Math.atan2(hx,hz)+Math.sin(gt*wig+q.ph*3)*.16;_sq.setFromAxisAngle(_sy,ry);_sm.compose(_sv.set(x,.02,z),_sq,_ss.set(q.sc,1,q.sc));m.setMatrixAt(k++,_sm)}}
+   const ry=Math.atan2(hx,hz)+Math.sin(gt*wig+q.ph*3)*.17;_sq.setFromAxisAngle(_sy,ry);_sm.compose(_sv.set(x,.02,z),_sq,_ss.set(q.sc,1,q.sc));m.setMatrixAt(k++,_sm)}}
  m.count=k;m.instanceMatrix.needsUpdate=true}
 const _tip=new THREE.Vector3();
-function updFishFx(dt){updSchools(dt);if(FCB){FCB.t-=dt;if(FCB.t<=0)FCB=null}if(catchM){catchT-=dt;catchM.position.set(P.x,groundY(P.x,P.z)+2.6+Math.sin(catchT*8)*.05,P.z);catchM.rotation.set(0,gt*2.5,Math.sin(gt*14)*.25);if(catchT<=0){scene.remove(catchM);catchM=null}}
+function updFishFx(dt){updSchools(dt);if(FCB){FCB.t-=dt;if(FCB.t<=0)FCB=null}if(catchM){catchT-=dt;const hy=groundY(P.x,P.z)+3.15,A=catchA;
+  if(A&&A.t<A.T){A.t+=dt;const u=Math.min(1,A.t/A.T),e=1-(1-u)*(1-u);   /* 물 밖으로 튀어 올라 머리 위로 포물선 */
+   catchM.position.set(lerp(A.sx,P.x,e),lerp(.1,hy,e)+Math.sin(u*Math.PI)*2.1,lerp(A.sz,P.z,e));catchM.rotation.set(-u*Math.PI*2,Math.atan2(P.x-A.sx,P.z-A.sz)+Math.PI/2,0);
+   if(Math.random()<dt*30)puff(catchM.position.x,catchM.position.y,catchM.position.z,0xe6f3ff,1,.35);
+   if(u>=1){puff(P.x,hy,P.z,A.g>=3?0xffc24a:A.g>=2?0xc59bff:A.g?0x8fc4ff:0xfff3d6,A.g>=2?14:7,.7);sfx(880,.06,'sine',.04);catchA=null}}
+  else{catchM.position.set(P.x,hy+Math.sin(catchT*8)*.05,P.z);catchM.rotation.set(0,gt*2.5,Math.sin(gt*14)*.25)}
+  if(catchT<=0){scene.remove(catchM);catchM=null;catchA=null}}
  for(const r of ripples){if(r.t>=r.l){r.m.visible=false;continue}r.t+=dt;const u=r.t/r.l;r.m.position.set(r.x,.04,r.z);r.m.scale.setScalar(r.s*(.6+u*2.6));r.m.material.opacity=.55*(1-u)}
  const f=fishing;if(!f||!P.a.tip){if(bobM)bobM.visible=lineM.visible=false;return}P.a.root.updateMatrixWorld(true);P.a.tip.getWorldPosition(_tip);let bx=f.bx,bz=f.bz,by=.03;
  if(f.st==='cast'){const u=Math.min(1,f.t/f.T);bx=lerp(_tip.x,f.bx,u);bz=lerp(_tip.z,f.bz,u);by=lerp(_tip.y,.03,u)+Math.sin(u*Math.PI)*1.6}
  else if(f.st==='wait'){f.nib=Math.max(0,(f.nib||0)-dt);by=.03+Math.sin(gt*2.4)*.025-(f.nib>0?.07:0)}
  else if(f.st==='bite'){by=-.1+Math.sin(gt*32)*.035}
  else if(f.st==='reel'){const k=f.prog*.82,tx=P.x+Math.sin(P.rot)*1.6,tz=P.z+Math.cos(P.rot)*1.6;bx=lerp(f.sx,tx,k);bz=lerp(f.sz,tz,k);if(waterDepth(bx,bz)<.15){bx=lerp(f.sx,tx,k*.7);bz=lerp(f.sz,tz,k*.7)}if(f.thr>0){bx+=Math.sin(gt*23)*.18;bz+=Math.cos(gt*19)*.18;by=-.05}if(Math.random()<dt*(f.thr>0?14:4))puff(bx,.1,bz,0xe6f3ff,1,.5)}
- f.vx=bx;f.vz=bz;bobM.visible=lineM.visible=true;bobM.position.set(bx,by,bz);bobM.rotation.z=f.st==='bite'?Math.sin(gt*30)*.5:0;
+ f.vx=bx;f.vz=bz;if(f.st==='wait'||f.st==='bite'){f.rpT=(f.rpT||0)-dt;if(f.rpT<=0){f.rpT=f.st==='bite'?.28:rand(1.1,1.9);ripple(bx,bz,f.st==='bite'?.7:.5,f.st==='bite'?.7:1.3)}}f.vx=bx;f.vz=bz;bobM.visible=lineM.visible=true;bobM.position.set(bx,by,bz);bobM.rotation.z=f.st==='bite'?Math.sin(gt*30)*.5:0;
  const sag=f.st==='reel'?lerp(.5,.02,clamp(f.ten*1.4,0,1)):f.st==='cast'?0:.6,arr=lineM.geometry.attributes.position.array;for(let i=0;i<16;i++){const u=i/15;arr[i*3]=lerp(_tip.x,bx,u);arr[i*3+1]=lerp(_tip.y,by+.16,u)-Math.sin(u*Math.PI)*sag;arr[i*3+2]=lerp(_tip.z,bz,u)}lineM.geometry.attributes.position.needsUpdate=true}
 function drawFishUI(c,k){if(FCB)drawCatch(c,k);const f=fishing;
  if(!f){if(curId()==='rod'&&!P.dead&&!INT.on&&!panel&&!inWater()){const a=aimSpot();if(a){const q=scr(a.s.x,.3,a.s.z);uiPill(c,'🎣 여기 던져요',q[0],q[1],11*k,UIC.pn,UIC.tx,UIC.pn3)}}return}
  const y0=groundY(P.x,P.z),hp=scr(P.x,y0+2.9,P.z);
- if(f.st==='wait')uiPill(c,'입질을 기다려요…',hp[0],hp[1],12*k,UIC.pn,UIC.tx,UIC.pn3);
- if(f.st==='bite'){const s=1+Math.sin(gt*20)*.1;c.font=`900 ${40*k*s}px ${UIF}`;c.lineWidth=6;c.strokeStyle=UIC.brn;c.strokeText('!',hp[0],hp[1]);c.fillStyle='#FFB547';c.fillText('!',hp[0],hp[1]);uiPill(c,'지금 눌러요!',hp[0],hp[1]+24*k,13*k,UIC.red,'#fff')}
+ const bq=scr(f.vx||f.bx,.35,f.vz||f.bz),bo=Math.sin(gt*2.4)*2*k;
+ if(f.st==='wait')uiPill(c,'…',bq[0],bq[1]-26*k+bo,12*k,UIC.pn,UIC.tx,UIC.pn3);
+ if(f.st==='bite'){const s=1+Math.sin(gt*20)*.1,jy=bq[1]-44*k-Math.abs(Math.sin(gt*9))*6*k;c.font=`900 ${34*k*s}px ${UIF}`;c.textAlign='center';c.lineWidth=6;c.strokeStyle=UIC.brn;c.strokeText('!',bq[0],jy);c.fillStyle='#FFB547';c.fillText('!',bq[0],jy);uiPill(c,'지금 눌러요!',bq[0],bq[1]-16*k,12*k,UIC.red,'#fff')}
  if(f.st==='reel'){const w=250*k,h=16*k,x=innerWidth/2-w/2,y=innerHeight*.2,thr=f.thr>0;c.fillStyle=UIC.pn;rrect(c,x-14*k,y-34*k,w+28*k,92*k,16*k);c.fill();c.strokeStyle=thr?UIC.red:'#E2CDA8';c.lineWidth=2.5;c.stroke();
   c.font=`800 ${13*k}px ${UIF}`;c.fillStyle=thr&&Math.sin(gt*18)>0?UIC.red:UIC.tx;c.fillText(thr?'요동쳐요! 손을 떼세요':inp.fire?'좋아요, 계속 감아요':'꾹 눌러서 감아요',innerWidth/2,y-14*k);
   c.fillStyle='#E6D4B4';rrect(c,x,y,w,h,h/2);c.fill();c.fillStyle='#4A9BE0';rrect(c,x,y,w*clamp(f.prog,0,1),h,h/2);c.fill();c.font=`${16*k}px ${UIF}`;c.fillText('🐟',x+w*clamp(f.prog,0,1),y+h*.85);

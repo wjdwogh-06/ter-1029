@@ -233,9 +233,9 @@ function blocked(x,z,r,wm=0,pl=0){if(x<4||z<4||x>WS-4||z>WS-4)return true;const 
 /* world structures: only what the map owner asked for (ports are in ports.js, supply drops in dress.js) */
 function villageAndPOI(){POI.lhS=[];POI.guards=[];POI.lh.forEach((c,i)=>{addStruct({t:'lighthouse',x:c.x,z:c.z,r:0}).li=i;lhIslet(c,i)});buildSupply();villageDress()}
 /* boulders and moss around a sea lighthouse, set on the islet's real slope (the front path stays clear) */
-function lhIslet(c,i){const y0=hAt(c.x,c.z),p=[];for(let a=0;a<17;a++){const an=a*.37+hash(a,i,90)*.3,far=a>9,rr=far?8.6+hash(a,i,92)*3.4:5.6+hash(a,i,91)*1.9,x=Math.cos(an)*rr,z=Math.sin(an)*rr,s=.5+hash(a,i,93)*(far?1:.55),h=hAt(c.x+x,c.z+z);if(h<-1.7||z>0&&Math.abs(x)<2.6)continue;
+function lhIslet(c,i){const y0=hAt(c.x,c.z),p=[];for(let a=0;a<17;a++){const an=a*.37+hash(a,i,90)*.3,far=a>9,rr=far?8.6+hash(a,i,92)*3.4:5.6+hash(a,i,91)*1.9,x=Math.cos(an)*rr,z=Math.sin(an)*rr,s=.5+hash(a,i,93)*(far?1:.55),h=hAt(c.x+x,c.z+z);if(z>0&&Math.abs(x)<2.6)continue;let wet=h<.25;for(let k=0;k<8&&!wet;k++)if(hAt(c.x+x+Math.cos(k*.785)*s*1.2,c.z+z+Math.sin(k*.785)*s*1.2)<.15)wet=true;if(wet)continue;   /* 물에 걸치는 바위는 빼요(기획자 요청) */
   p.push(pt(new THREE.DodecahedronGeometry(s),[0x8f8e86,0x7a7972,0x6a6964][a%3],[x,h-y0+s*.22,z],[a,a*1.7,a*.6],[1,.72,1.1]))}
- for(let a=0;a<5;a++){const an=a*1.3+i+2.2,rr=3.9+hash(a,i,94)*1.5,x=Math.cos(an)*rr,z=Math.sin(an)*rr;if(z>0&&Math.abs(x)<2.6)continue;p.push(pt(ico(.5,1),a%2?0x5f9c48:0x6aa64f,[x,hAt(c.x+x,c.z+z)-y0+.03,z],0,[1.3,.2,1.1]))}
+ for(let a=0;a<5;a++){const an=a*1.3+i+2.2,rr=3.9+hash(a,i,94)*1.5,x=Math.cos(an)*rr,z=Math.sin(an)*rr;if(z>0&&Math.abs(x)<2.6||hAt(c.x+x,c.z+z)<.3)continue;p.push(pt(ico(.5,1),a%2?0x5f9c48:0x6aa64f,[x,hAt(c.x+x,c.z+z)-y0+.03,z],0,[1.3,.2,1.1]))}
  const m=mesh(mg(p),MATT);m.position.set(c.x,y0,c.z);scene.add(m)}
 /* ===== fx ===== */
 const tracers=[],parts=[],floats=[],booms=[];let flashL=null;
