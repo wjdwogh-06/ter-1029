@@ -79,7 +79,7 @@ function bridgeGeo(L){const p=[],n=Math.max(3,Math.round(L/.5));for(let i=0;i<n;
  for(const sx of[-1,1]){p.push(pt(box(.2,.2,L),0x6f4a2c,[sx*1.0,.62,0]),pt(box(.1,.1,L+.2),0x7a5232,[sx*1.26,1.62,0]),pt(box(.07,.07,L+.2),0x7a5232,[sx*1.26,1.2,0]));const m=Math.max(2,Math.round(L/2.4)+1);
   for(let i=0;i<m;i++){const z=-L/2+.1+i*(L-.2)/(m-1);p.push(pt(box(.14,1.1,.14),0x6f4a2c,[sx*1.26,1.18,z]),pt(box(.2,.06,.2),0x4b3520,[sx*1.26,1.75,z]),pt(cyl(.13,.15,2.6,6),0x7a5232,[sx*1.05,-.6,z]))}}return mg(p)}
 /* ---- ground dressing: what grows where ---- */
-function dressItems(r,ri){const out=[],x0=r.cx-REG/2,z0=r.cz-REG/2;
+function dressItems(r,ri){const out=[],x0=r.cx-REG/2,z0=r.cz-REG/2,SL=structs.filter(q=>Math.abs(q.x-r.cx)<REG/2+6&&Math.abs(q.z-r.cz)<REG/2+6);   /* no grass or pebbles inside buildings */
  for(let i=0;i<430;i++){const x=x0+hash(i,ri,61)*REG,z=z0+hash(i,ri,62)*REG,h=hAt(x,z);if(h<-1.4||h>9.5)continue;const k=hash(i,ri,63),k2=hash(i,ri,64),k3=hash(i,ri,65);let t=null,y=h-.03,s=.75+k3*.6;if(onDock(x,z))continue;
   if(h<1.02){const I=islAt(x,z);let rd=99,rw=0;if(I&&I.ty===0){rd=riverD(x,z);rw=_rp?_rp.w:0}
    if(h<-.12){if(rd<rw+.5&&h>-1.3&&k<.26){t=k2<.3?'lilyF':'lily';y=.03;s=.8+k3*.7}else if(h>-.45&&rd<rw+2.5&&k<.2){t=k2<.6?'reed':'wplant'}else continue}
@@ -93,12 +93,16 @@ function dressItems(r,ri){const out=[],x0=r.cx-REG/2,z0=r.cz-REG/2;
    else if(f>.5)t=k<.2?'fern':k<.25?'mush':k<.275?'log':k<.29?'stump':k<.33?'shrub':k<.72?'tuft':k<.78?'flw'+((k2*6)|0):k<.83?'peb':k<.87?'rk'+((k2*4)|0):k<.89?'rockS':null;
    else{const fb=sm(.55,.75,fl);t=k<.12+fb*.32?'flw'+((k2*6)|0):k<.2+fb*.32?'tuftL':k<.74?'tuft':k<.79?'peb':k<.82?'shrub':k<.865?'rk'+((k2*4)|0):k<.875?'stump':k<.89?'rockS':null}
    if(!t)continue;if(t==='log'||t==='rockS'||t==='stump')s=.9+k3*.5}
+  if(SL.length&&SL.some(q=>inStruct(q,x,z,.3*s)))continue;
   out.push(t,x,y,z,k2*6.283,s,.88+hash(i,ri,67)*.22)}return out}
 function dressBuild(r,ri){const it=dressItems(r,ri),n=it.length/7;if(!n){r.dn=1;return}let tot=0;for(let i=0;i<n;i++)tot+=DT[it[i*7]].cnt;const pos=new Float32Array(tot*3),col=new Float32Array(tot*3),nr=new Float32Array(tot*3);let o=0;
  for(let i=0;i<n;i++){const T=DT[it[i*7]],x=it[i*7+1]-r.cx,y=it[i*7+2],z=it[i*7+3]-r.cz,a=it[i*7+4],s=it[i*7+5],tv=it[i*7+6],cs=Math.cos(a),sn=Math.sin(a),p=T.p,c=T.c,nn=T.n;
   for(let v=0;v<T.cnt;v++){const j=v*3,q=o*3,px=p[j]*s,pz=p[j+2]*s;pos[q]=x+px*cs+pz*sn;pos[q+1]=y+p[j+1]*s;pos[q+2]=z-px*sn+pz*cs;col[q]=c[j]*tv;col[q+1]=c[j+1]*tv;col[q+2]=c[j+2]*tv;nr[q]=nn[j]*cs+nn[j+2]*sn;nr[q+1]=nn[j+1];nr[q+2]=-nn[j]*sn+nn[j+2]*cs;o++}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('normal',new THREE.BufferAttribute(nr,3));
  const m=new THREE.Mesh(g,MATT);m.position.set(r.cx,0,r.cz);m.castShadow=false;m.receiveShadow=true;m.frustumCulled=false;m.matrixAutoUpdate=false;m.updateMatrix();scene.add(m);r.d=m}
+/* a building placed or removed: rebuild the ground dressing of the regions it touches */
+function dressDirty(x,z,pad=4){for(const r of regions){if(Math.abs(r.cx-x)>REG/2+pad||Math.abs(r.cz-z)>REG/2+pad)continue;if(r.d){scene.remove(r.d);r.d.geometry.dispose();r.d=null}r.dn=0}}
+{const _as=addStruct,_rs=removeStruct;addStruct=function(s){const r=_as(s);if(regions.length&&mode==='play')dressDirty(r.x,r.z);return r};removeStruct=function(s){_rs(s);if(regions.length&&mode==='play')dressDirty(s.x,s.z)}}
 /* called every frame from cullRegions: build at most one region batch per frame, drop far ones */
 function dressCull(x,z){let built=0;for(let ri=0;ri<regions.length;ri++){const r=regions[ri],ax=Math.abs(r.cx-x),az=Math.abs(r.cz-z),near=opt.gfx&&ax<REG*.5+46&&az<REG*.5+52;
   if(near&&!r.d&&!r.dn&&!built){dressBuild(r,ri);built=1}if(r.d){let v=!!near;if(v){_sp.center.set(r.cx,1,r.cz);_sp.radius=REG*.71+2;v=_fr.intersectsSphere(_sp)}r.d.visible=v;if(ax>REG*.5+110||az>REG*.5+110){scene.remove(r.d);r.d.geometry.dispose();r.d=null}}}}

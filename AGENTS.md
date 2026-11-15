@@ -23,7 +23,7 @@
 ```
 python3 -m http.server 8765          # 혼자 하기: http://localhost:8765
 npm start                            # 멀티: http://localhost:8080
-python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
+python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
 ```
 
 - 빌드 단계 없음. three.js r128, 모듈 아님(전역 스크립트). **번들러·프레임워크·ES module로 바꾸지 마세요.**
@@ -34,7 +34,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 2. 스크립트 로드 순서 (index.html)
 
-`three.min.js → GLTFLoader → SkeletonUtils → core.js → world.js → actors.js → water.js → ports.js → dress.js → interior.js → ui.js → chat.js → net.js`
+`three.min.js → GLTFLoader → SkeletonUtils → core.js → world.js → actors.js → water.js → ports.js → dress.js → interior.js → look.js → ui.js → chat.js → net.js`
 
 전부 전역 스코프를 공유합니다. 뒤 파일이 앞 파일의 함수를 감싸는 경우가 있습니다(net.js가 `attack`, `placeBuild` 등을 감쌈).
 
@@ -66,7 +66,8 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 - KayKit 모델은 `assets/pack*.json`에서 `GEO`로 들어옵니다(집, 선술집, 상자 등).
 - 나무·바위는 구역별 `InstancedMesh`. **r128 버그: `MAT`을 쓰는 모든 InstancedMesh에 instanceColor가 있어야 합니다**(없으면 렌더가 죽음).
 - r128에는 `BufferGeometry.applyQuaternion`이 없습니다 → `applyMatrix4`.
-- 바닥 장식(풀·꽃)은 구역이 보일 때 한 번 합쳐 만듭니다(`dress.js dressBuild`).
+- 바닥 장식(풀·꽃)은 구역이 보일 때 한 번 합쳐 만듭니다(`dress.js dressBuild`). 구조물 안에는 생기지 않고, 구조물을 놓거나 치우면 그 구역 장식을 다시 만들어요(`dressDirty`).
+- **새 디자인(`js/look.js`)**: 기획자가 준 파일. 기존 파일을 고치지 않고 위에 덮어씌워요(`buildProc`, `makeIcons`, `addStruct`를 감쌈). 집(home_A/home_B/home → 주황 기와지붕 오두막 4색), 텐트(노란 삼각 텐트), 나무·돌·산딸기·통조림·손도끼 모델, 모든 아이콘을 베이지 원판 스티커로. index.html에서 한 줄 빼면 예전 모습. **캐릭터는 바꾸지 않아요**(기획자 결정, 원래 파일에 있던 캐릭터 부분은 뺐음).
 - 성능 목표: 휴대폰. 숲 한복판 삼각형 약 22만. 조각을 늘릴 땐 합치기(`mg`)와 인스턴싱을 쓰세요.
 
 ## 6. 구조물
@@ -85,7 +86,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 - 상인은 **초승달 항구마을에만** 있어요(마을의 `market` 구조물 + 상인 캐릭터 `VIL.mx/mz`).
 - 품목: `SHOP.sell`(core.js). 지금은 텐트, 손도끼, 낚싯대, 보관 상자. `SHOP.free=1`이면 전부 무료(재화 시스템은 기획자가 나중에 설계). 팔기 칸은 예전 동전 방식 그대로 남아 있어요.
-- 아이템 디자인은 **현대식(20~21세기)**. 새 모델: `GEO.axe_m`, `GEO.mtent`, `GEO.mstash`(world.js), `GEO.rod`(water.js). 나머지 아이템도 나중에 현대식으로 바꿀 예정.
+- 아이템 디자인은 **현대식(20~21세기)**. 모델: `GEO.mstash`(world.js), `GEO.rod`(water.js), 그리고 `js/look.js`가 덮어씌우는 `GEO.mtent`, `GEO.axe_m`, `GEO.can`, `GEO.lk_logs/lk_stones/lk_berry`. 나머지 아이템도 나중에 바꿀 예정.
 - 맵의 '뒤지기' 고철 더미(OBJT 5)는 기획자 요청으로 생성하지 않아요. 고철은 보급 상자에서 나와요.
 
 ## 6-2. 설치 규칙과 텐트 내부
@@ -132,7 +133,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 11. 지금 상태와 다음 일
 
-끝난 것: 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
+끝난 것: 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
 
 기획자가 다음에 정할 것(먼저 만들지 말 것): 경제(농사, 상점), 약탈 규칙, 친목 기능, 동물 캐릭터, 서버 배포.
 
