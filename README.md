@@ -23,7 +23,9 @@ npm start                        # = server 폴더 npm install 후 node server/s
 ```
 http://localhost:8080 에서 게임과 서버가 함께 열립니다. 자세한 내용은 `server/README.md`.
 
-**GitHub Pages**: 저장소가 비공개면 유료 플랜이 필요합니다. 공개로 바꾸면 Settings → Pages → main 브랜치 루트로 바로 됩니다(혼자 하기 모드).
+**바로 플레이(최신판)**: https://claude.ai/artifact/EdeHiog5TJLLWZGYmrk5wX — 이 저장소 main과 같은 코드입니다.
+
+**GitHub Pages**: 공개 저장소라 Settings → Pages → main 브랜치 루트를 고르면 무료 실행 링크가 생깁니다(혼자 하기 모드).
 
 ## 폴더
 
