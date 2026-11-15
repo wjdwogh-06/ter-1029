@@ -155,10 +155,38 @@ function interact(){const t=target;if(!t)return;
  else if(s.own){take('wood',1);s.hp=Math.min(s.max,s.hp+s.max*.34);sfx(300,.07,'square',.04);P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.3,force:1,speed:1.7})}}
 /* ---- building ---- */
 function setBuild(m){bmode=m;if(ghost){scene.remove(ghost);ghost=null}if(m&&m!=='demo'){ghost=new THREE.Mesh(GEO[BUILDS[m].g],new THREE.MeshBasicMaterial({color:0x66dd77,transparent:true,opacity:.55,depthWrite:false}));ghost.scale.setScalar(BUILDS[m].s);scene.add(ghost)}if(typeof buildUI==='function')buildUI()}
+/* ---- 설치 금지 구역 (기획자 요청): 등대·보급지·항구 둘레에 그곳보다 조금 큰 원. 설치할 때만 빨갛게 보여요 ----
+   크기는 그 자리에 실제로 놓인 것(등대섬 땅, 보급 상자·모래주머니·철조망, 부두·배·가게·소품)의 가장 먼 곳 + 여유(NOB_PAD)로 정해요.
+   새 게임 시작 때 한 번(buildNoBuild), 플레이어가 지은 건 빼고 월드 구조물만 봐요 */
+const NOB=[],NOB_PAD={lh:3,sup:3.5,port:4},NOB_N={lh:'등대',sup:'보급지',port:'항구'};let nobG=null;
+function buildNoBuild(){NOB.length=0;
+ for(const L of LHS){let e=0;for(let a=0;a<48;a++){const an=a/48*Math.PI*2;for(let r=0;r<26;r+=.5)if(hAt(L.x+Math.cos(an)*r,L.z+Math.sin(an)*r)>0)e=Math.max(e,r)}NOB.push({k:'lh',x:L.x,z:L.z,r:Math.max(12,e+NOB_PAD.lh)})}
+ const supT={supply:1,chest:1,blk:1,suplamp:1,cfence:1};
+ for(const s of SUPS){let e=6;for(const q of structs)if(!q.own&&supT[q.t]){const d=dist(q.x,q.z,s.x,s.z);if(d<14)e=Math.max(e,d+Math.max(sdef(q).bx,sdef(q).bz))}NOB.push({k:'sup',x:s.x,z:s.z,r:e+NOB_PAD.sup})}
+ for(const p of PORTS){const pts=[];if(p.g)p.g.children.forEach(m=>{if(!m.geometry)return;if(!m.geometry.boundingSphere)m.geometry.computeBoundingSphere();const bs=m.geometry.boundingSphere,sc=m.scale.x;pts.push([m.position.x,m.position.z,Math.min(bs.radius*sc,14)])});
+  for(const q of structs){if(q.own||q.t==='lighthouse'||supT[q.t]&&q.t!=='cfence')continue;if(dist(q.x,q.z,p.x,p.z)>44||SUPS.some(s=>dist(q.x,q.z,s.x,s.z)<14))continue;pts.push([q.x,q.z,Math.max(sdef(q).bx,sdef(q).bz)])}
+  if(!pts.length)continue;let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const[x,z,r]of pts){x0=Math.min(x0,x-r);x1=Math.max(x1,x+r);z0=Math.min(z0,z-r);z1=Math.max(z1,z+r)}
+  const cx=(x0+x1)/2,cz=(z0+z1)/2;let e=0;for(const[x,z,r]of pts)e=Math.max(e,dist(x,z,cx,cz)+r);NOB.push({k:'port',x:cx,z:cz,r:e+NOB_PAD.port,n:p.n})}}
+const nobAt=(x,z,r=0)=>{for(const n of NOB)if(dist(x,z,n.x,n.z)<n.r+r)return n;return null};
+/* 빨간 원: 땅·물 높이를 따라 휘는 원판 + 테두리 띠. 설치 모드일 때만 보이고 살짝 깜박여요 */
+function nobMeshes(){if(nobG)return;nobG=new THREE.Group();nobG.visible=false;scene.add(nobG);
+ const fm=new THREE.MeshBasicMaterial({color:0xff4b3e,transparent:true,opacity:.17,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),em=new THREE.MeshBasicMaterial({color:0xff3b30,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+ for(const n of NOB){const A=Math.max(40,Math.round(n.r*3)),Rn=Math.max(6,Math.round(n.r/2.5)),y=(x,z)=>Math.max(hAt(x,z),0)+.09,P0=[],I=[],E=[],EI=[];
+  P0.push(n.x,y(n.x,n.z),n.z);for(let j=1;j<=Rn;j++){const rr=n.r*j/Rn;for(let i=0;i<A;i++){const an=i/A*Math.PI*2,x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;P0.push(x,y(x,z),z)}}
+  for(let i=0;i<A;i++)I.push(0,1+(i+1)%A,1+i);for(let j=1;j<Rn;j++){const a0=1+(j-1)*A,a1=1+j*A;for(let i=0;i<A;i++){const i1=(i+1)%A;I.push(a0+i,a1+i1,a1+i,a0+i,a0+i1,a1+i1)}}
+  for(let i=0;i<A;i++){const an=i/A*Math.PI*2;for(const rr of[n.r-.45,n.r]){const x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;E.push(x,y(x,z)+.02,z)}const i1=(i+1)%A;EI.push(i*2,i1*2+1,i*2+1,i*2,i1*2,i1*2+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P0,3));g.setIndex(I);const m=new THREE.Mesh(g,fm);m.renderOrder=3;m.frustumCulled=true;g.computeBoundingSphere();
+  const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(E,3));ge.setIndex(EI);ge.computeBoundingSphere();const me=new THREE.Mesh(ge,em);me.renderOrder=3;nobG.add(m,me)}
+ nobG.userData={fm,em}}
+function updNoBuild(){const on=!!bmode&&bmode!=='demo'&&!INT.on;if(on)nobMeshes();if(!nobG)return;nobG.visible=on;if(on){const k=.5+.5*Math.sin(gt*4);nobG.userData.fm.opacity=.2+.1*k;nobG.userData.em.opacity=.6+.3*k}}
+/* 설치 모드: 가까운 금지 구역 테두리(나와 가장 가까운 곳)에 알약 */
+function drawNoBuild(c,k){if(!bmode||bmode==='demo')return;const g=ghost&&ghost.userData.g;
+ if(g&&!g.ok){const q=scr(g.x,groundY(g.x,g.z)+2.4,g.z);if(q[2])uiPill(c,'🚫 '+g.why,q[0],q[1],11.5*k,UIC.red,'#fff','rgba(255,255,255,.3)')}   /* 미리보기가 빨가면 이유를 그 위에 */
+ if(!nobG||!nobG.visible)return;for(const n of NOB){const d=dist(P.x,P.z,n.x,n.z);if(d>n.r+22||d<=n.r)continue;const t=n.r/d,x=n.x+(P.x-n.x)*t,z=n.z+(P.z-n.z)*t;if(g&&!g.ok&&dist(x,z,g.x,g.z)<6)continue;const q=scr(x,Math.max(hAt(x,z),0)+.4,z);if(!q[2])continue;uiPill(c,`${NOB_N[n.k]} 주변 설치 금지`,q[0],q[1],10.5*k,'rgba(229,83,75,.9)','#fff','rgba(255,255,255,.3)')}}
 /* where the next build would go, and why it cannot go there (pr.why) */
 function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=P.x+Math.sin(P.rot)*d,z=P.z+Math.cos(P.rot)*d,r=brot;if(b.grid){x=Math.round(x);z=Math.round(z)}else r=brot+P.rot+Math.PI;if(b.fixR)r=0;   /* 정면이 늘 카메라(+z)를 보게 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
- if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';
+ if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(nobAt(x,z,R0)){const n=nobAt(x,z,R0);why=`${NOB_N[n.k]} 주변은 설치 금지 구역이에요`}else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';
  if(!why){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r),fx=b.foot?b.foot[0]:b.bx,fz=b.foot?b.foot[1]:b.bz,st=b.foot?.25:1;   /* ground sheets (b.foot) are checked over their whole area */
   for(let ax=-1;ax<=1.001;ax+=st)for(let az=-1;az<=1.001;az+=st){const lx=ax*fx,lz=az*fz,h=b.foot?gridH(x+lx*c+lz*sn,z-lx*sn+lz*c):hAt(x+lx*c+lz*sn,z-lx*sn+lz*c);if(h<lo)lo=h;if(h>hi)hi=h}
   if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.tilt||(b.grid?.4:.16+R0*.07)))why='땅이 기울어서 놓을 수 없어요'}
