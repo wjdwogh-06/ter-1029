@@ -168,17 +168,21 @@ function buildNoBuild(){NOB.length=0;
   if(!pts.length)continue;let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const[x,z,r]of pts){x0=Math.min(x0,x-r);x1=Math.max(x1,x+r);z0=Math.min(z0,z-r);z1=Math.max(z1,z+r)}
   const cx=(x0+x1)/2,cz=(z0+z1)/2;let e=0;for(const[x,z,r]of pts)e=Math.max(e,dist(x,z,cx,cz)+r);NOB.push({k:'port',x:cx,z:cz,r:e+NOB_PAD.port,n:p.n})}}
 const nobAt=(x,z,r=0)=>{for(const n of NOB)if(dist(x,z,n.x,n.z)<n.r+r)return n;return null};
-/* 빨간 원: 땅·물 높이를 따라 휘는 원판 + 테두리 띠. 설치 모드일 때만 보이고 살짝 깜박여요 */
+/* 빨간 원(설치 모드에서만): 땅·물 높이를 따라 휘는 원판. 안쪽은 거의 투명하고 가장자리로 갈수록 부드럽게 붉어지며, 옅은 사선 무늬가 천천히 흘러요. 테두리는 얇고 또렷한 선 하나 */
 function nobMeshes(){if(nobG)return;nobG=new THREE.Group();nobG.visible=false;scene.add(nobG);
- const fm=new THREE.MeshBasicMaterial({color:0xff4b3e,transparent:true,opacity:.17,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),em=new THREE.MeshBasicMaterial({color:0xff3b30,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
- for(const n of NOB){const A=Math.max(40,Math.round(n.r*3)),Rn=Math.max(6,Math.round(n.r/2.5)),y=(x,z)=>Math.max(hAt(x,z),0)+.09,P0=[],I=[],E=[],EI=[];
-  P0.push(n.x,y(n.x,n.z),n.z);for(let j=1;j<=Rn;j++){const rr=n.r*j/Rn;for(let i=0;i<A;i++){const an=i/A*Math.PI*2,x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;P0.push(x,y(x,z),z)}}
-  for(let i=0;i<A;i++)I.push(0,1+(i+1)%A,1+i);for(let j=1;j<Rn;j++){const a0=1+(j-1)*A,a1=1+j*A;for(let i=0;i<A;i++){const i1=(i+1)%A;I.push(a0+i,a1+i1,a1+i,a0+i,a0+i1,a1+i1)}}
-  for(let i=0;i<A;i++){const an=i/A*Math.PI*2;for(const rr of[n.r-.45,n.r]){const x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;E.push(x,y(x,z)+.02,z)}const i1=(i+1)%A;EI.push(i*2,i1*2+1,i*2+1,i*2,i1*2,i1*2+1)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P0,3));g.setIndex(I);const m=new THREE.Mesh(g,fm);m.renderOrder=3;m.frustumCulled=true;g.computeBoundingSphere();
+ const fm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,uniforms:{uT:{value:0},uA:{value:1},uC:{value:new THREE.Color(0xff4438)}},
+  vertexShader:'attribute float aR;varying float vR;varying vec3 vW;void main(){vR=aR;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+  fragmentShader:'uniform float uT,uA;uniform vec3 uC;varying float vR;varying vec3 vW;void main(){float e=smoothstep(.55,1.,vR);float st=smoothstep(.42,.5,abs(fract((vW.x-vW.z)*.28+uT*.06)-.5))*(1.-e*.7);float a=(.035+e*e*.3+st*.045)*uA;gl_FragColor=vec4(uC,a);}'}),
+  em=new THREE.MeshBasicMaterial({color:0xff3b30,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+ for(const n of NOB){const A=Math.max(48,Math.round(n.r*3.5)),y=(x,z)=>Math.max(hAt(x,z),0)+.09,P0=[],R0=[],I=[],E=[],EI=[],rings=[];
+  const Rn=Math.max(5,Math.round(n.r/3));for(let j=1;j<=Rn;j++)rings.push(.8*j/Rn);rings.push(.88,.94,.98,1);   /* 가장자리 쪽은 촘촘하게(부드러운 붉은 기) */
+  P0.push(n.x,y(n.x,n.z),n.z);R0.push(0);for(const f of rings){const rr=n.r*f;for(let i=0;i<A;i++){const an=i/A*Math.PI*2,x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;P0.push(x,y(x,z),z);R0.push(f)}}
+  for(let i=0;i<A;i++)I.push(0,1+(i+1)%A,1+i);for(let j=1;j<rings.length;j++){const a0=1+(j-1)*A,a1=1+j*A;for(let i=0;i<A;i++){const i1=(i+1)%A;I.push(a0+i,a1+i1,a1+i,a0+i,a0+i1,a1+i1)}}
+  for(let i=0;i<A;i++){const an=i/A*Math.PI*2;for(const rr of[n.r-.13,n.r]){const x=n.x+Math.cos(an)*rr,z=n.z+Math.sin(an)*rr;E.push(x,y(x,z)+.025,z)}const i1=(i+1)%A;EI.push(i*2,i1*2+1,i*2+1,i*2,i1*2,i1*2+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P0,3));g.setAttribute('aR',new THREE.Float32BufferAttribute(R0,1));g.setIndex(I);g.computeBoundingSphere();const m=new THREE.Mesh(g,fm);m.renderOrder=3;
   const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(E,3));ge.setIndex(EI);ge.computeBoundingSphere();const me=new THREE.Mesh(ge,em);me.renderOrder=3;nobG.add(m,me)}
  nobG.userData={fm,em}}
-function updNoBuild(){const on=!!bmode&&bmode!=='demo'&&!INT.on;if(on)nobMeshes();if(!nobG)return;nobG.visible=on;if(on){const k=.5+.5*Math.sin(gt*4);nobG.userData.fm.opacity=.2+.1*k;nobG.userData.em.opacity=.6+.3*k}}
+function updNoBuild(){const on=!!bmode&&bmode!=='demo'&&!INT.on;if(on)nobMeshes();if(!nobG)return;nobG.visible=on;if(on){const k=.5+.5*Math.sin(gt*3);nobG.userData.fm.uniforms.uT.value=gt;nobG.userData.fm.uniforms.uA.value=.85+.25*k;nobG.userData.em.opacity=.75+.2*k}}
 /* 설치 모드: 가까운 금지 구역 테두리(나와 가장 가까운 곳)에 알약 */
 function drawNoBuild(c,k){if(!bmode||bmode==='demo')return;const g=ghost&&ghost.userData.g;
  if(g&&!g.ok){const q=scr(g.x,groundY(g.x,g.z)+2.4,g.z);if(q[2])uiPill(c,'🚫 '+g.why,q[0],q[1],11.5*k,UIC.red,'#fff','rgba(255,255,255,.3)')}   /* 미리보기가 빨가면 이유를 그 위에 */
@@ -247,7 +251,7 @@ function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=d
  const ws=updWaterState(dt),swim=ws==='swim',smul=speedMul()*(DEV.on?DEV.sp:1);
  let mx=inp.mx,mz=inp.mz,l=Math.hypot(mx,mz);if(l>1){mx/=l;mz/=l;l=1}P.moving=l>.15;if(P.moving&&l<.55){const k=.45/l;mx*=k;mz*=k}const id=curId(),w=WEAP[id],press=inp.fire&&!P.fireWas;P.fireWas=inp.fire;
  if(fishing&&id!=='rod')endFish();
- if(inp.roll&&P.rollT<=0&&P.rollCd<=0&&!swim&&!fishing){P.rollT=.4;P.rollCd=.85;P.inv=.42;if(P.moving){P.rdx=mx/l;P.rdz=mz/l}else{P.rdx=Math.sin(P.rot);P.rdz=Math.cos(P.rot)}a.play('Dodge_Forward',{once:1,lock:.4,force:1,speed:1.6});sfx(300,.14,'sine',.04,.5)}inp.roll=false;
+ if(false&&inp.roll&&P.rollT<=0&&P.rollCd<=0&&!swim&&!fishing){   /* 구르기는 없앴어요(기획자 요청) */P.rollT=.4;P.rollCd=.85;P.inv=.42;if(P.moving){P.rdx=mx/l;P.rdz=mz/l}else{P.rdx=Math.sin(P.rot);P.rdz=Math.cos(P.rot)}a.play('Dodge_Forward',{once:1,lock:.4,force:1,speed:1.6});sfx(300,.14,'sine',.04,.5)}inp.roll=false;
  if(P.rollT>0){P.rollT-=dt;moveEnt(P,P.rdx*12*smul*dt,P.rdz*12*smul*dt);P.rot=Math.atan2(P.rdx,P.rdz)}
  else{const firing=(inp.fire||P.tapT>0)&&!bmode&&!swim&&!w.rod;if(P.moving||firing)P.auto=null;
   if(P.auto&&!P.moving){const t=P.auto,d=dist(P.x,P.z,t.x,t.z),reach=t.k==='move'?.5:t.rr+1.15;P.autoT+=dt;

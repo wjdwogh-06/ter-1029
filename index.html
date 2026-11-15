@@ -27,14 +27,14 @@ button,input{font-family:var(--f)}
 .tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:800;color:#fff;background:var(--brn);line-height:1.25}
 .bar{height:12px;border-radius:7px;background:var(--pn3);overflow:hidden;box-shadow:inset 0 2px 0 rgba(120,86,52,.18)}.bar i{display:block;height:100%;border-radius:7px;box-shadow:inset 0 3px 0 rgba(255,255,255,.35);transition:width .25s}
 .br{display:flex;align-items:center;gap:7px;margin-top:6px}.br span{font-size:13px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff!important;flex:none}.br em{font-style:normal;font-size:12.5px;color:var(--tx);font-weight:800;width:26px;text-align:right}
-#st{left:12px;top:10px;width:286px;height:100px;border-radius:52px 20px 20px 52px;pointer-events:none}
-#ava{position:absolute;left:8px;top:7px;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#FFE3B0,#E9B77A);border:3.5px solid #fff;box-shadow:0 0 0 2.5px var(--amb);overflow:hidden}#ava img{width:84px;height:84px}
+#st{left:12px;top:10px;width:232px;height:100px;border-radius:20px;pointer-events:none}
+#ava{display:none;position:absolute;left:8px;top:7px;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#FFE3B0,#E9B77A);border:3.5px solid #fff;box-shadow:0 0 0 2.5px var(--amb);overflow:hidden}#ava img{width:84px;height:84px}
 /* 시계: 남색 알약 (롱빈터 좌표 표시처럼) */
-#clock{left:50%;top:10px;transform:translateX(-50%);padding:7px 16px;border-radius:24px;display:flex;align-items:center;gap:10px;font-size:15px;white-space:nowrap;pointer-events:none;background:var(--nav);border:2px solid rgba(255,255,255,.14);color:#fff;font-weight:800}
+#clock{display:none!important;left:50%;top:10px;transform:translateX(-50%);padding:7px 16px;border-radius:24px;display:flex;align-items:center;gap:10px;font-size:15px;white-space:nowrap;pointer-events:none;background:var(--nav);border:2px solid rgba(255,255,255,.14);color:#fff;font-weight:800}
 #raidTx{color:#fff!important;background:var(--red);padding:2px 9px;border-radius:10px;font-size:13px!important}#raidTx:empty{display:none}
 #mmw{position:absolute;right:12px;top:10px;width:132px;height:132px;border-radius:50%;overflow:hidden;border:4px solid var(--pn);box-shadow:0 0 0 2.5px var(--brn),0 8px 18px rgba(40,24,12,.35)}#mm{width:132px;height:132px}
 #pills{position:absolute;right:12px;top:150px;display:flex;gap:6px;pointer-events:none}.pill{position:static;display:flex;align-items:center;gap:4px;padding:3px 11px 3px 6px;border-radius:15px;font-size:14px;font-weight:800;border-width:2px}.pill img{width:22px;height:22px}
-#quest{left:12px;top:118px;width:286px;padding:9px 12px 10px;border-radius:16px;pointer-events:none}
+#quest{display:none!important;left:12px;top:118px;width:286px;padding:9px 12px 10px;border-radius:16px;pointer-events:none}
 #quest small{display:inline-block;font-size:11.5px;font-weight:800;color:#fff;background:var(--org);padding:2px 9px;border-radius:9px;letter-spacing:.2px}#quest div{font-size:14.5px;margin-top:5px;line-height:1.3;font-weight:800}
 /* 둥근 버튼: 크림색, 갈색 아이콘, 아래 두께감 */
 .rb{position:absolute;border-radius:50%;background:radial-gradient(circle at 38% 30%,#FFFDF8,#F3E5C9 75%);border:2.5px solid var(--bd);box-shadow:0 5px 0 #CDB085,0 9px 16px rgba(40,24,12,.28);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;color:var(--tx);font-family:var(--f);font-weight:800;padding:0;touch-action:none}
@@ -42,26 +42,32 @@ button,input{font-family:var(--f)}
 #bAtk{right:30px;bottom:26px;width:138px;height:138px;border:3px solid var(--amb);box-shadow:0 0 0 5px rgba(240,162,58,.28),0 6px 0 #CDB085,0 12px 20px rgba(40,24,12,.3)}#bAtk b{position:absolute;bottom:10px;font-size:14px;color:var(--tx)}
 #bAtk.bite{border-color:#fff;box-shadow:0 0 0 8px rgba(240,162,58,.7),0 0 30px rgba(255,190,90,.9)}
 #bAct{right:182px;bottom:18px;width:98px;height:98px;font-size:16px;opacity:.6}#bAct.on{opacity:1;border:3px solid var(--grn);box-shadow:0 0 0 5px rgba(69,184,100,.28),0 5px 0 #CDB085,0 9px 16px rgba(40,24,12,.28)}
-#bRoll{right:178px;bottom:126px;width:74px;height:74px}#bBuild{right:104px;bottom:176px;width:68px;height:68px}#bBag{right:26px;bottom:176px;width:68px;height:68px}
+#bRoll{display:none!important}#bBuild{right:104px;bottom:176px;width:68px;height:68px}#bBag{right:26px;bottom:176px;width:68px;height:68px}
 #bMenu{right:154px;top:10px;width:46px;height:46px}#bZoom{right:154px;top:62px;width:46px;height:46px}#bMenu span,#bZoom span{font-size:19px}
 #joy{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(251,244,230,.12),rgba(251,244,230,.32));border:3px solid rgba(251,244,230,.85);pointer-events:none}#joy i{position:absolute;left:43px;top:43px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#FFFDF8,#EAD8B6);box-shadow:0 4px 0 #CDB085,0 8px 14px rgba(40,24,12,.3)}
 /* 퀵슬롯 */
-#quick{left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:7px;padding:7px 9px}
+#quick{display:none!important}
 .slot{position:relative;width:62px;height:62px;border-radius:15px;background:var(--pn2);border:2px solid var(--pn3);box-shadow:inset 0 -4px 0 rgba(120,86,52,.1);flex:none}
 .slot img{position:absolute;left:6%;top:6%;width:88%;height:88%;pointer-events:none}.slot b{position:absolute;right:5px;bottom:2px;font-size:14px;font-weight:900;color:var(--tx);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
 .slot .key{position:absolute;left:6px;top:3px;font-size:10px;color:var(--mut);pointer-events:none}
 .slot.sel{border-color:var(--amb);background:#FFEBC2;box-shadow:0 0 0 3px rgba(240,162,58,.45),inset 0 -4px 0 rgba(120,86,52,.1)}
-#bbar{left:50%;bottom:92px;transform:translateX(-50%);display:flex;gap:8px;padding:8px 10px;align-items:center;font-size:14px;white-space:nowrap}
+#bbar{left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;padding:8px 10px;align-items:center;font-size:14px;white-space:nowrap}
 /* 버튼: 초록(기본), 크림(보조), 빨강(위험) */
 .btn{background:var(--grn);color:#fff;border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:900;font-family:var(--f);box-shadow:0 4px 0 var(--grnD);white-space:nowrap;min-height:44px}.btn:active,.rb:active{transform:translateY(2px)}
 .btn.g{background:var(--pn2);color:var(--tx);box-shadow:0 4px 0 var(--pn3);border:2px solid var(--pn3)}.btn.r{background:#FBE0DC;color:var(--red);box-shadow:0 4px 0 #EDB9B2}.btn[disabled]{opacity:.45}
 /* 알림: 진한 갈색 알약 */
 #toast{left:50%;top:58px;transform:translateX(-50%);padding:8px 16px;font-size:15px;border-radius:14px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis;background:var(--brn);border-color:var(--brn);color:#fff;font-weight:800}#toast.on{opacity:1}
-#ui.port #clock{left:12px;top:184px;transform:none}#ui.port #toast{top:232px}
-#ui.port #bAtk{bottom:92px}#ui.port #bAct{bottom:86px}#ui.port #bRoll{bottom:194px}#ui.port #bBuild,#ui.port #bBag{bottom:244px}#ui.port #bbar{bottom:330px}
+#ui.port #toast{top:156px}
+#ui.port #bAtk{bottom:40px}#ui.port #bAct{bottom:34px}#ui.port #bBuild,#ui.port #bBag{bottom:192px}#ui.port #bbar{bottom:276px}
 #shade{position:absolute;left:0;top:0;background:rgba(40,24,14,.45)}
 /* 창(가방·제작·건설·지도·상점) */
 #panel{left:50%;top:12px;transform:translateX(-50%);display:flex;flex-direction:column;overflow:hidden;background:var(--pn);border-radius:22px}
+/* 가방은 옆에 붙는 창: 게임은 계속 움직이고, 캐릭터가 보이게 오른쪽(세로 화면은 아래)에 붙어요 */
+#panel.side{transform:none;border-radius:20px}#panel.side #pbody{padding:10px}
+.eq{display:flex;gap:10px;align-items:center;padding:8px;background:var(--pn2);border:2px solid var(--pn3);border-radius:16px;margin-bottom:8px}
+.eq .fig{width:76px;height:76px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#FFE3B0,#E9B77A);border:3px solid #fff;box-shadow:0 0 0 2px var(--amb);overflow:hidden}.eq .fig img{width:76px;height:76px}
+.eq .hand{position:relative;width:64px;height:64px;flex:none;border-radius:15px;background:#FFF7E6;border:2.5px dashed var(--pn3)}.eq .hand.on{border:2.5px solid var(--amb);background:#FFEBC2}.eq .hand img{position:absolute;left:6%;top:6%;width:88%;height:88%}
+.slot .eqm{position:absolute;left:3px;top:2px;font-size:10px;font-weight:900;color:#fff;background:var(--grn);border-radius:7px;padding:0 5px;line-height:15px;pointer-events:none}
 #ptop{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:2px solid var(--pn3);font-size:16px;background:var(--pn2)}
 .tab{padding:9px 15px;border-radius:12px;color:var(--mut);white-space:nowrap;font-weight:800}.tab.on{background:var(--brn);color:#fff}
 #pcoin{color:var(--tx);font-weight:800}
@@ -86,7 +92,7 @@ button,input{font-family:var(--f)}
 <canvas id="game"></canvas><canvas id="fx"></canvas>
 <div id="vig"></div><div id="tsT" class="ts"></div><div id="tsB" class="ts"></div><div id="hurt"></div><div id="cold"></div>
 <div id="ui" class="hide">
- <div id="st" class="pn"><div id="ava"></div><div style="position:absolute;left:102px;top:7px;right:10px"><div style="font-size:15px">생존자 <span id="dayTx" style="color:var(--mut);font-size:12px;font-weight:500"></span></div>
+ <div id="st" class="pn"><div id="ava"></div><div style="position:absolute;left:14px;top:7px;right:12px"><div style="font-size:15px">생존자 <span id="dayTx" style="color:var(--mut);font-size:12px;font-weight:500"></span></div>
   <div class="br"><span style="background:var(--red)">♥</span><div class="bar" style="flex:1"><i id="bHp" style="background:var(--red)"></i></div><em id="tHp"></em></div>
   <div class="br"><span style="background:var(--amb)">●</span><div class="bar" style="flex:1"><i id="bHu" style="background:var(--amb)"></i></div><em id="tHu"></em></div>
   <div class="br"><span style="background:var(--blu)">❄</span><div class="bar" style="flex:1"><i id="bWa" style="background:var(--blu)"></i></div><em id="tWa"></em></div></div></div>
