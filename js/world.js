@@ -209,7 +209,11 @@ let glowTex=null;function glow(color,size,op=.5){if(!glowTex){const c=document.c
 function flames(g,y,s){const fl=[];const mk=(r,h,m,yy,ox,oz)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(r,8,6),flameMat[m]);b.position.set(ox,yy,oz);g.add(b);const t=new THREE.Mesh(new THREE.ConeGeometry(r*.93,h,8),flameMat[m]);t.position.set(ox*1.3,yy+r*.5+h/2,oz*1.3);g.add(t);fl.push(t)};
  mk(.4*s,.95*s,0,y+.42*s,0,0);mk(.27*s,.7*s,1,y+.4*s,.03,.05);mk(.15*s,.42*s,2,y+.36*s,-.02,.08);const gl=glow(0xff7a2a,6*s,.4);gl.position.y=y+.9*s;g.add(gl);return fl}
 function sdef(s){return BUILDS[s.t]||DECO[s.t]}
-function addStruct(s){const d=sdef(s),g=new THREE.Group();const m=mesh(GEO[d.g]);m.scale.setScalar(d.s);g.add(m);const y=d.flat?0:hAt(s.x,s.z);g.position.set(s.x,y-.04+(s.yo||0),s.z);g.rotation.y=s.r||0;
+/* ground as the terrain mesh draws it (2m grid, see buildTerrain) and the highest point of it under a footprint (half sizes f=[x,z]):
+   structures with a ground sheet (d.foot, e.g. the tent) sit on that highest point so no part of the sheet sinks into the grass */
+const gridH=(x,z)=>{const x0=Math.floor(x/2)*2,z0=Math.floor(z/2)*2,fx=(x-x0)/2,fz=(z-z0)/2;return (hAt(x0,z0)*(1-fx)+hAt(x0+2,z0)*fx)*(1-fz)+(hAt(x0,z0+2)*(1-fx)+hAt(x0+2,z0+2)*fx)*fz};
+function footY(x,z,f){let m=-99;for(let i=-1;i<=1.001;i+=.25)for(let j=-1;j<=1.001;j+=.25)m=Math.max(m,gridH(x+i*f[0],z+j*f[1]));return m+.004}
+function addStruct(s){const d=sdef(s),g=new THREE.Group();const m=mesh(GEO[d.g]);m.scale.setScalar(d.s);g.add(m);const y=d.flat?0:d.foot?footY(s.x,s.z,d.foot):hAt(s.x,s.z);g.position.set(s.x,y-.04+(s.yo||0),s.z);g.rotation.y=s.r||0;
  if(d.lamp){const gl=glow(0xffc46a,3.6,.6);gl.position.set(0,d.lamp,.48);gl.visible=false;g.add(gl);PLAMPS.push(gl);s.fl=[];lightsrc.push(s)}
  if(s.t==='fire'){s.fl=flames(g,0,1.1);lightsrc.push(s)}if(s.t==='torch'){s.fl=[];const gl=glow(0xff8a3a,3.5,.35);gl.position.y=1.8;g.add(gl);lightsrc.push(s)}
  if(s.t==='spring'){const d2=new THREE.Mesh(new THREE.CircleGeometry(4.3,24),new THREE.MeshBasicMaterial({color:new THREE.Color(.25,.85,.9),transparent:true,opacity:.82}));d2.rotation.x=-Math.PI/2;d2.position.y=.14;g.add(d2);s.steam=[];for(let i=0;i<7;i++){const sp=glow(0xffffff,4.5,.16);sp.material.blending=THREE.NormalBlending;sp.position.set(Math.cos(i*2.3)*2.4,1+i*.6,Math.sin(i*2.3)*2.4);sp.userData.p=i/7;g.add(sp);s.steam.push(sp)}warmsrc.push(s)}

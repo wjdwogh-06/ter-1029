@@ -1,14 +1,18 @@
 'use strict';
-/* ===== look: 롱빈터풍 새 디자인 — 집, 아이템, 아이콘 =====
-   다른 파일은 고치지 않고 위에 "덮어씌우는" 파일이에요. index.html에서 이 파일 한 줄만 빼면 예전 모습으로 돌아가요.
-   로드 순서: interior.js 다음, ui.js 앞 (ui.js 끝의 boot()가 돌기 전에 감싸 두어야 해요).
+/* ===== look: 롱빈터풍 새 디자인 — 집, 아이템, 설치형, 아이콘, 자연, 분위기 =====
+   기획자가 준 파일(look_1.js)에서 캐릭터 부분만 뺀 것. 다른 파일은 고치지 않고 위에 "덮어씌우는" 파일이에요.
+   index.html에서 이 파일 한 줄만 빼면 예전 모습으로 돌아가요. 로드 순서: interior.js 다음, ui.js 앞.
 
    - 캐릭터는 바꾸지 않아요(기획자 결정: 원래 KayKit 캐릭터 유지). 이 파일에 캐릭터 코드는 없어요.
    - 집: home_A / home_B / 플레이어 오두막(home)을 주황 기와지붕 오두막 4색으로. 충돌 크기(bx,bz)는 예전 그대로예요.
-   - 아이템: 텐트, 나무, 돌, 산딸기, 통조림, 손도끼 모델. 모든 아이콘은 베이지 원판 + 갈색 테두리 스티커로.
+   - 아이템: 텐트, 나무, 돌, 산딸기, 통조림, 손도끼 모델.
+   - 설치형 외형(1단계): 울타리 4종 + 문 4종. 움직이는 부품과 효과 자리는 lkModel 설명 참고, 목록은 LKB.
+   - 아이콘: 분류별 색 원판 + 크게 삐져나온 물건 + 굵은 외곽선 + 셀 음영 (LK_CAT).
+   - 분위기(LK_MOOD): 매끈한 음영, 따뜻한 햇빛 + 보랏빛 그림자, 진한 잔디, 롱빈터풍 나무·바위·덤불, 파란 바다.
    새 전역 이름은 전부 LK / lk 로 시작해요. */
 
-const LK_ICON_DISC=true;   /* false 로 바꾸면 아이콘 뒤 베이지 원판 없이 테두리만 */
+const LK_ICON_DISC=true;   /* false 로 바꾸면 아이콘 뒤 색 원판 없이 테두리만 */
+const LK_MOOD=true;        /* 롱빈터 분위기: 매끈한 음영, 따뜻한 햇빛 + 보랏빛 그림자, 진한 초록 잔디 + 흰 점. false 면 예전 화면 */
 
 /* ---------- 집: 주황 기와지붕 오두막 ---------- */
 /* W,D = 벽 크기, H = 벽 높이, RH = 지붕 높이. 문은 +z(카메라 쪽) */
@@ -61,23 +65,185 @@ function lkAxe(){const WD=0xb88350,WD2=0x8d5f36,ST=0xc9d0d8,p=[pt(cyl(.045,.055,
  for(let i=0;i<4;i++)p.push(pt(new THREE.TorusGeometry(.057,.01,4,8),0x5e3e22,[0,-.27+i*.07,0],[Math.PI/2,0,0]));
  p.push(pt(ex([[-.06,.72],[-.28,.68],[-.44,.62],[-.48,.86],[-.44,1.08],[-.28,1.03],[-.06,.99]],.06,.01),ST,[0,0,0],[0,Math.PI/2,0]),pt(ex([[-.42,.63],[-.48,.62],[-.52,.86],[-.48,1.1],[-.42,1.08],[-.46,.86]],.04,.008),0xeef2f5,[0,0,0],[0,Math.PI/2,0]),
   pt(box(.16,.3,.1),0xd9483e,[.02,.86,0]),pt(box(.06,.14,.08),ST,[.12,.86,0]));return mg(p)}
+/* ---------- 설치형 외형: 움직이는 부품 + 효과 자리 ----------
+   lkModel(키, 고정 조각들, 부품, 효과자리)로 만들어요.
+   - GEO[키]        : 전부 합친 모양 (건설 미리보기 고스트, 아이콘용)
+   - GEO[키+'_b']   : 고정 부분만. 실제로 설치되면 이걸 쓰고, 부품은 따로 붙여요
+   - 부품(parts)    : {이름:{g:[조각], pv:[회전 중심], glow:빛나는 재질?, par:부모 부품}} → 설치되면 s.lk.parts.이름 (Mesh, 회전 중심에 놓임)
+   - 효과자리(anchors): {이름:[x,y,z]} → s.lk.anchors.이름 (빈 Object3D, 불꽃·연기·물보라 같은 효과를 붙일 자리)
+   애니메이션은 예) s.lk.parts.door.rotation.y = -Math.PI/2 (문이 앞쪽 +z로 열림) 처럼 부품만 돌리면 돼요. */
+const LKP={},LKGLOW=new THREE.MeshBasicMaterial({vertexColors:true});
+function lkModel(key,base,parts,anchors){const full=base.slice(),R={parts:[],anchors:anchors||{}},wp={};
+ for(const n in parts||{}){const P=parts[n],o=P.par?wp[P.par]:[0,0,0],w=[o[0]+P.pv[0],o[1]+P.pv[1],o[2]+P.pv[2]];wp[n]=w;GEO[key+'_'+n]=mg(P.g);R.parts.push({n,pv:P.pv,glow:!!P.glow,par:P.par||null});
+  P.g.forEach(q=>{const c=q.clone();c.translate(w[0],w[1],w[2]);full.push(c)})}
+ GEO[key+'_b']=mg(base);GEO[key]=mg(full);LKP[key]=R}
+function lkAttach(s){const d=sdef(s);if(!d||!s.m)return;const R=LKP[d.g],m=s.m.children[0];if(!R||!m)return;m.geometry=GEO[d.g+'_b'];s.lk={parts:{},anchors:{}};
+ for(const q of R.parts){const pm=mesh(GEO[d.g+'_'+q.n],q.glow?LKGLOW:MAT,!q.glow);pm.name=q.n;pm.position.fromArray(q.pv);(q.par?s.lk.parts[q.par]:m).add(pm);s.lk.parts[q.n]=pm}
+ for(const n in R.anchors){const o=new THREE.Object3D();o.name='@'+n;o.position.fromArray(R.anchors[n]);m.add(o);s.lk.anchors[n]=o}}
+/* 철망 무늬: 너비 W, 높이 H 사각형 안에 ±45° 철사 */
+function lkLattice(W,H,x0,y0,z,step,col,th){const p=[],add=(u0,v0,u1,v1,sg)=>{const L=Math.hypot(u1-u0,v1-v0);if(L<.03)return;p.push(pt(box(L,th,th),col,[x0+(u0+u1)/2,y0+(v0+v1)/2,z],[0,0,sg*Math.PI/4]))};
+ for(let k=-H;k<=W;k+=step){const u0=Math.max(0,k),u1=Math.min(W,H+k);if(u1>u0)add(u0,u0-k,u1,u1-k,1)}
+ for(let k=step/2;k<=W+H;k+=step){const u0=Math.max(0,k-H),u1=Math.min(W,k);if(u1>u0)add(u0,k-u0,u1,k-u1,-1)}return p}
+
+/* 설치형 카탈로그: 나중에 BUILDS나 ITEMS에 연결할 때 쓰는 정보. lkDefOf(id)는 BUILDS에 바로 넣을 수 있는 모양으로 돌려줘요
+   예) BUILDS.fence_iron=Object.assign(lkDefOf('fence_iron'),{c:{scrap:4},d:'설명'})  ← 재료와 설명은 기획에 맞게 */
+const LKB={
+ fence_wood: {n:'나무 울타리',g:'lk_fence_wood',bx:1,bz:.25,hp:70,grid:1},
+ fence_stone:{n:'돌 울타리',g:'lk_fence_stone',bx:1,bz:.4,hp:420,grid:1},
+ fence_iron: {n:'철제 울타리',g:'lk_fence_iron',bx:1,bz:.25,hp:650,grid:1},
+ fence_ti:   {n:'티타늄 울타리',g:'lk_fence_ti',bx:1,bz:.25,hp:1000,grid:1},
+ gate_wood:  {n:'나무 울타리 문',g:'lk_gate_wood',bx:1,bz:.25,hp:60,grid:1,gate:1},
+ gate_stone: {n:'돌 울타리 문',g:'lk_gate_stone',bx:1,bz:.4,hp:380,grid:1,gate:1},
+ gate_iron:  {n:'철제 울타리 문',g:'lk_gate_iron',bx:1,bz:.25,hp:600,grid:1,gate:1},
+ gate_ti:    {n:'티타늄 울타리 문',g:'lk_gate_ti',bx:1,bz:.25,hp:950,grid:1,gate:1}};
+const lkDefOf=id=>{const b=LKB[id];const o={n:b.n,g:b.g,s:1,bx:b.bx,bz:b.bz,hp:b.hp,c:{}};['grid','gate','pass'].forEach(k=>{if(b[k])o[k]=b[k]});return o};
+
+/* 둥근 모서리 상자: w×h×d, cr = 앞에서 본 모서리 둥글기, bv = 테두리 깎기. 아기자기한 덩어리감의 기본 조각 */
+function lkRb(w,h,d,cr,bv){bv=Math.min(bv===undefined?.03:bv,w/2-.002,h/2-.002,d/2-.002);const W=w/2-bv,H=h/2-bv,c=Math.max(.001,Math.min(cr===undefined?.04:cr,W-.001,H-.001)),s=new THREE.Shape();
+ s.moveTo(-W+c,-H);s.lineTo(W-c,-H);s.quadraticCurveTo(W,-H,W,-H+c);s.lineTo(W,H-c);s.quadraticCurveTo(W,H,W-c,H);s.lineTo(-W+c,H);s.quadraticCurveTo(-W,H,-W,H-c);s.lineTo(-W,-H+c);s.quadraticCurveTo(-W,-H,-W+c,-H);
+ const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(.002,d-2*bv),bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:2,steps:1,curveSegments:4});g.translate(0,0,-Math.max(.002,d-2*bv)/2);return g}
+/* 울타리: 한 칸은 x축으로 2m(-1~1), 앞은 +z. 굵고 둥근 덩어리 몇 개로 단순하게 */
+const LKW={post:0xa9652f,cap:0x8e5226,rail:0xb8703a,pl:[0xeda353,0xe0913f,0xf0ab5c,0xe69a48]},LKS={bl:[0xcdb6b5,0xbea7a7,0xd8c4c3],cap:0xa8918f,moss:0x7cbf5a},LKI={post:0x8f99a4,cap:0x6c7580,wire:0xbfc8d1},LKT={post:0xf3f6f8,cap:0x5d6974,pn:0xe2e9ef,in:0xcbd6df,g:0x67d6ff};
+const lkPlank=(x,y,h,c,w=.36)=>pt(lkRb(w,h,.1,w*.46,.025),c,[x,y,0]);
+function lkFenceWood(){const p=[];for(const x of[-.92,.92])p.push(pt(lkRb(.22,1.25,.22,.05,.04),LKW.post,[x,.625,0]),pt(lkRb(.27,.09,.27,.04,.025),LKW.cap,[x,1.29,0]));
+ p.push(pt(lkRb(1.7,.15,.08,.05,.025),LKW.rail,[0,.78,-.09]),pt(lkRb(1.7,.15,.08,.05,.025),LKW.rail,[0,.34,-.09]));[-.6,-.2,.2,.6].forEach((x,i)=>p.push(lkPlank(x,.6,i%2?1.04:1.1,LKW.pl[i])));return p}
+function lkFenceStone(){const p=[];let k=0;for(const[y,xs,ws]of[[.23,[-.66,0,.66],[.62,.62,.62]],[.69,[-.79,-.26,.27,.79],[.38,.6,.42,.38]]])xs.forEach((x,i)=>p.push(pt(lkRb(ws[i]+.02,.44,.6,.12,.06),LKS.bl[(k++)%3],[x,y,0])));
+ p.push(pt(lkRb(2.04,.13,.68,.05,.04),LKS.cap,[0,.97,0]));for(const[x,z,r]of[[-.55,.12,.13],[.62,-.1,.1]])p.push(pt(new THREE.SphereGeometry(r,8,5),LKS.moss,[x,1.04,z],0,[1.4,.6,1.1]));return p}
+function lkFenceIron(){const p=[];for(const x of[-.93,.93])p.push(pt(lkRb(.17,1.6,.17,.07,.04),LKI.post,[x,.8,0]),pt(new THREE.SphereGeometry(.11,10,7),LKI.cap,[x,1.64,0]));
+ for(const y of[1.44,.16])p.push(pt(lkRb(1.72,.1,.1,.045,.03),LKI.post,[0,y,0]));return p.concat(lkLattice(1.7,1.22,-.85,.19,0,.34,LKI.wire,.045))}
+function lkFenceTiBase(){const p=[];for(const x of[-.92,.92])p.push(pt(lkRb(.22,1.6,.22,.09,.05),LKT.post,[x,.8,0]),pt(lkRb(.27,.1,.27,.05,.03),LKT.cap,[x,1.64,0]));
+ p.push(pt(lkRb(1.64,1.2,.12,.2,.05),LKT.pn,[0,.8,0]),pt(lkRb(1.38,.92,.04,.16,.02),LKT.in,[0,.8,.06]));return p}
+const lkTiGlow=()=>[pt(lkRb(1.38,.09,.06,.045,.02),LKT.g,[0,.8,.085]),...[-.92,.92].map(x=>pt(lkRb(.07,.3,.05,.03,.015),LKT.g,[x,1.2,.11]))];
+/* 문: 경첩이 왼쪽. 문짝은 부품 'door' (경첩 기준 +x로 뻗음) */
+function lkGateWood(){const base=[],door=[];for(const x of[-.94,.94])base.push(pt(lkRb(.22,1.42,.22,.05,.04),LKW.post,[x,.71,0]),pt(lkRb(.27,.09,.27,.04,.025),LKW.cap,[x,1.46,0]));
+ [.22,.62,1.02,1.42].forEach((u,i)=>door.push(lkPlank(u,.64,i%2?1.06:1.12,LKW.pl[i],.38)));
+ for(const y of[.36,.9])door.push(pt(lkRb(1.6,.15,.08,.05,.025),LKW.rail,[.82,y,-.09]));door.push(pt(lkRb(1.5,.15,.08,.05,.025),LKW.rail,[.82,.63,-.09],[0,0,.36]),pt(new THREE.SphereGeometry(.07,10,7),0x3b2f28,[1.5,.68,.08]));
+ lkModel('lk_gate_wood',base,{door:{g:door,pv:[-.84,0,0]}})}
+function lkGateStone(){const base=[],door=[];for(const x of[-.8,.8]){[0,1].forEach(r=>base.push(pt(lkRb(.42,.62,.52,.1,.05),LKS.bl[(r+(x>0?1:0))%3],[x,.32+r*.64,0])));base.push(pt(lkRb(.5,.12,.6,.05,.035),LKS.cap,[x,1.34,0]),pt(new THREE.SphereGeometry(.1,8,5),LKS.moss,[x+.06,1.41,.1],0,[1.4,.6,1.1]))}
+ [.2,.6,.98].forEach((u,i)=>door.push(lkPlank(u,.62,1.08,[0x9a6236,0x8c582f,0xa66b3d][i],.38)));for(const y of[.34,.9])door.push(pt(lkRb(1.18,.1,.13,.04,.025),0x4a4f57,[.59,y,0]));door.push(pt(new THREE.TorusGeometry(.08,.025,6,12),0x4a4f57,[1.0,.62,.08]));
+ lkModel('lk_gate_stone',base,{door:{g:door,pv:[-.58,0,0]}})}
+function lkGateIron(){const base=[],door=[];for(const x of[-.94,.94])base.push(pt(lkRb(.18,1.66,.18,.07,.04),LKI.post,[x,.83,0]),pt(new THREE.SphereGeometry(.12,10,7),LKI.cap,[x,1.7,0]));
+ door.push(pt(lkRb(1.74,.1,.1,.045,.03),LKI.post,[.87,1.46,0]),pt(lkRb(1.74,.1,.1,.045,.03),LKI.post,[.87,.16,0]),pt(lkRb(.1,1.38,.1,.045,.03),LKI.post,[.05,.81,0]),pt(lkRb(.1,1.38,.1,.045,.03),LKI.post,[1.69,.81,0]),pt(lkRb(.1,.2,.12,.04,.02),0x4a5058,[1.69,.84,.07]));
+ lkModel('lk_gate_iron',base,{door:{g:door.concat(lkLattice(1.54,1.2,.1,.21,0,.34,LKI.wire,.045)),pv:[-.88,0,0]}})}
+function lkGateTi(){const base=[],door=[];for(const x of[-.94,.94])base.push(pt(lkRb(.22,1.68,.22,.09,.05),LKT.post,[x,.84,0]),pt(lkRb(.27,.1,.27,.05,.03),LKT.cap,[x,1.72,0]));
+ door.push(pt(lkRb(1.64,1.24,.12,.2,.05),LKT.pn,[.84,.82,0]),pt(lkRb(1.38,.94,.04,.16,.02),LKT.in,[.84,.82,.06]),pt(lkRb(.2,.28,.05,.05,.02),0x3a434c,[1.42,.96,.1]));
+ lkModel('lk_gate_ti',base,{door:{g:door,pv:[-.83,0,0]},doorGlow:{g:[pt(lkRb(1.38,.09,.06,.045,.02),LKT.g,[.84,.82,.085]),pt(lkRb(.1,.06,.03,.02,.01),0x6bff9a,[1.42,1.03,.13])],pv:[0,0,0],glow:true,par:'door'},postGlow:{g:[-.94,.94].map(x=>pt(lkRb(.07,.3,.05,.03,.015),LKT.g,[x,1.28,.11])),pv:[0,0,0],glow:true}})}
+function lkBuildStage1(){
+ lkModel('lk_fence_wood',lkFenceWood());lkModel('lk_fence_stone',lkFenceStone());lkModel('lk_fence_iron',lkFenceIron());lkModel('lk_fence_ti',lkFenceTiBase(),{glow:{g:lkTiGlow(),pv:[0,0,0],glow:true}});
+ lkGateWood();lkGateStone();lkGateIron();lkGateTi();
+ Object.assign(BUILDS.fence,{g:'lk_fence_wood',s:1});Object.assign(BUILDS.wall,{g:'lk_fence_stone',s:1});Object.assign(BUILDS.gate,{g:'lk_gate_stone',s:1})}
+
 function lkBuildGeo(){
  LK_COT.forEach((c,i)=>{GEO['lk_cotA_'+i]=lkCottage(2.9,3.0,2.15,1.3,c[0],c[1],c[2]);GEO['lk_cotB_'+i]=lkCottage(3.3,4.0,2.35,1.45,c[0],c[1],c[2])});
  Object.assign(DECO.home_A,{g:'lk_cotA_0',s:1});Object.assign(DECO.home_B,{g:'lk_cotB_1',s:1});Object.assign(BUILDS.home,{g:'lk_cotA_3',s:1});
  GEO.mtent=lkTent();GEO.lk_logs=lkLogs();GEO.lk_stones=lkStones();GEO.lk_berry=lkBerry();GEO.can=lkCan();GEO.axe_m=lkAxe();
  ITEMS.wood.ic='lk_logs';ITEMS.stone.ic='lk_stones';ITEMS.berry.ic='lk_berry';
+ lkBuildStage1();
+ if(LK_MOOD)for(const k in GEO)if(/^lk_/.test(k)||k==='mtent'||k==='can'||k==='axe_m')lkSmooth(GEO[k],50);
  for(const k in GEO)if(!GEO[k].boundingSphere)GEO[k].computeBoundingSphere()}
 
-/* ---------- 아이콘: 베이지 원판 + 갈색 테두리 스티커 ---------- */
-function lkSticker(im){const N=128,c=document.createElement('canvas');c.width=c.height=N;const k=c.getContext('2d');
- if(LK_ICON_DISC){const g=k.createRadialGradient(N*.42,N*.36,4,N/2,N/2,N*.48);g.addColorStop(0,'#fbf2de');g.addColorStop(1,'#ead5ab');k.fillStyle=g;k.beginPath();k.arc(N/2,N/2,N*.46,0,Math.PI*2);k.fill();k.lineWidth=3;k.strokeStyle='#d6ba88';k.stroke()}
- const o=document.createElement('canvas');o.width=o.height=N;const q=o.getContext('2d');q.drawImage(im,0,0,N,N);q.globalCompositeOperation='source-in';q.fillStyle='#5b3a24';q.fillRect(0,0,N,N);
- const pd=N*.13,S2=N-pd*2;for(let a=0;a<16;a++)k.drawImage(o,pd+Math.cos(a*.3927)*3.2,pd+Math.sin(a*.3927)*3.2,S2,S2);k.drawImage(im,pd,pd,S2,S2);return c.toDataURL()}
-function lkIcons(){const ids=Object.keys(ICON);let left=ids.length;const done=()=>{if(--left>0)return;try{if(S&&S.quick&&typeof drawQuick==='function')drawQuick();hudDirty=true}catch(e){}};
- ids.forEach(id=>{const im=new Image();im.onload=()=>{try{ICON[id]=lkSticker(im)}catch(e){}done()};im.onerror=done;im.src=ICON[id]})}
+/* ---------- 아이콘: 분류별 색 원판 + 크게 삐져나온 물건 + 굵은 외곽선 + 3단 셀 음영 ----------
+   분류: build 설치형(산호) / tool 도구(하늘) / food 음식·회복(연두) / gun 무기·탄약(회청) / res 재료(베이지) / rare 고급(보라)
+   ICON[아이템 id] 에 들어가요. 설치형 카탈로그(LKB)도 ICON['fence_iron'] 처럼 같은 id로 미리 만들어 둬요. */
+const LK_CAT={build:['#f9a08a','#ec735a'],tool:['#b6dbef','#86b9d8'],food:['#b7e6c4','#82cc9c'],gun:['#d3d8e0','#a9b3c0'],res:['#f8ebcd','#e6cf9f'],rare:['#cdb4f0','#a386dc']};
+const lkCatOf=id=>{const it=ITEMS[id];if(!it)return'build';const t=it.ty;return t==='kit'?'build':(t==='tool')?'tool':(t==='food'||t==='heal'||t==='fish')?'food':(t==='gun'||t==='throw'||t==='ammo')?'gun':'res'};
+const lkRotOf=id=>{const it=ITEMS[id];return it.ty==='gun'?[.3,-1.0,.25]:/^c?f_/.test(id)?[.32,-Math.PI/2+.32,0]:id==='rod'?[0,-1.57,-.25]:(it.ty==='tool'||id==='grenade')?[.2,.3,-.6]:[.5,-.7,0]};
+let LKR=null;
+function lkIconKit(){if(LKR)return LKR;const r=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});r.outputEncoding=THREE.sRGBEncoding;r.setPixelRatio(1);r.setSize(128,128);
+ const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0xb4bccb,1.0));const d=new THREE.DirectionalLight(0xfff6e6,1.0);d.position.set(2,4,3);sc.add(d);
+ const gm=new THREE.DataTexture(new Uint8Array([150,215,255]),3,1,THREE.LuminanceFormat);gm.minFilter=gm.magFilter=THREE.NearestFilter;gm.generateMipmaps=false;gm.needsUpdate=true;
+ const m=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshToonMaterial({vertexColors:true,gradientMap:gm,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1})),
+  e=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x3b2a1f,transparent:true,opacity:.45})),piv=new THREE.Group();piv.add(m,e);sc.add(piv);
+ const cv=document.createElement('canvas');cv.width=cv.height=128;return LKR={r,sc,m,e,piv,cv,cx:cv.getContext('2d'),c:new THREE.OrthographicCamera(-1,1,1,-1,.1,60)}}
+/* 1) 한 번 그려서 실루엣 크기를 재고 2) 원판 안에 꼭 들어가게 카메라를 맞춰 다시 그려요 */
+function lkIconFrom(g,rot,cat){const L=lkIconKit(),N=128,DR=N*.44,v=new THREE.Vector3(),bx=new THREE.Box3();L.m.geometry=g;g.computeBoundingBox();g.boundingBox.getCenter(v);L.m.position.copy(v).multiplyScalar(-1);L.e.position.copy(L.m.position);
+ L.piv.rotation.set(rot[0],rot[1],rot[2]);L.piv.updateMatrixWorld(true);bx.setFromObject(L.m);bx.getSize(v);let rr=Math.max(v.x,v.y)*.5;bx.getCenter(v);let px=v.x,py=v.y;
+ const shot=()=>{Object.assign(L.c,{left:-rr,right:rr,top:rr,bottom:-rr});L.c.position.set(px,py,20);L.c.updateProjectionMatrix();L.r.render(L.sc,L.c)};
+ L.e.visible=false;shot();L.cx.clearRect(0,0,N,N);L.cx.drawImage(L.r.domElement,0,0);const a=L.cx.getImageData(0,0,N,N).data;let x0=N,x1=0,y0=N,y1=0;
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(a[(y*N+x)*4+3]>24){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+ if(x1>=x0){const mx=(x0+x1)/2,my=(y0+y1)/2;let mr=1;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(a[(y*N+x)*4+3]>24){const d=Math.hypot(x-mx,y-my);if(d>mr)mr=d}
+  const wp=2*rr/N;px+=(mx-N/2)*wp;py-=(my-N/2)*wp;rr*=mr/(DR-6)}
+ const eg=new THREE.EdgesGeometry(g,40);L.e.geometry=eg;L.e.visible=true;shot();eg.dispose();
+ const c=document.createElement('canvas');c.width=c.height=N;const k=c.getContext('2d');
+ if(LK_ICON_DISC){const cc=LK_CAT[cat]||LK_CAT.res,gr=k.createRadialGradient(N*.42,N*.38,4,N/2,N/2,DR);gr.addColorStop(0,cc[0]);gr.addColorStop(1,cc[1]);k.fillStyle=gr;k.beginPath();k.arc(N/2,N/2,DR,0,Math.PI*2);k.fill()}
+ const sl=document.createElement('canvas');sl.width=sl.height=N;const sq=sl.getContext('2d');sq.drawImage(L.r.domElement,0,0);sq.globalCompositeOperation='source-in';sq.fillStyle='#3b2a1f';sq.fillRect(0,0,N,N);
+ for(let i=0;i<16;i++)k.drawImage(sl,Math.cos(i*.3927)*3,Math.sin(i*.3927)*3);k.drawImage(L.r.domElement,0,0);return c.toDataURL()}
+function lkIcons(){try{for(const id in ITEMS){const g=GEO[ITEMS[id].ic];if(g)try{ICON[id]=lkIconFrom(g,lkRotOf(id),lkCatOf(id))}catch(e){}}
+  if(GEO.coin_stack_small)ICON.coin=lkIconFrom(GEO.coin_stack_small,[.6,-.6,0],'res');
+  for(const id in LKB){const b=LKB[id];if(GEO[b.g])ICON[id]=lkIconFrom(GEO[b.g],b.ir||[.42,-.62,0],b.cat||'build')}}
+ finally{if(LKR){LKR.r.dispose();LKR.r.forceContextLoss();LKR=null}}
+ try{if(S&&S.quick&&typeof drawQuick==='function')drawQuick();hudDirty=true}catch(e){}}
+
+/* ---------- 분위기 (LK_MOOD) ---------- */
+/* 매끈한 음영: 같은 자리의 꼭짓점끼리 노멀을 평균 (각도 deg 이상 꺾인 모서리는 그대로 또렷하게) */
+function lkSmooth(g,deg){const P=g.attributes.position,n=P.count;if(!n||n%3)return;const fn=new Float32Array(n*3),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+ for(let i=0;i<n;i+=3){a.fromBufferAttribute(P,i);b.fromBufferAttribute(P,i+1).sub(a);c.fromBufferAttribute(P,i+2).sub(a);b.cross(c);b.divideScalar(b.length()||1);for(let k=0;k<3;k++){fn[(i+k)*3]=b.x;fn[(i+k)*3+1]=b.y;fn[(i+k)*3+2]=b.z}}
+ const map=new Map(),Q=1e4;for(let i=0;i<n;i++){const k=Math.round(P.getX(i)*Q)+','+Math.round(P.getY(i)*Q)+','+Math.round(P.getZ(i)*Q);let L=map.get(k);if(!L)map.set(k,L=[]);L.push(i)}
+ const cs=Math.cos(deg*Math.PI/180),out=new Float32Array(n*3);
+ map.forEach(L=>{for(const i of L){let x=0,y=0,z=0;for(const j of L)if(fn[i*3]*fn[j*3]+fn[i*3+1]*fn[j*3+1]+fn[i*3+2]*fn[j*3+2]>=cs){x+=fn[j*3];y+=fn[j*3+1];z+=fn[j*3+2]}const l=Math.hypot(x,y,z)||1;out[i*3]=x/l;out[i*3+1]=y/l;out[i*3+2]=z/l}});
+ g.setAttribute('normal',new THREE.BufferAttribute(out,3))}
+/* 땅: 진하고 선명한 잔디 + 짧은 연두색 붓자국, 얼룩무늬는 약하게, 모래·흙은 따뜻한 노란빛 */
+if(LK_MOOD){const _ob=TERR.onBeforeCompile;TERR.onBeforeCompile=sh=>{_ob(sh);sh.fragmentShader=sh.fragmentShader.replace('diffuseColor.rgb*=.83+.3*pa;','diffuseColor.rgb*=.94+.09*pa;').replace('1.-.085*smoothstep(.66,.72,n3)+.06*smoothstep(.3,.24,n3)','1.-.03*smoothstep(.66,.72,n3)+.02*smoothstep(.3,.24,n3)').replace('#include <alphamap_fragment>',`{vec3 c=diffuseColor.rgb;float land=smoothstep(.15,.6,vWP.y),gr=smoothstep(-.01,.13,c.g-max(c.r,c.b))*land;
+ c=mix(c,c*vec3(.38,.74,.92),gr);c=mix(c,c*vec3(1.14,1.03,.66),(1.-gr)*smoothstep(.03,.2,c.r-c.b)*smoothstep(-.4,.2,vWP.y)*.85);
+ vec2 q=vWP.xz*1.7,ci=floor(q),f=fract(q),o=vec2(th(ci+3.7),th(ci+11.1))*.5+.25;float an=-.5+(th(ci+5.3)-.5)*.5;vec2 p=f-o;p=vec2(p.x*cos(an)-p.y*sin(an),p.x*sin(an)+p.y*cos(an));
+ float ds=(1.-smoothstep(.1,.15,abs(p.x)))*(1.-smoothstep(.022,.045,abs(p.y)))*step(.42,th(ci+23.9));c=mix(c,vec3(.6,.8,.36),ds*gr*.62);diffuseColor.rgb=c;}
+ #include <alphamap_fragment>`)}}
+/* ---------- 자연: 롱빈터풍 나무·바위·덤불 (LK_MOOD) ----------
+   기존 GEO 키를 그대로 덮어써서 배치·충돌·채집은 하나도 안 바뀌어요. 크기도 예전 모델과 비슷하게 맞췄어요(높이 약 1.1, 월드에서 ×3.4~5.2). */
+function lkShade(g,lo,hi){g.computeBoundingBox();const b=g.boundingBox,P=g.attributes.position,c=g.attributes.color.array,h=(b.max.y-b.min.y)||1;for(let i=0;i<P.count;i++){const k=lo+(hi-lo)*(P.getY(i)-b.min.y)/h;c[i*3]*=k;c[i*3+1]*=k;c[i*3+2]*=k}return g}
+/* 우산처럼 처진 침엽수 층: 꼭대기 → 볼록한 중간 고리 → 들쭉날쭉한 치맛단 */
+function lkTier(r,h,n){const v=[],A=[0,h,0],m=[],e=[];for(let i=0;i<n;i++){const a=i/n*6.283;m.push([Math.cos(a)*r*.6,h*.5,Math.sin(a)*r*.6])}
+ for(let j=0;j<2*n;j++){const a=j/(2*n)*6.283,rr=j%2?r:r*.8;e.push([Math.cos(a)*rr,j%2?0:h*.1,Math.sin(a)*rr])}
+ const tri=(p,q,s)=>{const ux=q[0]-p[0],uy=q[1]-p[1],uz=q[2]-p[2],wx=s[0]-p[0],wy=s[1]-p[1],wz=s[2]-p[2],nx=uy*wz-uz*wy,ny=uz*wx-ux*wz,nz=ux*wy-uy*wx,cx=(p[0]+q[0]+s[0])/3,cy=(p[1]+q[1]+s[1])/3+h,cz=(p[2]+q[2]+s[2])/3;if(nx*cx+ny*cy+nz*cz<0)v.push(...p,...s,...q);else v.push(...p,...q,...s)};
+ for(let i=0;i<n;i++){const i1=(i+1)%n;tri(A,m[i],m[i1]);tri(m[i],e[2*i],e[2*i+1]);tri(m[i],e[2*i+1],m[i1]);tri(m[i1],e[2*i+1],e[(2*i+2)%(2*n)])}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return g}
+function lkPatch(r,c,n=9,sd=1){r*=.62;n=13;const g=new THREE.CircleGeometry(r,n);g.rotateX(-Math.PI/2);const P=g.attributes.position;for(let i=1;i<P.count;i++){const k=.88+.24*hash(i,sd,61);P.setX(i,P.getX(i)*k);P.setZ(i,P.getZ(i)*k)}return pt(g,c,[0,.028,0])}
+function lkBoulder(r,c,s,pos,sy=.72){const g=new THREE.IcosahedronGeometry(r,r<.13?0:1),P=g.attributes.position;for(let i=0;i<P.count;i++){let x=P.getX(i)/r,y=P.getY(i)/r,z=P.getZ(i)/r;const f=1+.17*Math.sin(x*3.1+s)+.13*Math.sin(y*4.3+s*2.1)+.12*Math.sin(z*3.7+s*3.3);y=Math.max(y*f*sy,-.3);P.setXYZ(i,x*f*r,(y+.3)*r,z*f*r)}
+ return lkShade(pt(g,c,pos,[0,s,0]),.8,1.08)}
+function lkCypress(h,r,c,pos){const pts=[],n=7;for(let i=0;i<=n;i++){const t=i/n,env=Math.pow(Math.sin(Math.PI*Math.pow(t,.62)),.8)*r;pts.push(new THREE.Vector2(Math.max(.004,env*(i%2?1:.74)),.04+t*h))}
+ return lkShade(pt(new THREE.LatheGeometry(pts,6),c,pos),.78,1.1)}
+const lkBlob=(r,c,pos,sy=.82)=>lkShade(pt(new THREE.SphereGeometry(r,7,4),c,pos,[0,pos[0]*9,0],[1,sy,1]),.76,1.1);
+function lkPine(o){const TR=0xa85c34,p=[lkPatch(o.pr,0x7d5140,9,o.sd),lkShade(pt(cyl(o.tr*.6,o.tr,o.th,6),TR,[.012,o.th/2-.08,0],[0,0,-.04]),.8,1.05)];
+ o.tiers.forEach(([y,r,h],i)=>p.push(lkShade(pt(lkTier(r,h,o.n||6),i%2?0x2f8a5a:0x35945f,[.02+(i%2?.012:-.008),y,0],[0,i*.7,0]),.7,1.12)));return p}
+function lkLeafTree(TR,PC,cols,band){const h=.56,p=[lkPatch(.34,PC,9,7),lkShade(pt(cyl(.04,.062,h+.14,6),TR,[.01,h/2-.07,0],[0,0,-.05]),.85,1.05)];
+ if(band)for(const y of[.14,.3,.46])p.push(pt(new THREE.CylinderGeometry(.056,.06,.022,5,1,true),0x3a3a36,[.01,y,0],[0,y*9,0],[1,1,.7]));
+ [[0,h+.36,0,.3],[.22,h+.2,.08,.23],[-.2,h+.24,-.1,.22],[.02,h+.14,.2,.19]].forEach((b,i)=>p.push(lkBlob(b[3],cols[i%cols.length],[b[0],b[1],b[2]])));return p}
+function lkDT(k,g){lkSmooth(g,60);DT[k]={p:g.attributes.position.array,c:g.attributes.color.array,n:g.attributes.normal.array,cnt:g.attributes.position.count}}
+function lkNature(){const S=(k,p,deg=55)=>{const g=mg(p);lkSmooth(g,deg);g.computeBoundingSphere();GEO[k]=g};
+ S('tree_single_A',lkPine({sd:1,pr:.3,tr:.05,th:.62,tiers:[[.34,.3,.3],[.56,.24,.28],[.78,.17,.3]]}));
+ S('tree_single_B',lkPine({sd:2,pr:.36,tr:.06,th:.7,n:7,tiers:[[.3,.36,.3],[.5,.3,.28],[.7,.23,.26],[.88,.15,.24]]}));
+ {const G=[0x5f9f45,0x55933e,0x6bab4c],p=[lkPatch(.9,0x7d5140,11,3)];[[-.3,-.12,.98,.2],[.22,-.26,.8,.17],[.08,.3,.66,.15],[-.38,.34,.5,.12]].forEach(([x,z,h,r],i)=>p.push(lkCypress(h,r,G[i%3],[x,0,z])));
+  p.push(lkBlob(.15,0x3f9a55,[.46,.1,.14]),lkBlob(.11,0x4aa85e,[-.02,.07,-.46]),lkBoulder(.1,0x8f8f97,2,[.36,0,.42]));S('trees_A_small',p)}
+ /* 잎나무는 회색 잎 + 인스턴스 색(참나무·단풍·황금)이라, 줄기와 흙은 그 색으로 미리 나눠 둔 값을 써요 */
+ for(const[k,tc]of[['t_leaf',[2.4,.25,.7]],['t_fall',[.25,.2,.9]]]){const g=mg(lkLeafTree(0xff00ff,0x00ffff,[0xffffff,0xe2e2e2,0xcccccc,0xf0f0f0])),c=g.attributes.color.array;
+  for(let i=0;i<c.length;i+=3){const mk=c[i+2]>.6&&Math.abs(c[i]-c[i+1])>.5*c[i+2];if(mk&&c[i]>c[i+1]){const q=c[i+2];c[i]=tc[0]*q;c[i+1]=tc[1]*q;c[i+2]=tc[2]*q}else if(mk){const q=c[i+2]*.7;c[i]=tc[0]*q;c[i+1]=tc[1]*q;c[i+2]=tc[2]*q}}lkSmooth(g,55);GEO[k]=g}
+ S('t_birch',lkLeafTree(0xf0ece0,0x7d5140,[0xb9d43a,0xa6c730,0xc6dd4a,0xafce36],1));if(GEO.t_dead)lkSmooth(GEO.t_dead,60);
+ S('rock_single_E',[lkBoulder(.17,0x8e8e96,1,[-.03,0,0],.62),lkBoulder(.085,0x9a9aa2,4,[.19,0,.07])],70);
+ S('rockB',[lkBoulder(.2,0x8e8e96,2,[0,0,0],.9),lkBoulder(.14,0x83838c,5,[.26,0,.14]),lkBoulder(.09,0x9a9aa2,8,[-.2,0,.2])],70);
+ S('bush',[lkBlob(.62,0x3a9552,[-.32,.42,0]),lkBlob(.6,0x44a25c,[.34,.42,.1]),lkBlob(.66,0x3f9a55,[0,.66,-.1])]);
+ lkDT('shrub',mg([lkBlob(.34,0x3f9a55,[0,.22,0],.78),lkBlob(.25,0x4aa85e,[.3,.17,.1],.78),lkBlob(.2,0x55b266,[-.2,.26,-.08],.8)]));
+ for(let i=0;i<4;i++)lkDT('rk'+i,mg([lkBoulder(.5+i*.1,[0x8e8e96,0x83838c,0x9a9aa2,0x8a8a93][i],i*2+1,[0,0,0],.6+i*.08),lkBoulder(.24,0x9a9aa2,i+11,[.55+i*.08,0,.2])]));
+ lkDT('rockS',mg([lkBoulder(.26,0x8e8e96,3,[0,0,0]),lkBoulder(.16,0x83838c,6,[.32,0,.12]),lkBoulder(.11,0x9a9aa2,9,[-.2,0,.26])]))}
+
+/* 빛: 낮에는 햇빛을 따뜻한 크림색, 그늘(하늘빛)을 보랏빛 남색으로. 밤과 텐트 안은 그대로 */
+const LKC1=new THREE.Color(),LKC2=new THREE.Color();
+function lkMood(){if(!LK_MOOD||(typeof INT!=='undefined'&&INT.on))return;const nt=dark(),day=1-nt;
+ if(day>0){hemi.color.lerp(LKC1.setRGB(.6,.62,1.0),.8*day);hemi.groundColor.lerp(LKC2.setRGB(.52,.42,.76),.8*day);sun.color.lerp(LKC1.setRGB(1.0,.87,.68),.7*day);sun.intensity*=1+.14*day;scene.fog.near*=1+.35*day;scene.fog.far*=1+.3*day}
+ /* 밤: 깜깜한 대신 보랏빛 남색으로 은은하게 보이게 */
+ if(nt>0){hemi.color.lerp(LKC1.setRGB(.6,.52,1.0),.75*nt);hemi.groundColor.lerp(LKC2.setRGB(.36,.28,.66),.75*nt);hemi.intensity*=1+.7*nt;sun.color.lerp(LKC1.setRGB(.66,.62,1.0),.6*nt);
+  if(!WX.b){scene.background.lerp(LKC1.setRGB(.035,.03,.12),.6*nt);scene.fog.color.copy(scene.background)}}}
 
 /* ---------- 연결: 기존 함수 감싸기 ---------- */
 /* makeIcons는 ui.js(이 파일 뒤)에 있어서, boot()가 buildProc을 부를 때(ui.js가 다 읽힌 뒤) 감싸요 */
 {const _bp=buildProc;buildProc=function(){_bp();try{lkBuildGeo()}catch(e){console.error('look: 모델 만들기 실패',e)}
  if(!buildProc.lkIc&&typeof makeIcons==='function'){buildProc.lkIc=1;const _mi=makeIcons;makeIcons=function(){_mi();try{lkIcons()}catch(e){console.error('look: 아이콘 실패',e)}}}}}
-{const _as=addStruct;addStruct=function(s){const r=_as(s);try{lkHouseVar(r)}catch(e){}return r}}
+{const _ue=updEnv;updEnv=function(dt,px,pz){_ue(dt,px,pz);try{lkMood()}catch(e){}}}
+{const _bd=buildDressGeo;buildDressGeo=function(){_bd();if(LK_MOOD)try{lkNature()}catch(e){console.error('look: 자연 모델 실패',e)}}}
+{const _bt=buildTerrain;buildTerrain=function(){_bt();if(LK_MOOD)try{water.material.uniforms.cS.value.setHex(0x4a84ec).convertSRGBToLinear();water.material.uniforms.cD.value.setHex(0x2346b4).convertSRGBToLinear()}catch(e){}}}
+{const _ir=initRenderer;initRenderer=function(){_ir();if(LK_MOOD)R.toneMappingExposure=1.06}}
+{const _as=addStruct;addStruct=function(s){const r=_as(s);try{lkHouseVar(r);lkAttach(r)}catch(e){console.error('look: 구조물 부품 실패',e)}return r}}
+/* 문 부품 움직이기: 나(또는 멀티의 다른 플레이어)가 문 1.9m 안에 오면 앞쪽(+z)으로 열리고, 멀어지면 닫혀요.
+   문은 원래 플레이어가 지나갈 수 있어서(blocked) 모양만 맞춰 줘요. 적은 문을 못 지나가니 열리지 않아요 */
+function lkGates(dt){const ps=[P];if(typeof NET!=='undefined'&&NET.on)NET.players.forEach(p=>{if(p.hp>0)ps.push(p)});const k=Math.min(1,dt*8);
+ for(const s of structs){const d=s.lk&&s.lk.parts.door;if(!d||Math.abs(s.x-P.x)>45||Math.abs(s.z-P.z)>45)continue;const t=ps.some(p=>Math.abs(p.x-s.x)<1.9&&Math.abs(p.z-s.z)<1.9)?-1.5:0;if(Math.abs(t-d.rotation.y)>.002)d.rotation.y+=(t-d.rotation.y)*k}}
+{const _ud=updDress;updDress=function(dt,px,pz){_ud(dt,px,pz);try{lkGates(dt)}catch(e){}}}

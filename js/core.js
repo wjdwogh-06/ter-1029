@@ -121,7 +121,7 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
  forge:{n:'대장간',g:'blacksmith',s:3.8,bx:2.3,bz:2.2,hp:500,c:{wood:30,stone:30,scrap:10},d:'소총, 산탄총, 기관단총, 수류탄을 만드는 곳'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
- ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
+ ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[1.4,1.45],tilt:.1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',6,1]]},

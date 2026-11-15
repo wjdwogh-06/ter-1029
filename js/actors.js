@@ -159,8 +159,9 @@ function setBuild(m){bmode=m;if(ghost){scene.remove(ghost);ghost=null}if(m&&m!==
 function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=P.x+Math.sin(P.rot)*d,z=P.z+Math.cos(P.rot)*d,r=brot;if(b.grid){x=Math.round(x);z=Math.round(z)}else r=brot+P.rot+Math.PI;if(b.fixR)r=0;   /* 정면이 늘 카메라(+z)를 보게 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
  if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';
- if(!why){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r);for(const[ax,az]of[[0,0],[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1],[-1,0],[1,0]]){const lx=ax*b.bx,lz=az*b.bz,h=hAt(x+lx*c+lz*sn,z-lx*sn+lz*c);if(h<lo)lo=h;if(h>hi)hi=h}
-  if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.grid?.4:.16+R0*.07))why='땅이 기울어서 놓을 수 없어요'}
+ if(!why){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r),fx=b.foot?b.foot[0]:b.bx,fz=b.foot?b.foot[1]:b.bz,st=b.foot?.25:1;   /* ground sheets (b.foot) are checked over their whole area */
+  for(let ax=-1;ax<=1.001;ax+=st)for(let az=-1;az<=1.001;az+=st){const lx=ax*fx,lz=az*fz,h=b.foot?gridH(x+lx*c+lz*sn,z-lx*sn+lz*c):hAt(x+lx*c+lz*sn,z-lx*sn+lz*c);if(h<lo)lo=h;if(h>hi)hi=h}
+  if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.tilt||(b.grid?.4:.16+R0*.07)))why='땅이 기울어서 놓을 수 없어요'}
  if(!why)for(const s of structs){if(dist(s.x,s.z,x,z)<.9||(!b.grid||!sdef(s).grid)&&inStruct(s,x,z,R0+.12)){why='다른 구조물과 겹쳐요';break}}
  if(!why){const n=Math.ceil((R0+2.2)/CELL),cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-n;j<=n&&!why;j++)for(let i=-n;i<=n;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const cl=o.t<3?(R0<.9?.75:1.35)+(o.t===2?.7:0):o.t===3?OBJT[3].r*o.sc/5.6+.3:.6;if(dist(o.x,o.z,x,z)<cl+R0){why=o.t<3?'나무와 겹쳐요':o.t===3?'바위와 겹쳐요':'덤불과 겹쳐요';break}}}
  pr.why=why;pr.ok=!why;return pr}
