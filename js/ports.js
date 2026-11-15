@@ -29,14 +29,14 @@ function buildPortGeo(){const WD=0x8d5f3b,WD2=0x6f4a2c,WD3=0xb98556,IRON=0x3a3f4
  GEO.praft=mg([...[0,1,2,3,4,5].map(i=>pt(cyl(.3,.3,3.8,7),i%2?WD:WD3,[-1.5+i*.6,.25,0],[Math.PI/2,0,0])),pt(box(3.9,.1,.3),WD2,[0,.52,1.3]),pt(box(3.9,.1,.3),WD2,[0,.52,-1.3]),pt(cyl(.3,.3,.5,8),0x2f5d8a,[1.2,.8,1.0]),pt(box(.5,.4,.5),0xa67848,[-1.1,.75,-.8])]);
  GEO.pstack=mg([pt(GEO.crate_A_big,null,[0,0,0],[0,.2,0],[4.6,4.6,4.6]),pt(GEO.crate_B_small,null,[1.15,0,.15],[0,.7,0],[4.6,4.6,4.6]),pt(GEO.crate_A_small,null,[.1,1.05,.05],[0,-.3,0],[4.6,4.6,4.6]),pt(GEO.barrel,null,[-1.05,0,.35],0,[4.6,4.6,4.6]),pt(GEO.sack,null,[.6,0,1.0],[0,1,0],[6,6,6])])}
 /* eight small-port recipes: pier shape, building, boats, extras */
-const PVAR=[{L:20,w:2.8,sh:'I',b:'home_A',boats:[['rowboat',2.75,8,.08]],ex:['net','stack']},
- {L:16,w:2.8,sh:'T',b:'tent',boats:[['rowboat',-2.75,6,3.2],['rowboat',2.8,9.5,-.06]],ex:['stack','rack']},
+const PVAR=[{L:20,w:2.8,sh:'I',b:'home_A',boats:[['fboat',3.3,8,0]],ex:['net','stack']},
+ {L:16,w:2.8,sh:'T',b:'tent',boats:[['fboat',3.3,5.6,0]],ex:['stack','rack']},
  {L:22,w:3.2,sh:'L',b:'lumbermill',boats:[['fboat',-4.4,13,0]],ex:['crane','stack']},
- {L:13,w:2.6,sh:'II',b:'towerB',boats:[['rowboat',3.5,6,0],['rowboat',3.5,10,3.14]],ex:['rack']},
+ {L:13,w:2.6,sh:'II',b:'towerB',boats:[['fboat',3.5,7.5,0]],ex:['rack']},
  {L:18,w:3.6,sh:'I',b:'home_B',boats:[['fboat',4.9,10,3.14]],ex:['crane','stack','net']},
- {L:14,w:2.8,sh:'T',b:'home_A',boats:[['rowboat',2.75,5,0]],ex:['rack','net']},
- {L:17,w:2.8,sh:'U',b:'tent',boats:[['rowboat',3.5,7.5,1.57],['rowboat',3.5,11,-1.57]],ex:['stack']},
- {L:15,w:2.8,sh:'I',b:'home_B',boats:[['rowboat',-2.75,9,3.1]],ex:['raft','net','stack']}];
+ {L:14,w:2.8,sh:'T',b:'home_A',boats:[['fboat',3.3,4.4,0]],ex:['rack','net']},
+ {L:17,w:2.8,sh:'U',b:'tent',boats:[['fboat',3.5,6.5,0]],ex:['stack']},
+ {L:15,w:2.8,sh:'I',b:'home_B',boats:[['fboat',-3.3,9,3.14]],ex:['net','stack']}];
 function buildPorts(){buildPortGeo();let sv=0;
  for(const p of PORTS){const G=p.g=new THREE.Group();scene.add(G);const sx=p.town?1:p.sx,W=(lx,lz)=>{lx*=sx;return[p.x+p.dz*lx+p.dx*lz,p.z-p.dx*lx+p.dz*lz]};
   const rect=(lx,lz,len,w,lr=0,quay=0)=>{const [x,z]=W(lx,lz),m=mesh(quay?quayGeo(len,w):pierGeo(len,w),MATT);m.position.set(x,0,z);m.rotation.y=p.r+lr;G.add(m);addDock(x,z,p.r+lr,w/2+.08,len/2+.08,quay?.8:.76)};
@@ -47,7 +47,7 @@ function buildPorts(){buildPortGeo();let sv=0;
   const BY={rowboat:.3,fboat:.5,sailboat:.48};
   if(p.town){/* harbour town, kept tight: quay on the shore, three piers, two short rows of buildings right behind it */
    rect(0,.8,36,5.2,Math.PI/2,1);rect(0,13,20,3.6);rect(0,22,11,3.2,Math.PI/2);rect(-11.5,8.4,12,2.8);rect(11.5,9,13,2.8);rect(14.7,14.3,7,2.6,Math.PI/2);
-   boat('sailboat',5,17.5,3.14,BY.sailboat);boat('fboat',-14.9,9,0,BY.fboat);boat('fboat',7.6,10,3.14,BY.fboat);boat('rowboat',-8.2,7,.1,BY.rowboat);boat('rowboat',-8.2,11.2,3.2,BY.rowboat);boat('rowboat',-3.4,7,3.14,BY.rowboat);boat('rowboat',15,11,1.57,BY.rowboat);
+   boat('fboat',7.6,10,3.14,BY.fboat);   /* 배는 항구마다 딱 한 척(기획자 요청) */
    boat('pbuoy',-20,19,0,.05);boat('pbuoy',21,21,0,.05);boat('pbuoy',0,31,0,.05);
    for(const lx of[-15.5,-6,6,15.5])lamp(lx,2.6,Math.PI);lamp(-1.3,20,Math.PI/2);lamp(1.3,8,-Math.PI/2);lamp(-6.5,-14,0);lamp(6.5,-14,0);
    put('pcrane',12.4,13,Math.PI/2);put('pstack',-16.4,.4,.3);put('pstack',16.6,.2,-2);put('pstack',1.2,12,1.2,.8);put('pnet',-7,-3.6,.1).rotation.y=.15;put('prack',7.4,-3.8,-.1).rotation.y=-.12;put('psign',3.2,-3,0).rotation.y=0;
@@ -59,7 +59,7 @@ function buildPorts(){buildPortGeo();let sv=0;
    if(v.sh==='T')rect(0,L-3.9,9.5,2.8,Math.PI/2);if(v.sh==='L')rect(w/2+3.2,L-3.9,6.6,2.8,Math.PI/2);if(v.sh==='II'){rect(7,L/2-2.5,L,w);rect(3.5,-1.2,9.6,2.6,Math.PI/2)}if(v.sh==='U'){rect(7,L/2-2.5,L,w);rect(3.5,L-3.9,9.8,2.8,Math.PI/2)}
    v.boats.forEach(b=>boat(b[0],b[1],b[2],b[3],BY[b[0]]));boat('pbuoy',-6.5-(sv%3),L+3,0,.05);if(sv%2)boat('pbuoy',8+(sv%4),L+1,0,.05);
    lamp(-w/2-.7,-2.4,Math.PI/2);lamp(w/2-.35,L-4.6,-Math.PI/2);put('psign',w/2+1.6,-4.2,0).rotation.y=0;put('pboll',-(w/2-.3),4);put('pboll',w/2-.3,L*.55);put('pboll',-(w/2-.3),L-3.2);
-   const far=v.b==='lumbermill'?-11:v.b==='towerB'?-8.5:-9;S_(v.b,-6.2,far,.15+(sv%3)*.12);S_('fire',3.6,-8.2,0,{hp:1e9});S_('barrel',-1.6,-5.2);
+   S_('fire',3.6,-8.2,0,{hp:1e9});   /* 항구 건물은 없앴어요(기획자 요청: 건물 대신 철조망과 소품) */S_('barrel',-1.6,-5.2);
    for(const e of v.ex){if(e==='net')put('pnet',5.4,-5.6,.5).rotation.y=.2;else if(e==='rack')put('prack',7,-7.6,-.35).rotation.y=-.2;else if(e==='stack')put('pstack',-3.2,-3.6,.4,.85);else if(e==='crane')put('pcrane',w/2-.55,L-8,Math.PI/2);else if(e==='raft'){const [x,z]=W(-6,10);const m=put('praft',-6,10,.3,1,.0);PBOATS.push({m,y:0,ph:2,p});addDock(x,z,p.r+.3*sx,1.9,1.9,.56)}}
    if(v.sh==='II'||v.sh==='U'){lamp(7+w/2-.35,L-4.6,-Math.PI/2);put('pboll',7-(w/2-.3),5)}}}}
 function updPorts(px,pz){const dk=dark()>.3;for(const p of PORTS)if(p.g)p.g.visible=Math.abs(p.x-px)<170&&Math.abs(p.z-pz)<170;

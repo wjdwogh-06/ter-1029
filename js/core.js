@@ -126,8 +126,8 @@ const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:
  pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
  smg:{dmg:10,cd:.095,range:15,ammo:'ammoS',spread:.07},shotgun:{dmg:9,pel:6,cd:.9,range:11,ammo:'ammoL',spread:.17}};
 const RECIPES=[{id:'axe',n:1,c:{wood:3,stone:2}},{id:'rod',n:1,c:{wood:4,cloth:1}},{id:'bandage',n:1,c:{cloth:2}},
- {id:'ammoS',n:12,c:{scrap:1,powder:1},bench:1},{id:'ammoL',n:8,c:{scrap:2,powder:1},bench:1},{id:'grenade',n:1,c:{scrap:3,powder:3},forge:1},
- {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},forge:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},forge:1},{id:'smg',n:1,c:{scrap:24,wood:3},forge:1}];
+ {id:'ammoS',n:12,c:{scrap:1,powder:1},bench:1},{id:'ammoL',n:8,c:{scrap:2,powder:1},bench:1},{id:'grenade',n:1,c:{scrap:3,powder:3},bench:1},
+ {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},bench:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},bench:1},{id:'smg',n:1,c:{scrap:24,wood:3},bench:1}];
 /* builds: g=geometry, s=scale, bx/bz=half extents, hp */
 const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'몸을 녹이고 밤을 밝혀요'},
  bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},d:'총과 탄약을 만들어요'},
@@ -141,7 +141,6 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  mine:{n:'지뢰',g:'mine',s:1,bx:.4,bz:.4,hp:20,c:{scrap:4,powder:4},d:'적이 밟으면 크게 터져요. 한 번 쓰면 사라져요',pass:1,trap:2},
  gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 주변 16칸의 탐조등에 전기를 보내요'},
  slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
- forge:{n:'대장간',g:'blacksmith',s:3.8,bx:2.3,bz:2.2,hp:500,c:{wood:30,stone:30,scrap:10},d:'소총, 산탄총, 기관단총, 수류탄을 만드는 곳'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
  ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[1.4,1.45],tilt:.1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
