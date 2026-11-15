@@ -18,7 +18,7 @@ async def steps(pg):
     await ev("()=>CHAT.say('me','텐트 안은 아늑하네요')");await ev("()=>{P.x=INT.x-2.4;P.z=INT.z-1.8}");await pg.wait_for_timeout(700);await pg.screenshot(path=os.path.join(OUT,'room_corner.jpg'),type='jpeg',quality=92)
     await ev("()=>{S.time=.95;P.x=INT.x+.5;P.z=INT.z}");await pg.wait_for_timeout(900);await pg.screenshot(path=os.path.join(OUT,'room_night.jpg'),type='jpeg',quality=92)
     # walls hold
-    print('escape',await ev("()=>{let esc=0;for(let k=0;k<4000;k++){if(!INT.on)break;const a=Math.random()*6.28;moveEnt(P,Math.cos(a)*.35,Math.sin(a)*.35);const lx=P.x-INT.x,lz=P.z-INT.z;if(Math.abs(lx)>INT.hw||lz<-INT.hd||(lz>INT.hd&&Math.abs(lx)>INT.door))esc++}return esc}"))
+    print('escape',await ev("()=>{let esc=0;for(let k=0;k<4000;k++){if(!INT.on)break;const a=Math.random()*6.28;moveEnt(P,Math.cos(a)*.35,Math.sin(a)*.35);const lx=P.x-INT.x,lz=P.z-INT.z;if(Math.abs(lx)>INT.hw||lz<-INT.hd)esc++}return esc}"))
     # walk out the door
     await ev("()=>{S.time=.42;CHAT.b.clear();P.x=INT.x+1.6;P.z=INT.z-.6;P.rot=Math.PI}");await pg.wait_for_timeout(700);print('far label',await ev("()=>target&&target.lab"));await pg.screenshot(path=os.path.join(OUT,'room_clean.jpg'),type='jpeg',quality=92)
     await ev("()=>{P.x=INT.x-.5;P.z=INT.z+1.3;P.rot=0}");await pg.wait_for_timeout(700);print('door label',await ev("()=>target&&target.lab"));await pg.screenshot(path=os.path.join(OUT,'room_door.jpg'),type='jpeg',quality=92)

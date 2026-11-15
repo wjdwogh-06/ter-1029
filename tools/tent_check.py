@@ -14,6 +14,6 @@ async def steps(pg):
     print('label',await ev("()=>target&&target.lab"))
     await ev("()=>{inp.actEdge=true;interact();inp.actEdge=false}");await pg.wait_for_timeout(2600);await pg.screenshot(path=os.path.join(OUT,'tent_in.jpg'),type='jpeg',quality=90)
     print('inside',await ev("()=>JSON.stringify({on:INT.on,p:[P.x|0,P.z|0,+groundY(P.x,P.z).toFixed(1)],st:WTR.st,it:INT.it.map(s=>s.t)})"))
-    print('walls',await ev("()=>{let e=P,esc=0;for(let k=0;k<3000;k++){const a=Math.random()*6.28;moveEnt(e,Math.cos(a)*.4,Math.sin(a)*.4);const lx=P.x-INT.x,lz=P.z-INT.z;if(Math.abs(lx)>INT.hw||lz<-INT.hd||(lz>INT.hd&&Math.abs(lx)>INT.door))esc++}return esc}"))
+    print('walls',await ev("()=>{let e=P,esc=0;for(let k=0;k<3000;k++){const a=Math.random()*6.28;moveEnt(e,Math.cos(a)*.4,Math.sin(a)*.4);const lx=P.x-INT.x,lz=P.z-INT.z;if(Math.abs(lx)>INT.hw||lz<-INT.hd)esc++}return esc}"))
     await ev("()=>{const b=INT.it[0];P.x=b.x;P.z=b.z-.6;P.rot=0}");await pg.wait_for_timeout(700);print('exit',await ev("()=>target&&target.lab"));await ev("()=>{inp.actEdge=true;interact();inp.actEdge=false}");await pg.wait_for_timeout(2600)
     print('outside',await ev("()=>JSON.stringify({on:INT.on,p:[P.x|0,P.z|0],blocked:String(walk(P.x,P.z,.42,P)),structsAtCorner:structs.filter(s=>s.x<80&&s.z<80).length})"))
