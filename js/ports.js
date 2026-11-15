@@ -53,14 +53,14 @@ function buildPorts(){buildPortGeo();let sv=0;
    put('pcrane',12.4,13,Math.PI/2);put('pstack',-16.4,.4,.3);put('pstack',16.6,.2,-2);put('pstack',1.2,12,1.2,.8);put('pnet',-7,-3.6,.1).rotation.y=.15;put('prack',7.4,-3.8,-.1).rotation.y=-.12;put('psign',3.2,-3,0).rotation.y=0;
    for(const [lx,lz] of[[-1.4,5],[1.4,5],[-1.4,17],[1.4,17],[-10.4,13],[-12.6,13],[10.4,14],[4.6,22.9],[-4.6,22.9]])put('pboll',lx,lz);
    S_('market',0,-9,0);   /* 센터: 건물은 가게 하나만 (기획자 요청으로 술집·집·창고·대장간·우물·깃발 제거). 철조망과 소품은 look.js lkCenter */
-   S_('fire',-5.6,-14.2,0,{hp:1e9});S_('bench',5.2,-6.9,-.2,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});S_('barrel',-8.2,-7);S_('crate',-9.4,-6.6,.4);S_('barrel',14,-6.8);
+   S_('fire',-3.4,-16.4,0,{hp:1e9});S_('bench',5.2,-6.9,-.2,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});S_('barrel',-8.2,-7);S_('crate',-9.4,-6.6,.4);S_('barrel',14,-6.8);
    {const [mx,mz]=W(0,-9);VIL.mx=mx+2.3;VIL.mz=mz+3.4}}
   else{const v=PVAR[p.vi%PVAR.length],L=p.L||v.L,w=v.w;sv++;p.v=v;rect(0,L/2-2.5,L,w);
    if(v.sh==='T')rect(0,L-3.9,9.5,2.8,Math.PI/2);if(v.sh==='L')rect(w/2+3.2,L-3.9,6.6,2.8,Math.PI/2);if(v.sh==='II'){rect(7,L/2-2.5,L,w);rect(3.5,-1.2,9.6,2.6,Math.PI/2)}if(v.sh==='U'){rect(7,L/2-2.5,L,w);rect(3.5,L-3.9,9.8,2.8,Math.PI/2)}
    v.boats.forEach(b=>boat(b[0],b[1],b[2],b[3],BY[b[0]]));boat('pbuoy',-6.5-(sv%3),L+3,0,.05);if(sv%2)boat('pbuoy',8+(sv%4),L+1,0,.05);
    lamp(-w/2-.7,-2.4,Math.PI/2);lamp(w/2-.35,L-4.6,-Math.PI/2);put('psign',w/2+1.6,-4.2,0).rotation.y=0;put('pboll',-(w/2-.3),4);put('pboll',w/2-.3,L*.55);put('pboll',-(w/2-.3),L-3.2);
    S_('fire',3.6,-8.2,0,{hp:1e9});   /* 항구 건물은 없앴어요(기획자 요청: 건물 대신 철조망과 소품) */S_('barrel',-1.6,-5.2);
-   for(const e of v.ex){if(e==='net')put('pnet',5.4,-5.6,.5).rotation.y=.2;else if(e==='rack')put('prack',7,-7.6,-.35).rotation.y=-.2;else if(e==='stack')put('pstack',-3.2,-3.6,.4,.85);else if(e==='crane')put('pcrane',w/2-.55,L-8,Math.PI/2);else if(e==='raft'){const [x,z]=W(-6,10);const m=put('praft',-6,10,.3,1,.0);PBOATS.push({m,y:0,ph:2,p});addDock(x,z,p.r+.3*sx,1.9,1.9,.56)}}
+   for(const e of v.ex){if(e==='net')put('pnet',5.4,-5.6,.5).rotation.y=.2;else if(e==='rack')put('prack',7,-7.6,-.35).rotation.y=-.2;else if(e==='stack')put('pstack',-4.6,-4.9,.4,.85);else if(e==='crane')put('pcrane',w/2-.55,L-8,Math.PI/2);else if(e==='raft'){const [x,z]=W(-6,10);const m=put('praft',-6,10,.3,1,.0);PBOATS.push({m,y:0,ph:2,p});addDock(x,z,p.r+.3*sx,1.9,1.9,.56)}}
    if(v.sh==='II'||v.sh==='U'){lamp(7+w/2-.35,L-4.6,-Math.PI/2);put('pboll',7-(w/2-.3),5)}}}}
 function updPorts(px,pz){const dk=dark()>.3;for(const p of PORTS)if(p.g)p.g.visible=Math.abs(p.x-px)<170&&Math.abs(p.z-pz)<170;
  for(const b of PBOATS){if(!b.p.g.visible)continue;b.m.position.y=b.y+Math.sin(gt*1.25+b.ph)*.05;b.m.rotation.z=Math.sin(gt*1.05+b.ph)*.045;b.m.rotation.x=Math.sin(gt*.8+b.ph*1.7)*.02}

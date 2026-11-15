@@ -210,7 +210,7 @@ function lkPortGeo(){const S=(k,p)=>{const g=mg(p);lkSmooth(g,50);g.computeBound
  {const T=lkTug(),g=mg(T.p);lkSmooth(g,62);g.computeBoundingSphere();GEO.fboat=g;GEO.lk_fboat_glow=mg(T.glow)}
  S('rowboat',[pt(hull(.66,.46,1.55),0xc47d45),pt(rim(.66,1.55,.075),0xf0d9a8),pt(disc(.52,1.36),0x9a5a30,[0,-.2,0]),pt(lkRb(1.1,.07,.26,.03,.02),0xe0a565,[0,-.06,.5]),pt(lkRb(1.14,.07,.26,.03,.02),0xe0a565,[0,-.06,-.35]),pt(cyl(.03,.03,1.7,6),0xe9d3a6,[.5,.06,.1],[1.45,0,.25]),pt(cyl(.03,.03,1.7,6),0xe9d3a6,[-.5,.06,.1],[1.45,0,-.25])]);
  if(GEO.sailboat)lkSmooth(GEO.sailboat,50);if(GEO.pbuoy)lkSmooth(GEO.pbuoy,60);
- S('plamp',[pt(lkRb(.15,2.95,.15,.06,.03),LKH.dk,[0,1.475,0]),pt(lkRb(.3,.14,.3,.05,.03),LKH.dk,[0,.07,0]),pt(box(.1,.1,.62),LKH.dk,[0,2.98,.25]),pt(lkRb(.32,.36,.32,.07,.03),0xffe7a8,[0,2.72,.5]),pt(cone(.3,.24,4),0x4353a8,[0,3.02,.5],[0,Math.PI/4,0]),pt(box(.36,.05,.36),LKH.dk,[0,2.53,.5])]);
+ S('plamp',lkLampParts(2.72));
  S('pboll',[pt(cyl(.15,.2,.5,8),0x3f4450,[0,.25,0]),pt(new THREE.SphereGeometry(.24,8,5),0xe9c046,[0,.52,0],0,[1,.6,1])]);
  S('pnet',[...[-1.25,1.25].flatMap(x=>[pt(lkRb(.14,2.0,.14,.06,.03),LKI.post,[x,1,0]),pt(new THREE.SphereGeometry(.1,8,6),LKI.cap,[x,2.04,0])]),pt(lkRb(2.4,.09,.09,.04,.025),LKI.post,[0,1.84,0]),pt(lkRb(2.4,.09,.09,.04,.025),LKI.post,[0,.14,0]),...lkLattice(2.36,1.62,-1.18,.18,0,.3,LKI.wire,.035)]);
  S('psign',[pt(lkRb(.16,2.3,.16,.06,.03),0xa5622f,[0,1.15,0]),pt(lkRb(1.6,.9,.12,.12,.04),0xd99a5c,[0,2.05,.05]),pt(lkRb(1.36,.66,.04,.08,.015),0xf0d9a8,[0,2.05,.12]),pt(lkRb(.1,.3,.03,.04,.01),0xdb5a4c,[-.42,2.1,.15]),pt(lkRb(.1,.1,.03,.04,.01),0xdb5a4c,[-.42,1.86,.15]),...[2.2,2.05,1.9].map((y,i)=>pt(box(i==2?.4:.62,.07,.03),0x8a5a36,[i==2?.09:.2,y,.15]))]);
@@ -245,7 +245,7 @@ function lkBuildTown(){
  {const g=mg(lkPallet([0,0,0],0,2));lkSmooth(g,50);GEO.lk_pallet=g;Object.assign(DECO.crate,{g:'lk_pallet',s:1})}
  Object.assign(DECO.lumber,{g:'lk_logs',s:3.4});Object.assign(DECO.tent,{g:'mtent',s:1.15});
  /* 모닥불 받침: 둥근 흰 돌 + 엇갈린 장작 (불꽃은 예전 그대로 위에 붙어요) */
- {const p=[];for(let a=0;a<9;a++)p.push(lkBoulder(.2,a%2?0xdedbd6:0xcdc9c4,a,[Math.cos(a*.698)*.74,-.02,Math.sin(a*.698)*.74]));for(let a=0;a<3;a++)p.push(pt(cyl(.1,.11,1.15,7),a%2?0x9a5a30:0x8a4e28,[0,.14,0],[Math.PI/2,0,a*1.05+.3]));const g=mg(p);lkSmooth(g,60);GEO.firepit=g}}
+ {const g=mg(lkFireParts());lkSmooth(g,60);GEO.firepit=g}}
 
 /* ---------- 센터·항구·보급지의 흰 철조망 (LK_MOOD) ----------
    기획자 요청: 마을 대신 '센터'. 건물은 가게 하나, 나머지는 철조망과 소품으로만 꾸며요. 철조망(cfence)은 지나갈 수 없는 구조물이고, 땅이 물가이거나 다른 구조물과 겹치는 자리는 자동으로 건너뛰어요 */
@@ -269,7 +269,7 @@ function lkBuildStage2(){const WD=0xd18a50,WD2=0xa9652f,DKM=0x3f4450,ST=0x8f99a4
    pt(lkRb(.34,.3,.3,.06,.03),0xdb5a4c,[-.85,1.16,.2]),pt(lkRb(.14,.2,.34,.04,.02),ST,[-.85,1.3,.36]),pt(cyl(.03,.03,.4,6),DKM,[-.85,1.12,.5],[0,0,Math.PI/2]),
    pt(lkRb(.6,.3,.34,.06,.03),0x4a8fd6,[.75,1.16,.1]),pt(lkRb(.3,.06,.06,.025,.015),DKM,[.75,1.36,.1]),pt(lkRb(.7,.26,.06,.05,.02),0xc47d45,[.2,.66,.6]),pt(lkRb(.16,.06,.04,.02,.01),DKM,[.2,.66,.64]));
   lkModel('lk_bench',p,{}, {work:[0,1.05,.2]});Object.assign(BUILDS.bench,{g:'lk_bench',s:1})}
- {const p=[];for(let a=0;a<9;a++)p.push(lkBoulder(.2,a%2?0xdedbd6:0xcdc9c4,a,[Math.cos(a*.698)*.74,-.02,Math.sin(a*.698)*.74]));for(let a=0;a<3;a++)p.push(pt(cyl(.1,.11,1.15,7),a%2?0x9a5a30:0x8a4e28,[0,.14,0],[Math.PI/2,0,a*1.05+.3]));
+ {const p=lkFireParts();
   lkModel('lk_fire',p,{}, {flame:[0,.2,0],smoke:[0,1.5,0]});Object.assign(BUILDS.fire,{g:'lk_fire',s:1,outdoor:1})}
  {const p=[pt(lkRb(.84,.66,.62,.12,.05),DKM,[0,.55,0]),pt(lkRb(.94,.08,.72,.035,.03),0x2c3038,[0,.9,0]),pt(lkRb(.94,.08,.72,.035,.03),0x2c3038,[0,.2,0]),pt(lkRb(.5,.42,.05,.08,.02),0x2c3038,[0,.55,.31]),pt(lkRb(.08,.06,.06,.02,.015),ST,[.2,.55,.36]),
    pt(cyl(.1,.1,1.5,8),0x565c68,[.22,1.65,-.12]),pt(cyl(.13,.13,.08,8),0x2c3038,[.22,.96,-.12]),pt(cone(.2,.14,8),0x2c3038,[.22,2.46,-.12])];for(const x of[-.34,.34])for(const z of[-.24,.24])p.push(pt(lkRb(.09,.2,.09,.03,.02),0x2c3038,[x,.09,z]));
@@ -294,7 +294,7 @@ function lkSupplyGeo(){const DKM=0x3a3f4f,YL=0xe9c046,S=(k,p,d=50)=>{const g=mg(
  {const T=0x2fa7a0,T2=0x45c2b8,T3=0x268a85,body=()=>[pt(lkRb(.96,.62,.96,.1,.05),T,[0,.35,0]),pt(lkRb(1.0,.08,1.0,.04,.03),T3,[0,.06,0]),pt(lkRb(.42,.22,.03,.04,.012),0xf3ead6,[0,.36,.49]),pt(lkRb(.08,.08,.02,.03,.008),0xdb4a3e,[-.11,.36,.505]),pt(box(.16,.03,.02),T3,[.07,.39,.505]),pt(box(.16,.03,.02),T3,[.07,.33,.505]),
    ...[-.26,.26].map(x=>pt(lkRb(.1,.16,.05,.03,.015),YL,[x,.6,.5])),...[-1,1].map(sx=>pt(lkRb(.05,.1,.34,.02,.015),T3,[sx*.5,.4,0]))],lid=mg([pt(lkRb(1.02,.14,1.02,.06,.04),T2,[0,0,0]),pt(lkRb(.7,.03,.5,.03,.01),T,[0,.075,0])]);
   S('supcrate',[...body(),pt(lid,null,[0,.7,0])]);S('supcrate_open',[...body(),pt(box(.82,.02,.82),0x1f4f4c,[0,.63,0]),pt(new THREE.SphereGeometry(.3,8,5),0xe9d3a6,[.05,.58,0],0,[1.2,.3,1.1]),pt(lid,null,[0,1.02,-.6],[-1.15,0,0])])}
- S('suplamp',[pt(lkRb(.12,2.5,.12,.05,.03),DKM,[0,1.25,0]),pt(lkRb(.26,.12,.26,.05,.03),DKM,[0,.06,0]),pt(box(.09,.09,.6),DKM,[0,2.42,.24]),pt(lkRb(.26,.3,.26,.06,.03),0xffe7a8,[0,2.12,.48]),pt(cone(.25,.2,4),0x4353a8,[0,2.38,.48],[0,Math.PI/4,0]),pt(box(.3,.04,.3),DKM,[0,1.95,.48])]);
+ S('suplamp',lkLampParts(2.12));
 }
 function lkBuildStage3(){const DKM=0x3a3f4f,ST=0x8f99a4,YL=0xe9c046,WD=0xd18a50,WD2=0xa9652f,S=(k,p,d=50)=>{const g=mg(p);lkSmooth(g,d);g.computeBoundingSphere();GEO[k]=g};
  {const B=0x3f7fe0,B2=0x5a98f0,p=[pt(lkRb(1.4,.62,1.0,.1,.05),B,[0,.37,0]),pt(lkRb(1.48,.2,1.08,.08,.05),B2,[0,.77,0]),pt(lkRb(1.1,.05,.7,.04,.02),B,[0,.885,0]),pt(lkRb(.5,.2,.03,.04,.012),0xf3ead6,[0,.36,.51])];
@@ -428,6 +428,31 @@ function lkMood(){if(!LK_MOOD||(typeof INT!=='undefined'&&INT.on))return;const n
  if(nt>0){hemi.color.lerp(LKC1.setRGB(.6,.52,1.0),.75*nt);hemi.groundColor.lerp(LKC2.setRGB(.36,.28,.66),.75*nt);hemi.intensity*=1+.7*nt;sun.color.lerp(LKC1.setRGB(.66,.62,1.0),.6*nt);
   if(!WX.b){scene.background.lerp(LKC1.setRGB(.035,.03,.12),.6*nt);scene.fog.color.copy(scene.background)}}}
 
+/* ---------- 다듬기(기획자 요청: 도형 티 나는 것들) ----------
+   모닥불: 둥근 돌 고리 + 숯 바닥 + 기대 세운 장작(티피) / 불꽃: 물방울 모양 혀 여러 개가 따로 일렁이고, 앞쪽에 밝은 속불, 위로 불티
+   가로등(항구 plamp, 보급지 suplamp): 콘크리트 받침 + 가늘어지는 기둥 + 팔 + 둥근 갓과 따뜻한 유리. 불빛 자리(H)는 예전과 같아요 */
+function lkFireParts(){const p=[],up=new THREE.Vector3(0,1,0),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3();
+ for(let a=0;a<10;a++){const an=a/10*Math.PI*2+.15;p.push(lkBoulder(a%3?.19:.22,a%2?0xdedbd6:0xcbc6bf,a,[Math.cos(an)*.72,-.02,Math.sin(an)*.72]))}
+ p.push(pt(cyl(.5,.55,.06,16),0x3a2a22,[0,.03,0]));
+ for(let i=0;i<5;i++){const an=i/5*Math.PI*2+.4,bx=Math.cos(an)*.38,bz=Math.sin(an)*.38;v.set(-bx*.85,.74,-bz*.85);const len=v.length();q.setFromUnitVectors(up,v.normalize());e.setFromQuaternion(q);
+  p.push(pt(cyl(.06,.078,len,7),i%2?0x9a5a30:0x86502a,[bx+v.x*len/2,.05+v.y*len/2,bz+v.z*len/2],[e.x,e.y,e.z]),pt(cyl(.07,.07,.025,7),0xd9a86a,[bx-v.x*.01,.05-v.y*.01,bz-v.z*.01],[e.x,e.y,e.z]))}
+ return p}
+const LK_TONGUE=new THREE.LatheGeometry([[0,0],[.42,.06],[.55,.22],[.5,.42],[.36,.62],[.2,.8],[.08,.94],[0,1.02]].map(a=>new THREE.Vector2(a[0],a[1])),10);
+function lkFlames(g,y,s){s*=1.15;const G=new THREE.Group();G.position.y=y;g.add(G);const T=[];
+ const bed=new THREE.Mesh(new THREE.CircleGeometry(.4*s,16),new THREE.MeshBasicMaterial({color:new THREE.Color(1.5,.42,.08)}));bed.rotation.x=-Math.PI/2;bed.position.y=.075;G.add(bed);
+ const add=(m,sc,h,x,z,lx,lz,ph)=>{const pv=new THREE.Group();pv.position.set(x,.08,z);const me=new THREE.Mesh(LK_TONGUE,flameMat[m]);pv.add(me);pv.rotation.set(lx,0,lz);G.add(pv);T.push({pv,me,sc,h,lx,lz,ph})};
+ add(0,.34*s,.95*s,0,0,0,0,0);add(0,.22*s,.62*s,.19*s,.05*s,.1,-.34,1.7);add(0,.21*s,.56*s,-.18*s,.06*s,.12,.36,3.1);add(0,.19*s,.5*s,.02*s,-.17*s,-.32,0,4.4);
+ add(1,.24*s,.7*s,0,.07*s,.06,0,2.2);add(2,.13*s,.42*s,0,.15*s,.12,0,5.3);
+ const sm=new THREE.MeshBasicMaterial({color:new THREE.Color(3,2.1,.6)}),sg=new THREE.SphereGeometry(.032*s,6,4),SP=[];for(let i=0;i<4;i++){const m=new THREE.Mesh(sg,sm);G.add(m);SP.push({m,o:i/4,a:i*2.1})}
+ const gl=glow(0xff7a2a,6*s,.4);gl.position.y=y+.9*s;g.add(gl);
+ T[0].me.onBeforeRender=()=>{const t=gt;for(const q of T){const f=1+Math.sin(t*(8+q.ph)+q.ph*3)*.12+Math.sin(t*(13.7+q.ph*.7)+q.ph)*.06,w=q.sc*(1.05-.05*f);q.me.scale.set(w,q.h*f,w);q.pv.rotation.x=q.lx+Math.sin(t*3.1+q.ph)*.07;q.pv.rotation.z=q.lz+Math.sin(t*2.6+q.ph*1.3)*.08}
+  for(const p of SP){const u=(t*.7+p.o)%1;p.m.position.set(Math.sin(p.a+t*1.3)*.2*s*u,.45*s+u*1.7*s,Math.cos(p.a+t)*.14*s*u);p.m.scale.setScalar(Math.max(.01,1-u))}};
+ return []}   /* 예전 일렁임 루프(s.fl)는 쓰지 않고 스스로 움직여요 */
+if(LK_MOOD)flames=lkFlames;
+function lkLampParts(H){const DK=0x39425a,DK2=0x2c3346,CR=0xf1ece2,GLs=0xffe2a0,top=H+.32,z=.49,p=[pt(cyl(.2,.25,.16,12),0xc9c4bd,[0,.08,0]),pt(cyl(.13,.16,.1,12),DK2,[0,.21,0]),pt(cyl(.045,.07,top-.2,10),DK,[0,.2+(top-.2)/2,0]),pt(new THREE.SphereGeometry(.07,10,8),DK,[0,top,0])];
+ p.push(pt(cyl(.034,.034,.5,8),DK,[0,top+.03,z/2],[Math.PI/2-.12,0,0]),pt(cyl(.022,.022,.12,6),DK,[0,top-.02,z]));
+ p.push(pt(new THREE.SphereGeometry(.21,16,8,0,Math.PI*2,0,Math.PI/2),DK,[0,H+.1,z],0,[1,.72,1]),pt(new THREE.TorusGeometry(.205,.026,6,18),CR,[0,H+.1,z],[Math.PI/2,0,0]),pt(new THREE.SphereGeometry(.15,14,8),GLs,[0,H+.05,z],0,[1,.55,1]));
+ return p}
 /* ---------- 연결: 기존 함수 감싸기 ---------- */
 /* makeIcons는 ui.js(이 파일 뒤)에 있어서, boot()가 buildProc을 부를 때(ui.js가 다 읽힌 뒤) 감싸요 */
 {const _bp=buildProc;buildProc=function(){_bp();try{lkBuildGeo()}catch(e){console.error('look: 모델 만들기 실패',e)}

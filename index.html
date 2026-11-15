@@ -41,8 +41,9 @@ button,input{font-family:var(--f)}
 .rb img{width:62%;height:62%;pointer-events:none;filter:drop-shadow(0 3px 2px rgba(90,58,46,.3))}.rb span{font-size:22px;pointer-events:none;line-height:1.1}
 #bAtk{right:30px;bottom:26px;width:138px;height:138px;border:3px solid var(--amb);box-shadow:0 0 0 5px rgba(240,162,58,.28),0 6px 0 #CDB085,0 12px 20px rgba(40,24,12,.3)}#bAtk b{position:absolute;bottom:10px;font-size:14px;color:var(--tx)}
 #bAtk.bite{border-color:#fff;box-shadow:0 0 0 8px rgba(240,162,58,.7),0 0 30px rgba(255,190,90,.9)}
-#bAct{right:182px;bottom:18px;width:98px;height:98px;font-size:16px;opacity:.6}#bAct.on{opacity:1;border:3px solid var(--grn);box-shadow:0 0 0 5px rgba(69,184,100,.28),0 5px 0 #CDB085,0 9px 16px rgba(40,24,12,.28)}
-#bRoll{display:none!important}#bBuild{right:104px;bottom:176px;width:68px;height:68px}#bBag{right:26px;bottom:176px;width:68px;height:68px}
+#bAct{display:none!important}#bBuild{display:none!important}#atkL{display:none;font-size:22px!important;font-weight:900;color:var(--tx);line-height:1.15;text-align:center;padding:0 10px}#bAtk.act #atkL{display:block}#bAtk.act img,#bAtk.act b{display:none}#bAtk.act{border-color:var(--grn);box-shadow:0 0 0 5px rgba(69,184,100,.3),0 6px 0 #CDB085,0 12px 20px rgba(40,24,12,.3)}
+#bAct.on{opacity:1;border:3px solid var(--grn);box-shadow:0 0 0 5px rgba(69,184,100,.28),0 5px 0 #CDB085,0 9px 16px rgba(40,24,12,.28)}
+#bRoll{display:none!important}#bBag{right:184px;bottom:30px;width:74px;height:74px}
 #bMenu{right:154px;top:10px;width:46px;height:46px}#bZoom{right:154px;top:62px;width:46px;height:46px}#bMenu span,#bZoom span{font-size:19px}
 #joy{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(251,244,230,.12),rgba(251,244,230,.32));border:3px solid rgba(251,244,230,.85);pointer-events:none}#joy i{position:absolute;left:43px;top:43px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#FFFDF8,#EAD8B6);box-shadow:0 4px 0 #CDB085,0 8px 14px rgba(40,24,12,.3)}
 /* 퀵슬롯 */
@@ -58,7 +59,7 @@ button,input{font-family:var(--f)}
 /* 알림: 진한 갈색 알약 */
 #toast{left:50%;top:58px;transform:translateX(-50%);padding:8px 16px;font-size:15px;border-radius:14px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis;background:var(--brn);border-color:var(--brn);color:#fff;font-weight:800}#toast.on{opacity:1}
 #ui.port #toast{top:156px}
-#ui.port #bAtk{bottom:40px}#ui.port #bAct{bottom:34px}#ui.port #bBuild,#ui.port #bBag{bottom:192px}#ui.port #bbar{bottom:276px}
+#ui.port #bAtk{bottom:40px}#ui.port #bBag{bottom:44px}#ui.port #bbar{bottom:196px}
 #shade{position:absolute;left:0;top:0;background:rgba(40,24,14,.45)}
 /* 창(가방·제작·건설·지도·상점) */
 #panel{left:50%;top:12px;transform:translateX(-50%);display:flex;flex-direction:column;overflow:hidden;background:var(--pn);border-radius:22px}
@@ -102,7 +103,7 @@ button,input{font-family:var(--f)}
  <button id="bMenu" class="rb"><span>⚙</span></button><button id="bZoom" class="rb"><span>🔍</span></button>
  <div id="pills"></div>
  <div id="joy" class="hide"><i></i></div>
- <button id="bAtk" class="rb"><img id="atkIc"><b id="atkN"></b></button>
+ <button id="bAtk" class="rb"><img id="atkIc"><b id="atkN"></b><span id="atkL"></span></button>
  <button id="bAct" class="rb">—</button>
  <button id="bRoll" class="rb"><span>💨</span>구르기</button>
  <button id="bBuild" class="rb"><span>🔨</span>건설</button>
