@@ -93,7 +93,7 @@ function fishSpotsInit(){if(FSP.length)return;const all=[...FISH_PTS_A.map(q=>({
   for(let a=0;a<72;a++){const an=a/72*Math.PI*2,dx=Math.cos(an),dz=Math.sin(an);let r=0;while(r<30&&waterDepth(s.x+dx*r,s.z+dz*r)<.9)r+=.25;if(r>=30)continue;r+=.8;const x=s.x+dx*r,z=s.z+dz*r;let md=9;for(const o of oth)md=Math.min(md,dist(o.x,o.z,x,z));const sc=md+dz*2-r*.15;if(sc>bs){bs=sc;best=[x,z]}}
   if(best){s.ox=s.x;s.oz=s.z;s.x=best[0];s.z=best[1]}});
  all.forEach((s,i)=>{const A=s.zone==='A';s.R=FISH_ZONES[s.zone].R;s.dir=fhs(i,9)<.5?1:-1;s.gone=0;s.ripT=fhs(i,7)*2;s.jmpT=4+fhs(i,8)*8;s.fish=[];const n=A?5:6;
-  for(let j=0;j<n;j++){const r=s.R*(.45+.55*fhs(i,j*3+1));s.fish.push({r,w:s.dir*(A?.75:.95)*(.8+.4*fhs(i,j*3+2))/r,ph:j/n*Math.PI*2+fhs(i,j*3+3)*.8,sc:A?1.75+.6*fhs(i,j+20):1.25+.4*fhs(i,j+20)})}});
+  for(let j=0;j<n;j++){const r=s.R*(.45+.55*fhs(i,j*3+1));s.fish.push({r,w:s.dir*(A?.75:.95)*(.8+.4*fhs(i,j*3+2))/r,ph:j/n*Math.PI*2+fhs(i,j*3+3)*.8,sc:A?1+.2*fhs(i,j+20):.8+.2*fhs(i,j+20)})}});
  FSP=all}
 const spotAt=(x,z)=>{let b=null,bd=1e9;for(const s of FSP){const d=dist(s.x,s.z,x,z);if(d<=s.R+FCATCH&&d<bd){bd=d;b=s}}return b};
 function fishWarn(m){if(gt-fishWarnT<1.4)return;fishWarnT=gt;toast(m)}

@@ -25,7 +25,7 @@
 ```
 python3 -m http.server 8765          # 혼자 하기: http://localhost:8765
 npm start                            # 멀티: http://localhost:8080
-python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py·town_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py, 낚시 fish_check.py, 낚시 포인트 지형 fishpt_scan.py) (pip install playwright, 크롬 필요. CHROME=경로)
+python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py·town_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py, 낚시 fish_check.py, 낚시 포인트 지형 fishpt_scan.py, 4차 센터·철조망·설치형 2단계 center_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
 ```
 
 - 빌드 단계 없음. three.js r128, 모듈 아님(전역 스크립트). **번들러·프레임워크·ES module로 바꾸지 마세요.**
@@ -70,10 +70,12 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 - 나무·바위는 구역별 `InstancedMesh`. **r128 버그: `MAT`을 쓰는 모든 InstancedMesh에 instanceColor가 있어야 합니다**(없으면 렌더가 죽음).
 - r128에는 `BufferGeometry.applyQuaternion`이 없습니다 → `applyMatrix4`.
 - 바닥 장식(풀·꽃)은 구역이 보일 때 한 번 합쳐 만듭니다(`dress.js dressBuild`). 구조물 안에는 생기지 않고, 구조물을 놓거나 치우면 그 구역 장식을 다시 만들어요(`dressDirty`).
-- **새 디자인(`js/look.js`)**: 기획자가 준 파일(3차). 기존 파일을 고치지 않고 위에 덮어씌워요(`buildProc`, `makeIcons`, `addStruct`, `updEnv`, `buildDressGeo`, `buildTerrain`, `initRenderer`, `updDress`, `buildPortGeo`를 감싸고 `pierGeo`·`quayGeo`를 바꿔 끼움). index.html에서 한 줄 빼면 예전 모습. **캐릭터는 바꾸지 않아요**(기획자 결정, 원래 파일에 있던 캐릭터 부분은 뺐음).
+- **새 디자인(`js/look.js`)**: 기획자가 준 파일(4차). 기존 파일을 고치지 않고 위에 덮어씌워요(`buildProc`, `makeIcons`, `addStruct`, `updEnv`, `buildDressGeo`, `buildTerrain`, `initRenderer`, `updDress`, `buildPortGeo`를 감싸고 `pierGeo`·`quayGeo`를 바꿔 끼움). index.html에서 한 줄 빼면 예전 모습. **캐릭터는 바꾸지 않아요**(기획자 결정, 원래 파일에 있던 캐릭터 부분은 뺐음).
   - 집(주황 기와지붕 오두막 4색), 노란 삼각 텐트, 나무·돌·산딸기·통조림·손도끼 모델.
   - 설치형 1단계: 울타리 4종 + 문 4종(`LKB` 목록, `lkModel`로 움직이는 부품·효과 자리). 지금 `BUILDS.fence`=나무 울타리, `wall`=돌 울타리, `gate`=돌 울타리 문. 문짝은 사람이 1.9m 안에 오면 열려요(`lkGates`).
   - 아이콘: 분류별 색 원판 + 굵은 외곽선 + 셀 음영(`LK_CAT`).
+  - **센터(4차)**: 기획자 요청으로 마을 대신 '센터'. 항구마을 건물은 가게(market) 하나뿐(술집·집·창고·대장간·깃발 없음, ports.js). 흰 철조망(`DECO.cfence`, 지나갈 수 없음)과 탱크·철탑·드럼통·팔레트는 `lkCenter`가 놓아요(짝수 번호 작은 항구 앞에도 철조망 조금). 보급지 뒤쪽에도 철조망(`lkSupplyFence`). 물가·부두·다른 구조물·기울어진 땅(0.25 넘게)은 자동으로 건너뛰어요.
+  - 설치형 2·3단계 외형(4차, 외형만): 작업대 `lk_bench`, 모닥불 `lk_fire`, 발전기 `lk_gen`(BUILDS에 연결됨), 난로·표지판·텃밭·배터리·스프링클러(`LKB`에 목록만, 기능은 기획자가 정한 뒤에).
   - 마을·항구(`lkBuildTown`, `lkPortGeo`): market=자판기 가게(상인), tavern=바, lumbermill=창고, blacksmith·forge=컨테이너 작업장, well=탱크, towerB=철탑, barrel=드럼통 4색, crate=팔레트, 넓은 부두=콘크리트+빨간 테두리, 좁은 부두=나무 판자, 통통배·노 젓는 배·가로등·볼라드·그물·간판. 종류(t)·충돌 크기·부두 윗면 높이(0.76/0.80)는 그대로.
   - 분위기 `LK_MOOD`: 매끈한 음영, 따뜻한 햇빛 + 보랏빛 그림자, 보랏빛 남색 밤, 진한 잔디 + 흰 붓자국, 롱빈터풍 나무·바위·덤불(기존 GEO 키를 덮어써서 배치·충돌·채집은 그대로), 파란 바다. `false`면 예전 화면. 텐트 안에서는 꺼져요.
 - 성능 목표: 휴대폰. 숲 한복판 삼각형 약 22만. 조각을 늘릴 땐 합치기(`mg`)와 인스턴싱을 쓰세요.
@@ -84,7 +86,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 - 생성: `addStruct({t,x,z,r,own,…})`, 제거: `removeStruct`. 충돌: `inStruct`, `blocked`, `walk`.
 - 걸을 수 있는 판(부두, 뗏목): `addDock(x,z,rot,hw,hl,y)`.
 - 모든 구조물을 놓은 뒤 `pruneObjects()`가 건물 속 나무·바위를 지웁니다. 넓게 비우려면 `CLEARS.push([x,z,r])`.
-- 월드 구조물이 생기는 곳은 세 군데뿐: `villageAndPOI()`(등대), `buildPorts()`(항구), `buildSupply()`(보급지).
+- 월드 구조물이 생기는 곳: `villageAndPOI()`(등대), `buildPorts()`(항구), `buildSupply()`(보급지), 그리고 look.js가 `buildPorts` 뒤에 붙이는 `lkCenter`·`lkSupplyFence`(철조망·소품).
 - **포탑은 한 종류**(`BUILDS.turret`, 모델 `tbase/thead/tbrl`). 동작은 `actors.js`의 `sdef(s).tur` 루프가 처리하므로 수치(`range, cd, dmg, ammo, cap, load`)만 바꾸면 됩니다.
 - **텐트**는 `BUILDS.ptent`(키 이름 주의: `DECO.tent`는 항구 장식용 옛 천막). `home:1`이면 설치 시 내 기지가 되고, [들어가기]로 **내부 방**에 들어갑니다(§6-2).
 - **설치 키트**: 상점에서 산 `kit_tent`, `kit_stash`(ITEMS, `ty:'kit'`)가 있으면 재료 대신 키트 1개를 써요(`hasKit/canBuild/payBuild`, core.js). 키트로 놓은 건물은 철거하면 키트가 돌아와요(`s.kit`). `fixR:1`이면 정면이 항상 카메라(+z)를 봐요.
@@ -129,14 +131,14 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 ## 6-5. 낚시 (`js/water.js`, 데이터는 core.js)
 
 - **기획자가 찍은 포인트에서만 낚여요.** 아무 물에나 던지면 "여기엔 물고기가 없어요". 포인트 좌표는 `FISH_PTS_A`(등대 앞바다 24곳)·`FISH_PTS_B`(해안 64곳). 등대 한가운데(땅 위)에 찍힌 점 5개(메모2·4·5·7·8)는 `fishSpotsInit()`이 그 등대섬 바로 앞 깊은 물(카메라 쪽, 다른 떼와 안 겹치는 쪽)로 옮겨요. 실제 위치는 `FSP`(각 `x,z,zone,lb,R`, 옮긴 점은 `ox,oz`에 원래 좌표).
-- 포인트마다 **물고기 떼 그림자가 원을 그리며 돌아요**(`updSchools`, InstancedMesh 하나, 카메라 48m 안만). 가까운 떼에서 물결·가끔 튀어오름. 찌를 던지면 떼 중 한 마리가 찌로 다가와 물고, 감는 동안 찌 밑에서 버둥거려요. 낚은 떼는 7초 동안 한 마리가 비어요.
-- 규칙: **낚싯대 사거리 `ROD_R`=8m**, 떼 반지름 `R`(A 2.8m, B 2.2m)+`FCATCH` 1.2m 안에 떨어져야 해요. **물 안(얕은 물·헤엄)에서는 못 해요**(`inWater()`). 부두 위는 땅이라 돼요. [던지기]는 사거리 안의 떼로 자동 조준(`aimSpot`), 물을 톡 누르면 그 자리(멀면 물가까지 걸어가서). 낚싯대를 들면 던질 수 있는 떼 위에 "🎣 여기 던져요".
+- 포인트마다 **물고기 떼 그림자가 원을 그리며 돌아요**(`updSchools`, InstancedMesh 하나, 카메라 48m 안만). 물고기 크기는 캐릭터보다 살짝 작게(A 1.0~1.2m, B 0.8~1.0m, 기획자 요청). 가까운 떼에서 물결·가끔 튀어오름. 찌를 던지면 떼 중 한 마리가 찌로 다가와 물고, 감는 동안 찌 밑에서 버둥거려요. 낚은 떼는 7초 동안 한 마리가 비어요.
+- 규칙: **낚싯대 사거리 `ROD_R`=8m**, 떼 반지름 `R`(A 2.3m, B 1.8m)+`FCATCH` 1.2m 안에 떨어져야 해요. **물 안(얕은 물·헤엄)에서는 못 해요**(`inWater()`). 부두 위는 땅이라 돼요. [던지기]는 사거리 안의 떼로 자동 조준(`aimSpot`), 물을 톡 누르면 그 자리(멀면 물가까지 걸어가서). 낚싯대를 들면 던질 수 있는 떼 위에 "🎣 여기 던져요".
 - 등급 `FGRADE`: 일반·희귀·영웅(에픽)·전설. 확률은 `FISH_ZONES`(%, 같은 등급 안에서는 똑같이 나눔):
   - A 등대 앞바다: 망치상어 전설 3, 황새치 영웅 8, 해파리 희귀 18, 참치 일반 71.
   - B 해안: 무지개송어·날치 희귀 각 9(합 18), 송어·연어·멸치·청어 일반 각 20.5(합 82). 영웅·전설 없음.
   - 등급이 높을수록 힘(`str`)이 세서 감기 어려워요. 낚으면 등급 색 배너(`drawCatch`, 새 물고기·최고 기록 표시)와 등급별 효과음.
 - 물고기 정의 `FISH`(core.js): 새 물고기는 `g`(등급)·`k`(생김새, water.js `fishGeoK`). 예전 물고기(북극곤들매기·대구·도치·넙치·그린란드상어)는 `old:1`로 낚이지 않고 저장 호환용 아이템만 남았어요. 도감(메뉴)은 `FISH_LIST`만 구역별로 보여요. 해파리를 익히면 '데친 해파리'(`cn`).
-- 판매가(`p`)와 배고픔 회복은 임시값이에요. 경제는 기획자가 정할 것. 지도에 낚시 포인트를 표시할지도 기획자에게 물어볼 것(지금은 표시 안 함).
+- 판매가(`p`)와 배고픔 회복은 임시값이에요. 경제는 기획자가 정할 것. **지도에는 낚시 포인트를 표시하지 않아요**(기획자 요청). 게임 화면의 물고기 떼와 "🎣 여기 던져요"로만 보여요.
 - 검사: `tools/fish_check.py`(확률 20만 번, 88곳 모두 물가에서 실제로 던져 보기, 물 안·먼 곳·빈 물 거부, 한 마리 끝까지 낚기, 스크린샷).
 
 ## 7. 캐릭터와 몹 (actors.js)
@@ -164,7 +166,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 11. 지금 상태와 다음 일
 
-끝난 것: 낚시 포인트(기획자 좌표 88곳, 물고기 떼, 사거리 8m, 물 안 금지, 등급·확률, 새 물고기 10종), look.js 3차(롱빈터풍 마을·항구), look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
+끝난 것: look.js 4차(센터: 가게 하나 + 흰 철조망·소품, 보급지 철조망, 설치형 2단계 외형), 낚시 포인트(기획자 좌표 88곳, 물고기 떼, 사거리 8m, 물 안 금지, 등급·확률, 새 물고기 10종), look.js 3차(롱빈터풍 마을·항구), look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
 
 기획자가 다음에 정할 것(먼저 만들지 말 것): 경제(농사, 상점), 약탈 규칙, 친목 기능, 동물 캐릭터, 서버 배포.
 

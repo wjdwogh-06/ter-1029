@@ -52,8 +52,8 @@ function buildPorts(){buildPortGeo();let sv=0;
    for(const lx of[-15.5,-6,6,15.5])lamp(lx,2.6,Math.PI);lamp(-1.3,20,Math.PI/2);lamp(1.3,8,-Math.PI/2);lamp(-6.5,-14,0);lamp(6.5,-14,0);
    put('pcrane',12.4,13,Math.PI/2);put('pstack',-16.4,.4,.3);put('pstack',16.6,.2,-2);put('pstack',1.2,12,1.2,.8);put('pnet',-7,-3.6,.1).rotation.y=.15;put('prack',7.4,-3.8,-.1).rotation.y=-.12;put('psign',3.2,-3,0).rotation.y=0;
    for(const [lx,lz] of[[-1.4,5],[1.4,5],[-1.4,17],[1.4,17],[-10.4,13],[-12.6,13],[10.4,14],[4.6,22.9],[-4.6,22.9]])put('pboll',lx,lz);
-   S_('tavern',-11.5,-9.5,.1);S_('market',0,-9,0);S_('home_A',9.5,-9,-.12);S_('home_B',16.5,-11.5,-.25);S_('lumbermill',-13,-19.5,.25);S_('home_A',-4.5,-19.5,.15);S_('well',2.6,-15.5,.3);S_('blacksmith',10.5,-19.5,-.15);S_('flagB',-3.4,-4.6);S_('flagB',3.4,-4.6);
-   S_('fire',-5.6,-14.2,0,{hp:1e9});S_('bench',5.2,-6.9,-.2,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});S_('barrel',-8.2,-7);S_('crate',-9.4,-6.6,.4);S_('barrel',14,-6.8);S_('rack',14.6,-17,-.6);S_('lumber',-17.5,-13.5,.5);
+   S_('market',0,-9,0);   /* 센터: 건물은 가게 하나만 (기획자 요청으로 술집·집·창고·대장간·우물·깃발 제거). 철조망과 소품은 look.js lkCenter */
+   S_('fire',-5.6,-14.2,0,{hp:1e9});S_('bench',5.2,-6.9,-.2,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});S_('barrel',-8.2,-7);S_('crate',-9.4,-6.6,.4);S_('barrel',14,-6.8);
    {const [mx,mz]=W(0,-9);VIL.mx=mx+2.3;VIL.mz=mz+3.4}}
   else{const v=PVAR[p.vi%PVAR.length],L=p.L||v.L,w=v.w;sv++;p.v=v;rect(0,L/2-2.5,L,w);
    if(v.sh==='T')rect(0,L-3.9,9.5,2.8,Math.PI/2);if(v.sh==='L')rect(w/2+3.2,L-3.9,6.6,2.8,Math.PI/2);if(v.sh==='II'){rect(7,L/2-2.5,L,w);rect(3.5,-1.2,9.6,2.6,Math.PI/2)}if(v.sh==='U'){rect(7,L/2-2.5,L,w);rect(3.5,L-3.9,9.8,2.8,Math.PI/2)}

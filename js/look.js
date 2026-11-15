@@ -1,6 +1,6 @@
 'use strict';
 /* ===== look: 롱빈터풍 새 디자인 — 집, 아이템, 설치형, 아이콘, 자연, 분위기 =====
-   기획자가 준 파일(3차)에서 캐릭터 부분만 뺀 것. 다른 파일은 고치지 않고 위에 "덮어씌우는" 파일이에요.
+   기획자가 준 파일(4차)에서 캐릭터 부분만 뺀 것. 다른 파일은 고치지 않고 위에 "덮어씌우는" 파일이에요.
    index.html에서 이 파일 한 줄만 빼면 예전 모습으로 돌아가요. 로드 순서: interior.js 다음, ui.js 앞.
 
    - 캐릭터는 바꾸지 않아요(기획자 결정: 원래 KayKit 캐릭터 유지). 이 파일에 캐릭터 코드는 없어요.
@@ -10,6 +10,8 @@
    - 아이콘: 분류별 색 원판 + 크게 삐져나온 물건 + 굵은 외곽선 + 셀 음영 (LK_CAT).
    - 분위기(LK_MOOD): 매끈한 음영, 따뜻한 햇빛 + 보랏빛 그림자, 진한 잔디, 롱빈터풍 나무·바위·덤불, 파란 바다.
    - 마을·항구(LK_MOOD): 자판기 가게, 바, 창고, 컨테이너 작업장, 탱크, 철탑, 드럼통, 팔레트, 콘크리트·나무 부두, 통통배, 가로등.
+   - 센터(4차): 건물은 가게 하나, 흰 철조망(cfence)과 소품으로 꾸밈(lkCenter). 보급지에도 철조망(lkSupplyFence).
+   - 설치형 2·3단계 외형(4차): 작업대, 모닥불, 난로, 표지판, 텃밭, 발전기, 배터리, 스프링클러.
    - (게임 쪽 추가) 문짝은 사람이 가까이 오면 열려요: 맨 아래 lkGates.
    새 전역 이름은 전부 LK / lk 로 시작해요. */
 
@@ -99,8 +101,14 @@ const LKB={
  gate_wood:  {n:'나무 울타리 문',g:'lk_gate_wood',bx:1,bz:.25,hp:60,grid:1,gate:1},
  gate_stone: {n:'돌 울타리 문',g:'lk_gate_stone',bx:1,bz:.4,hp:380,grid:1,gate:1},
  gate_iron:  {n:'철제 울타리 문',g:'lk_gate_iron',bx:1,bz:.25,hp:600,grid:1,gate:1},
- gate_ti:    {n:'티타늄 울타리 문',g:'lk_gate_ti',bx:1,bz:.25,hp:950,grid:1,gate:1}};
-const lkDefOf=id=>{const b=LKB[id];const o={n:b.n,g:b.g,s:1,bx:b.bx,bz:b.bz,hp:b.hp,c:{}};['grid','gate','pass'].forEach(k=>{if(b[k])o[k]=b[k]});return o};
+ gate_ti:    {n:'티타늄 울타리 문',g:'lk_gate_ti',bx:1,bz:.25,hp:950,grid:1,gate:1},
+ /* 2·3단계. indoor:1 = 텐트·집 안에서만, outdoor:1 = 밖에서만 (규칙 구현은 아직 — 표시만 해 둔 값) */
+ stove:    {n:'난로',g:'lk_stove',bx:.5,bz:.45,hp:150,indoor:1},
+ sign:     {n:'표지판',g:'lk_sign',bx:.3,bz:.15,hp:40},
+ garden:   {n:'텃밭 (3×3)',g:'lk_garden',bx:1.5,bz:1.5,hp:120},
+ battery:  {n:'배터리',g:'lk_battery',bx:.5,bz:.4,hp:120},
+ sprinkler:{n:'스프링클러',g:'lk_sprinkler',bx:.3,bz:.3,hp:60}};
+const lkDefOf=id=>{const b=LKB[id];const o={n:b.n,g:b.g,s:1,bx:b.bx,bz:b.bz,hp:b.hp,c:{}};['grid','gate','pass','indoor','outdoor'].forEach(k=>{if(b[k])o[k]=b[k]});return o};
 
 /* 둥근 모서리 상자: w×h×d, cr = 앞에서 본 모서리 둥글기, bv = 테두리 깎기. 아기자기한 덩어리감의 기본 조각 */
 function lkRb(w,h,d,cr,bv){bv=Math.min(bv===undefined?.03:bv,w/2-.002,h/2-.002,d/2-.002);const W=w/2-bv,H=h/2-bv,c=Math.max(.001,Math.min(cr===undefined?.04:cr,W-.001,H-.001)),s=new THREE.Shape();
@@ -207,12 +215,52 @@ function lkBuildTown(){
  /* 모닥불 받침: 둥근 흰 돌 + 엇갈린 장작 (불꽃은 예전 그대로 위에 붙어요) */
  {const p=[];for(let a=0;a<9;a++)p.push(lkBoulder(.2,a%2?0xdedbd6:0xcdc9c4,a,[Math.cos(a*.698)*.74,-.02,Math.sin(a*.698)*.74]));for(let a=0;a<3;a++)p.push(pt(cyl(.1,.11,1.15,7),a%2?0x9a5a30:0x8a4e28,[0,.14,0],[Math.PI/2,0,a*1.05+.3]));const g=mg(p);lkSmooth(g,60);GEO.firepit=g}}
 
+/* ---------- 센터·항구·보급지의 흰 철조망 (LK_MOOD) ----------
+   기획자 요청: 마을 대신 '센터'. 건물은 가게 하나, 나머지는 철조망과 소품으로만 꾸며요. 철조망(cfence)은 지나갈 수 없는 구조물이고, 땅이 물가이거나 다른 구조물과 겹치는 자리는 자동으로 건너뛰어요 */
+function lkFenceGeo(){const PO=0xe9ecef,WI=0xd3d9df,p=[];for(const x of[-1.25,1.25])p.push(pt(lkRb(.13,1.95,.13,.05,.03),PO,[x,.975,0]),pt(new THREE.SphereGeometry(.09,8,6),0xc3cad1,[x,1.98,0]));
+ p.push(pt(lkRb(2.5,.08,.08,.035,.02),PO,[0,1.8,0]),pt(lkRb(2.5,.08,.08,.035,.02),PO,[0,.14,0]),...lkLattice(2.38,1.6,-1.19,.18,0,.3,WI,.03));const g=mg(p);lkSmooth(g,50);GEO.lk_cfence=g;DECO.cfence={g:'lk_cfence',s:1,bx:1.25,bz:.14}}
+function lkFence(x,z,r){const c=Math.cos(r),sn=Math.sin(r);for(const u of[-1.25,0,1.25]){const X=x+c*u,Z=z-sn*u;if(hAt(X,Z)<.95||onDock(X,Z))return null;for(const q of structs)if(q.t!=='cfence'&&inStruct(q,X,Z,.3))return null}
+ const hs=[];for(const u of[-1.25,0,1.25])for(const v of[-.3,.3])hs.push(hAt(x+c*u+sn*v,z-sn*u+c*v));for(const q of[[-1.25,-.14],[1.25,-.14],[-1.25,.14],[1.25,.14]])hs.push(hAt(x+q[0],z+q[1]));if(Math.max(...hs)-Math.min(...hs)>.25)return null;return addStruct({t:'cfence',x,z,r})}   /* 기울기: 실제 발자국 + 축 정렬 모서리(check_world 기준) */
+function lkCenter(){for(const p of PORTS){const sx=p.town?1:p.sx,W=(lx,lz)=>{lx*=sx;return[p.x+p.dz*lx+p.dx*lz,p.z-p.dx*lx+p.dz*lz]},F=(lx,lz,q)=>{const[x,z]=W(lx,lz);lkFence(x,z,p.r+(q?Math.PI/2:0))},D=(t,lx,lz,r=0)=>{const[x,z]=W(lx,lz);for(const q of structs)if(inStruct(q,x,z,sdef({t}).bx+.2))return;if(hAt(x,z)<.95)return;addStruct({t,x,z,r})};
+  if(p.town){for(let lx=-13.75;lx<14;lx+=2.5)if(Math.abs(lx)>4)F(lx,-21);for(const s of[-1,1])for(const lz of[-19.75,-17.25,-14.75,-9.75,-7.25,-4.75])F(s*15.25,lz,1);
+   D('well',-10.5,-17.5,.2);D('towerB',10.2,-16.6);D('barrel',-12.2,-6);D('barrel',-11.3,-6.9);D('barrel',12.4,-6.2);D('barrel',7.4,-18.8);D('barrel',8.3,-19.4);D('crate',11.2,-10.6,.3);D('crate',-12.6,-12.2,-.2);D('crate',-6.6,-18.6,.5)}
+  else if(p.i%2===0){for(const lx of[1.25,3.75,6.25,8.75])F(lx,-12.5);for(const lz of[-11.25,-8.75])F(10,lz,1);D('barrel',8.6,-11.2);D('crate',6.9,-11)}}}
+function lkSupplyFence(){SUPS.forEach(s=>{const m=s.i%2?-1:1;for(const dx of[-2.5,0,2.5])lkFence(s.x+dx,s.z-5.4,0);lkFence(s.x-3.9*m,s.z-4.0,Math.PI/2);lkFence(s.x-3.9*m,s.z-1.5,Math.PI/2)})}
+
+/* ---------- 설치형 2·3단계: 작업대, 모닥불, 난로, 표지판, 텃밭, 발전기, 배터리, 스프링클러 (외형만) ----------
+   부품(s.lk.parts)과 효과 자리(s.lk.anchors): 모닥불 flame/smoke, 난로 fire(빛)·smoke, 표지판 text, 텃밭 p0~p8(심는 자리), 발전기 led(빛)·exhaust, 배터리 charge(빛), 스프링클러 head(돌리는 부품)·spray */
+function lkBuildStage2(){const WD=0xd18a50,WD2=0xa9652f,DKM=0x3f4450,ST=0x8f99a4;
+ {const p=[];
+  p.push(pt(lkRb(2.5,1.25,.16,.1,.04),0xdb9659,[0,.93,0],[Math.PI/2,0,0]),pt(lkRb(2.3,1.05,.08,.08,.03),WD2,[0,.3,0],[Math.PI/2,0,0]));for(const x of[-1.1,1.1])for(const z of[-.48,.48])p.push(pt(lkRb(.16,.9,.16,.05,.03),WD2,[x,.45,z]));
+  p.push(pt(lkRb(2.5,.95,.1,.08,.03),0xc47d45,[0,1.52,-.56]),pt(lkRb(.14,1.1,.12,.04,.02),WD2,[-1.14,1.45,-.56]),pt(lkRb(.14,1.1,.12,.04,.02),WD2,[1.14,1.45,-.56]),
+   pt(lkRb(.12,.5,.05,.04,.015),0xdb5a4c,[-.7,1.56,-.49],[0,0,.3]),pt(lkRb(.22,.12,.05,.04,.015),ST,[-.63,1.8,-.49],[0,0,.3]),pt(lkRb(.5,.2,.04,.05,.012),ST,[0,1.62,-.49],[0,0,-.12]),pt(lkRb(.14,.2,.05,.04,.015),WD2,[.3,1.6,-.49],[0,0,-.12]),pt(lkRb(.1,.44,.05,.04,.015),WD2,[.75,1.56,-.49]),pt(lkRb(.26,.14,.07,.04,.02),DKM,[.75,1.8,-.49]),
+   pt(lkRb(.34,.3,.3,.06,.03),0xdb5a4c,[-.85,1.16,.2]),pt(lkRb(.14,.2,.34,.04,.02),ST,[-.85,1.3,.36]),pt(cyl(.03,.03,.4,6),DKM,[-.85,1.12,.5],[0,0,Math.PI/2]),
+   pt(lkRb(.6,.3,.34,.06,.03),0x4a8fd6,[.75,1.16,.1]),pt(lkRb(.3,.06,.06,.025,.015),DKM,[.75,1.36,.1]),pt(lkRb(.7,.26,.06,.05,.02),0xc47d45,[.2,.66,.6]),pt(lkRb(.16,.06,.04,.02,.01),DKM,[.2,.66,.64]));
+  lkModel('lk_bench',p,{}, {work:[0,1.05,.2]});Object.assign(BUILDS.bench,{g:'lk_bench',s:1})}
+ {const p=[];for(let a=0;a<9;a++)p.push(lkBoulder(.2,a%2?0xdedbd6:0xcdc9c4,a,[Math.cos(a*.698)*.74,-.02,Math.sin(a*.698)*.74]));for(let a=0;a<3;a++)p.push(pt(cyl(.1,.11,1.15,7),a%2?0x9a5a30:0x8a4e28,[0,.14,0],[Math.PI/2,0,a*1.05+.3]));
+  lkModel('lk_fire',p,{}, {flame:[0,.2,0],smoke:[0,1.5,0]});Object.assign(BUILDS.fire,{g:'lk_fire',s:1,outdoor:1})}
+ {const p=[pt(lkRb(.84,.66,.62,.12,.05),DKM,[0,.55,0]),pt(lkRb(.94,.08,.72,.035,.03),0x2c3038,[0,.9,0]),pt(lkRb(.94,.08,.72,.035,.03),0x2c3038,[0,.2,0]),pt(lkRb(.5,.42,.05,.08,.02),0x2c3038,[0,.55,.31]),pt(lkRb(.08,.06,.06,.02,.015),ST,[.2,.55,.36]),
+   pt(cyl(.1,.1,1.5,8),0x565c68,[.22,1.65,-.12]),pt(cyl(.13,.13,.08,8),0x2c3038,[.22,.96,-.12]),pt(cone(.2,.14,8),0x2c3038,[.22,2.46,-.12])];for(const x of[-.34,.34])for(const z of[-.24,.24])p.push(pt(lkRb(.09,.2,.09,.03,.02),0x2c3038,[x,.09,z]));
+  lkModel('lk_stove',p,{fire:{g:[pt(lkRb(.36,.28,.03,.06,.01),0xffa24a,[0,.55,.345]),pt(lkRb(.2,.14,.02,.04,.008),0xffe08a,[0,.52,.36])],pv:[0,0,0],glow:true}},{smoke:[.22,2.6,-.12],heat:[0,.6,.5]})}
+ lkModel('lk_sign',[pt(lkRb(.15,1.5,.15,.05,.03),WD2,[0,.75,0]),pt(lkRb(1.3,.8,.12,.1,.04),0xdb9659,[0,1.5,.06]),pt(lkRb(1.08,.58,.04,.07,.015),0xf3e3bd,[0,1.5,.125])],{},{text:[0,1.5,.16]});
+ {const SO=0x6b4636,SO2=0x7a5240,p=[pt(box(2.76,.2,2.76),SO,[0,.16,0])],an={};for(const sz of[-1,1])p.push(pt(lkRb(3.0,.34,.2,.06,.04),WD,[0,.17,sz*1.4]));for(const sx of[-1,1])p.push(pt(lkRb(.2,.34,3.0,.06,.04),0xc47d45,[sx*1.4,.17,0]));
+  for(const sx of[-1,1])for(const sz of[-1,1])p.push(pt(lkRb(.26,.42,.26,.06,.04),WD2,[sx*1.4,.21,sz*1.4]));
+  for(let i=0;i<9;i++){const x=(i%3-1)*.86,z=((i/3|0)-1)*.86;p.push(pt(new THREE.SphereGeometry(.24,8,5),SO2,[x,.25,z],0,[1,.3,1]));an['p'+i]=[x,.3,z]}lkModel('lk_garden',p,{},an)}
+ {const RD=0xdb4a3e,p=[pt(lkRb(1.1,.6,.7,.12,.05),RD,[0,.5,0]),pt(lkRb(1.2,.1,.8,.04,.03),0x2c3038,[0,.14,0]),pt(cyl(.26,.26,.74,10),0xc23c32,[.18,.5,0],[Math.PI/2,0,0]),pt(cyl(.09,.09,.06,8),0xe9c046,[-.3,.83,.1]),pt(lkRb(.34,.24,.04,.04,.015),0x2c3038,[-.3,.52,.36]),
+   pt(cyl(.06,.06,.5,6),ST,[-.45,1.0,-.2]),pt(cyl(.09,.07,.14,6),0x2c3038,[-.45,1.3,-.2])];for(const sx of[-1,1])for(const sz of[-1,1])p.push(pt(cyl(.04,.04,.95,6),0x2c3038,[sx*.66,.5,sz*.42]));for(const sz of[-1,1])p.push(pt(cyl(.04,.04,1.36,6),0x2c3038,[0,.97,sz*.42],[0,0,Math.PI/2]));
+  for(const sx of[-1,1])p.push(pt(cyl(.04,.04,.88,6),0x2c3038,[sx*.66,.97,0],[Math.PI/2,0,0]));
+  lkModel('lk_gen',p,{led:{g:[pt(cyl(.035,.035,.03,8),0x7cf08a,[-.38,.56,.385],[Math.PI/2,0,0]),pt(lkRb(.14,.05,.02,.02,.006),0xffd35c,[-.26,.48,.385])],pv:[0,0,0],glow:true}},{exhaust:[-.45,1.45,-.2]});Object.assign(BUILDS.gen,{g:'lk_gen',s:1})}
+ {const TL=0x2fa7a0,p=[pt(lkRb(.92,.66,.62,.1,.05),TL,[0,.4,0]),pt(lkRb(.98,.12,.68,.05,.03),0x268a85,[0,.74,0]),pt(cyl(.07,.07,.12,8),0xdb4a3e,[-.26,.85,0]),pt(cyl(.07,.07,.12,8),0x2c3038,[.26,.85,0]),pt(lkRb(.5,.06,.08,.03,.02),0x2c3038,[0,.98,0]),pt(lkRb(.05,.2,.08,.02,.015),0x2c3038,[-.24,.9,0]),pt(lkRb(.05,.2,.08,.02,.015),0x2c3038,[.24,.9,0]),pt(lkRb(.6,.26,.03,.04,.012),0x1f4f4c,[0,.4,.315])];
+  lkModel('lk_battery',p,{charge:{g:[0,1,2,3].map(i=>pt(lkRb(.1,.17,.02,.025,.006),i<3?0x7cf08a:0x3f6f6a,[-.2+i*.133,.4,.33])),pv:[0,0,0],glow:true}},{spark:[0,.95,0]})}
+ lkModel('lk_sprinkler',[pt(cyl(.26,.3,.1,10),0x4a8fd6,[0,.05,0]),pt(cyl(.07,.08,.62,8),ST,[0,.4,0]),pt(cyl(.1,.1,.08,8),0x4a8fd6,[0,.72,0])],
+  {head:{g:[pt(cyl(.045,.045,.6,6),ST,[0,.06,0],[0,0,Math.PI/2]),pt(new THREE.SphereGeometry(.09,8,6),0x4a8fd6,[0,.06,0]),pt(cone(.06,.14,6),0xdb5a4c,[.3,.1,0],[0,0,-.6]),pt(cone(.06,.14,6),0xdb5a4c,[-.3,.1,0],[0,0,.6])],pv:[0,.76,0]}},{spray:[0,.9,0]})}
+
 function lkBuildGeo(){
  LK_COT.forEach((c,i)=>{GEO['lk_cotA_'+i]=lkCottage(2.9,3.0,2.15,1.3,c[0],c[1],c[2]);GEO['lk_cotB_'+i]=lkCottage(3.3,4.0,2.35,1.45,c[0],c[1],c[2])});
  Object.assign(DECO.home_A,{g:'lk_cotA_0',s:1});Object.assign(DECO.home_B,{g:'lk_cotB_1',s:1});Object.assign(BUILDS.home,{g:'lk_cotA_3',s:1});
  GEO.mtent=lkTent();GEO.lk_logs=lkLogs();GEO.lk_stones=lkStones();GEO.lk_berry=lkBerry();GEO.can=lkCan();GEO.axe_m=lkAxe();
  ITEMS.wood.ic='lk_logs';ITEMS.stone.ic='lk_stones';ITEMS.berry.ic='lk_berry';
- lkBuildStage1();if(LK_MOOD)lkBuildTown();
+ lkBuildStage1();if(LK_MOOD){lkBuildTown();lkFenceGeo()}lkBuildStage2();
  if(LK_MOOD)for(const k in GEO)if(/^lk_/.test(k)||k==='mtent'||k==='can'||k==='axe_m')lkSmooth(GEO[k],50);
  for(const k in GEO)if(!GEO[k].boundingSphere)GEO[k].computeBoundingSphere()}
 
@@ -244,7 +292,8 @@ function lkIconFrom(g,rot,cat){const L=lkIconKit(),N=128,DR=N*.44,v=new THREE.Ve
  for(let i=0;i<16;i++)k.drawImage(sl,Math.cos(i*.3927)*3,Math.sin(i*.3927)*3);k.drawImage(L.r.domElement,0,0);return c.toDataURL()}
 function lkIcons(){try{for(const id in ITEMS){const g=GEO[ITEMS[id].ic];if(g)try{ICON[id]=lkIconFrom(g,lkRotOf(id),lkCatOf(id))}catch(e){}}
   if(GEO.coin_stack_small)ICON.coin=lkIconFrom(GEO.coin_stack_small,[.6,-.6,0],'res');
-  for(const id in LKB){const b=LKB[id];if(GEO[b.g])ICON[id]=lkIconFrom(GEO[b.g],b.ir||[.42,-.62,0],b.cat||'build')}}
+  for(const id in LKB){const b=LKB[id];if(GEO[b.g])ICON[id]=lkIconFrom(GEO[b.g],b.ir||[.42,-.62,0],b.cat||'build')}
+  for(const id in BUILDS)if(!ICON[id]&&GEO[BUILDS[id].g])ICON[id]=lkIconFrom(GEO[BUILDS[id].g],[.42,-.62,0],'build')}
  finally{if(LKR){LKR.r.dispose();LKR.r.forceContextLoss();LKR=null}}
  try{if(S&&S.quick&&typeof drawQuick==='function')drawQuick();hudDirty=true}catch(e){}}
 
@@ -312,6 +361,7 @@ function lkMood(){if(!LK_MOOD||(typeof INT!=='undefined'&&INT.on))return;const n
 {const _bp=buildProc;buildProc=function(){_bp();try{lkBuildGeo()}catch(e){console.error('look: 모델 만들기 실패',e)}
  if(!buildProc.lkIc&&typeof makeIcons==='function'){buildProc.lkIc=1;const _mi=makeIcons;makeIcons=function(){_mi();try{lkIcons()}catch(e){console.error('look: 아이콘 실패',e)}}}}}
 {const _ue=updEnv;updEnv=function(dt,px,pz){_ue(dt,px,pz);try{lkMood()}catch(e){}}}
+if(LK_MOOD){const _bpo=buildPorts;buildPorts=function(){_bpo();try{lkSupplyFence();lkCenter()}catch(e){console.error('look: 철조망 실패',e)}}}
 if(LK_MOOD){pierGeo=lkPier;quayGeo=lkQuay;const _pg=buildPortGeo;buildPortGeo=function(){_pg();try{lkPortGeo()}catch(e){console.error('look: 항구 모델 실패',e)}}}
 {const _bd=buildDressGeo;buildDressGeo=function(){_bd();if(LK_MOOD)try{lkNature()}catch(e){console.error('look: 자연 모델 실패',e)}}}
 {const _bt=buildTerrain;buildTerrain=function(){_bt();if(LK_MOOD)try{water.material.uniforms.cS.value.setHex(0x4a84ec).convertSRGBToLinear();water.material.uniforms.cD.value.setHex(0x2346b4).convertSRGBToLinear()}catch(e){}}}

@@ -118,8 +118,8 @@ const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:5,food:18,cm:[22,36],back:0x5
  {id:'f_hammer',n:'망치상어',g:3,k:'hammer',str:5,p:160,food:64,cm:[220,480],back:0x7a8994,belly:0xe7ebee,len:1.5,h:.34,w2:.3}];
 FISH.forEach(f=>{const gtag=f.old?'':`[${FGRADE[f.g][0]}] `;ITEMS[f.id]={n:f.n,ic:f.id,ty:'fish',food:6,p:f.p,d:`${gtag}${f.legend?'전설의 물고기! ':''}날로 먹으면 배고픔 +6. 모닥불에 구우면 +${f.food}`};ITEMS['c'+f.id]={n:f.cn||'구운 '+f.n,ic:'c'+f.id,ty:'food',food:f.food,p:Math.round(f.p*1.5),d:`잘 익힌 ${f.n}. 배고픔 +${f.food}`}});
 /* 낚시 구역: 포인트마다 나오는 물고기와 확률(%). 같은 등급 안에서는 똑같이 나눔. R=물고기 떼가 도는 반지름 */
-const FISH_ZONES={A:{n:'등대 앞바다',R:2.8,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
- B:{n:'해안',R:2.2,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
+const FISH_ZONES={A:{n:'등대 앞바다',R:2.3,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
+ B:{n:'해안',R:1.8,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
 const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]===a.id)-FISH_ZONES.A.t.some(q=>q[0]===b.id))||a.g-b.g);
 ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:30,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
