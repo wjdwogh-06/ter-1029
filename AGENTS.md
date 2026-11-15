@@ -25,7 +25,7 @@
 ```
 python3 -m http.server 8765          # 혼자 하기: http://localhost:8765
 npm start                            # 멀티: http://localhost:8080
-python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
+python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py·town_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
 ```
 
 - 빌드 단계 없음. three.js r128, 모듈 아님(전역 스크립트). **번들러·프레임워크·ES module로 바꾸지 마세요.**
@@ -69,10 +69,11 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 - 나무·바위는 구역별 `InstancedMesh`. **r128 버그: `MAT`을 쓰는 모든 InstancedMesh에 instanceColor가 있어야 합니다**(없으면 렌더가 죽음).
 - r128에는 `BufferGeometry.applyQuaternion`이 없습니다 → `applyMatrix4`.
 - 바닥 장식(풀·꽃)은 구역이 보일 때 한 번 합쳐 만듭니다(`dress.js dressBuild`). 구조물 안에는 생기지 않고, 구조물을 놓거나 치우면 그 구역 장식을 다시 만들어요(`dressDirty`).
-- **새 디자인(`js/look.js`)**: 기획자가 준 파일(2차 look_1.js). 기존 파일을 고치지 않고 위에 덮어씌워요(`buildProc`, `makeIcons`, `addStruct`, `updEnv`, `buildDressGeo`, `buildTerrain`, `initRenderer`, `updDress`를 감쌈). index.html에서 한 줄 빼면 예전 모습. **캐릭터는 바꾸지 않아요**(기획자 결정, 원래 파일에 있던 캐릭터 부분은 뺐음).
+- **새 디자인(`js/look.js`)**: 기획자가 준 파일(3차). 기존 파일을 고치지 않고 위에 덮어씌워요(`buildProc`, `makeIcons`, `addStruct`, `updEnv`, `buildDressGeo`, `buildTerrain`, `initRenderer`, `updDress`, `buildPortGeo`를 감싸고 `pierGeo`·`quayGeo`를 바꿔 끼움). index.html에서 한 줄 빼면 예전 모습. **캐릭터는 바꾸지 않아요**(기획자 결정, 원래 파일에 있던 캐릭터 부분은 뺐음).
   - 집(주황 기와지붕 오두막 4색), 노란 삼각 텐트, 나무·돌·산딸기·통조림·손도끼 모델.
   - 설치형 1단계: 울타리 4종 + 문 4종(`LKB` 목록, `lkModel`로 움직이는 부품·효과 자리). 지금 `BUILDS.fence`=나무 울타리, `wall`=돌 울타리, `gate`=돌 울타리 문. 문짝은 사람이 1.9m 안에 오면 열려요(`lkGates`).
   - 아이콘: 분류별 색 원판 + 굵은 외곽선 + 셀 음영(`LK_CAT`).
+  - 마을·항구(`lkBuildTown`, `lkPortGeo`): market=자판기 가게(상인), tavern=바, lumbermill=창고, blacksmith·forge=컨테이너 작업장, well=탱크, towerB=철탑, barrel=드럼통 4색, crate=팔레트, 넓은 부두=콘크리트+빨간 테두리, 좁은 부두=나무 판자, 통통배·노 젓는 배·가로등·볼라드·그물·간판. 종류(t)·충돌 크기·부두 윗면 높이(0.76/0.80)는 그대로.
   - 분위기 `LK_MOOD`: 매끈한 음영, 따뜻한 햇빛 + 보랏빛 그림자, 보랏빛 남색 밤, 진한 잔디 + 흰 붓자국, 롱빈터풍 나무·바위·덤불(기존 GEO 키를 덮어써서 배치·충돌·채집은 그대로), 파란 바다. `false`면 예전 화면. 텐트 안에서는 꺼져요.
 - 성능 목표: 휴대폰. 숲 한복판 삼각형 약 22만. 조각을 늘릴 땐 합치기(`mg`)와 인스턴싱을 쓰세요.
 
@@ -149,7 +150,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 11. 지금 상태와 다음 일
 
-끝난 것: look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
+끝난 것: look.js 3차(롱빈터풍 마을·항구), look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
 
 기획자가 다음에 정할 것(먼저 만들지 말 것): 경제(농사, 상점), 약탈 규칙, 친목 기능, 동물 캐릭터, 서버 배포.
 
