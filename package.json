@@ -1,0 +1,1 @@
+{"name":"ter-1029","version":"0.4.0","private":true,"description":"초승달섬 전초기지 — 롱빈터풍 3D 모바일 브라우저 생존 게임","scripts":{"start":"npm --prefix server install --no-audit --no-fund && node server/server.js","dev":"python3 -m http.server 8765","check":"python3 tools/gt.py tools/check_world.py"}}

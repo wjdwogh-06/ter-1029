@@ -1,0 +1,6 @@
+node_modules/
+server/world.json
+*.jpg
+*.png
+.DS_Store
+tools/out/
