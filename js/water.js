@@ -87,13 +87,26 @@ function waterPose(dt){const a=P.a,r=a.root;r.rotation.order='YXZ';const sw=WTR.
 const ROD_R=8,FCATCH=1.2;let FSP=[],FCB=null,fishWarnT=0;
 const fhs=(i,k)=>{const v=Math.sin(i*127.1+k*311.7)*43758.5453;return v-Math.floor(v)};
 const FISHD={};FISH.forEach(f=>FISHD[f.id]=f);
+/* 떼 자리 맞추기(부팅 때 한 번, 지형·부두·배만 보고 정해서 누구에게나 같아요):
+   떼가 도는 원 + 물고기 반 길이까지 물 깊이 FS_MIN 이상(물가 거품·모래·땅에 안 걸치게), 부두·배 밑 아님, 다른 떼와 안 겹침, 물가 땅에서 던질 수 있음.
+   어기는 점만 기획자 좌표에서 가장 조금 옮겨요(등대 한가운데처럼 땅 위 점 포함). 옮긴 점은 ox,oz에 원래 좌표 */
+const FS_MIN=.22,FS_GAP=.6,FS_HALF=.45;
+function fsWaterOK(x,z,R){const rr=R+FS_HALF;if(hAt(x,z)>-FS_MIN||onDock(x,z))return false;
+ for(let a=0;a<20;a++){const an=a/20*Math.PI*2;for(const k of[1,.55]){const px=x+Math.cos(an)*rr*k,pz=z+Math.sin(an)*rr*k;if(hAt(px,pz)>-FS_MIN||onDock(px,pz))return false}}
+ for(const b of PBOATS){const p=b.m.position,g=b.m.geometry,br=(g.boundingSphere?g.boundingSphere.radius:1.5)*b.m.scale.x*.8;if(dist(p.x,p.z,x,z)<rr+br)return false}return true}
+function fsLandOK(x,z,R){const lim=ROD_R+R+FCATCH-1;for(let r=1;r<=lim;r+=.5){const n=Math.max(12,Math.round(r*5));for(let i=0;i<n;i++){const an=i/n*Math.PI*2,px=x+Math.cos(an)*r,pz=z+Math.sin(an)*r;if(hAt(px,pz)>=-SHALLOW||onDock(px,pz))return true}}return false}
 function fishSpotsInit(){if(FSP.length)return;const all=[...FISH_PTS_A.map(q=>({x:q[0],z:q[1],zone:'A',lb:q[2]})),...FISH_PTS_B.map((q,i)=>({x:q[0],z:q[1],zone:'B',lb:'해안'+(i+1)}))];
- all.forEach((s,i)=>{if(waterDepth(s.x,s.z)>.05)return;   /* 땅 위(등대 한가운데)에 찍힌 점 → 등대섬 바로 앞 깊은 물. 카메라 쪽(+z), 같은 구역 다른 떼와 겹치지 않는 쪽 */
-  const oth=all.filter(o=>o!==s&&o.zone===s.zone&&dist(o.x,o.z,s.x,s.z)<30);let best=null,bs=-1e9;
-  for(let a=0;a<72;a++){const an=a/72*Math.PI*2,dx=Math.cos(an),dz=Math.sin(an);let r=0;while(r<30&&waterDepth(s.x+dx*r,s.z+dz*r)<.9)r+=.25;if(r>=30)continue;r+=.8;const x=s.x+dx*r,z=s.z+dz*r;let md=9;for(const o of oth)md=Math.min(md,dist(o.x,o.z,x,z));const sc=md+dz*2-r*.15;if(sc>bs){bs=sc;best=[x,z]}}
-  if(best){s.ox=s.x;s.oz=s.z;s.x=best[0];s.z=best[1]}});
- all.forEach((s,i)=>{const A=s.zone==='A';s.R=FISH_ZONES[s.zone].R;s.dir=fhs(i,9)<.5?1:-1;s.gone=0;s.ripT=fhs(i,7)*2;s.jmpT=4+fhs(i,8)*8;s.fish=[];const n=A?5:6;
-  for(let j=0;j<n;j++){const r=s.R*(.45+.55*fhs(i,j*3+1));s.fish.push({r,w:s.dir*(A?.75:.95)*(.8+.4*fhs(i,j*3+2))/r,ph:j/n*Math.PI*2+fhs(i,j*3+3)*.8,sc:A?1+.2*fhs(i,j+20):.8+.2*fhs(i,j+20)})}});
+ all.forEach(s=>s.R=FISH_ZONES[s.zone].R);const placed=[],sepOK=(x,z,R)=>placed.every(q=>dist(q.x,q.z,x,z)>=q.R+R+2*FS_HALF+FS_GAP);
+ const rest=[];for(const s of all){if(fsWaterOK(s.x,s.z,s.R)&&sepOK(s.x,s.z,s.R))placed.push(s);else rest.push(s)}   /* 1) 이미 괜찮은 점은 그대로 */
+ const ringMin=(x,z,R)=>{const rr=R+FS_HALF;let m=-hAt(x,z);for(let a=0;a<20;a++){const an=a/20*Math.PI*2;for(const k of[1,.55]){const px=x+Math.cos(an)*rr*k,pz=z+Math.sin(an)*rr*k;m=Math.min(m,onDock(px,pz)?-9:-hAt(px,pz))}}return m};
+ for(const s of rest){let best=null,bs=-1e9,rmin=1e9;const lim=hAt(s.x,s.z)>-.05?18:6;   /* 2) 나머지는 가장 가까운 괜찮은 자리로 (같은 거리면 깊은 물·카메라 쪽). 땅 위 점(등대 한가운데)만 멀리까지 */
+  for(let r=.25;r<=lim&&r<=rmin+1;r+=.25){const n=Math.max(16,Math.round(Math.PI*2*r/.4));for(let i=0;i<n;i++){const an=i/n*Math.PI*2,dx=Math.cos(an),dz=Math.sin(an),x=s.x+dx*r,z=s.z+dz*r;
+   if(!fsWaterOK(x,z,s.R)||!sepOK(x,z,s.R)||!fsLandOK(x,z,s.R))continue;rmin=Math.min(rmin,r);const sc=-r+Math.min(-hAt(x,z),2)*.25+dz*.3;if(sc>bs){bs=sc;best=[x,z]}}}
+  if(!best){bs=-1e9;for(let r=0;r<=lim;r+=.5){const n=r?Math.max(16,Math.round(Math.PI*2*r/.5)):1;for(let i=0;i<n;i++){const an=i/n*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r;   /* 3) 넓은 얕은 여울: 거리 안에서 가장 깊은 쪽(겹침·던지기는 지킴) */
+    if(!sepOK(x,z,s.R)||!fsLandOK(x,z,s.R))continue;let bad=0;for(const b of PBOATS)if(dist(b.m.position.x,b.m.position.z,x,z)<s.R+FS_HALF+1.5)bad=1;if(bad)continue;const sc=ringMin(x,z,s.R)-r*.02;if(sc>bs){bs=sc;best=[x,z]}}}s.adj='shallow'}
+  if(best&&(best[0]!==s.x||best[1]!==s.z)){s.ox=s.x;s.oz=s.z;s.x=best[0];s.z=best[1]}placed.push(s)}
+ all.forEach((s,i)=>{const A=s.zone==='A';s.dir=fhs(i,9)<.5?1:-1;s.gone=0;s.ripT=fhs(i,7)*2;s.jmpT=4+fhs(i,8)*8;s.fish=[];const n=A?4:5;
+  for(let j=0;j<n;j++){const r=s.R*(.45+.55*fhs(i,j*3+1));s.fish.push({r,w:s.dir*(A?.7:.85)*(.8+.4*fhs(i,j*3+2))/r,ph:j/n*Math.PI*2+fhs(i,j*3+3)*.8,sc:A?.7+.15*fhs(i,j+20):.55+.15*fhs(i,j+20)})}});
  FSP=all}
 const spotAt=(x,z)=>{let b=null,bd=1e9;for(const s of FSP){const d=dist(s.x,s.z,x,z);if(d<=s.R+FCATCH&&d<bd){bd=d;b=s}}return b};
 function fishWarn(m){if(gt-fishWarnT<1.4)return;fishWarnT=gt;toast(m)}

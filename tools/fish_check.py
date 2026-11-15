@@ -2,7 +2,12 @@
 import json
 async def steps(pg):
     ev=pg.evaluate
-    print('spots',await ev("()=>JSON.stringify({n:FSP.length,A:FSP.filter(s=>s.zone==='A').length,B:FSP.filter(s=>s.zone==='B').length,moved:FSP.filter(s=>s.ox!==undefined).map(s=>[s.lb,[s.ox,s.oz],[+s.x.toFixed(1),+s.z.toFixed(1)],+waterDepth(s.x,s.z).toFixed(2)])})"))
+    print('spots',await ev("()=>JSON.stringify({n:FSP.length,A:FSP.filter(s=>s.zone==='A').length,B:FSP.filter(s=>s.zone==='B').length,shallowFlat:FSP.filter(s=>s.adj).map(s=>s.lb)})"))
+    # 떼 자리: 원+물고기 반 길이까지 깊이 0.35 이상(땅·거품에 안 걸침), 부두 밑 아님, 다른 떼와 안 겹침. 옮긴 점과 거리
+    print('layout',await ev("""()=>{const bad=[],ov=[];for(const s of FSP){const rr=s.R+FS_HALF;let md=9,dk=0;for(let a=0;a<36;a++){const an=a/36*6.283;for(const k of[1,.5]){const x=s.x+Math.cos(an)*rr*k,z=s.z+Math.sin(an)*rr*k;md=Math.min(md,-hAt(x,z));if(onDock(x,z))dk=1}}if(md<FS_MIN-.02||dk)bad.push(s.lb+':'+md.toFixed(2)+(dk?' dock':''))}
+      for(let i=0;i<FSP.length;i++)for(let j=i+1;j<FSP.length;j++){const a=FSP[i],b=FSP[j],d=dist(a.x,a.z,b.x,b.z);if(d<a.R+b.R+2*FS_HALF)ov.push(a.lb+'-'+b.lb+':'+d.toFixed(1))}
+      const mv=FSP.filter(s=>s.ox!==undefined).map(s=>[s.lb,+dist(s.x,s.z,s.ox,s.oz).toFixed(1)]).sort((a,b)=>b[1]-a[1]);
+      return JSON.stringify({landOrShallow:bad,overlap:ov,moved:mv.length,maxMove:mv.slice(0,8),under1m:mv.filter(q=>q[1]<=1).length})}"""))
     print('odds',await ev("""()=>{const out={};for(const zk of['A','B']){const sp=FSP.find(s=>s.zone===zk),c={},g=[0,0,0,0],N=200000;for(let i=0;i<N;i++){const f=pickFish(sp);c[f.n]=(c[f.n]||0)+1;g[f.g]++}
       for(const k in c)c[k]=+(c[k]/N*100).toFixed(1);out[zk]={fish:c,grade:Object.fromEntries(g.map((v,i)=>[FGRADE[i][0],+(v/N*100).toFixed(1)]))}}return JSON.stringify(out)}"""))
     # 88곳 모두: 가장 가까운 설 수 있는 땅으로 옮겨 [던지기] → 그 떼(또는 같은 구역 이웃 떼)에 던져지는지
