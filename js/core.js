@@ -32,17 +32,19 @@ const PORTS=[];
 /* supply spots (marked by hand in admin mode): cleared ground with a few supply crates */
 /* 기획자 요청(7차): 까마귀섬 낚시섬(메모1, 철조망 울타리 + 문 + 낚시섬 주인)과 물개섬 특수 보급지(항구1 메모, 네모난 바위 언덕 + 경사로).
    땅 모양만 여기서(서버도 같은 땅), 구조물과 모델은 js/places.js. h=둘레 땅 높이(buildHeights에서 정함) */
-const FISHISLE={x:137,z:135,h:1.12,hw:8.75,hd:7.5};
-/* 물개섬 특수 보급지(8차, 기획자: '올라가고 네모난 곳 안은 파여 있어야'): 층진 바위 절벽 언덕(테두리 높이 h+top), 앞 경사로로 올라가서
-   안쪽 돌계단으로 파인 분지(h-dig)로 내려가요. 땅은 둘레를 평평하게 + 분지 안만 파고, 테두리·경사로·계단의 걷는 높이는 spSurf(모양은 places.js 메시).
-   A/ac=바깥 반폭·모서리, B/bc=안쪽 반폭·모서리, rx=경사로·계단 x 위치, rw·rl=경사로 폭·길이, sw·sl=계단 폭·길이 */
-const SPSUP={x:718,z:849,h:1.12,top:1.9,dig:.6,A:8.0,ac:2.6,B:5.6,bc:1.6,rx:2.6,rw:2.8,rl:6.6,sw:2.4,sl:4.4};
-function rbox(ex,ez,a,c){const qx=Math.abs(ex)-(a-c),qz=Math.abs(ez)-(a-c);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-c}   /* 모서리 둥근 네모까지 거리(안쪽 음수) */
-const spOut=(x,z)=>rbox(x-SPSUP.x,z-SPSUP.z,SPSUP.A,SPSUP.ac),spIn=(x,z)=>rbox(x-SPSUP.x,z-SPSUP.z,SPSUP.B,SPSUP.bc);
-function spSurf(x,z){const S2=SPSUP,ex=x-S2.x,ez=z-S2.z;if(ex>S2.A+1||ex<-S2.A-1||ez<-S2.A-1||ez>S2.A+S2.rl+1)return null;
- const Hr=S2.h+S2.top,Hb=S2.h-S2.dig,ax=Math.abs(ex-S2.rx);
- if(ax<S2.rw/2+.05&&ez>S2.A-.6&&ez<S2.A+S2.rl)return Hr-(Hr-S2.h)*clamp((ez-(S2.A-.6))/(S2.rl+.6),0,1);   /* 바깥 경사로 */
- if(ax<S2.sw/2+.05&&ez<S2.B+.4&&ez>S2.B-S2.sl)return Hb+(Hr-Hb)*clamp((ez-(S2.B-S2.sl))/(S2.sl+.4),0,1);   /* 안쪽 돌계단 */
+const FISHISLE={x:137,z:135,h:1.12,hw:8.75,hd:7.5,cx:-3,cz:-6.5,rx:23,rz:20.5};   /* cx·cz·rx·rz: 캠프 땅 다지기 직사각형(캠프 중심 기준, 9차에 넓힘) */
+/* 물개섬 특수 보급지(9차, 기획자: '올라가고 네모 안은 파여 있게' + '더 크게, 계단은 앞에서 봐도 옆모습이 보이게'): 모서리 둥근 직사각형 바위 언덕.
+   테두리 높이 h+top, 안쪽 분지 h-dig. 경사로는 앞(+z) 절벽에 붙어 x 방향으로 올라가고(서쪽 바닥 rp.x0 → rp.x1에서 테두리 높이, rp.x1~x2 꼭대기 마루),
+   계단은 분지 뒤(−z) 벽에 붙어 x 방향으로 내려가요(st.x0~x1 꼭대기 마루 → st.x2에서 바닥). 둘 다 카메라에서 옆모습이 보여요.
+   땅은 둘레를 평평하게 + 분지 안만 파고, 테두리·경사로·계단의 걷는 높이는 spSurf(모양은 places.js 메시).
+   AX/AZ/ac=바깥 반폭(x·z)·모서리, BX/BZ/bc=안쪽 반폭·모서리, rp.z0·w=경사로 띠(AZ+z0 ~ AZ+z0+w), st.w=계단 띠(−BZ ~ −BZ+w) */
+const SPSUP={x:718,z:845,h:1.12,top:1.9,dig:.6,AX:14,AZ:11,ac:3,BX:10.5,BZ:7.5,bc:2,rp:{x0:-12.6,x1:-1.2,x2:2.6,z0:.15,w:3.6},st:{x0:-8.4,x1:-5.8,x2:1.4,w:3}};
+function rbox2(ex,ez,ax,az,c){const qx=Math.abs(ex)-(ax-c),qz=Math.abs(ez)-(az-c);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-c}   /* 모서리 둥근 직사각형까지 거리(안쪽 음수) */
+const spOut=(x,z)=>rbox2(x-SPSUP.x,z-SPSUP.z,SPSUP.AX,SPSUP.AZ,SPSUP.ac),spIn=(x,z)=>rbox2(x-SPSUP.x,z-SPSUP.z,SPSUP.BX,SPSUP.BZ,SPSUP.bc);
+function spSurf(x,z){const S=SPSUP,R=S.rp,T=S.st,ex=x-S.x,ez=z-S.z;if(ex>S.AX+1||ex<-S.AX-1||ez<-S.AZ-1||ez>S.AZ+R.z0+R.w+1)return null;
+ const Hr=S.h+S.top,Hb=S.h-S.dig;
+ if(ex>R.x0-.05&&ex<R.x2+.05&&ez<S.AZ+R.z0+R.w+.05){if(ex>=R.x1&&ez>S.AZ-.6)return Hr;if(ez>S.AZ+R.z0-.05)return S.h+(Hr-S.h)*clamp((ex-R.x0)/(R.x1-R.x0),0,1)}   /* 앞 경사로 + 꼭대기 마루 */
+ if(ex>T.x0-.05&&ex<T.x2+.05&&ez>-S.BZ-.6&&ez<-S.BZ+T.w+.05){if(ex<=T.x1)return Hr;if(ez>-S.BZ-.05)return Hb+(Hr-Hb)*(1-clamp((ex-T.x1)/(T.x2-T.x1),0,1))}   /* 뒤 계단 + 꼭대기 마루 */
  return spOut(x,z)<0&&spIn(x,z)>0?Hr:null}   /* 테두리 위 */
 const SUPPLY_SITES=[[103,754],[158,162],[822,266],[684,174],[687,843],[905,682],[486,708],[448,726],[451,703],[236,619],[216,401],[463,263],[402,608],[741,547]],SUPS=[];
 function findSupply(sd){SUPS.length=0;SUPPLY_SITES.forEach((q,i)=>{let x=q[0],z=q[1];if(rawH(x,z,sd,1)<1){let ok=false;for(let r=2;r<40&&!ok;r+=2)for(let a=0;a<24;a++){const X=q[0]+Math.cos(a*.262)*r,Z=q[1]+Math.sin(a*.262)*r;if(rawH(X,Z,sd,1)>1.2){x=X;z=Z;ok=true;break}}if(!ok)return}
@@ -92,8 +94,8 @@ function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const
    if(al<0&&dd<p.R)h=lerp(h,1.15,(1-sm(p.R*.6,p.R,dd))*sm(-3,-6.5,al));const Lb=p.town?27:(p.L||22)+3,Wb=p.town?22:11;
    if(al>-6&&al<Lb+8&&la<Wb+6){const cap=al<-3?lerp(1.15,.5,(al+6)/3):al<1?lerp(.5,-.15,(al+3)/4):al<5?lerp(-.15,-1.6,(al-1)/4):-1.6;if(h>cap)h=lerp(h,cap,(1-sm(Wb,Wb+6,la))*(1-sm(Lb,Lb+8,al)))}}
   for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>10||ex<-10||ez>10||ez<-10)continue;h=lerp(h,s.h,1-sm(4.5,9.5,Math.hypot(ex,ez)))}
-  {const ex=x-FISHISLE.x,ez=z-FISHISLE.z;if(ex<18&&ex>-18&&ez<18&&ez>-18)h=lerp(h,FISHISLE.h,1-sm(12.5,17,Math.hypot(ex,ez)))}
-  {const ex=x-SPSUP.x,ez=z-SPSUP.z;if(ex<26&&ex>-26&&ez<26&&ez>-26){h=lerp(h,SPSUP.h,1-sm(SPSUP.A+4,SPSUP.A+10,Math.hypot(ex,ez*.85)));h=lerp(h,SPSUP.h-SPSUP.dig,1-sm(.6,1.4,rbox(ex,ez,SPSUP.B,SPSUP.bc)))}}}
+  {const F=FISHISLE,ex=x-F.x-F.cx,ez=z-F.z-F.cz;if(ex<F.rx+5&&ex>-F.rx-5&&ez<F.rz+5&&ez>-F.rz-5){const d=rbox2(ex,ez,F.rx,F.rz,4);if(d<4)h=lerp(h,F.h,(1-sm(0,4,d))*sm(.3,.95,h))}}   /* 땅만 다져요(바닷가 선은 그대로) */
+  {const S=SPSUP,ex=x-S.x,ez=z-S.z;if(ex<S.AX+14&&ex>-S.AX-14&&ez<S.AZ+14&&ez>-S.AZ-14){h=lerp(h,S.h,1-sm(6,11,rbox2(ex,ez,S.AX,S.AZ,S.ac)));h=lerp(h,S.h-S.dig,1-sm(.6,1.4,rbox2(ex,ez,S.BX,S.BZ,S.bc)))}}}
  return lhRock(x,z,h,sd)}
 function buildHeights(sd){SEED=sd;layout(sd);const A=ISL[0],B=ISL[1];
  findPorts(sd);{const p=PORTS[0];VIL.x=p.x-p.dz*1.6-p.dx*14.4;VIL.z=p.z+p.dx*1.6-p.dz*14.4;VIL.px=p.x-p.dx*13;VIL.pz=p.z-p.dz*13}OUT.x=OUT.z=-9999;   /* the hub (spawn, safe zone, merchant) is the harbour town */

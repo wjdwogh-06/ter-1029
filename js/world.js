@@ -139,11 +139,11 @@ function buildTerrain(){const st=2,n=REG/st+1,C4=new THREE.Color();tchunks=[];
    const nz=fbm(x*.05+20,z*.05+11,3),I=islAt(x,z),vol=I&&I.tint?1:0;
    C1.setHex(0x74b545).lerp(C2.setHex(0x4f9440),sm(.3,.8,nz)*.9).lerp(C2.setHex(0x9ad058),noise(x*.35,z*.35,7)*.25);C1.lerp(C2.setHex(0xa8cf4e),sm(.58,.78,noise(x*.06+7,z*.06+3,SEED+9))*.3);if(vol)C1.lerp(C2.setHex(0x6f7f5a),sm(.35,.75,fbm(x*.02+50,z*.02+9,4))*.6);
    const fr=sm(.5,.62,noise(x*.035+100,z*.035+100,SEED+4));C1.lerp(C2.setHex(0x3c8238),fr*.5);
-   const tp=tundraAt(x,z,h);if(tp>0)C1.lerp(C2.setHex(0xb9bf62).lerp(C3.setHex(0x93a651),nz),tp*.6);{const H=UH(h);if(H>6&&!(Math.abs(x-SPSUP.x)<15&&Math.abs(z-SPSUP.z)<18))C1.lerp(C2.setHex(0x8f9a6e),sm(6,10,H)*.5)}   /* 특수 보급 언덕 위는 잔디 그대로 */
-   const sl=Math.abs(hAt(x+1.5,z)-hAt(x-1.5,z))+Math.abs(hAt(x,z+1.5)-hAt(x,z-1.5)),spo=Math.abs(x-SPSUP.x)<26&&Math.abs(z-SPSUP.z)<26?spOut(x,z):9,spi=spo<9?spIn(x,z):9;
+   const tp=tundraAt(x,z,h);if(tp>0)C1.lerp(C2.setHex(0xb9bf62).lerp(C3.setHex(0x93a651),nz),tp*.6);{const H=UH(h);if(H>6&&!(Math.abs(x-SPSUP.x)<21&&Math.abs(z-SPSUP.z)<20))C1.lerp(C2.setHex(0x8f9a6e),sm(6,10,H)*.5)}   /* 특수 보급 언덕 위는 잔디 그대로 */
+   const sl=Math.abs(hAt(x+1.5,z)-hAt(x-1.5,z))+Math.abs(hAt(x,z+1.5)-hAt(x,z-1.5)),spo=Math.abs(x-SPSUP.x)<32&&Math.abs(z-SPSUP.z)<30?spOut(x,z):9,spi=spo<9?spIn(x,z):9;
    if(sl>1.1&&!(spo<1))C1.lerp(C2.setHex(vol?0x5a574f:0x7d776a),sm(1.1,2.4,sl));   /* 특수 보급 분지 안·테두리 밑(메시가 덮음)은 바위색 안 섞음 */
    if(spo<9){if(spo>0&&spo<3.2)C1.multiplyScalar(lerp(.8,1,sm(0,3.2,spo)));if(spi<.4)C1.lerp(C2.setHex(0x6a8a42),.4).lerp(C3.setHex(0x8f7d56),.3*sm(.35,.75,noise(x*.35,z*.35,5)))}   /* 절벽 밑은 살짝 어둡게, 분지 바닥은 흙 섞인 풀 */
-   if(typeof plWorn==='function'&&h>.75){const wn=plWorn(x-FISHISLE.x,z-FISHISLE.z);if(wn>0)C1.lerp(C2.setHex(0x9a7246).lerp(C3.setHex(0xb08758),noise(x*.5,z*.5,3)),Math.min(1,wn*1.1))}   /* 낚시 캠프 닳은 흙길 */
+   if(typeof plWornAt==='function'&&h>.75){const wn=plWornAt(x,z);if(wn>0)C1.lerp(C2.setHex(0x9a7246).lerp(C3.setHex(0xb08758),noise(x*.5,z*.5,3)),Math.min(1,wn*1.1))}   /* 낚시 캠프 닳은 흙길 */
    let dv=dist(x,z,VIL.px,VIL.pz);if(dv<27)C1.lerp(C2.setHex(0xb39a72),(1-sm(15,27,dv))*.8);
    {const sd2=supD(x,z);if(sd2<8.5)C1.lerp(C2.setHex(0xb39a72),(1-sm(3,8.5,sd2))*.75)}
    if(h>.6){const pd=pathD(x,z);if(pd<3.4)C1.lerp(C2.setHex(0xc4a878),(1-sm(1.1,3.4,pd))*.9)}

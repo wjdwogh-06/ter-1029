@@ -12,7 +12,7 @@
 :root{--pn:#FBF4E6;--pn2:#F3E7D0;--pn3:#E6D4B4;--bd:#E2CDA8;--tx:#5B3D2B;--mut:#A08368;--amb:#F0A23A;--org:#C9772B;--grn:#45B864;--grnD:#2F9A4C;--red:#E5534B;--redD:#B83C35;--blu:#4A9BE0;--pur:#9B7BE0;--brn:#5A3A2E;--nav:#2E3754;
  --f:"NanumSquareRound","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-html,body{margin:0;height:100%;overflow:hidden;background:#1b1410;font-family:var(--f);color:var(--tx);font-weight:700;touch-action:none;overscroll-behavior:none}
+html,body{margin:0;height:100%;width:100%;overflow:hidden;background:#1b1410;font-family:var(--f);color:var(--tx);font-weight:700;touch-action:none;overscroll-behavior:none}
 button,input{font-family:var(--f)}
 #game,#fx{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}#fx{pointer-events:none;z-index:2}
 #vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 58%,rgba(30,18,10,.32) 100%)}
@@ -125,6 +125,6 @@ button,input{font-family:var(--f)}
 <div id="fade"></div>
 <div id="respawn"><div class="rsT">쓰러졌어요…</div><div class="rsS" id="rsSt"></div><div class="rsB"><i id="rsBar"></i></div><div class="rsH">무작위 항구에서 다시 깨어나요</div></div>
 <script src="js/three.min.js"></script><script src="js/GLTFLoader.js"></script><script src="js/SkeletonUtils.js"></script>
-<script src="js/core.js"></script><script src="js/world.js"></script><script src="js/actors.js"></script><script src="js/water.js"></script><script src="js/ports.js"></script><script src="js/dress.js"></script><script src="js/interior.js"></script><script src="js/look.js"></script><script src="js/places.js"></script><script src="js/ui.js"></script><script src="js/chat.js"></script><script src="js/net.js"></script>
+<script src="js/core.js"></script><script src="js/world.js"></script><script src="js/actors.js"></script><script src="js/water.js"></script><script src="js/ports.js"></script><script src="js/dress.js"></script><script src="js/interior.js"></script><script src="js/look.js"></script><script src="js/places.js"></script><script src="js/ui.js"></script><script src="js/screen.js"></script><script src="js/chat.js"></script><script src="js/net.js"></script>
 </body>
 </html>

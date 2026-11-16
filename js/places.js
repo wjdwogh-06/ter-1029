@@ -5,7 +5,7 @@
       + 모닥불과 통나무 의자 + 징검돌 길 + 줄 전구. 나중에 '낚시 도감을 다 채우면 들어오는 곳'이 될 자리
    2) 물개섬 특수 보급지(SPSUP, x=718 z=849): 층층이 쌓인 바위 절벽 언덕. 앞 흙 경사로로 올라가서, 안쪽 돌계단으로 파인 분지로 내려가면 특수 보급.
    땅(분지 파기·둘레 다지기)과 걷는 높이(spSurf)는 core.js, 여기서는 모양(메시)·벽·구조물·문·주인 */
-const PLACES=[{k:'fish',n:'낚시섬',x:FISHISLE.x-8,z:FISHISLE.z-1,c:'#3fb6e0'},{k:'sp',n:'특수 보급지',x:SPSUP.x,z:SPSUP.z,c:'#ff7a3d'}];
+const PLACES=[{k:'fish',n:'낚시섬',x:FISHISLE.x-3,z:FISHISLE.z-6,c:'#3fb6e0'},{k:'sp',n:'특수 보급지',x:SPSUP.x,z:SPSUP.z,c:'#ff7a3d'}];
 let FNPC=null;   /* 낚시섬 주인 {a,x,z,rot,i} */
 const FNPC_LINES=['어서 와요! 여긴 낚시꾼들의 섬이에요.','오늘은 물때가 좋네요. 등대 앞바다엔 큰 놈이 살아요.','도감은 잘 채우고 있어요? 다 채우면 꼭 보여 줘요.'];
 DECO.cgate={g:'pl_cgate',s:1,bx:1.25,bz:.16,hp:1e9};   /* 철조망 문: 닫혀 있을 때만 막혀요(s.open, world.js inStruct) */
@@ -26,10 +26,6 @@ PLGeo.prototype.tri=function(a,b,c,ca,cb,cc,dir){const ux=b[0]-a[0],uy=b[1]-a[1]
 PLGeo.prototype.quad=function(a,b,c,d,ca,cb,cc,cd,dir){this.tri(a,b,c,ca,cb,cc,dir);this.tri(a,c,d,ca,cc,cd,dir)};
 PLGeo.prototype.build=function(smooth){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(this.p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(this.c,3));g.computeVertexNormals();if(smooth&&typeof lkSmooth==='function')lkSmooth(g,smooth);g.computeBoundingSphere();return g};
 const plWave=(t,sd,amp)=>amp*(.5*Math.sin(6.283*(3*t)+sd*1.7)+.3*Math.sin(6.283*(7*t)+sd*3.1)+.2*Math.sin(6.283*(13*t)+sd*5.3));   /* 둘레를 따라 부드럽게 울퉁불퉁 */
-/* 모서리 둥근 네모 둘레 N점(가운데 기준): {x,z,nx,nz,t} */
-function plRRect(a,c,N){const s=a-c,L=8*s+Math.PI*2*c,S=[[a,-s,0,1,1,0],[s,a,-1,0,0,1],[-a,s,0,-1,-1,0],[-s,-a,1,0,0,-1]],Cn=[[s,s],[-s,s],[-s,-s],[s,-s]],out=[];
- for(let i=0;i<N;i++){let u=i/N*L,p=null;for(let k=0;k<4&&!p;k++){if(u<2*s){const q=S[k];p={x:q[0]+q[2]*u,z:q[1]+q[3]*u,nx:q[4],nz:q[5]};break}u-=2*s;if(u<Math.PI*c/2){const th=k*Math.PI/2+u/c;p={x:Cn[k][0]+c*Math.cos(th),z:Cn[k][1]+c*Math.sin(th),nx:Math.cos(th),nz:Math.sin(th)};break}u-=Math.PI*c/2}
-  if(!p)p={x:a,z:-s,nx:1,nz:0};p.t=i/N;out.push(p)}return out}
 /* 바위 색: 층마다 조금씩, 점마다 살짝 */
 const plRock=(band,i,k=1)=>{const H=[0x6d6a78,0x84818e,0x938f9c,0x9f9ca7][band],v=.9+hash(i,band*7+3,61)*.2;return plCol(H,v*k)};
 
@@ -53,79 +49,161 @@ function plSignText(txt,w=2.7,h=.5,px=74){const cv=document.createElement('canva
 const plAdd=(g,x,y,z,ry=0,m)=>{const o=mesh(g,m||MATT);o.position.set(x,y,z);o.rotation.y=ry;scene.add(o);return o};
 const plWallAlong=(pts,step,skip)=>{let acc=step;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let u=0;u<L;u+=.25){acc+=.25;if(acc>=step){acc=0;const x=a[0]+(b[0]-a[0])*u/L,z=a[1]+(b[1]-a[1])*u/L;if(!skip||!skip(x,z))addStruct({t:'iblk',x,z,r:Math.atan2(-(b[1]-a[1]),b[0]-a[0]),hp:1e9})}}}};
 
-/* ========== 2) 물개섬 특수 보급지: 바위 분지 ========== */
-function plCrater(){const S2=SPSUP,X=S2.x,Z=S2.z,G=S2.h,Hr=G+S2.top,Hb=G-S2.dig,N=144,UP=[0,1,0];
- const O=plRRect(S2.A,S2.ac,N),I=plRRect(S2.B,S2.bc,N);
- const ringO=(off,y,band,sd)=>O.map((p,i)=>{const o=off+plWave(p.t,sd,.16)+(hash(i,band,71)-.5)*.1;return[X+p.x+p.nx*o,y+plWave(p.t,sd+9,.07),Z+p.z+p.nz*o]});
- const ringI=(off,y,band,sd)=>I.map((p,i)=>{const o=off+plWave(p.t,sd,.12)+(hash(i,band,73)-.5)*.08;return[X+p.x+p.nx*o,y+plWave(p.t,sd+9,.06),Z+p.z+p.nz*o]});
+/* ========== 2) 물개섬 특수 보급지: 바위 분지 (9차: 크게, 경사로·계단 옆모습) ========== */
+/* 모서리 둥근 직사각형 둘레 N점(가운데 기준): {x,z,nx,nz,t} */
+function plRRect2(ax,az,c,N){const sx=ax-c,sz=az-c,q=Math.PI*c/2,arc=(cx,cz,a0)=>u=>{const th=a0+u/c;return{x:cx+c*Math.cos(th),z:cz+c*Math.sin(th),nx:Math.cos(th),nz:Math.sin(th)}};
+ const S=[[2*sz,u=>({x:ax,z:-sz+u,nx:1,nz:0})],[q,arc(sx,sz,0)],[2*sx,u=>({x:sx-u,z:az,nx:0,nz:1})],[q,arc(-sx,sz,Math.PI/2)],[2*sz,u=>({x:-ax,z:sz-u,nx:-1,nz:0})],[q,arc(-sx,-sz,Math.PI)],[2*sx,u=>({x:-sx+u,z:-az,nx:0,nz:-1})],[q,arc(sx,-sz,1.5*Math.PI)]],L=S.reduce((a,s)=>a+s[0],0),out=[];
+ for(let i=0;i<N;i++){let u=i/N*L,p=null;for(const [l,f] of S){if(u<=l){p=f(u);break}u-=l}if(!p)p={x:ax,z:-sz,nx:1,nz:0};p.t=i/N;out.push(p)}return out}
+/* 축에 맞춘 보이지 않는 벽 한 줄(1.8m 조각으로 나눠요: inStruct는 6m 안의 구조물만 봐요) */
+function plWallSeg(ax,az,bx,bz,th=.4){const L=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.ceil(L/1.8)),r=Math.atan2(-(bz-az),bx-ax),k=PLB(L/n/2+.05,th);for(let i=0;i<n;i++){const t=(i+.5)/n;addStruct({t:k,x:ax+(bx-ax)*t,z:az+(bz-az)*t,r,hp:1e9})}}
+const plWood=0x8a5a36,plWoodD=0x6f4a2c,plRope=0xd9c49a;
+/* 기울어진 막대(난간·줄): a→b */
+function plBar(p,a,b,w,c){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],L=Math.hypot(dx,dy,dz),v=new THREE.Vector3(dx,dy,dz).normalize(),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1,0,0),v),e=new THREE.Euler().setFromQuaternion(q);
+ p.push(pt(lkRb(L+.02,w,w,Math.min(.03,w/3),.02),c,[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],[e.x,e.y,e.z]))}
+/* 처지는 밧줄 */
+function plSag(p,a,b,sag=.12,c=plRope,w=.035){let prev=a;for(let k=1;k<=4;k++){const t=k/4,q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-Math.sin(t*Math.PI)*sag,a[2]+(b[2]-a[2])*t];plBar(p,prev,q,w,c);prev=q}}
+/* 감시탑(나무 다리 넷 + X 버팀 + 마루 + 난간 + 초록 천 지붕 + 사다리) */
+function plTowerGeo(){const p=[],W=plWood,D=plWoodD,s=.8,H=3.3;
+ for(const x of[-s,s])for(const z of[-s,s])p.push(pt(lkRb(.17,5.0,.17,.05,.03),W,[x,2.5,z]));
+ for(const [y0,y1] of [[.25,1.75],[1.75,3.2]]){plBar(p,[-s,y0,s+.03],[s,y1,s+.03],.07,D);plBar(p,[s,y0,s+.03],[-s,y1,s+.03],.07,D);plBar(p,[s+.03,y0,-s],[s+.03,y1,s],.07,D);plBar(p,[s+.03,y0,s],[s+.03,y1,-s],.07,D);plBar(p,[-s-.03,y0,-s],[-s-.03,y1,s],.07,D);plBar(p,[-s-.03,y0,s],[-s-.03,y1,-s],.07,D)}
+ const tone=[0xb98556,0xa67848,0xc08d5c];for(let k=0;k<7;k++)p.push(pt(lkRb(.3,.12,2.1,.03,.02),tone[k%3],[-.9+k*.3,H,0]));
+ for(const y of[H+.45,H+.9]){p.push(pt(lkRb(1.9,.08,.08,.03,.02),D,[0,y,-s]),pt(lkRb(.08,.08,1.9,.03,.02),D,[s,y,0]),pt(lkRb(.08,.08,1.9,.03,.02),D,[-s,y,0]),pt(lkRb(.6,.08,.08,.03,.02),D,[-.5,y,s]),pt(lkRb(.6,.08,.08,.03,.02),D,[.5,y,s]))}
+ p.push(pt(cone(1.6,.85,4),0x5c7a3c,[0,5.4,0],[0,Math.PI/4,0]),pt(lkRb(2.05,.08,2.05,.03,.02),0x4f6a34,[0,5.0,0]),pt(new THREE.SphereGeometry(.08,8,6),0xd9c49a,[0,5.86,0]));
+ for(const x of[-.27,.27])p.push(pt(lkRb(.07,H+.05,.07,.02,.02),D,[x,H/2,s+.28],[-.08,0,0]));for(let y=.35;y<H;y+=.36)p.push(pt(lkRb(.6,.05,.06,.02,.01),W,[0,y,s+.28-y*.08]));
+ return mg(p)}
+/* 위장망 그늘(기둥 넷 + 처진 망) */
+function plShadeGeo(w,d,h){const p=[];for(const x of[-w/2,w/2])for(const z of[-d/2,d/2])p.push(pt(cyl(.05,.06,h,8),0x5a5f66,[x,h/2,z]));
+ const g=new PLGeo(),nx=8,nz=6,C=[0x5f7a3a,0x7d8a4a,0x8a7a4f,0x4f6a34],P=(i,j)=>{const u=i/nx,v=j/nz;return[-w/2-.15+(w+.3)*u,h+.03-.28*Math.sin(Math.PI*u)*Math.sin(Math.PI*v)+(hash(i,j,41)-.5)*.05,-d/2-.15+(d+.3)*v]},cl=(i,j)=>plCol(C[Math.min(3,(hash(i>>1,j>>1,43)*4)|0)],.92+hash(i,j,44)*.16);
+ for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)g.quad(P(i,j),P(i+1,j),P(i+1,j+1),P(i,j+1),cl(i,j),cl(i+1,j),cl(i+1,j+1),cl(i,j+1),[0,1,0]);
+ return{poles:mg(p),net:g.build(30)}}
+/* 접이식 탁자 + 지도 + 무전기 + 의자 */
+function plTableGeo(){const p=[pt(lkRb(1.6,.07,.8,.03,.02),0x7d6a4f,[0,.78,0]),pt(lkRb(.62,.012,.46,.01,.005),0xe8dcb8,[-.3,.82,.05]),pt(lkRb(.16,.014,.16,.01,.005),0xff7a3d,[-.24,.83,.08])];
+ for(const x of[-.72,.72])for(const z of[-.32,.32])p.push(pt(lkRb(.06,.78,.06,.02,.01),0x4a4f57,[x,.39,z]));
+ if(GEO.radio)p.push(pt(GEO.radio,null,[.42,.81,-.05],[0,-.3,0],[.85,.85,.85]));
+ for(const [x,z] of[[-.35,.75],[.5,.7]])p.push(pt(cyl(.19,.17,.06,12),0x5a5f66,[x,.46,z]),pt(cyl(.03,.03,.44,6),0x4a4f57,[x,.22,z]));return mg(p)}
+/* 모래주머니 줄(아래 n개 + 위 n-1개) */
+function plSandbagGeo(n){const p=[],C=[0xb9a77c,0xae9c70,0xc2b088];for(let r=0;r<2;r++){const m=n-r;for(let k=0;k<m;k++)p.push(pt(lkRb(.6,.25,.38,.11,.07),C[(k+r*2)%3],[(k-(m-1)/2)*.58,.13+r*.23,(hash(k,r,51)-.5)*.05],[0,(hash(k,r,52)-.5)*.12,0]))}const g=mg(p);lkSmooth(g,50);return g}
+/* 깃대 + 주황 깃발 */
+function plFlagGeo(){const p=[pt(cyl(.05,.065,4.6,10),0xd8dde2,[0,2.3,0]),pt(new THREE.SphereGeometry(.09,10,7),0xe9c046,[0,4.65,0]),pt(lkRb(.36,.14,.36,.04,.03),0x6a7078,[0,.07,0])];
+ const g=new PLGeo(),n=8,F=(i,j)=>[.06+1.35*i/n,4.45-.82*j/2,Math.sin(i/n*Math.PI*1.6)*.12*(i/n)],cl=(i,j)=>j===1&&false?0:plCol(0xff7a3d,.95);
+ for(let i=0;i<n;i++)for(let j=0;j<2;j++){const c=j===0?plCol(0xff7a3d):plCol(0xff8f55);g.quad(F(i,j),F(i+1,j),F(i+1,j+1),F(i,j+1),c,c,c,c,[0,0,1])}
+ return{pole:mg(p),cloth:g.build()}}
+/* 길쭉한 주황 고깔 */
+function plConeGeo(){return mg([pt(lkRb(.38,.05,.38,.04,.02),0xff7a3d,[0,.025,0]),pt(cyl(.035,.15,.5,10),0xff7a3d,[0,.3,0]),pt(cyl(.085,.11,.09,10),0xf4f4f4,[0,.27,0]),pt(cyl(.06,.075,.06,10),0xf4f4f4,[0,.44,0])])}
+/* 노란 경고 간판(나무 기둥 둘) */
+function plBoardGeo(w=2.5,h=.78){return mg([...[-w/2+.2,w/2-.2].map(x=>pt(lkRb(.13,1.55,.13,.04,.03),plWood,[x,.78,-.04])),pt(lkRb(w+.12,h+.12,.08,.06,.03),0x3a3f4a,[0,1.32,0]),pt(lkRb(w,h,.1,.05,.03),0xf2c94c,[0,1.32,.02]),
+ ...[0,1,2,3,4,5,6,7].map(k=>pt(lkRb(.18,.1,.11,.02,.01),k%2?0x3a3f4a:0xf2c94c,[-w/2+.15+k*(w-.3)/7,.95,.03]))])}
+
+function plCrater(){const S2=SPSUP,R=S2.rp,T=S2.st,X=S2.x,Z=S2.z,G=S2.h,Hr=G+S2.top,Hb=G-S2.dig,N=208,UP=[0,1,0];
+ const O=plRRect2(S2.AX,S2.AZ,S2.ac,N),I=plRRect2(S2.BX,S2.BZ,S2.bc,N);
+ const fo=p=>p.nz>.7&&p.x>R.x0-1.4&&p.x<R.x2+.9?.1:1,fi=p=>p.nz<-.7&&p.x>T.x0-.9&&p.x<T.x2+.9?.08:1;   /* 경사로·계단이 붙는 곳은 절벽을 곧게 */
+ const ringO=(off,y,band,sd)=>O.map((p,i)=>{const k=fo(p),o=(off+plWave(p.t,sd,.18)+(hash(i,band,71)-.5)*.1)*k;return[X+p.x+p.nx*o,y+plWave(p.t,sd+9,.07)*k,Z+p.z+p.nz*o]});
+ const ringI=(off,y,band,sd)=>I.map((p,i)=>{const k=fi(p),o=(off+plWave(p.t,sd,.13)+(hash(i,band,73)-.5)*.08)*k;return[X+p.x+p.nx*o,y+plWave(p.t,sd+9,.06)*k,Z+p.z+p.nz*o]});
  const g=new PLGeo();
  const band=(rings,cols,outward,isIn)=>{for(let r=0;r<rings.length-1;r++){const A=rings[r],B=rings[r+1];for(let i=0;i<N;i++){const j=(i+1)%N,P=isIn?I[i]:O[i],dir=outward?[P.nx,0,P.nz]:[-P.nx,0,-P.nz];
    const lip=Math.abs(A[i][1]-B[i][1])<.15;g.quad(A[i],A[j],B[j],B[i],cols(r,i),cols(r,j),cols(r+1,j),cols(r+1,i),lip?UP:dir)}}};
  /* 바깥 절벽: 아래가 넓고 위로 좁아지는 세 층 + 층마다 턱 */
- {const L=[[G-.35,.62,0],[G+.5,.5,0],[G+.5,.32,1],[G+1.22,.24,1],[G+1.22,.12,2],[Hr-.02,0,2]],rs=L.map(q=>ringO(q[1],q[0],q[2],q[2]*2+1)),bk=L.map(q=>q[2]);
+ {const L=[[G-.35,.66,0],[G+.52,.54,0],[G+.52,.34,1],[G+1.24,.26,1],[G+1.24,.13,2],[Hr-.02,0,2]],rs=L.map(q=>ringO(q[1],q[0],q[2],q[2]*2+1)),bk=L.map(q=>q[2]);
   band(rs,(r,i)=>r===5?plCol(0x8c9a6a,.95+hash(i,9,5)*.1):r===2||r===4?plRock(bk[r],i,1.12):plRock(bk[r],i),true,false)}
  /* 안쪽 절벽(분지 쪽을 봄) */
- {const L=[[Hb-.3,-.5,0],[Hb+.72,-.4,0],[Hb+.72,-.26,1],[Hb+1.62,-.18,1],[Hb+1.62,-.08,2],[Hr-.02,0,2]],rs=L.map(q=>ringI(q[1],q[0],q[2],q[2]*2+5)),bk=L.map(q=>q[2]);
+ {const L=[[Hb-.3,-.5,0],[Hb+.74,-.4,0],[Hb+.74,-.26,1],[Hb+1.64,-.18,1],[Hb+1.64,-.08,2],[Hr-.02,0,2]],rs=L.map(q=>ringI(q[1],q[0],q[2],q[2]*2+5)),bk=L.map(q=>q[2]);
   band(rs,(r,i)=>r===5?plCol(0x8c9a6a,.95+hash(i,11,5)*.1):r===2||r===4?plRock(bk[r],i,1.1):plRock(bk[r],i,.95),false,true)}
  scene.add(mesh(g.build(48),PLM2()));
- /* 꼭대기 풀: 땅과 같은 잔디(TERR)로, 가장자리는 살짝 밖으로 덮고 늘어뜨려요 */
- {const t=new PLGeo(),Ot=O.map(p=>{const o=.14+plWave(p.t,1,.16);return[X+p.x+p.nx*o,Hr,Z+p.z+p.nz*o]}),It=I.map(p=>{const o=-.1+plWave(p.t,5,.12);return[X+p.x+p.nx*o,Hr,Z+p.z+p.nz*o]});
+ /* 꼭대기 풀(TERR) + 가장자리 늘어뜨림 */
+ {const t=new PLGeo(),Ot=O.map(p=>{const o=(.14+plWave(p.t,1,.16))*fo(p);return[X+p.x+p.nx*o,Hr,Z+p.z+p.nz*o]}),It=I.map(p=>{const o=(-.1+plWave(p.t,5,.12))*fi(p);return[X+p.x+p.nx*o,Hr,Z+p.z+p.nz*o]});
   const gc=i=>plCol(0x74b545,.92+hash(i,2,9)*.16);for(let i=0;i<N;i++){const j=(i+1)%N;t.quad(It[i],It[j],Ot[j],Ot[i],gc(i),gc(j),gc(j),gc(i),UP)}
   const cap=mesh(t.build(),TERR);cap.receiveShadow=true;scene.add(cap);
   const s=new PLGeo(),sc=i=>plCol(0x5f9a3c,.9+hash(i,4,9)*.12);for(let i=0;i<N;i++){const j=(i+1)%N;
    const o0=Ot[i],o1=Ot[j],d0=[o0[0],o0[1]-.24,o0[2]],d1=[o1[0],o1[1]-.24,o1[2]];s.quad(o0,o1,d1,d0,sc(i),sc(j),sc(j),sc(i),[O[i].nx,0,O[i].nz]);
    const a0=It[i],a1=It[j],b0=[a0[0],a0[1]-.2,a0[2]],b1=[a1[0],a1[1]-.2,a1[2]];s.quad(a0,a1,b1,b0,sc(i),sc(j),sc(j),sc(i),[-I[i].nx,0,-I[i].nz])}
   scene.add(mesh(s.build(40),PLM2()))}
- /* 바깥 경사로: 흙길 + 양옆 바위 벽 + 가장자리 돌 */
- {const t=new PLGeo(),w=S2.rw/2+.28,z0=S2.A-.4,z1=S2.A+S2.rl+.25,n=12,hy=z=>Math.max(G-.03,Hr-(Hr-G)*clamp((z-(S2.A-.6))/(S2.rl+.6),0,1));
-  const xs=[-w,-w*.55,0,w*.55,w],cc=(k,i)=>k===0||k===4?plCol(0x6f9e48,.95):plCol(k===2?0xa38a60:0x9a8259,.94+hash(i,k,7)*.1);
-  for(let i=0;i<n;i++){const za=z0+(z1-z0)*i/n,zb=z0+(z1-z0)*(i+1)/n;for(let k=0;k<4;k++){const xa=X+S2.rx+xs[k],xb=X+S2.rx+xs[k+1];
-    t.quad([xa,hy(za)+.02,za+Z],[xb,hy(za)+.02,za+Z],[xb,hy(zb)+.02,zb+Z],[xa,hy(zb)+.02,zb+Z],cc(k,i),cc(k+1,i),cc(k+1,i+1),cc(k,i+1),UP)}}
+ /* 앞 경사로: 절벽에 붙어 서쪽에서 동쪽으로 올라가요(카메라에서 옆모습). 흙길 + 돌 옹벽 + 나무 난간 */
+ const rz0=S2.AZ+R.z0,rz1=rz0+R.w,hy=x=>x>=R.x1?Hr+.02:Math.max(G+.03,G+(Hr+.02-G)*clamp((x-R.x0)/(R.x1-R.x0),0,1));
+ {const xs=[];for(let x=R.x0;x<R.x2-.05;x+=.95)xs.push(x);xs.push(R.x1);xs.push(R.x2);xs.sort((a,b)=>a-b);
+  const t=new PLGeo(),zs=[rz0-.1,rz0+.6,(rz0+rz1)/2,rz1-.6,rz1],cc=(k,i)=>plCol(k===0||k===4?0x8f7a54:k===2?0xa38a60:0x9a8259,.94+hash(i,k,7)*.1);
+  for(let i=0;i<xs.length-1;i++){const xa=xs[i],xb=xs[i+1];for(let k=0;k<4;k++)t.quad([X+xa,hy(xa),Z+zs[k]],[X+xb,hy(xb),Z+zs[k]],[X+xb,hy(xb),Z+zs[k+1]],[X+xa,hy(xa),Z+zs[k+1]],cc(k,i),cc(k,i+1),cc(k+1,i+1),cc(k+1,i),UP)}
+  {const c=plCol(0x9a8259);t.quad([X+R.x1,Hr+.02,Z+S2.AZ-.7],[X+R.x2,Hr+.02,Z+S2.AZ-.7],[X+R.x2,Hr+.02,Z+rz0-.1],[X+R.x1,Hr+.02,Z+rz0-.1],c,c,c,c,UP)}
   const rm=mesh(t.build(),TERR);rm.receiveShadow=true;scene.add(rm);
-  const s=new PLGeo();for(const sd of[-1,1])for(let i=0;i<n;i++){const za=z0+(z1-z0)*i/n,zb=z0+(z1-z0)*(i+1)/n,x=X+S2.rx+sd*w,yb=G-.3;
-   s.quad([x,hy(za)+.02,za+Z],[x,hy(zb)+.02,zb+Z],[x,yb,zb+Z],[x,yb,za+Z],plRock(1,i),plRock(1,i+1),plRock(0,i+1),plRock(0,i),[sd,0,0])}
-  scene.add(mesh(s.build(40),PLM2()))}
- /* 안쪽 돌계단: 6칸 + 양옆 돌 난간 */
- {const n=6,top=S2.B+.4,bot=S2.B-S2.sl,d=(top-bot)/n,p=[];for(let k=0;k<n;k++){const zc=top-(k+.5)*d,ty=Hb+(Hr-Hb)*((zc-bot)/(top-bot)),h=ty-(Hb-.3);
-   p.push(pt(lkRb(S2.sw+.1,h,d+.04,.06,.04),k%2?0xb6afa4:0xaba497,[S2.rx,(Hb-.3)+h/2,zc]));
-   for(const sd of[-1,1])p.push(pt(lkRb(.42,h+.34,d+.06,.1,.06),k%2?0x8f8c98:0x86838f,[S2.rx+sd*(S2.sw/2+.26),(Hb-.3)+(h+.34)/2,zc]))}
-  const sg=mg(p);if(typeof lkSmooth==='function')lkSmooth(sg,40);plAdd(sg,X,0,Z)}
+  /* 옹벽: 아래·위 두 줄 돌 + 갓돌 */
+  const w=new PLGeo(),yb=G-.35;for(let i=0;i<xs.length-1;i++){const xa=xs[i],xb=xs[i+1],ta=hy(xa)-.1,tb=hy(xb)-.1,ma=yb+(ta-yb)*.48,mb=yb+(tb-yb)*.48,c0=plRock(0,i,1.05),c1=plRock(1,i,1.08+hash(i,3,77)*.08);
+   w.quad([X+xa,yb,Z+rz1],[X+xb,yb,Z+rz1],[X+xb,mb,Z+rz1],[X+xa,ma,Z+rz1],c0,c0,c0,c0,[0,0,1]);w.quad([X+xa,ma+.02,Z+rz1+.01],[X+xb,mb+.02,Z+rz1+.01],[X+xb,tb,Z+rz1+.01],[X+xa,ta,Z+rz1+.01],c1,c1,c1,c1,[0,0,1])}
+  {const c=plRock(1,3,1.05);w.quad([X+R.x2,yb,Z+rz0-.1],[X+R.x2,yb,Z+rz1],[X+R.x2,Hr+.02,Z+rz1],[X+R.x2,Hr+.02,Z+rz0-.1],c,c,c,c,[1,0,0])}
+  scene.add(mesh(w.build(),PLM2()));
+  const p=[],sl=Math.atan((Hr-G)/(R.x1-R.x0));
+  for(let x=R.x0+.5;x<R.x1-.2;x+=.9)p.push(pt(lkRb(.92,.12,.34,.04,.03),0xb6afa4,[x+.45,hy(x+.45)-.04,rz1-.05],[0,0,sl]));
+  for(let x=R.x1;x<R.x2;x+=.95)p.push(pt(lkRb(.97,.12,.34,.04,.03),0xb6afa4,[x+.475,Hr-.02,rz1-.05]));
+  const px=[];for(let x=R.x0+1.4;x<R.x2-.15;x+=1.6)px.push(x);px.push(R.x2-.2);
+  px.forEach((x,i)=>{p.push(pt(lkRb(.13,1.0,.13,.04,.03),plWood,[x,hy(x)+.5,rz1-.2]));if(i)for(const y of[.5,.92])plBar(p,[px[i-1],hy(px[i-1])+y,rz1-.2],[x,hy(x)+y,rz1-.2],.075,plWoodD)});
+  for(const z of[rz0+.5,(rz0+rz1)/2])p.push(pt(lkRb(.13,1.0,.13,.04,.03),plWood,[R.x2-.2,Hr+.5,z]));for(const y of[.5,.92])plBar(p,[R.x2-.2,Hr+y,rz0+.5],[R.x2-.2,Hr+y,rz1-.2],.075,plWoodD);
+  const g2=mg(p);lkSmooth(g2,40);plAdd(g2,X,0,Z)}
+ /* 뒤 돌계단: 분지 뒤 벽에 붙어 서쪽(꼭대기 마루)에서 동쪽으로 내려가요. 칸마다 밝은 디딤돌 + 나무 난간 */
+ {const zb=-S2.BZ-.28,zf=-S2.BZ+T.w,n=10,yb=Hb-.3,p=[],d=(T.x2-T.x1)/n,sy=x=>x<=T.x1?Hr:Hb+(Hr-Hb)*(1-clamp((x-T.x1)/(T.x2-T.x1),0,1));
+  p.push(pt(lkRb(T.x1-T.x0+.02,Hr+.02-yb,zf-zb,.08,.05),0x8b8579,[(T.x0+T.x1)/2,(yb+Hr+.02)/2,(zb+zf)/2]),pt(lkRb(T.x1-T.x0+.08,.09,zf-zb+.06,.03,.02),0xb3aa98,[(T.x0+T.x1)/2,Hr+.03,(zb+zf)/2]));
+  for(let k=0;k<n;k++){const xc=T.x1+(k+.5)*d,ty=Hr-(Hr-Hb)*(k+.5)/n+.02,h=ty-yb;p.push(pt(lkRb(d+.03,h,zf-zb,.05,.04),k%2?0x8b8579:0x817b70,[xc,yb+h/2,(zb+zf)/2]),pt(lkRb(d+.05,.08,zf-zb+.05,.02,.02),k%2?0xb3aa98:0xa89f8d,[xc,ty+.01,(zb+zf)/2+.02]))}
+  const px=[T.x0+.2];for(let x=T.x1;x<T.x2-.3;x+=1.45)px.push(x);px.push(T.x2-.35);
+  px.forEach((x,i)=>{const y=sy(x);p.push(pt(lkRb(.12,.95,.12,.04,.03),plWood,[x,y+.47,zf-.15]));if(i)for(const yy of[.48,.88])plBar(p,[px[i-1],sy(px[i-1])+yy,zf-.15],[x,y+yy,zf-.15],.07,plWoodD)});
+  p.push(pt(lkRb(.12,.95,.12,.04,.03),plWood,[T.x0+.2,Hr+.47,zb+.5]));for(const yy of[.48,.88])plBar(p,[T.x0+.2,Hr+yy,zb+.5],[T.x0+.2,Hr+yy,zf-.15],.07,plWoodD);
+  const sg=mg(p);lkSmooth(sg,40);plAdd(sg,X,0,Z)}
  /* 바위 무더기(절벽 밑·꼭대기·분지 모서리) */
  {const rk=[],C=[0x8e8e96,0x83838c,0x9a9aa2,0x7f7c88];let i=0;const B=(r,x,y,z,sy=.85)=>rk.push(lkBoulder(r,C[i%4],i++*3+1,[x,y,z],sy));
-  for(let k=0;k<N;k+=5){const p=O[k];if(p.nz>.3&&Math.abs(p.x-S2.rx)<S2.rw/2+1.4)continue;const h0=hash(k,1,33);if(h0<.35)continue;
-   const o=.85+hash(k,2,33)*.7,r=.38+hash(k,3,33)*.55;B(r,p.x+p.nx*o,G-.18,p.z+p.nz*o,.8+hash(k,4,33)*.3);if(h0>.75)B(r*.55,p.x+p.nx*(o+r*.9)+p.nz*.4,G-.12,p.z+p.nz*(o+r*.9)-p.nx*.4,.7)}
-  for(let k=2;k<N;k+=11){const p=O[k];if(p.nz>.3&&Math.abs(p.x-S2.rx)<S2.rw/2+1)continue;B(.22+hash(k,5,33)*.18,p.x-p.nx*.55,Hr-.04,p.z-p.nz*.55,.7)}
-  for(const [x,z,r] of [[-4.4,-4.3,.55],[-4.7,-3.4,.32],[4.5,-4.5,.42],[-4.6,3.9,.36],[4.7,-3.7,.26]])B(r,x,Hb-.08,z,.8);
-  for(const sd of[-1,1])for(let z=S2.A+.6;z<S2.A+S2.rl-.4;z+=.95)B(.2+hash(z*10|0,sd+5,33)*.12,S2.rx+sd*(S2.rw/2+.42),Math.max(G-.05,Hr-(Hr-G)*clamp((z-(S2.A-.6))/(S2.rl+.6),0,1))-.08,z,.75);
-  const rg=mg(rk);if(typeof lkSmooth==='function')lkSmooth(rg,70);plAdd(rg,X,0,Z)}
- /* 나무·덤불: 테두리 모서리, 절벽 밑, 분지 안 */
+  for(let k=0;k<N;k+=5){const p=O[k];if(p.nz>.5&&p.x>R.x0-2.2&&p.x<R.x2+1.4)continue;const h0=hash(k,1,33);if(h0<.3)continue;
+   const o=.9+hash(k,2,33)*.8,r=.4+hash(k,3,33)*.6;B(r,p.x+p.nx*o,G-.18,p.z+p.nz*o,.8+hash(k,4,33)*.3);if(h0>.72)B(r*.55,p.x+p.nx*(o+r*.9)+p.nz*.4,G-.12,p.z+p.nz*(o+r*.9)-p.nx*.4,.7)}
+  for(let k=2;k<N;k+=9){const p=O[k];if(p.nz>.5&&p.x>R.x1-1&&p.x<R.x2+1)continue;B(.2+hash(k,5,33)*.2,p.x-p.nx*.6,Hr-.04,p.z-p.nz*.6,.7)}
+  for(const [x,z,r] of [[-9.8,6.6,.55],[-10.0,5.6,.32],[9.9,6.7,.5],[10.0,-3.4,.36],[-3.5,6.9,.3],[6.2,-6.9,.4]])B(r,x,Hb-.08,z,.8);
+  for(let x=R.x0+1;x<R.x2;x+=1.3)if(hash(x*10|0,7,33)>.45)B(.2+hash(x*10|0,8,33)*.14,x,G-.04,rz1+.55+hash(x*10|0,9,33)*.4,.75);
+  const rg=mg(rk);lkSmooth(rg,70);plAdd(rg,X,0,Z)}
+ /* 테두리: 나무·덤불·깃발·감시탑·안쪽 밧줄 울타리 */
  {const v=[];const put=(k,x,y,z,s,ry)=>{if(GEO[k])v.push(pt(GEO[k],null,[x,y,z],[0,ry,0],[s,s,s]))};
-  put('tree_single_A',-S2.A+1.0,Hr-.05,-S2.A+1.1,3.0,.3);put('tree_single_B',S2.A-1.2,Hr-.05,-S2.A+1.0,2.6,1.1);put('tree_single_A',-S2.A+1.1,Hr-.05,S2.A-1.6,2.4,2);
-  put('bush',S2.A-1.1,Hr-.04,S2.A-1.2,.62,.5);put('bush',-S2.A+2.6,Hr-.04,-S2.A+.9,.5,1.4);put('bush',-1.5,Hr-.04,-S2.A+.95,.45,2.2);
-  put('bush',-S2.A-.9,G-.05,2.2,.7,.2);put('bush',S2.A+1.0,G-.05,-3.5,.62,1.3);put('bush',-S2.B+.8,Hb-.04,.8,.5,.9);put('bush',S2.B-.9,Hb-.04,2.4,.45,2.6);
+  put('tree_single_A',-13.0,Hr-.05,9.4,2.8,.3);put('tree_single_B',S2.AX+2.4,G-.05,1.8,2.7,1.1);put('tree_single_A',4.6,G-.05,-S2.AZ-2.8,3.0,2);put('tree_single_B',-5.2,G-.05,-S2.AZ-3.2,2.8,.6);put('tree_single_A',-S2.AX-2.6,G-.05,-3.5,2.6,1.7);
+  put('bush',12.2,Hr-.04,8.7,.62,.5);put('bush',-12.3,Hr-.04,-2.2,.55,1.4);put('bush',7.2,Hr-.04,-9.3,.48,2.2);put('bush',-8.6,Hr-.04,9.2,.5,.2);
+  put('bush',-S2.AX-1.2,G-.05,2.2,.75,.2);put('bush',S2.AX+1.1,G-.05,-4.5,.68,1.3);put('bush',S2.AX+.9,G-.05,5.2,.6,2.1);put('bush',-S2.AX-.9,G-.05,-7.5,.7,.9);
+  put('bush',-9.7,Hb-.04,6.6,.52,.9);put('bush',9.6,Hb-.04,6.4,.46,2.6);put('bush',9.8,Hb-.04,-6.6,.5,1.6);
   if(v.length)plAdd(mg(v),X,0,Z)}
- /* 분지 바닥: 떨어진 낙하산 + 특수 보급 + 신호등 */
- if(GEO.chute)plAdd(GEO.chute,X-2.4,Hb+.01,Z-2.9,.6);
- {const c0=addStruct({t:'spsupply',x:X-1.2,z:Z-.6,r:.15}),c1=addStruct({t:'spsupply',x:X+1.4,z:Z-2.4,r:-.2});c0.li='sp0';c1.li='sp1'}
- {const b=addStruct({t:'spbeacon',x:X-4.1,z:Z+3.4,r:0,hp:1e9}),s=glow(0xff8a3d,3.6,.7);s.position.set(b.x,Hb+3.25,b.z);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)}
- /* 보이지 않는 벽: 바깥 절벽(경사로 입구 빼고), 안쪽 절벽(계단 입구 빼고), 경사로·계단 옆 */
- const contour=(f,v)=>{const pts=[];for(let a=0;a<=360;a+=.5){const an=a*Math.PI/180,dx=Math.cos(an),dz=Math.sin(an);let lo=0,hi=16;for(let k=0;k<22;k++){const m=(lo+hi)/2;f(X+dx*m,Z+dz*m)<v?lo=m:hi=m}pts.push([X+dx*lo,Z+dz*lo])}return pts};
- /* 입구 자리는 잘라내고, 남은 조각마다 벽을 처음·끝에 딱 맞춰 놓아요(벽 끝 = 경사로·계단 옆벽 안쪽 면, 틈 없음) */
- const runWalls=(pts,half)=>{const keep=pts.map(([x,z])=>!(z>Z&&Math.abs(x-X-S2.rx)<half+.95)),runs=[];let cur=[];
+ for(const [x,z] of [[-13.0,9.4],[SPSUP.AX+2.4,1.8],[4.6,-SPSUP.AZ-2.8],[-5.2,-SPSUP.AZ-3.2],[-SPSUP.AX-2.6,-3.5]])addStruct({t:PLB(.3,.3),x:X+x,z:Z+z,r:0,hp:1e9});
+ {const tw=plAdd(plTowerGeo(),X+11.6,Hr-.02,Z-8.5,-.12);for(const [lx,lz] of [[-.8,-.8],[.8,-.8],[-.8,.8],[.8,.8]]){const c=Math.cos(-.12),s=Math.sin(-.12);addStruct({t:PLB(.14,.14),x:X+11.6+lx*c+lz*s,z:Z-8.5-lx*s+lz*c,r:0,hp:1e9})}
+  const l=glow(0xffc46a,2.6,.6);l.position.set(X+11.6,Hr+4.7,Z-8.5);l.visible=false;scene.add(l);if(typeof PLAMPS!=='undefined')PLAMPS.push(l);
+  const lan=mesh(mg([pt(lkRb(.2,.26,.2,.05,.03),0xffd58a,[0,0,0])]),typeof LKGLOW!=='undefined'?LKGLOW:MATT);lan.position.set(X+11.6,Hr+4.75,Z-8.5);scene.add(lan)}
+ {const f=plFlagGeo();plAdd(f.pole,X-12.9,Hr-.02,Z-9.6);plAdd(f.cloth,X-12.9,Hr-.02,Z-9.6,0,PLM2());addStruct({t:PLB(.18,.18),x:X-12.9,z:Z-9.6,r:0,hp:1e9})}
+ {const p=[],ps=[];for(let k=0;k<N;k+=6){const q=I[k];if(q.nz<-.7&&q.x>T.x0-.4&&q.x<T.x1+.3)continue;ps.push([q.x+q.nx*.42,q.z+q.nz*.42,k])}
+  ps.forEach((a,i)=>{p.push(pt(lkRb(.11,.75,.11,.04,.03),plWood,[a[0],Hr+.37,a[1]]));const b=ps[(i+1)%ps.length];if(Math.abs(b[2]-a[2])<=6||b[2]<a[2]&&N-a[2]+b[2]<=6)plSag(p,[a[0],Hr+.66,a[1]],[b[0],Hr+.66,b[1]],.1)});
+  const rg=mg(p);lkSmooth(rg,40);plAdd(rg,X,0,Z)}
+ /* 경사로 아래: 경고 간판 + 가로등 2 */
+ {const b=plAdd(plBoardGeo(),X+R.x0-3.4,G-.02,Z+S2.AZ+5.0,.2),t=plSignText('⚠ 특수 보급지',2.3,.46,70);t.position.set(0,1.32,.08);b.add(t);addStruct({t:PLB(1.3,.14),x:X+R.x0-3.4,z:Z+S2.AZ+5.0,r:.2,hp:1e9})}
+ const lamp=(x,z,y,ry)=>{if(!GEO.plamp)return;plAdd(GEO.plamp,X+x,y,Z+z,ry);const s=glow(0xffc46a,3.4,.65);s.position.set(X+x+Math.sin(ry)*.5,y+2.75,Z+z+Math.cos(ry)*.5);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s);addStruct({t:PLB(.14,.14),x:X+x,z:Z+z,r:0,hp:1e9})};
+ lamp(R.x0-.9,rz1+.7,G-.02,Math.PI/2);lamp(R.x2-.55,rz0+.35,Hr,-Math.PI/2);
+ /* 분지 바닥: 떨어진 보급(낙하산·주황 고깔), 위장망 그늘 + 무전 탁자, 천막, 발전기, 탄약 팔레트, 드럼통, 모래주머니, 신호등 */
+ {const v=[],add=(k,x,z,ry=0,s=1,y=Hb)=>{if(GEO[k])v.push(pt(GEO[k],null,[x,y,z],[0,ry,0],[s,s,s]))};
+  add('chute',-2.9,-1.4,.5,1.15);
+  const cg=plConeGeo();for(let k=0;k<7;k++){const a=-.3+k*.95,x=.4+Math.cos(a)*3.6,z=1.1+Math.sin(a)*3.0;v.push(pt(cg,null,[x,Hb,z],[0,a,0]))}
+  add('suptent',7.4,-5.0,0,1.05);add('lk_pallet',-8.7,-1.2,.1,1);add('ammostack',-8.7,-1.2,.2,1.1,Hb+.16);add('jerry',-7.3,-.4,.5);add('jerry',-6.9,-.1,1.2);add('tarppile',4.6,-3.9,.3,1.1);
+  add('lk_pallet',-9.4,-6.1,1.57,1.05);add('ammostack',-9.4,-5.6,1.5,1,Hb+.16);add('ammostack',-9.5,-6.7,1.6,.95,Hb+.16);
+  add('lk_drum_1',9.4,-.9,.2,.95);add('lk_drum_0',9.0,-.1,1.2,.95);add('lk_drum_2',9.8,.0,2.0,.95);add('lk_gen',8.7,1.2,-1.57,1);
+  for(const [x,z] of [[3.2,3.8],[-3.1,4.6],[-6.2,-2.6]])v.push(pt(GEO.flarecan||cg,null,[x,Hb,z],[Math.PI/2,0,hash(x*9|0,1,3)*6],[1,1,1]));
+  const g=mg(v);plAdd(g,X,0,Z)}
+ {const sh=plShadeGeo(3.6,2.6,2.2);plAdd(sh.poles,X+5.9,Hb,Z+3.6);plAdd(sh.net,X+5.9,Hb,Z+3.6,0,PLM2()).castShadow=true;plAdd(plTableGeo(),X+5.9,Hb,Z+3.5,0);
+  for(const [x,z] of[[-1.8,-1.3],[1.8,-1.3],[-1.8,1.3],[1.8,1.3]])addStruct({t:PLB(.08,.08),x:X+5.9+x,z:Z+3.6+z,r:0,hp:1e9});addStruct({t:PLB(.85,.45),x:X+5.9,z:Z+3.5,r:0,hp:1e9});
+  /* 발전기 → 그늘 전선 */ const p=[];plBar(p,[8.2,Hb+.05,1.3],[6.9,Hb+.03,2.6],.035,0x2c3346);plBar(p,[6.9,Hb+.03,2.6],[6.5,Hb+.78,3.3],.03,0x2c3346);plAdd(mg(p),X,0,Z)}
+ {const sb=plSandbagGeo(6);plAdd(sb,X-6.0,Hb,Z+4.4,.35);addStruct({t:PLB(1.75,.24),x:X-6.0,z:Z+4.4,r:.35,hp:1e9});plAdd(plSandbagGeo(5),X+2.6,Hb,Z+6.0,-.12);addStruct({t:PLB(1.45,.24),x:X+2.6,z:Z+6.0,r:-.12,hp:1e9})}
+ for(const [x,z,bx,bz,r] of [[7.4,-5.0,1.75,.95,0],[-8.7,-1.2,.65,.55,.1],[-9.5,-6.0,1.0,1.45,0],[4.6,-3.9,.65,.5,.3],[9.4,-.4,.75,.75,0],[8.7,1.2,.45,.62,0],[-7.1,-.25,.35,.35,0]])addStruct({t:PLB(bx,bz),x:X+x,z:Z+z,r,hp:1e9});
+ {const c0=addStruct({t:'spsupply',x:X-.9,z:Z+1.6,r:.15}),c1=addStruct({t:'spsupply',x:X+1.8,z:Z+.3,r:-.25});c0.li='sp0';c1.li='sp1'}
+ {const b=addStruct({t:'spbeacon',x:X-9.2,z:Z+5.0,r:0,hp:1e9}),s=glow(0xff8a3d,3.6,.7);s.position.set(b.x,Hb+3.25,b.z);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)}
+ for(const [x,z,r] of [[-9.7,3.4,1.2],[4.9,-6.6,-.3]])addStruct({t:'suplamp',x:X+x,z:Z+z,r});
+ /* 보이지 않는 벽: 바깥 절벽(경사로 꼭대기 마루 빼고), 안쪽 절벽(계단 자리 빼고), 경사로 바깥·끝, 계단 앞·꼭대기 끝·테두리 쪽 */
+ const contour=(f,v)=>{const pts=[];for(let a=0;a<=360;a+=.4){const an=a*Math.PI/180,dx=Math.cos(an),dz=Math.sin(an);let lo=0,hi=22;for(let k=0;k<24;k++){const m=(lo+hi)/2;f(X+dx*m,Z+dz*m)<v?lo=m:hi=m}pts.push([X+dx*lo,Z+dz*lo])}return pts};
+ const runWalls=(pts,cut)=>{const keep=pts.map(([x,z])=>!cut(x-X,z-Z)),runs=[];let cur=[];
   pts.forEach((q,i)=>{if(keep[i])cur.push(q);else if(cur.length){runs.push(cur);cur=[]}});if(cur.length){if(runs.length&&keep[0])runs[0]=cur.concat(runs[0]);else runs.push(cur)}
-  for(const R of runs){let L=0;const cum=[0];for(let i=1;i<R.length;i++){L+=Math.hypot(R[i][0]-R[i-1][0],R[i][1]-R[i-1][1]);cum.push(L)}
-   const n=Math.max(1,Math.ceil(L/1.6));for(let k=0;k<=n;k++){const u=L*k/n;let i=1;while(i<R.length-1&&cum[i]<u)i++;const a=R[i-1],b=R[i],t=clamp((u-cum[i-1])/((cum[i]-cum[i-1])||1),0,1);
+  for(const Rn of runs){let L=0;const cum=[0];for(let i=1;i<Rn.length;i++){L+=Math.hypot(Rn[i][0]-Rn[i-1][0],Rn[i][1]-Rn[i-1][1]);cum.push(L)}
+   const n=Math.max(1,Math.ceil(L/1.6));for(let k=0;k<=n;k++){const u=L*k/n;let i=1;while(i<Rn.length-1&&cum[i]<u)i++;const a=Rn[i-1],b=Rn[i],t=clamp((u-cum[i-1])/((cum[i]-cum[i-1])||1),0,1);
     addStruct({t:'iblk',x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,r:Math.atan2(-(b[1]-a[1]),b[0]-a[0]),hp:1e9})}}};
- runWalls(contour(spOut,.28),S2.rw/2-.02);runWalls(contour(spIn,-.28),S2.sw/2-.02);
- /* 경사로·계단 옆벽은 절벽 선(바깥 .28 / 안쪽 −.28)에서 끝나요 → 꼭대기에서 테두리 위로 걸어 나가 한 바퀴 돌 수 있어요 */
- const side=(z0,z1,off)=>{const n=Math.max(1,Math.ceil((z1-z0)/1.5));for(const sd of[-1,1])for(let k=0;k<=n;k++)addStruct({t:'iblk',x:X+S2.rx+sd*off,z:Z+z0+(z1-z0)*k/n,r:Math.PI/2,hp:1e9})};
- side(S2.A+.28+.95,S2.A+S2.rl-.2,S2.rw/2+.38);side(S2.B-S2.sl+.2,S2.B-.28-.95,S2.sw/2+.38);
- /* 테두리 모서리 나무 밑동 */
- for(const [x,z] of [[-S2.A+1.0,-S2.A+1.1],[S2.A-1.2,-S2.A+1.0],[-S2.A+1.1,S2.A-1.6]])addStruct({t:PLB(.3,.3),x:X+x,z:Z+z,r:0,hp:1e9});
- CLEARS.push([X,Z+3,19])}
+ runWalls(contour(spOut,.28),(x,z)=>z>0&&x>R.x1-.95&&x<R.x2+.95);
+ runWalls(contour(spIn,-.28),(x,z)=>z<0&&x>T.x0-1.35&&x<T.x2+.95);
+ plWallSeg(X+R.x0+1.8,Z+rz1+.4,X+R.x2+.8,Z+rz1+.4);plWallSeg(X+R.x2+.4,Z+S2.AZ-.2,X+R.x2+.4,Z+rz1+.4);   /* 경사로 바깥 · 꼭대기 동쪽 끝 */
+ plWallSeg(X+T.x1,Z-S2.BZ-.28,X+T.x2+1.2,Z-S2.BZ-.28);plWallSeg(X+T.x0-.4,Z-S2.BZ-.9,X+T.x0-.4,Z-S2.BZ+T.w+.8);plWallSeg(X+T.x0-.8,Z-S2.BZ+T.w+.4,X+T.x2-.45,Z-S2.BZ+T.w+.4);   /* 계단 테두리 쪽 · 꼭대기 서쪽 끝 · 계단 앞 */
+ CLEARS.push([X,Z+2,22])}
 
 /* ========== 1) 까마귀섬 낚시섬: 바닷가 낚시 캠프 ========== */
-const FCAMP={deckY:1.46,deck:[-20.6,-11.2,-5.2,.6],porch:[-17.8,-12.4,.6,2.5],pier:[-30.5,-20.6,-2.0,.2],hut:[-15.2,-2.85,5.0,3.6],npc:[-15.1,1.0],stall:[-15.1,2.0],gate:[-2,7.4]};
+const FCAMP={deckY:1.46,deck:[-20.6,-11.2,-5.2,.6],porch:[-17.8,-12.4,.6,2.5],pier:[-30.5,-20.6,-2.0,.2],hut:[-15.2,-2.85,5.0,3.6],npc:[-15.1,1.0],stall:[-15.1,2.0],gate:[-1,12.4],
+ fire:[-.5,1.0],pier2:[1.8,4.2,-33,-22.6],smoke:[13.0,-4.4],dex:[4.2,9.6]};   /* 9차: 문을 남쪽으로 옮기고 마당·훈제실·북쪽 잔교·도감 게시판 자리 */
 const PLBOATS=[];
 function plFenceGeo(pts,blk,skip){const PO=0xe9ecef,WI=0xd3d9df,parts=[],post=(x,z)=>{const y=hAt(x,z),b=Math.min(y,0)-.2,top=Math.max(y,.05)+1.95;parts.push(pt(lkRb(.13,top-b,.13,.05,.03),PO,[x,(top+b)/2,z]),pt(new THREE.SphereGeometry(.09,8,6),0xc3cad1,[x,top+.03,z]))};
  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(L/2.4)),w=L/n,r=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);
@@ -170,15 +248,75 @@ function plRackGeo(){const WD=0x9c6a3d,p=[];for(const sx of[-1,1])for(const sz o
 function plCrateGeo(){const p=[pt(lkRb(1.0,.62,.72,.05,.03),0xb07a45,[0,.31,0]),pt(lkRb(1.02,.08,.74,.03,.02),0x8a5a36,[0,.12,0]),pt(lkRb(1.02,.08,.74,.03,.02),0x8a5a36,[0,.52,0]),pt(lkRb(.9,.06,.62,.03,.02),0xcdeef8,[0,.6,0])];
  for(const [id,x,z,ry] of [['f_herring',-.25,0,.4],['f_anch',.05,.1,-.3],['f_trout',.3,-.05,.2]])if(GEO[id])p.push(pt(GEO[id],null,[x,.68,z],[0,ry,0],[.5,.5,.5]));const g=mg(p);lkSmooth(g,45);return g}
 /* 낚시 캠프 안 닳은 땅(흙): 모닥불 둘레·문에서 판매대까지 길·데크 앞. world.js 지형 색에서 불러요 (0~1) */
-const PLWORN=[[-2,8.6],[-2,6.4],[-2.7,5.4],[-3.7,4.6],[-4.9,4.0],[-6.2,3.6],[-7.5,3.4],[-8.8,3.3],[-10.1,3.3],[-11.4,3.4],[-12.7,3.5],[-13.9,3.4]],PLWORN2=[[-9.6,2.2],[-10.2,1.1],[-10.6,0],[-10.8,-1.1],[-10.7,-2.6]];
+/* 낚시 캠프 안 닳은 땅(흙)과 징검돌 길: 문 → 마당 → 툇마루(PLWORN), 갈래 → 데크 동쪽 계단(PLWORN2), 마당 → 북쪽 잔교(PLWORN3), 마당 → 훈제실(PLWORN4) */
+const PLWORN=[[-1,11.4],[-1.2,9.4],[-2.2,7.4],[-4.6,6.0],[-7.6,5.0],[-10.6,4.0],[-13.9,3.4]],PLWORN2=[[-7.6,5.0],[-9.4,2.6],[-10.5,.4],[-10.7,-2.6]],PLWORN3=[[.6,-2.0],[.2,-5.5],[.8,-9.5],[1.9,-14],[2.7,-18.5],[3,-21.6]],PLWORN4=[[1.8,2.0],[4.6,1.6],[7.6,.5],[10.2,-.9],[11.8,-2.6]];
 function plSegD(px,pz,L){let m=9;for(let i=0;i<L.length-1;i++){const [ax,az]=L[i],[bx,bz]=L[i+1],dx=bx-ax,dz=bz-az,t=clamp(((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz),0,1);m=Math.min(m,Math.hypot(px-ax-dx*t,pz-az-dz*t))}return m}
-function plWorn(fx,fz){if(fx<-26||fx>12||fz<-14||fz>12)return 0;const n=noise(fx*.6+3,fz*.6+9,77);
- let w=(1-sm(1.6,3.9,Math.hypot(fx-.3,fz-.6)))*.95;w=Math.max(w,(1-sm(.5,2.1,Math.min(plSegD(fx,fz,PLWORN),plSegD(fx,fz,PLWORN2))))*.75);
- w=Math.max(w,(1-sm(0,2.6,Math.max(Math.abs(fx+14.6)-4.6,0)+Math.max(fz-2.5,0)+Math.max(1-fz,0)))*.55);return clamp(w*(.75+n*.5),0,1)}
+function plWorn(fx,fz){if(fx<-26||fx>20||fz<-26||fz>14)return 0;const n=noise(fx*.6+3,fz*.6+9,77),F=FCAMP;
+ let w=(1-sm(2.2,4.4,Math.hypot(fx-F.fire[0],fz-F.fire[1])))*.95;w=Math.max(w,(1-sm(.5,2.1,Math.min(plSegD(fx,fz,PLWORN),plSegD(fx,fz,PLWORN2),plSegD(fx,fz,PLWORN3),plSegD(fx,fz,PLWORN4))))*.75);
+ w=Math.max(w,(1-sm(0,2.6,Math.max(Math.abs(fx+14.6)-4.6,0)+Math.max(fz-2.5,0)+Math.max(1-fz,0)))*.55);
+ w=Math.max(w,(1-sm(.3,2.4,Math.max(Math.abs(fx-F.smoke[0])-1.6,0)+Math.max(Math.abs(fz-F.smoke[1]-.4)-1.4,0)))*.7,(1-sm(.3,2.4,Math.max(Math.abs(fx+3.4)-2,0)+Math.max(Math.abs(fz+16.4)-1,0)))*.6);return clamp(w*(.75+n*.5),0,1)}
+/* 특수 보급지 경사로 아래 흙길 */
+function plWornSP(ex,ez){const S=SPSUP,R=S.rp;if(ex<R.x0-14||ex>R.x0+4||ez<S.AZ-1||ez>S.AZ+14)return 0;const d=plSegD(ex,ez,[[R.x0+1.2,S.AZ+2.0],[R.x0-2.2,S.AZ+3.2],[R.x0-5.6,S.AZ+5.6],[R.x0-9.5,S.AZ+9.5]]);return clamp((1-sm(.6,2.4,d))*.8*(.75+noise(ex*.6,ez*.6,79)*.5),0,1)}
+function plWornAt(x,z){return Math.max(plWorn(x-FISHISLE.x,z-FISHISLE.z),plWornSP(x-SPSUP.x,z-SPSUP.z))}
+/* ---- 9차 낚시 캠프 소품 모델 ---- */
+/* 훈제실: 짙은 판자 벽 셋 + 앞은 트임, 한쪽으로 기운 함석지붕, 굴뚝, 안에 걸린 생선·난로(빛남), 간판 */
+function plSmokeGeo(){const W=2.6,D=2.0,H=2.25,p=[],gl=[],B1=0x6f4a2c,B2=0x5e3f26,MT=0x8d969e,top=z=>H+.1+.45*(z+D/2)/D;
+ p.push(pt(lkRb(W+.24,.14,D+.24,.04,.03),0x5b4636,[0,.07,0]));
+ for(let x=-W/2+.15;x<W/2;x+=.3)p.push(pt(lkRb(.29,H+.1,.08,.03,.015),Math.round(x/.3)%2?B1:B2,[x,(H+.1)/2+.14,-D/2]));
+ for(const sx of[-1,1])for(let z=-D/2+.15;z<D/2;z+=.3){const h=top(z);p.push(pt(lkRb(.08,h,.29,.015,.03),Math.round(z/.3)%2?B1:B2,[sx*W/2,h/2+.14,z]))}
+ for(const sx of[-1,1])p.push(pt(lkRb(.16,top(D/2)+.02,.16,.04,.03),0x4a3322,[sx*W/2,(top(D/2)+.02)/2+.14,D/2]));p.push(pt(lkRb(W+.12,.16,.16,.04,.03),0x4a3322,[0,top(D/2)+.06,D/2]));
+ {const ang=Math.atan2(.45,D),len=Math.hypot(.45,D)+.5;p.push(pt(lkRb(W+.5,.07,len,.03,.02),MT,[0,H+.47+.14,0],[-ang,0,0]));for(let k=0;k<8;k++)p.push(pt(lkRb(.05,.04,len,.02,.01),0x9fa8b0,[-W/2-.1+k*(W+.2)/7,H+.52+.14,0],[-ang,0,0]))}
+ p.push(pt(cyl(.09,.09,1.3,10),0x3f4450,[W/2-.55,H+1.0,-D/2+.35]),pt(cyl(.15,.15,.07,10),0x3f4450,[W/2-.55,H+1.66,-D/2+.35]));
+ p.push(pt(lkRb(.62,.62,.5,.06,.04),0x3a3f4a,[W/2-.55,.45,-D/2+.35]));gl.push(pt(lkRb(.34,.18,.03,.02,.01),0xff9a3d,[W/2-.55,.32,-D/2+.61]));
+ for(const [y,z] of [[1.95,-.35],[1.5,.2]]){p.push(pt(cyl(.03,.03,W-.1,6),0x7d5232,[0,y+.14,z],[0,0,Math.PI/2]));['f_herring','f_salmon','f_trout','f_herring','f_anch'].forEach((id,i)=>{if(!GEO[id])return;const x=-W/2+.4+i*.45;p.push(pt(GEO[id],null,[x,y+.14-.36,z],[Math.PI/2,0,0],[.5,.5,.5]))})}
+ const g=mg(p);lkSmooth(g,45);return{g,gl:mg(gl)}}
+/* 낚시 도감 게시판(캔버스 그림): 도감의 물고기 10종 그림자 + 이름, 테두리 색 = 등급 */
+function plDexTex(){const cv=document.createElement('canvas');cv.width=512;cv.height=300;const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;
+ const rr=(x,a,b,w,h,r)=>{x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()};
+ const draw=()=>{const x=cv.getContext('2d'),F=typeof UIF!=='undefined'?UIF:'sans-serif';x.fillStyle='#f3e6c8';x.fillRect(0,0,512,300);x.fillStyle='#5b3d2b';x.font=`900 38px ${F}`;x.textAlign='center';x.textBaseline='middle';x.fillText('🎣 낚시 도감',256,32);
+  (typeof FISH_LIST!=='undefined'?FISH_LIST:[]).slice(0,10).forEach((f,i)=>{const cx=56+(i%5)*100,cy=114+((i/5)|0)*110,gc=FGRADE[f.g][1];x.fillStyle='#fffaf0';x.strokeStyle=gc;x.lineWidth=6;rr(x,cx-44,cy-40,88,94,12);x.fill();x.stroke();
+   x.fillStyle='#'+f.back.toString(16).padStart(6,'0');x.beginPath();x.ellipse(cx-5,cy-8,26,Math.max(8,Math.min(16,f.h*40)),0,0,Math.PI*2);x.fill();x.beginPath();x.moveTo(cx+16,cy-8);x.lineTo(cx+36,cy-24);x.lineTo(cx+36,cy+8);x.closePath();x.fill();
+   x.fillStyle='#fff';x.beginPath();x.arc(cx-21,cy-11,3.6,0,7);x.fill();x.fillStyle='#5b3d2b';x.font=`800 17px ${F}`;x.fillText(f.n,cx,cy+33)});tx.needsUpdate=true};
+ draw();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);return tx}
+function plDexBoard(){const p=[...[-1.5,1.5].map(x=>pt(lkRb(.15,2.35,.15,.05,.03),0x7d5232,[x,1.17,0])),pt(lkRb(3.1,1.9,.1,.06,.03),0x8a5a36,[0,1.55,0]),pt(lkRb(3.4,.12,.5,.04,.03),0x6f4a2c,[0,2.55,.05],[.18,0,0]),pt(lkRb(3.4,.12,.5,.04,.03),0x6f4a2c,[0,2.55,-.05],[-.18,0,0])];
+ const g=mg(p);lkSmooth(g,40);const m=mesh(g,MATT),pl=new THREE.Mesh(new THREE.PlaneGeometry(2.86,1.68),new THREE.MeshLambertMaterial({map:plDexTex()}));pl.position.set(0,1.55,.06);m.add(pl);return m}
+/* 피크닉 탁자 + 파랑·흰 줄무늬 파라솔 */
+function plPicnicGeo(){const p=[],W1=0xb98556,W2=0x9c6a3d;for(let k=0;k<4;k++)p.push(pt(lkRb(1.9,.07,.19,.03,.02),k%2?W1:0xc08d5c,[0,.76,-.3+k*.2]));
+ for(const sz of[-1,1])for(let k=0;k<2;k++)p.push(pt(lkRb(1.9,.06,.17,.03,.02),W1,[0,.45,sz*(.62+k*.18-.09)]));
+ for(const sx of[-.72,.72]){p.push(pt(lkRb(.08,.08,1.55,.02,.02),W2,[sx,.38,0]));for(const sz of[-1,1])p.push(pt(lkRb(.08,.86,.08,.02,.02),W2,[sx,.38,sz*.3],[sz*.5,0,0]))}
+ p.push(pt(cyl(.035,.035,2.35,8),0xe9ecef,[0,1.17,0]));const u=new PLGeo(),n=8,R=1.4,T=[0,2.38,0];for(let i=0;i<n;i++){const a0=i/n*Math.PI*2,a1=(i+1)/n*Math.PI*2,c=plCol(i%2?0xf4f4f4:0x3d8be0);u.tri(T,[Math.cos(a0)*R,1.98,Math.sin(a0)*R],[Math.cos(a1)*R,1.98,Math.sin(a1)*R],c,c,c,[0,1,0])}
+ const g=mg(p);lkSmooth(g,40);return{g,u:u.build()}}
+/* 꽃 화분 상자 */
+function plPlanterGeo(sd=0){const p=[pt(lkRb(1.2,.42,.42,.06,.04),0x9c6a3d,[0,.21,0]),pt(lkRb(1.24,.06,.46,.03,.02),0x7d5232,[0,.43,0]),pt(lkRb(1.08,.04,.32,.02,.01),0x5b4636,[0,.42,0])],C=[0xff6b6b,0xffd35c,0xff9ac2,0xf4f4f4,0xb38cff];
+ for(let i=0;i<5;i++){const x=-.45+i*.22;p.push(pt(new THREE.SphereGeometry(.14,8,6),0x5f9a3c,[x,.53,(hash(i,sd,7)-.5)*.1]),pt(new THREE.SphereGeometry(.075,8,6),C[(i+sd)%5],[x+.03,.66,(hash(i,sd,8)-.5)*.12]))}const g=mg(p);lkSmooth(g,40);return g}
+/* 배 고치는 곳: 나무 받침 둘 + 뒤집힌 작은 배 + 노·페인트 통·공구 상자 */
+function plYardGeo(){const p=[],W1=0x9c6a3d;for(const sx of[-1,1]){p.push(pt(lkRb(.12,.1,1.15,.03,.02),W1,[sx*1.0,.8,0]));for(const sz of[-1,1])for(const lx of[-.18,.18])p.push(pt(lkRb(.07,.86,.07,.02,.02),0x7d5232,[sx*1.0+lx,.4,sz*.42],[0,0,lx>0?-.22:.22]))}
+ if(GEO.rowboat){const b=GEO.rowboat;if(!b.boundingBox)b.computeBoundingBox();const bb=b.boundingBox;p.push(pt(b,null,[0,.84+bb.max.y,0],[Math.PI,Math.PI/2,0]))}
+ p.push(pt(lkRb(.06,.06,2.0,.02,.02),0xc08d5c,[1.7,.55,.75],[0,.25,-.9]),pt(lkRb(.2,.03,.5,.02,.01),0xc08d5c,[2.1,.12,1.4],[0,.25,-.9]),pt(cyl(.12,.12,.2,12),0xd9463b,[-1.75,.1,.7]),pt(cyl(.125,.125,.03,12),0xc9cdd2,[-1.75,.21,.7]),pt(lkRb(.5,.22,.24,.04,.02),0xd9463b,[-1.6,.11,-.8]),pt(lkRb(.3,.05,.05,.02,.01),0x3a3f4a,[-1.6,.27,-.8]));
+ const g=mg(p);lkSmooth(g,40);return g}
+/* 통발 더미: 초록 그물 상자 셋 + 주황 부표 */
+function plTrapGeo(){const p=[],one=(x,y,z,ry)=>{const q=[pt(lkRb(.86,.05,.62,.02,.01),0x2f5c44,[0,.025,0]),pt(lkRb(.86,.05,.62,.02,.01),0x2f5c44,[0,.42,0])];for(const sx of[-1,1])for(const sz of[-1,1])q.push(pt(lkRb(.05,.42,.05,.02,.01),0x2f5c44,[sx*.4,.21,sz*.28]));
+  q.push(...lkLattice(.78,.36,-.39,.04,.31,.12,0x5fae7e,.018),...lkLattice(.78,.36,-.39,.04,-.31,.12,0x5fae7e,.018));const g=mg(q);p.push(pt(g,null,[x,y,z],[0,ry,0]))};
+ one(-.45,0,0,.05);one(.48,0,.05,-.08);one(0,.45,0,.2);p.push(pt(new THREE.SphereGeometry(.16,10,7),0xff7a3d,[.15,1.05,.1]),pt(new THREE.SphereGeometry(.14,10,7),0xf1ece2,[.95,.6,.3]));return mg(p)}
+/* 빨랫줄: 기둥 둘 + 줄 + 노란 비옷·수건 */
+function plLaundryGeo(L=3.6){const p=[];for(const x of[0,L])p.push(pt(lkRb(.12,2.0,.12,.04,.03),0x7d5232,[x,1.0,0]),pt(lkRb(.5,.08,.08,.02,.02),0x7d5232,[x,1.9,0]));plSag(p,[0,1.85,0],[L,1.85,0],.16,0xe9e2cf,.02);
+ const hang=(x,w,h,c,coat)=>{const y=1.85-Math.sin(x/L*Math.PI)*.16;if(coat){p.push(pt(lkRb(w,h,.08,.06,.03),c,[x,y-h/2-.02,0]),pt(lkRb(.16,h*.7,.08,.04,.02),c,[x-w/2-.06,y-h*.4,0],[0,0,-.25]),pt(lkRb(.16,h*.7,.08,.04,.02),c,[x+w/2+.06,y-h*.4,0],[0,0,.25]),pt(lkRb(.3,.12,.09,.04,.02),c,[x,y+.02,0]))}else p.push(pt(lkRb(w,h,.03,.02,.01),c,[x,y-h/2-.02,0]));p.push(pt(lkRb(.04,.08,.04,.01,.01),0xd9463b,[x,y,0]))};
+ hang(.75,.42,.62,0xf2c94c,1);hang(1.55,.4,.5,0x3d8be0);hang(2.2,.36,.46,0xf4f4f4);hang(2.95,.42,.6,0xf2c94c,1);const g=mg(p);lkSmooth(g,40);return g}
+/* 장작 더미 + 그루터기에 꽂힌 손도끼 */
+function plWoodGeo(){const p=[];[[4,0],[3,1],[2,2]].forEach(([n,r])=>{for(let k=0;k<n;k++)p.push(pt(cyl(.13,.13,1.3,10),[0x9c6a3d,0x8a5a36,0xa8744a][(k+r)%3],[(k-(n-1)/2)*.27,.13+r*.23,0],[0,0,Math.PI/2]))});
+ for(const x of[-.7,.7])p.push(pt(lkRb(.08,.8,.08,.02,.02),0x6f4a2c,[x,.4,0]));const g=mg(p);lkSmooth(g,40);return g}
+function plStumpGeo(){const p=[pt(cyl(.32,.37,.46,14),0x8a5a36,[0,.23,0]),pt(cyl(.3,.3,.03,14),0xd9b98a,[0,.47,0]),pt(cyl(.11,.11,.5,8),0xa8744a,[.6,.11,.2],[0,.6,Math.PI/2]),pt(cyl(.1,.1,.42,8),0x9c6a3d,[.5,.1,-.35],[0,-.4,Math.PI/2])];
+ if(GEO.axe_m)p.push(pt(GEO.axe_m,null,[.02,.48,0],[0,.4,-.5],[.9,.9,.9]));return mg(p)}
+/* 줄 전구: [[a,b],…] 지역 좌표 → 줄 + 전구(빛남) + 밤 불빛 */
+function plLights(OX,OZ,segs){const p=[],gl=[];for(const [a,b] of segs){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.max(6,Math.round(L/.9));let prev=null;
+  for(let k=0;k<=n;k++){const t=k/n,q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-Math.sin(t*Math.PI)*.45,a[2]+(b[2]-a[2])*t];if(prev)plBar(p,prev,q,.025,0x2c3346);
+   if(k>0&&k<n){gl.push(pt(new THREE.SphereGeometry(.09,8,6),[0xffd58a,0xffb36b,0xfff0b0][k%3],[q[0],q[1]-.1,q[2]]));if(k%3===1){const s=glow(0xffc46a,1.7,.6);s.position.set(OX+q[0],q[1]-.12,OZ+q[2]);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)}}prev=q}}
+ plAdd(mg(p),OX,0,OZ);plAdd(mg(gl),OX,0,OZ,0,typeof LKGLOW!=='undefined'?LKGLOW:MATT).castShadow=false}
+const PLSMOKE=[];
 function plFishCamp(){const F=FCAMP,OX=FISHISLE.x,OZ=FISHISLE.z,Y=F.deckY,W=(x,z)=>[OX+x,OZ+z],bl=(x,z,bx,bz,r=0)=>addStruct({t:PLB(bx,bz),x:OX+x,z:OZ+z,r,hp:1e9}),gh=(x,z)=>hAt(OX+x,OZ+z);
- const [gx,gz]=F.gate;CLEARS.push([OX-8,OZ-1,17]);
- /* 철조망: 바다 ~ 문 왼쪽, 문 오른쪽 ~ 동쪽 ~ 북쪽 ~ 바다 (양 끝은 물속까지) */
- const A=[[-23.6,5.6],[-17,6.4],[-11,7.2],[-5.4,7.4],[gx-1.35,gz]].map(q=>W(q[0],q[1])),B=[[gx+1.35,gz],[2.5,7.0],[5.5,4.5],[6.5,0],[5.5,-5],[1,-8.6],[-6,-9.6],[-13,-9.4],[-23.6,-8.8]].map(q=>W(q[0],q[1]));
+ const [gx,gz]=F.gate;CLEARS.push([OX-3,OZ-7,27]);
+ /* 철조망: 남서쪽 바다 ~ 문 왼쪽, 문 오른쪽 ~ 동쪽 ~ 북쪽 바다 (양 끝은 물속까지, 서쪽·북쪽 바닷가는 트임) */
+ const A=[[-24.5,10.2],[-18,11.0],[-11,11.8],[-5,12.3],[gx-1.35,gz]].map(q=>W(q[0],q[1])),B=[[gx+1.35,gz],[5,12.2],[10.5,11.2],[15,8.4],[17.8,3.5],[18.6,-3.5],[17.8,-10.5],[15.4,-16.5],[12.2,-21.5],[11.4,-25.5],[11.6,-29.5]].map(q=>W(q[0],q[1]));
  const gskip=(x,z)=>Math.abs(x-OX-gx)<1.95&&Math.abs(z-OZ-gz)<.8;
  {const g=mg(plFenceGeo(A,1,gskip).concat(plFenceGeo(B,1,gskip)));lkSmooth(g,50);plAdd(g,0,0,0)}
  {const g=addStruct({t:'cgate',x:OX+gx,z:OZ+gz,r:0});g.open=false;g.ot=0;const t=plSignText('🎣 낚시섬');t.position.set(0,2.78,.13);if(g.m)g.m.add(t)}
@@ -223,31 +361,55 @@ function plFishCamp(){const F=FCAMP,OX=FISHISLE.x,OZ=FISHISLE.z,Y=F.deckY,W=(x,z
   const g=mg(v);lkSmooth(g,45);plAdd(g,OX,0,OZ)}
  /* 잔교에 묶인 작은 배(살짝 출렁여요) */
  if(GEO.rowboat){const b=plAdd(GEO.rowboat,OX+F.pier[0]+3.4,.3,OZ+F.pier[3]+1.25,Math.PI/2+.08);b.castShadow=false;PLBOATS.push({m:b,y:.3,ph:1.3})}
- /* 땅 위: 덕장, 그물, 생선 상자·드럼통, 모닥불·통나무 */
- plAdd(plRackGeo(),OX-4.8,gh(-4.8,-6.9)-.02,OZ-6.9,.08);bl(-4.8,-6.9,1.55,.42,.08);
- if(GEO.pnet){const a=Math.atan2(-(-9.6+8.6),-6-1);plAdd(GEO.pnet,OX+.6,gh(.6,-8.0)-.02,OZ-8.0,a);bl(.6,-8.0,1.35,.22,a)}
- {const cg=plCrateGeo();plAdd(cg,OX-8.6,gh(-8.6,-4.6)-.02,OZ-4.6,.25);plAdd(cg,OX-8.45,gh(-8.6,-4.6)+.6,OZ-4.55,-.15);bl(-8.6,-4.6,.62,.5,.25);
-  addStruct({t:'barrel',x:OX-7.3,z:OZ-6.1,r:.3,hp:1e9});addStruct({t:'barrel',x:OX-9.9,z:OZ-6.2,r:1.1,hp:1e9})}
- addStruct({t:'fire',x:OX+.3,z:OZ+.6,r:0,hp:1e9});
- if(GEO.lk_logs)for(const [x,z,r] of [[-1.8,1.7,.5],[2.3,1.8,-.55],[.6,-1.35,.08]]){plAdd(GEO.lk_logs,OX+x,gh(x,z)-.02,OZ+z,r).scale.set(2.2,1.6,2.2);bl(x,z,.6,.22,r)}
- const lamp=(x,z,y,ry)=>{plAdd(GEO.plamp,OX+x,y,OZ+z,ry);const s=glow(0xffc46a,3.4,.65);s.position.set(OX+x+Math.sin(ry)*.5,y+2.75,OZ+z+Math.cos(ry)*.5);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)};
- if(GEO.plamp){lamp(gx+2.3,gz-1.1,gh(gx+2.3,gz-1.1)-.02,Math.PI);lamp(F.pier[0]+.5,F.pier[2]+.35,Y,Math.PI/2);lamp(F.deck[1]-.3,F.deck[2]+.3,Y,-Math.PI/2)}
- /* 징검돌 길: 문 → 판매대 앞, 갈래 → 데크 동쪽 계단 */
- {const rk=[],P1=[[gx,6.4],[gx-.7,5.4],[gx-1.7,4.6],[gx-2.9,4.0],[gx-4.2,3.6],[gx-5.5,3.4],[gx-6.8,3.3],[gx-8.1,3.3],[gx-9.4,3.4],[gx-10.7,3.5],[gx-11.9,3.4]],P2=[[gx-7.6,2.2],[gx-8.2,1.1],[gx-8.6,0],[gx-8.8,-1.1],[gx-8.7,-2.2]];
-  P1.concat(P2).forEach(([x,z],i)=>rk.push(lkBoulder(.34+hash(i,1,91)*.1,[0xc9c2b4,0xb8b1a3,0xd3ccbe][i%3],i*5+2,[x,gh(x,z)-.06,z],.2)));
-  for(let i=0;i<14;i++){const a=hash(i,3,91)*6.28,r=1.5+hash(i,4,91)*5,x=Math.cos(a)*r-4,z=Math.sin(a)*r+1;rk.push(lkBoulder(.1+hash(i,5,91)*.08,0xa9a296,i*3,[x,gh(x,z)-.03,z],.5))}
+ /* ---- 땅 위(9차: 캠프를 넓혀 구역마다 채움) ---- */
+ const lamp=(x,z,y,ry)=>{if(!GEO.plamp)return;plAdd(GEO.plamp,OX+x,y,OZ+z,ry);const s=glow(0xffc46a,3.4,.65);s.position.set(OX+x+Math.sin(ry)*.5,y+2.75,OZ+z+Math.cos(ry)*.5);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)};
+ const at=(g,x,z,ry=0,m)=>plAdd(g,OX+x,gh(x,z)-.02,OZ+z,ry,m);
+ /* 오두막 옆: 생선 상자·드럼통 */
+ {const cg=plCrateGeo();at(cg,-9.4,-4.1,.25);plAdd(cg,OX-9.25,gh(-9.4,-4.1)+.6,OZ-4.05,-.15);bl(-9.4,-4.1,.62,.5,.25);addStruct({t:'barrel',x:OX-8.7,z:OZ-6.2,r:.3,hp:1e9})}
+ /* 가운데 마당: 모닥불 + 통나무 의자 셋 */
+ {const [fx,fz]=F.fire;addStruct({t:'fire',x:OX+fx,z:OZ+fz,r:0,hp:1e9});if(GEO.lk_logs)for(const [x,z,r] of [[fx-2.2,fz+1.0,.5],[fx+2.2,fz+1.1,-.55],[fx-1.6,fz-1.7,-.75]]){at(GEO.lk_logs,x,z,r).scale.set(2.2,1.6,2.2);bl(x,z,.6,.22,r)}}
+ /* 문 안 오른쪽: 낚시 도감 게시판(앞을 봄) */
+ {const [dx,dz]=F.dex,b=plDexBoard();b.position.set(OX+dx,gh(dx,dz)-.02,OZ+dz);scene.add(b);bl(dx,dz,1.62,.14)}
+ /* 남동쪽: 피크닉 탁자 + 파라솔, 꽃 화분 */
+ {const pc=plPicnicGeo();at(pc.g,10.2,5.2,.2);at(pc.u,10.2,5.2,.2,PLM2());bl(10.2,5.2,1.02,.95,.2);
+  [[-7.2,10.6,0],[-13.4,10.0,.05],[7.6,10.4,-.12],[-16.2,4.8,1.57]].forEach(([x,z,r],i)=>{at(plPlanterGeo(i),x,z,r);bl(x,z,.62,.24,r)})}
+ /* 동쪽: 훈제실(연기) + 장작 더미 + 그루터기 도끼 + 덕장 둘 */
+ {const [sx,sz]=F.smoke,h=plSmokeGeo(),m=at(h.g,sx,sz,0);m.add(mesh(h.gl,typeof LKGLOW!=='undefined'?LKGLOW:MATT,false));bl(sx,sz-.05,1.42,1.12);
+  const sign=plAdd(mg([pt(lkRb(1.4,.42,.07,.05,.02),0x8a5a36,[0,0,0])]),OX+sx,gh(sx,sz)+2.95,OZ+sz+1.12),t=plSignText('🐟 훈제실',1.3,.3,66);t.position.set(0,0,.05);sign.add(t);
+  const sm=new THREE.MeshLambertMaterial({color:0xe6e2dc});for(let i=0;i<4;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),sm);scene.add(p);PLSMOKE.push({m:p,x:OX+sx+1.3-.55,z:OZ+sz-1+.35,y:gh(sx,sz)+3.95,ph:i/4})}
+  const s=glow(0xff9a3d,2.2,.55);s.position.set(OX+sx+.75,gh(sx,sz)+.6,OZ+sz-.4);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)}
+ at(plWoodGeo(),15.9,-4.4,1.57);bl(15.9,-4.4,.5,.85);at(plStumpGeo(),10.4,-2.6,.3);bl(10.4,-2.6,.42,.42);
+ at(plRackGeo(),7.6,-9.4,.1);bl(7.6,-9.4,1.55,.42,.1);at(plRackGeo(),11.6,-10.2,-.18);bl(11.6,-10.2,1.55,.42,-.18);
+ /* 빨랫줄: 오두막 뒤 */
+ at(plLaundryGeo(3.6),-9.6,-9.4,.08);bl(-9.6,-9.4,.12,.12);bl(-9.6+3.6*Math.cos(.08),-9.4-3.6*Math.sin(.08),.12,.12);
+ /* 북쪽 바닷가: 배 고치는 곳, 그물 말리기, 통발 더미, 부표, 북쪽 잔교 + 작은 배 */
+ at(plYardGeo(),-3.4,-16.4,.06);bl(-3.4,-16.4,1.62,.72,.06);
+ if(GEO.pnet){at(GEO.pnet,-8.4,-13.6,.62);bl(-8.4,-13.6,1.35,.22,.62)}
+ at(plTrapGeo(),7.4,-19.2,-.2);bl(7.4,-19.2,.95,.42,-.2);
+ {const v=[];for(const [x,z,c] of [[5.1,-21.6,0xff7a3d],[5.5,-21.3,0xf1ece2],[5.3,-21.95,0xff7a3d],[4.9,-21.2,0xf1ece2]])v.push(pt(new THREE.SphereGeometry(.2,12,8),c,[x,gh(x,z)+.18+(c===0xf1ece2?.16:0),z]));plAdd(mg(v),OX,0,OZ);bl(5.2,-21.5,.5,.5)}
+ {const [px0,px1,pz0,pz1]=F.pier2,p=[];for(let z=pz0+.15,k=0;z<pz1;z+=.3,k++)p.push(pt(lkRb(px1-px0-.04,.1,.27,.02,.02),tone[(k+2)%4],[(px0+px1)/2,Y-.05,z]));
+  for(const x of[px0,px1])p.push(pt(lkRb(.14,.16,pz1-pz0,.03,.02),RW,[x,Y-.16,(pz0+pz1)/2]));for(let z=pz0+.3;z<pz1;z+=2)for(const x of[px0+.05,px1-.05]){const b=Math.min(gh(x,z),0)-.4;p.push(pt(cyl(.13,.15,Y-.1-b,8),PST,[x,(Y-.1+b)/2,z]))}
+  for(let k=0;k<2;k++)p.push(pt(lkRb(px1-px0,.12,.45,.03,.02),0xa67848,[(px0+px1)/2,Y-.2-k*.16,pz1+.25+k*.4]));
+  for(const [x,z] of [[px0+.15,pz0+.4],[px1-.15,pz0+.4],[px1-.15,pz0+3.4]])p.push(pt(cyl(.13,.16,.42,10),0x3f4450,[x,Y+.2,z]),pt(new THREE.SphereGeometry(.16,10,7),0x3f4450,[x,Y+.42,z],0,[1,.6,1]));
+  p.push(pt(new THREE.TorusGeometry(.26,.06,6,14),0xd9c49a,[px1-.5,Y+.06,pz0+1.6],[Math.PI/2,0,0]));
+  const g=mg(p);lkSmooth(g,45);plAdd(g,OX,0,OZ);addDock(OX+(px0+px1)/2,OZ+(pz0+pz1)/2,0,(px1-px0)/2+.05,(pz1-pz0)/2+.05,Y);addDock(OX+(px0+px1)/2,OZ+pz1+.45,0,(px1-px0)/2,.5,Y-.18);
+  lamp(px0+.35,pz0+.6,Y,Math.PI/2);if(GEO.rowboat){const b=plAdd(GEO.rowboat,OX+px1+1.35,.3,OZ+pz0+4.2,.06);b.castShadow=false;PLBOATS.push({m:b,y:.3,ph:2.4})}}
+ /* 나무(울타리 안 구석) */
+ if(GEO.tree_single_A){const v=[];for(const [x,z,s,r,k] of [[15.4,-13.4,2.6,.4,'tree_single_A'],[-12.0,-12.6,2.3,1.2,'tree_single_B'],[13.8,7.2,2.2,2.1,'tree_single_A'],[-16.6,7.6,2.0,.7,'tree_single_B']]){if(GEO[k])v.push(pt(GEO[k],null,[x,gh(x,z)-.05,z],[0,r,0],[s,s,s]));bl(x,z,.3,.3)}plAdd(mg(v),OX,0,OZ)}
+ /* 가로등 */
+ lamp(gx+2.3,gz-1.1,gh(gx+2.3,gz-1.1)-.02,Math.PI);lamp(F.pier[0]+.5,F.pier[2]+.35,Y,Math.PI/2);lamp(F.deck[1]-.3,F.deck[2]+.3,Y,-Math.PI/2);lamp(-1.2,-12.2,gh(-1.2,-12.2)-.02,0);lamp(10.8,-.9,gh(10.8,-.9)-.02,-Math.PI/2);
+ for(const [x,z] of [[gx+2.3,gz-1.1],[-1.2,-12.2],[10.8,-.9]])bl(x,z,.14,.14);
+ /* 징검돌 길: 문 → 마당 → 툇마루 / 마당 → 북쪽 잔교 / 마당 → 훈제실 / 갈래 → 데크 동쪽 계단 */
+ {const rk=[];let i=0;for(const L of [PLWORN,PLWORN3,PLWORN4,PLWORN2])for(let k=0;k<L.length-1;k++){const [ax,az]=L[k],[bx,bz]=L[k+1],n=Math.max(1,Math.round(Math.hypot(bx-ax,bz-az)/1.25));for(let j=0;j<n;j++){const t=j/n,x=ax+(bx-ax)*t+(hash(i,7,91)-.5)*.3,z=az+(bz-az)*t+(hash(i,8,91)-.5)*.3;
+   if(Math.hypot(x-F.fire[0],z-F.fire[1])<3.1){i++;continue}rk.push(lkBoulder(.32+hash(i,1,91)*.1,[0xc9c2b4,0xb8b1a3,0xd3ccbe][i%3],i*5+2,[x,gh(x,z)-.06,z],.2));i++}}
+  for(let k=0;k<30;k++){const x=-14+hash(k,3,92)*31,z=-20+hash(k,4,92)*31;rk.push(lkBoulder(.1+hash(k,5,92)*.08,0xa9a296,k*3,[x,gh(x,z)-.03,z],.5))}
   const g=mg(rk);lkSmooth(g,70);plAdd(g,OX,0,OZ)}
- /* 줄 전구: 오두막 앞 모서리 → 모닥불 옆 기둥 → 문 기둥 */
- {const poleX=2.4,poleZ=-1.3,py=gh(poleX,poleZ),p=[pt(cyl(.04,.055,2.95,8),0x3a3f4a,[poleX,py+1.47,poleZ]),pt(cyl(.09,.11,.16,8),0x3a3f4a,[poleX,py+.08,poleZ])],gl=[];bl(poleX,poleZ,.14,.14);
-  const A0=[F.hut[0]+F.hut[2]/2,Y+2.6,F.hut[1]+F.hut[3]/2],A1=[poleX,py+2.9,poleZ],A2=[gx+1.32,gh(gx+1.32,gz)+3.1,gz],up=new THREE.Vector3(0,1,0),v=new THREE.Vector3(),qq=new THREE.Quaternion(),e=new THREE.Euler();
-  for(const [a,b] of [[A0,A1],[A1,A2]]){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.max(6,Math.round(L/.9));let prev=null;
-   for(let k=0;k<=n;k++){const t=k/n,q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-Math.sin(t*Math.PI)*.45,a[2]+(b[2]-a[2])*t];
-    if(prev){const d=[q[0]-prev[0],q[1]-prev[1],q[2]-prev[2]],len=Math.hypot(...d);v.set(d[0],d[1],d[2]).normalize();qq.setFromUnitVectors(up,v);e.setFromQuaternion(qq);p.push(pt(cyl(.014,.014,len,4),0x2c3346,[(q[0]+prev[0])/2,(q[1]+prev[1])/2,(q[2]+prev[2])/2],[e.x,e.y,e.z]))}
-    if(k>0&&k<n){gl.push(pt(new THREE.SphereGeometry(.09,8,6),[0xffd58a,0xffb36b,0xfff0b0][k%3],[q[0],q[1]-.1,q[2]]));if(k%3===1){const s=glow(0xffc46a,1.7,.6);s.position.set(OX+q[0],q[1]-.12,OZ+q[2]);s.visible=false;scene.add(s);if(typeof PLAMPS!=='undefined')PLAMPS.push(s)}}
-    prev=q}}
-  plAdd(mg(p),OX,0,OZ);plAdd(mg(gl),OX,0,OZ,0,typeof LKGLOW!=='undefined'?LKGLOW:MATT).castShadow=false}
- /* 울타리 안 덤불·꽃 */
- if(GEO.bush){const v=[];for(const [x,z,s,r] of [[4.6,3.2,.55,.4],[5.2,-2.4,.48,1.2],[-7.6,6.1,.5,2],[1.6,5.6,.42,.8],[-2.6,-8.6,.5,1.6],[-12.4,-8.2,.55,.2],[3.2,-6.0,.45,2.4],[-14.6,5.4,.48,1.1]])v.push(pt(GEO.bush,null,[x,gh(x,z)-.04,z],[0,r,0],[s,s,s]));plAdd(mg(v),OX,0,OZ)}}
+ /* 줄 전구: 오두막 앞 모서리 → 마당 기둥 → 문 기둥, 마당 기둥 → 훈제실 */
+ {const P=[1.8,-1.3],py=gh(P[0],P[1]),p=[pt(cyl(.04,.055,2.95,8),0x3a3f4a,[P[0],py+1.47,P[1]]),pt(cyl(.09,.11,.16,8),0x3a3f4a,[P[0],py+.08,P[1]])];plAdd(mg(p),OX,0,OZ);bl(P[0],P[1],.14,.14);
+  const A0=[F.hut[0]+F.hut[2]/2,Y+2.6,F.hut[1]+F.hut[3]/2],A1=[P[0],py+2.9,P[1]],A2=[gx+1.32,gh(gx+1.32,gz)+3.1,gz],A3=[F.smoke[0]-1.3,gh(F.smoke[0],F.smoke[1])+2.5,F.smoke[1]+1.0];plLights(OX,OZ,[[A0,A1],[A1,A2],[A1,A3]])}
+ /* 덤불·꽃 */
+ if(GEO.bush){const v=[];for(const [x,z,s,r] of [[5.6,3.6,.55,.4],[-6.8,7.8,.5,2],[2.6,6.8,.42,.8],[16.0,-7.8,.5,1.6],[-12.6,8.6,.55,.2],[3.4,-6.2,.45,2.4],[14.6,1.2,.48,1.1],[8.8,-14.8,.52,.6],[-6.4,-20.6,.5,1.9],[12.8,-18.6,.46,2.8],[-16.0,1.5,.45,.3],[6.0,8.8,.4,1.4]])v.push(pt(GEO.bush,null,[x,gh(x,z)-.04,z],[0,r,0],[s,s,s]));plAdd(mg(v),OX,0,OZ)}}
+
 /* ---------- 놓기 ---------- */
 function buildPlaces(){plGeoParts();try{plFishCamp()}catch(e){console.error('낚시섬 만들기 실패',e)}try{plCrater()}catch(e){console.error('특수 보급지 만들기 실패',e)}}
 {const _bp=buildPorts;buildPorts=function(){_bp();try{buildPlaces()}catch(e){console.error('특별한 곳 만들기 실패',e)}}}   /* 항구 소품 모델(그물·가로등·배)이 생긴 뒤에 */
@@ -260,6 +422,7 @@ let plChat=false;function plHookChat(){if(plChat||typeof CHAT==='undefined')retu
 function updPlaces(dt){const k=Math.min(1,dt*7);plHookChat();
  for(const s of structs){if(s.t!=='cgate')continue;if(s.open){if(performance.now()>=s.ot){if(gateBusy(s))s.ot=performance.now()+400;else{s.open=false;sfx(240,.12,'square',.03);hudDirty=true}}}
   const L=s.lk&&s.lk.parts.leaf;if(L){const t=s.open?1.62:0;if(Math.abs(t-L.rotation.y)>.002)L.rotation.y+=(t-L.rotation.y)*k}}
+ for(const q of PLSMOKE){const t=(gt*.22+q.ph)%1;q.m.position.set(q.x+Math.sin(t*5+q.ph*9)*.12+t*.35,q.y+t*1.6,q.z);q.m.scale.setScalar((.35+t*1.1)*(1-t*t))}
  for(const b of PLBOATS){b.m.position.y=b.y+Math.sin(gt*1.25+b.ph)*.05;b.m.rotation.z=Math.sin(gt*1.05+b.ph)*.045}
  if(!FNPC)return;if(!FNPC.a&&CMAT.fisher){FNPC.a=new Actor('fisher');FNPC.a.play('Idle',{force:1});FNPC.a.set(FNPC.x,FNPC.z,0)}
  if(FNPC.a){const d=dist(P.x,P.z,FNPC.x,FNPC.z);FNPC.a.root.visible=d<90;if(d<60){const want=d<7?Math.atan2(P.x-FNPC.x,P.z-FNPC.z):0;let df=want-FNPC.rot;while(df>Math.PI)df-=Math.PI*2;while(df<-Math.PI)df+=Math.PI*2;FNPC.rot+=df*Math.min(1,dt*4);FNPC.a.root.rotation.y=FNPC.rot;FNPC.a.mixer.update(dt)}}}
@@ -280,4 +443,4 @@ const SPLOOT=()=>{const g={};const add=(k,n)=>g[k]=(g[k]||0)+n;add('coin',400+(M
 
 /* ---------- 설치 금지 구역 ---------- */
 if(typeof NOB_N!=='undefined')Object.assign(NOB_N,{fish:'낚시섬',sp:'특수 보급지'});
-{const _bn=buildNoBuild;buildNoBuild=function(){_bn();NOB.push({k:'fish',x:FISHISLE.x-8.5,z:FISHISLE.z-1,r:20});NOB.push({k:'sp',x:SPSUP.x+.6,z:SPSUP.z+3,r:17.5})}}
+{const _bn=buildNoBuild;buildNoBuild=function(){_bn();NOB.push({k:'fish',x:FISHISLE.x-3,z:FISHISLE.z-7,r:29.5});NOB.push({k:'sp',x:SPSUP.x-.5,z:SPSUP.z+1.5,r:22})}}
