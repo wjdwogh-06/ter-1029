@@ -33,9 +33,17 @@ const PORTS=[];
 /* 기획자 요청(7차): 까마귀섬 낚시섬(메모1, 철조망 울타리 + 문 + 낚시섬 주인)과 물개섬 특수 보급지(항구1 메모, 네모난 바위 언덕 + 경사로).
    땅 모양만 여기서(서버도 같은 땅), 구조물과 모델은 js/places.js. h=둘레 땅 높이(buildHeights에서 정함) */
 const FISHISLE={x:137,z:135,h:1.12,hw:8.75,hd:7.5};
-const SPSUP={x:718,z:849,h:1.12,top:1.9,hw:6.5,cr:2.2,rx:2.0,rw:3.4,rl:7.5};
-function spBox(x,z){const S2=SPSUP,qx=Math.abs(x-S2.x)-(S2.hw-S2.cr),qz=Math.abs(z-S2.z)-(S2.hw-S2.cr);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-S2.cr}   /* 네모 언덕 가장자리까지 거리(안쪽 음수) */
-function spRamp(x,z){const S2=SPSUP,ax=Math.abs(x-S2.x-S2.rx),ez=z-S2.z;if(ez<S2.hw-1.5||ax>S2.rw/2+1.2)return 0;return clamp(1-(ez-(S2.hw-.7))/S2.rl,0,1)*(1-sm(S2.rw/2-.15,S2.rw/2+.9,ax))}   /* 앞(+z)쪽 경사로: 0(땅)~1(언덕 위) */
+/* 물개섬 특수 보급지(8차, 기획자: '올라가고 네모난 곳 안은 파여 있어야'): 층진 바위 절벽 언덕(테두리 높이 h+top), 앞 경사로로 올라가서
+   안쪽 돌계단으로 파인 분지(h-dig)로 내려가요. 땅은 둘레를 평평하게 + 분지 안만 파고, 테두리·경사로·계단의 걷는 높이는 spSurf(모양은 places.js 메시).
+   A/ac=바깥 반폭·모서리, B/bc=안쪽 반폭·모서리, rx=경사로·계단 x 위치, rw·rl=경사로 폭·길이, sw·sl=계단 폭·길이 */
+const SPSUP={x:718,z:849,h:1.12,top:1.9,dig:.6,A:8.0,ac:2.6,B:5.6,bc:1.6,rx:2.6,rw:2.8,rl:6.6,sw:2.4,sl:4.4};
+function rbox(ex,ez,a,c){const qx=Math.abs(ex)-(a-c),qz=Math.abs(ez)-(a-c);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-c}   /* 모서리 둥근 네모까지 거리(안쪽 음수) */
+const spOut=(x,z)=>rbox(x-SPSUP.x,z-SPSUP.z,SPSUP.A,SPSUP.ac),spIn=(x,z)=>rbox(x-SPSUP.x,z-SPSUP.z,SPSUP.B,SPSUP.bc);
+function spSurf(x,z){const S2=SPSUP,ex=x-S2.x,ez=z-S2.z;if(ex>S2.A+1||ex<-S2.A-1||ez<-S2.A-1||ez>S2.A+S2.rl+1)return null;
+ const Hr=S2.h+S2.top,Hb=S2.h-S2.dig,ax=Math.abs(ex-S2.rx);
+ if(ax<S2.rw/2+.05&&ez>S2.A-.6&&ez<S2.A+S2.rl)return Hr-(Hr-S2.h)*clamp((ez-(S2.A-.6))/(S2.rl+.6),0,1);   /* 바깥 경사로 */
+ if(ax<S2.sw/2+.05&&ez<S2.B+.4&&ez>S2.B-S2.sl)return Hb+(Hr-Hb)*clamp((ez-(S2.B-S2.sl))/(S2.sl+.4),0,1);   /* 안쪽 돌계단 */
+ return spOut(x,z)<0&&spIn(x,z)>0?Hr:null}   /* 테두리 위 */
 const SUPPLY_SITES=[[103,754],[158,162],[822,266],[684,174],[687,843],[905,682],[486,708],[448,726],[451,703],[236,619],[216,401],[463,263],[402,608],[741,547]],SUPS=[];
 function findSupply(sd){SUPS.length=0;SUPPLY_SITES.forEach((q,i)=>{let x=q[0],z=q[1];if(rawH(x,z,sd,1)<1){let ok=false;for(let r=2;r<40&&!ok;r+=2)for(let a=0;a<24;a++){const X=q[0]+Math.cos(a*.262)*r,Z=q[1]+Math.sin(a*.262)*r;if(rawH(X,Z,sd,1)>1.2){x=X;z=Z;ok=true;break}}if(!ok)return}
   let h=0;for(const[ox,oz]of[[0,0],[3,0],[-3,0],[0,3],[0,-3]])h+=rawH(x+ox,z+oz,sd,1)/5;SUPS.push({i,x,z,h:Math.max(1.05,h)})})}
@@ -85,7 +93,7 @@ function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const
    if(al>-6&&al<Lb+8&&la<Wb+6){const cap=al<-3?lerp(1.15,.5,(al+6)/3):al<1?lerp(.5,-.15,(al+3)/4):al<5?lerp(-.15,-1.6,(al-1)/4):-1.6;if(h>cap)h=lerp(h,cap,(1-sm(Wb,Wb+6,la))*(1-sm(Lb,Lb+8,al)))}}
   for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>10||ex<-10||ez>10||ez<-10)continue;h=lerp(h,s.h,1-sm(4.5,9.5,Math.hypot(ex,ez)))}
   {const ex=x-FISHISLE.x,ez=z-FISHISLE.z;if(ex<18&&ex>-18&&ez<18&&ez>-18)h=lerp(h,FISHISLE.h,1-sm(12.5,17,Math.hypot(ex,ez)))}
-  {const ex=x-SPSUP.x,ez=z-SPSUP.z;if(ex<24&&ex>-24&&ez<24&&ez>-24){h=lerp(h,SPSUP.h,1-sm(15,21,Math.hypot(ex,ez)));h+=SPSUP.top*Math.max(1-sm(-.55,.65,spBox(x,z)),spRamp(x,z))}}}
+  {const ex=x-SPSUP.x,ez=z-SPSUP.z;if(ex<26&&ex>-26&&ez<26&&ez>-26){h=lerp(h,SPSUP.h,1-sm(SPSUP.A+4,SPSUP.A+10,Math.hypot(ex,ez*.85)));h=lerp(h,SPSUP.h-SPSUP.dig,1-sm(.6,1.4,rbox(ex,ez,SPSUP.B,SPSUP.bc)))}}}
  return lhRock(x,z,h,sd)}
 function buildHeights(sd){SEED=sd;layout(sd);const A=ISL[0],B=ISL[1];
  findPorts(sd);{const p=PORTS[0];VIL.x=p.x-p.dz*1.6-p.dx*14.4;VIL.z=p.z+p.dx*1.6-p.dz*14.4;VIL.px=p.x-p.dx*13;VIL.pz=p.z-p.dz*13}OUT.x=OUT.z=-9999;   /* the hub (spawn, safe zone, merchant) is the harbour town */

@@ -82,7 +82,8 @@ class Creature{constructor(kind){this.kind=kind;this.proc=1;const r=this.root=ne
 const DOCKS=[],DOCKG={};
 function addDock(x,z,r,hw,hl,y=.76){const d={x,z,c:Math.cos(r),s:Math.sin(r),hw,hl,y},R=Math.hypot(hw,hl);DOCKS.push(d);for(let cz=((z-R)/16)|0;cz<=((z+R)/16)|0;cz++)for(let cx=((x-R)/16)|0;cx<=((x+R)/16)|0;cx++){const k=cz*64+cx;(DOCKG[k]=DOCKG[k]||[]).push(d)}return d}
 function onDock(x,z){const L=DOCKG[((z/16)|0)*64+((x/16)|0)];if(!L)return null;for(const d of L){const ex=x-d.x,ez=z-d.z,lx=ex*d.c-ez*d.s,lz=ex*d.s+ez*d.c;if(lx>-d.hw&&lx<d.hw&&lz>-d.hl&&lz<d.hl)return d}return null}
-const groundY=(x,z)=>{const d=onDock(x,z);return d?Math.max(hAt(x,z),d.y):DEV.on?Math.max(hAt(x,z),.02):hAt(x,z)};
+const groundY=(x,z)=>{const sp=spSurf(x,z);if(sp!==null)return sp;   /* 특수 보급지 테두리·경사로·계단(core.js) */
+ const d=onDock(x,z);return d?Math.max(hAt(x,z),d.y):DEV.on?Math.max(hAt(x,z),.02):hAt(x,z)};
 const walk=(x,z,r,e)=>{if(INT.on&&e===P)return intWalk(x,z,r);if(DEV.on&&e===P)return x<4||z<4||x>WS-4||z>WS-4?true:null;if(onDock(x,z))return null;return blocked(x,z,r,e?(e.pl?2:1):0,e&&e.pl)};
 function moveEnt(e,dx,dz,r=.42){let m=false;if(walk(e.x+dx,e.z,r,e)===null){e.x+=dx;m=true}if(walk(e.x,e.z+dz,r,e)===null){e.z+=dz;m=true}return m}
 const turn=(a,b,k)=>{let d=b-a;while(d>Math.PI)d-=6.283;while(d<-Math.PI)d+=6.283;return a+d*Math.min(1,k)};

@@ -1,13 +1,14 @@
-# 7차 특별한 곳 검사: 까마귀섬 낚시섬(철조망·문·주인)과 물개섬 특수 보급지(네모 언덕·경사로·특수 보급)
-# 기대: gate 닫힘=막힘, 열림=지나감, 4초 뒤 닫힘, 문 안에 서 있으면 안 닫힘 / 주인 [말 걸기] → 말풍선
-#       언덕: 위 높이 ≈ 둘레+1.9, 경사로 길은 전부 걸을 수 있음, 경사로 입구 말고 둘레 어디로 가도 막힘(cliffOpen=[]) / 특수 보급 열기
+# 7·8차 특별한 곳 검사: 까마귀섬 낚시 캠프(철조망·문·데크·잔교·주인)와 물개섬 바위 분지(경사로로 올라가 계단으로 내려가는 특수 보급)
+# 기대: 문 닫힘=막힘, 열림=지나감, 4초 뒤 닫힘, 문 안에 서 있으면 안 닫힘 / 주인 [말 걸기] → 말풍선 / 데크·잔교 위 높이 = deckY
+#       분지: 테두리 ≈ 둘레+1.9, 바닥 ≈ 둘레-0.6, 경사로→테두리→계단→바닥 길이 전부 걸을 수 있음(path=[]), 바깥에서 절벽으로 못 들어옴(cliffOpen=[]),
+#       분지 안에서 계단 말고는 못 나감(innerOpen=[]) / 특수 보급 열기
 async def steps(pg):
     ev=pg.evaluate;O=lambda n:os.path.join(OUT,n)
     await ev("()=>{WX.t=1e9;WX.on=false;WX.b=0;S.time=.42;enemies.slice().forEach(dropEnemy);DEV.god=true}")
-    print('built',await ev("""()=>{const F=FISHISLE,S2=SPSUP,c=t=>structs.filter(s=>s.t===t&&(dist(s.x,s.z,F.x,F.z)<14||dist(s.x,s.z,S2.x,S2.z)<20)).length;
-      return JSON.stringify({cfence:c('cfence'),cgate:c('cgate'),fstall:c('fstall'),iblk:c('iblk'),sp:c('spsupply'),beacon:c('spbeacon'),fire:c('fire'),
-       h:{fish:+hAt(F.x,F.z).toFixed(2),fishEdge:+hAt(F.x+9,F.z).toFixed(2),top:+hAt(S2.x,S2.z).toFixed(2),out:+hAt(S2.x-11,S2.z).toFixed(2),ramp:[0,3,6,9,12,14].map(z=>+hAt(S2.x+S2.rx,S2.z+S2.hw+z-.7).toFixed(2))}})}"""))
-    # 문
+    print('built',await ev("""()=>{const F=FISHISLE,S2=SPSUP,c=(t,x,z,r)=>structs.filter(s=>(typeof t==='string'?s.t===t:t.test(s.t))&&dist(s.x,s.z,x,z)<r).length;
+      return JSON.stringify({gate:c('cgate',F.x,F.z,20),fstall:c('fstall',F.x,F.z,25),walls:c(/^iblk$/,F.x-6,F.z,30),sp:c('spsupply',S2.x,S2.z,12),fire:c('fire',F.x,F.z,20),
+       h:{deck:+groundY(F.x+FCAMP.deck[0]+2,F.z-1).toFixed(2),pier:+groundY(F.x+FCAMP.pier[0]+1,F.z-1).toFixed(2),rim:+groundY(S2.x-S2.A+1.2,S2.z).toFixed(2),floor:+groundY(S2.x,S2.z).toFixed(2),out:+groundY(S2.x-S2.A-3,S2.z).toFixed(2),
+        ramp:[0,2,4,6].map(z=>+groundY(S2.x+S2.rx,S2.z+S2.A+z).toFixed(2)),stairs:[0,1.5,3,4.2].map(z=>+groundY(S2.x+S2.rx,S2.z+S2.B-z).toFixed(2))}})}"""))
     print('gate',await ev("""()=>{const g=structs.find(s=>s.t==='cgate'),E={x:0,z:0,pl:1},r={};r.closedBlocks=walk(g.x,g.z,.42,E)!==null;
       P.x=g.x;P.z=g.z+1.6;P.rot=Math.PI;P.auto=null;let t=findTarget();r.label=t&&t.lab;target=t;inp.actEdge=true;interact();inp.actEdge=false;r.open=g.open;r.openPass=walk(g.x,g.z,.42,E)===null;return JSON.stringify(r)}"""))
     await pg.wait_for_timeout(900);await ev("()=>{updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(300)
@@ -16,26 +17,29 @@ async def steps(pg):
     print('gate later',await ev("()=>{const g=structs.find(s=>s.t==='cgate');return JSON.stringify({open:g.open,leaf:g.lk&&+g.lk.parts.leaf.rotation.y.toFixed(2)})}"))
     print('gate stand',await ev("""()=>new Promise(res=>{const g=structs.find(s=>s.t==='cgate');openGate(g);P.x=g.x;P.z=g.z;setTimeout(()=>{const a=g.open;P.x=g.x;P.z=g.z-1.8;setTimeout(()=>res(JSON.stringify({stillOpenWhileStanding:a,closedAfterLeave:!g.open})),1500)},5000)})"""))
     # 주인
-    await ev("()=>{P.x=FISHISLE.x+.3;P.z=FISHISLE.z-1.9;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
-    await pg.wait_for_timeout(800)
-    print('npc',await ev("()=>{const t=findTarget();const r={label:t&&t.lab,actor:!!(FNPC&&FNPC.a)};target=t;inp.actEdge=true;interact();inp.actEdge=false;r.bubble=CHAT.b.has('fisher');return JSON.stringify(r)}"))
+    await ev("()=>{P.x=FNPC.x+.4;P.z=FNPC.z+2.4;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    await pg.wait_for_timeout(900)
+    print('npc',await ev("()=>{const t=findTarget();const r={label:t&&t.lab,actor:!!(FNPC&&FNPC.a),py:+P.a.root.position.y.toFixed(2)};target=t;inp.actEdge=true;interact();inp.actEdge=false;r.bubble=CHAT.b.has('fisher');return JSON.stringify(r)}"))
     await pg.wait_for_timeout(700);await pg.screenshot(path=O('pl_fish_npc.jpg'),type='jpeg',quality=85)
-    await ev("()=>{P.x=FISHISLE.x;P.z=FISHISLE.z+11;P.rot=Math.PI;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(900)
-    await pg.screenshot(path=O('pl_fish_wide.jpg'),type='jpeg',quality=85)
-    # 언덕: 경사로 길, 둘레 막힘
-    print('mesa',await ev("""()=>{const S2=SPSUP,E={x:0,z:0,pl:1},bad=[],open=[];for(let z=S2.hw+S2.rl+.8;z>-4;z-=.25){const x=S2.x+S2.rx,zz=S2.z+z;if(walk(x,zz,.42,E)!==null)bad.push(+z.toFixed(2))}
-      for(let a=0;a<360;a+=3){const an=a*Math.PI/180,dx=Math.cos(an),dz=Math.sin(an);let blockedHit=false;for(let m=2;m<13;m+=.2){const x=S2.x+dx*m,z=S2.z+dz*m;if(walk(x,z,.42,E)!==null){blockedHit=true;break}}
-       const ex=S2.x+dx*11,ez=S2.z+dz*11;const inMouth=dz*11>0&&Math.abs(dx*11-S2.rx)<S2.rw/2+.1;if(!blockedHit&&!inMouth)open.push(a)}
-      return JSON.stringify({rampBlocked:bad.slice(0,12),nRampBlocked:bad.length,cliffOpen:open})}"""))
-    await ev("()=>{const S2=SPSUP;P.x=S2.x+S2.rx;P.z=S2.z+S2.hw+S2.rl+3;P.rot=Math.PI;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(1000)
-    await pg.screenshot(path=O('pl_mesa_front.jpg'),type='jpeg',quality=85)
-    await ev("()=>{const S2=SPSUP;P.x=S2.x+S2.rx;P.z=S2.z+S2.hw+3;P.rot=Math.PI;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(900)
-    await pg.screenshot(path=O('pl_mesa_ramp.jpg'),type='jpeg',quality=85)
-    # 특수 보급 열기
+    for n,x,z,zk in [('pl_fish_wide','FISHISLE.x-8','FISHISLE.z+10',1.05),('pl_fish_deck','FISHISLE.x-15','FISHISLE.z+4.5',.8),('pl_fish_gate','FISHISLE.x-2','FISHISLE.z+11',.85),('pl_fish_far','FISHISLE.x-8','FISHISLE.z+12',1.35)]:
+        await ev(f"()=>{{P.x={x};P.z={z};P.rot=Math.PI;zoomK={zk};updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}}");await pg.wait_for_timeout(1000)
+        await pg.screenshot(path=O(n+'.jpg'),type='jpeg',quality=85)
+    await ev("()=>{zoomK=1}")
+    # 분지: 길·벽
+    print('crater',await ev("""()=>{const S2=SPSUP,X=S2.x,Z=S2.z,E={x:0,z:0,pl:1},path=[],out=[],inn=[];
+      for(let z=S2.A+S2.rl+1;z>-3.5;z-=.2){const x=X+S2.rx;if(walk(x,Z+z,.42,E)!==null)path.push(+z.toFixed(1))}
+      for(let a=0;a<360;a+=3){const an=a*Math.PI/180,dx=Math.cos(an),dz=Math.sin(an);const mouth=dz>0&&Math.abs(dx*S2.A-S2.rx)<S2.rw/2+.3;
+       let hit=false;for(let m=S2.A+3;m>S2.B;m-=.2)if(walk(X+dx*m,Z+dz*m,.42,E)!==null){hit=true;break}if(!hit&&!mouth)out.push(a);
+       const smouth=dz>0&&Math.abs(dx*S2.B-S2.rx)<S2.sw/2+.3;let hit2=false;for(let m=1;m<S2.A;m+=.2)if(walk(X+dx*m,Z+dz*m,.42,E)!==null){hit2=true;break}if(!hit2&&!smouth)inn.push(a)}
+      return JSON.stringify({pathBlocked:path.slice(0,10),n:path.length,cliffOpen:out,innerOpen:inn})}"""))
+    for n,dx,dz,zk in [('pl_crater_front',0,'S2.A+S2.rl+4',1.15),('pl_crater_ramp','S2.rx','S2.A+2.5',.85),('pl_crater_rim','S2.rx','S2.A-.9',.85),('pl_crater_far',-6,'S2.A+12',1.5)]:
+        await ev(f"()=>{{const S2=SPSUP;P.x=S2.x+{dx};P.z=S2.z+{dz};P.rot=Math.PI;zoomK={zk};enemies.slice().forEach(dropEnemy);updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}}");await pg.wait_for_timeout(1000)
+        await pg.screenshot(path=O(n+'.jpg'),type='jpeg',quality=85)
+    await ev("()=>{zoomK=1}")
+    # 특수 보급 열기 (분지 바닥)
     await ev("()=>{const s=structs.find(q=>q.t==='spsupply');P.x=s.x;P.z=s.z+1.5;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(700)
-    print('loot',await ev("""()=>{const t=findTarget();const r={label:t&&t.lab,py:+P.a.root.position.y.toFixed(2)};const c0=S.coins,i0=Object.keys(S.inv).length;target=t;inp.actEdge=true;interact();inp.actEdge=false;
-      r.coins=S.coins-c0;r.newKinds=Object.keys(S.inv).length-i0;const t2=findTarget();r.after=t2&&t2.s===t.s?t2.lab:'다른 대상/없음';return JSON.stringify(r)}"""))
-    await pg.wait_for_timeout(600);await pg.screenshot(path=O('pl_mesa_top.jpg'),type='jpeg',quality=85)
-    await ev("()=>{S.time=.95}");await pg.wait_for_timeout(1500);await pg.screenshot(path=O('pl_mesa_night.jpg'),type='jpeg',quality=85)
-    await ev("()=>{S.time=.95;P.x=FISHISLE.x;P.z=FISHISLE.z+6;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(1500);await pg.screenshot(path=O('pl_fish_night.jpg'),type='jpeg',quality=85)
-    print('clips',await ev("()=>Object.keys(CLIPS).filter(k=>/Inter|Wave|Cheer|Talk|Use/.test(k)).join(',')"))
+    print('loot',await ev("""()=>{const t=findTarget();const r={label:t&&t.lab,py:+P.a.root.position.y.toFixed(2)};const c0=S.coins;target=t;inp.actEdge=true;interact();inp.actEdge=false;r.coins=S.coins-c0;const t2=findTarget();r.after=t2&&t2.s===t.s?t2.lab:'다른 대상/없음';return JSON.stringify(r)}"""))
+    await pg.wait_for_timeout(600);await pg.screenshot(path=O('pl_crater_floor.jpg'),type='jpeg',quality=85)
+    await ev("()=>{S.time=.95;const S2=SPSUP;P.x=S2.x;P.z=S2.z+S2.A+5;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(1500);await pg.screenshot(path=O('pl_crater_night.jpg'),type='jpeg',quality=85)
+    await ev("()=>{S.time=.95;P.x=FISHISLE.x-6;P.z=FISHISLE.z+8;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(1500);await pg.screenshot(path=O('pl_fish_night.jpg'),type='jpeg',quality=85)
+    print('tri',await ev("()=>R.info.render.triangles+'/'+R.info.render.calls"))
