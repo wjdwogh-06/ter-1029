@@ -2,6 +2,7 @@
 /* ===== ports: piers, quays, boats, harbour props. Each port is laid out in its own frame:
    origin = shoreline point, +lz = out to sea, +lx = right when facing the sea ===== */
 const PBOATS=[],PLAMPS=[],PGEO={};
+DECO.ferry={g:'nil',s:1,bx:1.4,bz:1.4,pass:1,hp:1e9};   /* 통통배 자리: 가까이 가서 [배 타기] → 가고 싶은 항구로(ui.js ferryGo). 지나갈 수 있어요 */
 /* 항구마다 랜덤 자판기 + 재활용 쓰레기통(기획자 요청 6차). 정면은 늘 카메라(+z). 모델은 look.js가 lk_vend·lk_recycle로 바꿔 끼워요 */
 DECO.vend={g:'vendbox',s:1,bx:.7,bz:.55,hp:1e9};DECO.recycle={g:'recyclebox',s:1,bx:.98,bz:.5,hp:1e9};
 function pierGeo(L,W){const key='p'+L.toFixed(1)+'_'+W.toFixed(1);if(PGEO[key])return PGEO[key];const p=[],n=Math.max(2,Math.round(L/.56));
@@ -63,7 +64,7 @@ function buildPorts(){buildPortGeo();let sv=0;
  for(const p of PORTS){const G=p.g=new THREE.Group();scene.add(G);const sx=p.town?1:p.sx,W=(lx,lz)=>{lx*=sx;return[p.x+p.dz*lx+p.dx*lz,p.z-p.dx*lx+p.dz*lz]};
   const rect=(lx,lz,len,w,lr=0,quay=0)=>{const [x,z]=W(lx,lz),m=mesh(quay?quayGeo(len,w):pierGeo(len,w),MATT);m.position.set(x,0,z);m.rotation.y=p.r+lr;G.add(m);addDock(x,z,p.r+lr,w/2+.08,len/2+.08,quay?.8:.76)};
   const put=(g,lx,lz,rot=0,s=1,y=null)=>{const [x,z]=W(lx,lz),m=mesh(GEO[g],MATT);{const q=GEO[g];if(!q.boundingBox)q.computeBoundingBox();const b=q.boundingBox;(p.pp=p.pp||[]).push([x,z,Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)*s])}m.scale.setScalar(s);m.position.set(x,y===null?groundY(x,z)-.02:y,z);m.rotation.y=p.r+rot*sx;G.add(m);return m};
-  const boat=(g,lx,lz,rot,y)=>{const m=put(g,lx,lz,rot,1,y);m.castShadow=false;PBOATS.push({m,y,ph:hash(lx*10|0,lz*10|0,p.i)*6,p})};
+  const boat=(g,lx,lz,rot,y)=>{const m=put(g,lx,lz,rot,1,y);m.castShadow=false;PBOATS.push({m,y,ph:hash(lx*10|0,lz*10|0,p.i)*6,p});if(g==='fboat'){const [x,z]=W(lx,lz);addStruct({t:'ferry',x,z,r:0,pi:p.i,hp:1e9})}};   /* 통통배 = 항구 사이 배편(11차) */
   const lamp=(lx,lz,rot=0)=>{const m=put('plamp',lx,lz,rot),s=glow(0xffc46a,3.4,.65),a=p.r+rot*sx;s.position.set(m.position.x+Math.sin(a)*.5,m.position.y+2.75,m.position.z+Math.cos(a)*.5);s.visible=false;G.add(s);PLAMPS.push(s)};
   const S_=(t,lx,lz,rot=0,o)=>{const [x,z]=W(lx,lz);return addStruct(Object.assign({t,x,z,r:rot},o))};   /* buildings always face the camera (+z): the view cannot be turned */
   const BY={rowboat:.3,fboat:.5,sailboat:.48};

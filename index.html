@@ -89,6 +89,7 @@ button,input{font-family:var(--f)}
 #respawn{position:fixed;inset:0;z-index:31;background:radial-gradient(ellipse at 50% 45%,#3a2a20 0%,#1f1610 70%);color:var(--pn);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .6s;font-family:var(--f);padding:20px;text-align:center}
 #respawn.on{opacity:1;pointer-events:auto}#respawn .rsT{font-size:30px;font-weight:900;letter-spacing:-.5px}#respawn .rsS{font-size:15px;font-weight:800;opacity:.8;min-height:20px}
 #respawn .rsB{width:min(340px,72vw);height:16px;border-radius:99px;background:rgba(251,244,230,.12);border:2px solid rgba(251,244,230,.35);overflow:hidden;margin-top:6px}
+#respawn.ferry{background:radial-gradient(ellipse at 50% 45%,#2c4664 0%,#15202f 72%)}#respawn.ferry .rsB i{background:repeating-linear-gradient(-45deg,#4a9fe0 0 10px,#9ccff2 10px 20px);background-size:28px 28px}
 #respawn .rsB i{display:block;height:100%;width:0;border-radius:99px;background:repeating-linear-gradient(-45deg,var(--grn) 0 10px,#8fd18a 10px 20px);background-size:28px 28px;animation:rsMove .9s linear infinite}
 @keyframes rsMove{to{background-position:28px 0}}#respawn .rsH{font-size:12.5px;font-weight:700;opacity:.5;margin-top:4px}
 #fade{position:fixed;inset:0;background:#1f1610;color:#FBF4E6;z-index:30;opacity:0;pointer-events:none;transition:opacity .5s;display:flex;align-items:center;justify-content:center;font-size:20px;text-align:center;padding:20px;font-weight:800}#fade.on{opacity:1;pointer-events:auto}

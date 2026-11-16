@@ -107,11 +107,12 @@ function die(){if(P.dead)return;if(INT.on)intOut();P.dead=true;S.hp=0;P.a.play('
 /* respawn rule (기획자 결정): every death puts you in front of a random port, on clear land.
    Tries ports in random order; on each one, walks rings of spots on the land side of the port and takes the first spot that is
    walkable, on solid ground, out of every structure, and at least 2.5m from other players (multiplayer) and 10m from enemies. */
-function portSpawn(){const order=PORTS.map((p,i)=>i).sort(()=>Math.random()-.5),others=typeof NET!=='undefined'&&NET.on?[...NET.players.values()]:[];
+function portSpawn(only){const order=only!=null?[only]:PORTS.map((p,i)=>i).sort(()=>Math.random()-.5),others=typeof NET!=='undefined'&&NET.on?[...NET.players.values()]:[];
  for(const i of order){const p=PORTS[i],ix=-p.dx,iz=-p.dz,lx=-iz,lz=ix,base=p.town?13:7;
   for(let ring=0;ring<6;ring++)for(let k=0;k<9;k++){const fw=base+ring*1.6+Math.random()*.8,side=(k%2?1:-1)*Math.ceil(k/2)*1.5+(Math.random()-.5)*.6,x=p.x+ix*fw+lx*side,z=p.z+iz*fw+lz*side;
    if(hAt(x,z)<1||onDock(x,z)||walk(x,z,.6,P)!==null||structs.some(s=>Math.abs(s.x-x)<6&&Math.abs(s.z-z)<6&&inStruct(s,x,z,.7)))continue;
    if(others.some(o=>dist(o.x,o.z,x,z)<2.5)||enemies.some(e=>!e.dead&&dist(e.x,e.z,x,z)<10))continue;return{x,z,p}}}
+ if(only!=null){const p=PORTS[only],b=p.town?13:7;return{x:p.x-p.dx*b,z:p.z-p.dz*b,p}}   /* only: 그 항구에서만 찾기(배편) */
  return{x:VIL.x,z:VIL.z,p:PORTS[0]}}
 function placeBag(){if(bagM){scene.remove(bagM);bagM=null}if(!S.bag)return;bagM=new THREE.Group();const m=mesh(GEO.sack);m.scale.setScalar(9);bagM.add(m);const g=glow(0x6cb8ff,3,.5);g.position.y=1.2;bagM.add(g);bagM.position.set(S.bag.x,surfY(S.bag.x,S.bag.z)+.1,S.bag.z);scene.add(bagM)}
 function attack(){const id=curId(),w=WEAP[id];if(P.cd>0)return;const y=groundY(P.x,P.z);
@@ -124,7 +125,7 @@ function throwNade(){if(!take('grenade',1))return;const e=nearestEnemy(P.x,P.z,1
  P.a.play('Throw',{once:1,lock:.5,force:1,speed:1.4});const m=mesh(GEO.grenade);m.scale.setScalar(.8);scene.add(m);nades.push({m,x:P.x,z:P.z,dx,dz,d,t:0,T:.75,y0:groundY(P.x,P.z)+1.6})}
 function explode(x,z,r,dmg){shake=.8;boom(x,groundY(x,z)+.6,z,r);for(const e of enemies.slice()){const d=dist(x,z,e.x,e.z);if(!e.dead&&d<r)hurtEnemy(e,dmg*(1-d/r*.6),(e.x-x)/(d||1),(e.z-z)/(d||1))}if(dist(x,z,P.x,P.z)<r*.7)hurtPlayer(18)}
 /* ---- interaction ---- */
-function sLabel(s){const df=sdef(s);if(s.t==='lighthouse')return S.lh[s.li]?'빠른 이동':'불 켜기';if(df.loot===3)return S.looted[s.li]&&S.day-S.looted[s.li]<5?null:'폭파';if(s.t==='gen'&&invN('wood')>0&&s.fuel<540)return'연료 넣기';if(df.loot)return S.looted[s.li]&&S.day-S.looted[s.li]<3?null:'열기';if(s.t==='market')return'거래';if(s.t==='vend')return'자판기';if(s.t==='recycle')return'팔기';if(s.t==='bench'||s.t==='forge'||s.t==='blacksmith')return'제작';if(s.t==='ptent')return s.own?'들어가기':null;if(s.t==='int_exit')return dist(P.x,P.z,s.x,s.z)<2.1?'나가기':null;if(s.t==='stash')return'보관';if(s.t==='fire'&&Object.keys(S.inv).some(k=>ITEMS[k]&&ITEMS[k].ty==='fish'))return'요리';if(s.t==='mg'&&invN('ammoL')>0&&s.ammo<240)return'장전';if(df.tur&&s.own&&invN(df.tur.ammo)>0&&s.ammo<df.tur.cap)return'장전';if(s.own&&s.hp<s.max-1&&invN('wood')>0)return'수리';return null}
+function sLabel(s){const df=sdef(s);if(s.t==='lighthouse')return S.lh[s.li]?'빠른 이동':'불 켜기';if(df.loot===3)return S.looted[s.li]&&S.day-S.looted[s.li]<5?null:'폭파';if(s.t==='gen'&&invN('wood')>0&&s.fuel<540)return'연료 넣기';if(df.loot)return S.looted[s.li]&&S.day-S.looted[s.li]<3?null:'열기';if(s.t==='market')return'거래';if(s.t==='ferry')return'배 타기';if(s.t==='vend')return'자판기';if(s.t==='recycle')return'팔기';if(s.t==='bench'||s.t==='forge'||s.t==='blacksmith')return'제작';if(s.t==='ptent')return s.own?'들어가기':null;if(s.t==='int_exit')return dist(P.x,P.z,s.x,s.z)<2.1?'나가기':null;if(s.t==='stash')return'보관';if(s.t==='fire'&&Object.keys(S.inv).some(k=>ITEMS[k]&&ITEMS[k].ty==='fish'))return'요리';if(s.t==='mg'&&invN('ammoL')>0&&s.ammo<240)return'장전';if(df.tur&&s.own&&invN(df.tur.ammo)>0&&s.ammo<df.tur.cap)return'장전';if(s.own&&s.hp<s.max-1&&invN('wood')>0)return'수리';return null}
 function findNear(ox,oz,fx,fz,reach){let best=null,bs=1e9;const con=(d,o)=>{if(d<bs){bs=d;best=o}};
  if(S.bag&&dist(ox,oz,S.bag.x,S.bag.z)<reach+.4)con(-1,{k:'bag',x:S.bag.x,z:S.bag.z,lab:'가방 줍기',rr:1});
  for(const s of structs){const df=sdef(s),ex=Math.max(df.bx,df.bz);if(dist(ox,oz,s.x,s.z)>reach+1+ex)continue;const lab=sLabel(s);if(lab)con(dist(fx,fz,s.x,s.z)-.5,{k:'s',s,x:s.x,z:s.z,lab,rr:ex+.4})}
@@ -153,7 +154,7 @@ function interact(){const t=target;if(!t)return;
  if(df.loot){S.looted[s.li]=S.day;P.a.play('PickUp',{once:1,lock:.5,force:1});const got={};const add=(k,n)=>got[k]=(got[k]||0)+n;
   if(df.loot===2){add('coin',200+(Math.random()*400|0));add('powder',4);add('ammoL',12);add('scrap',6);if(Math.random()<.35)add(pick(['rifle','shotgun']),1)}else{add('scrap',3+(Math.random()*4|0));for(let i=0;i<2;i++){const l=pick(LOOT);add(l[0],l[1]+(Math.random()*(l[2]-l[1]+1)|0))}}
   let i=0;for(const k in got){if(ITEMS[k]&&ITEMS[k].one&&invN(k)){give('scrap',6);continue}give(k,got[k]);ftext(s.x,groundY(s.x,s.z)+2.4+i++*.6,s.z,`+${got[k]} ${k==='coin'?'동전':ITEMS[k].n}`,'#ffe08a')}if(df.loot===1)s.m.children[0].geometry=GEO[df.og||'crate_open'];jingle([659,880]);hudDirty=true}
- else if(s.t==='market')openPanel('shop');else if(s.t==='vend'){VENDAT=s.pi|0;openPanel('vend')}else if(s.t==='recycle')openPanel('recycle');else if(s.t==='bench'||s.t==='forge'||s.t==='blacksmith')openPanel('craft');else if(s.t==='stash')openPanel('stash');else if(s.t==='fire')openPanel('cook');
+ else if(s.t==='market')openPanel('shop');else if(s.t==='ferry'){FERRY.from=s.pi|0;openPanel('ferry')}else if(s.t==='vend'){VENDAT=s.pi|0;openPanel('vend')}else if(s.t==='recycle')openPanel('recycle');else if(s.t==='bench'||s.t==='forge'||s.t==='blacksmith')openPanel('craft');else if(s.t==='stash')openPanel('stash');else if(s.t==='fire')openPanel('cook');
  else if(s.t==='ptent')intEnter(s);else if(s.t==='int_exit')intLeave();
  else if(s.t==='mg'){const n=Math.min(40,invN('ammoL'),240-s.ammo);take('ammoL',n);s.ammo+=n;sfx(500,.08);ftext(s.x,groundY(s.x,s.z)+2.6,s.z,`탄약 ${s.ammo}`,'#ffe08a');hudDirty=true}
  else if(s.own){take('wood',1);s.hp=Math.min(s.max,s.hp+s.max*.34);sfx(300,.07,'square',.04);P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.3,force:1,speed:1.7})}}
