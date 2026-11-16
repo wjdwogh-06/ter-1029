@@ -139,8 +139,10 @@ function buildTerrain(){const st=2,n=REG/st+1,C4=new THREE.Color();tchunks=[];
    const nz=fbm(x*.05+20,z*.05+11,3),I=islAt(x,z),vol=I&&I.tint?1:0;
    C1.setHex(0x74b545).lerp(C2.setHex(0x4f9440),sm(.3,.8,nz)*.9).lerp(C2.setHex(0x9ad058),noise(x*.35,z*.35,7)*.25);C1.lerp(C2.setHex(0xa8cf4e),sm(.58,.78,noise(x*.06+7,z*.06+3,SEED+9))*.3);if(vol)C1.lerp(C2.setHex(0x6f7f5a),sm(.35,.75,fbm(x*.02+50,z*.02+9,4))*.6);
    const fr=sm(.5,.62,noise(x*.035+100,z*.035+100,SEED+4));C1.lerp(C2.setHex(0x3c8238),fr*.5);
-   const tp=tundraAt(x,z,h);if(tp>0)C1.lerp(C2.setHex(0xb9bf62).lerp(C3.setHex(0x93a651),nz),tp*.6);{const H=UH(h);if(H>6)C1.lerp(C2.setHex(0x8f9a6e),sm(6,10,H)*.5)}
-   const sl=Math.abs(hAt(x+1.5,z)-hAt(x-1.5,z))+Math.abs(hAt(x,z+1.5)-hAt(x,z-1.5));if(sl>1.1)C1.lerp(C2.setHex(vol?0x5a574f:0x7d776a),sm(1.1,2.4,sl));
+   const tp=tundraAt(x,z,h);if(tp>0)C1.lerp(C2.setHex(0xb9bf62).lerp(C3.setHex(0x93a651),nz),tp*.6);{const H=UH(h);if(H>6&&!(Math.abs(x-SPSUP.x)<15&&Math.abs(z-SPSUP.z)<18))C1.lerp(C2.setHex(0x8f9a6e),sm(6,10,H)*.5)}   /* 특수 보급 언덕 위는 잔디 그대로 */
+   const sl=Math.abs(hAt(x+1.5,z)-hAt(x-1.5,z))+Math.abs(hAt(x,z+1.5)-hAt(x,z-1.5)),spd=Math.abs(x-SPSUP.x)<24&&Math.abs(z-SPSUP.z)<24?spBox(x,z):9,spr=spd<9?spRamp(x,z):0;
+   if(sl>1.1&&spd>-.25&&spr<.5)C1.lerp(C2.setHex(vol?0x5a574f:0x7d776a),sm(1.1,2.4,sl));   /* 특수 보급 언덕: 위와 경사로는 바위색 안 섞음 */
+   if(spd<9){if(spd>.4)C1.multiplyScalar(lerp(.8,1,sm(.4,2.6,spd)));if(spr>.03&&spr<.99&&Math.abs(x-SPSUP.x-SPSUP.rx)<SPSUP.rw/2)C1.lerp(C2.setHex(0xa08a5e),.38)}   /* 절벽 밑은 살짝 어둡게, 경사로는 흙길 */
    let dv=dist(x,z,VIL.px,VIL.pz);if(dv<27)C1.lerp(C2.setHex(0xb39a72),(1-sm(15,27,dv))*.8);
    {const sd2=supD(x,z);if(sd2<8.5)C1.lerp(C2.setHex(0xb39a72),(1-sm(3,8.5,sd2))*.75)}
    if(h>.6){const pd=pathD(x,z);if(pd<3.4)C1.lerp(C2.setHex(0xc4a878),(1-sm(1.1,3.4,pd))*.9)}
@@ -225,7 +227,7 @@ function addStruct(s){const d=sdef(s),g=new THREE.Group();const m=mesh(GEO[d.g])
  if(s.t==='mg'){s.gun=mesh(GEO.mggun);s.gun.position.y=1.12;g.add(s.gun);s.cd=0;s.ammo=s.ammo||0}
  if(s.hp===undefined)s.hp=d.hp||1e9;s.max=d.hp||1e9;s.m=g;scene.add(g);structs.push(s);return s}
 function removeStruct(s){scene.remove(s.m);const i=structs.indexOf(s);if(i>=0)structs.splice(i,1);const j=lightsrc.indexOf(s);if(j>=0)lightsrc.splice(j,1)}
-function inStruct(s,x,z,r){const d=sdef(s);if(d.pass)return false;const dx=x-s.x,dz=z-s.z;if(dx*dx+dz*dz>36)return false;const c=Math.cos(s.r||0),sn=Math.sin(s.r||0),lx=dx*c-dz*sn,lz=dx*sn+dz*c,qx=clamp(lx,-d.bx,d.bx),qz=clamp(lz,-d.bz,d.bz);return (lx-qx)**2+(lz-qz)**2<r*r}
+function inStruct(s,x,z,r){const d=sdef(s);if(d.pass||s.open)return false;   /* s.open: 열린 문(places.js) */const dx=x-s.x,dz=z-s.z;if(dx*dx+dz*dz>36)return false;const c=Math.cos(s.r||0),sn=Math.sin(s.r||0),lx=dx*c-dz*sn,lz=dx*sn+dz*c,qx=clamp(lx,-d.bx,d.bx),qz=clamp(lz,-d.bz,d.bz);return (lx-qx)**2+(lz-qz)**2<r*r}
 /* returns null (free), true (terrain/tree) or the struct in the way */
 function blocked(x,z,r,wm=0,pl=0){if(x<4||z<4||x>WS-4||z>WS-4)return true;const hh=hAt(x,z);if(wm===0?hh<.12:wm===1?hh<-.45:false)return true;
  const cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const rr=OBJT[o.t].r;if(rr&&(x-o.x)**2+(z-o.z)**2<(rr+r)**2)return true}

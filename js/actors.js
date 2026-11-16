@@ -13,10 +13,10 @@ async function loadChars(){const L=new THREE.GLTFLoader(),ld=async p=>{const buf
  const map=s=>{let m=null;s.traverse(o=>{if(o.isMesh&&o.material.map&&!m)m=o.material.map});return m},mk=(k,t)=>{CMAT[k]=new THREE.MeshLambertMaterial({map:t,skinning:true});CMATN[k]=new THREE.MeshLambertMaterial({map:t})};
  const hm=map(CH.hero),bm=map(CH.hood),rm=map(CH.brute);
  mk('hero',recolor(hm,hueTo(isGreen,104,118,62)));mk('bandit',recolor(bm,hueTo(isGreen,150,48,42)));mk('gunner',recolor(bm,hueTo(isGreen,78,88,108)));
- mk('brute',recolor(rm,hueTo(isBlue,128,40,36)));mk('merchant',recolor(rm,(r,g,b)=>null))}
+ mk('brute',recolor(rm,hueTo(isBlue,128,40,36)));mk('merchant',recolor(rm,(r,g,b)=>null));mk('fisher',recolor(rm,hueTo(isBlue,232,178,56)))}   /* 낚시섬 주인: 파란 옷을 노란 비옷 색으로 */
 const XRC={},XRAY=new THREE.MeshBasicMaterial({color:0xa8ecff,transparent:true,opacity:.4,depthFunc:THREE.GreaterDepth,depthWrite:false,skinning:true,fog:false,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc});
 function xrMat(m){if(XRC[m.uuid])return XRC[m.uuid];const c=m.clone();c.stencilWrite=true;c.stencilRef=1;c.stencilFunc=THREE.AlwaysStencilFunc;c.stencilZPass=THREE.ReplaceStencilOp;return XRC[m.uuid]=c}
-class Actor{constructor(kind){this.kind=kind;const src=kind==='hero'?CH.hero:(kind==='brute'||kind==='merchant')?CH.brute:CH.hood;const root=this.root=THREE.SkeletonUtils.clone(src);
+class Actor{constructor(kind){this.kind=kind;const src=kind==='hero'?CH.hero:(kind==='brute'||kind==='merchant'||kind==='fisher')?CH.brute:CH.hood;const root=this.root=THREE.SkeletonUtils.clone(src);
   root.traverse(o=>{if(o.isMesh){o.material=o.isSkinnedMesh?CMAT[kind]:CMATN[kind];o.castShadow=true;o.frustumCulled=false}if(/^handslot/.test(o.name))o.children.slice().forEach(c=>{if(!c.isBone)o.remove(c)});if(/^handslot\.?r$/.test(o.name))this.hand=o;if(o.name==='head'&&o.isBone)this.head=o});
   this.holder=new THREE.Object3D();this.hand.add(this.holder);this.mixer=new THREE.AnimationMixer(root);this.acts={};this.cur='';this.curA=null;this.lock=0;scene.add(root);if(kind==='brute')root.scale.setScalar(1.22)}
  play(n,o={}){if(this.cur===n&&!o.force)return;if(this.lock>0&&!o.lock&&!o.force)return;let a=this.acts[n];if(!a){a=this.acts[n]=this.mixer.clipAction(CLIPS[n])}a.reset();a.setLoop(o.once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!o.once;a.timeScale=o.speed||1;

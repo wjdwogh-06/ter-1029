@@ -25,7 +25,7 @@
 ```
 python3 -m http.server 8765          # 혼자 하기: http://localhost:8765
 npm start                            # 멀티: http://localhost:8080
-python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py·town_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py, 낚시 fish_check.py, 낚시 포인트 지형 fishpt_scan.py, 4차 센터·철조망·설치형 2단계 center_check.py, 설치 금지 구역 nobuild_check.py, 화면·가방·장비 bag_check.py, 끼임·막힌 칸 stuck_check.py, 오래 돌려 보기 soak_check.py, 색감 전·후 비교 color_check.py, 자판기·쓰레기통·부활 로딩·도끼·낚싯대 규칙 econ_check.py, 구조물 붙음·좁은 틈 layout_audit.py) (pip install playwright, 크롬 필요. CHROME=경로)
+python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_check.py, 텐트 tent_check.py, 채팅·텐트 내부 chat_tent_check.py, 새 디자인 look_check.py·look2_check.py·town_check.py, 텐트 깔개 tent_ground_check.py, 부활 respawn_check.py, 화면 전체 스크린샷 ui_check.py, 낚시 fish_check.py, 낚시 포인트 지형 fishpt_scan.py, 4차 센터·철조망·설치형 2단계 center_check.py, 설치 금지 구역 nobuild_check.py, 화면·가방·장비 bag_check.py, 끼임·막힌 칸 stuck_check.py, 오래 돌려 보기 soak_check.py, 색감 전·후 비교 color_check.py, 자판기·쓰레기통·부활 로딩·도끼·낚싯대 규칙 econ_check.py, 구조물 붙음·좁은 틈 layout_audit.py, 낚시섬·특수 보급지 places_check.py) (pip install playwright, 크롬 필요. CHROME=경로)
 ```
 
 - 빌드 단계 없음. three.js r128, 모듈 아님(전역 스크립트). **번들러·프레임워크·ES module로 바꾸지 마세요.**
@@ -36,7 +36,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 2. 스크립트 로드 순서 (index.html)
 
-`three.min.js → GLTFLoader → SkeletonUtils → core.js → world.js → actors.js → water.js → ports.js → dress.js → interior.js → look.js → ui.js → chat.js → net.js`
+`three.min.js → GLTFLoader → SkeletonUtils → core.js → world.js → actors.js → water.js → ports.js → dress.js → interior.js → look.js → places.js → ui.js → chat.js → net.js`
 
 전부 전역 스코프를 공유합니다. 뒤 파일이 앞 파일의 함수를 감싸는 경우가 있습니다(net.js가 `attack`, `placeBuild` 등을 감쌈).
 
@@ -105,6 +105,15 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 - **낚싯대를 들면 상호작용 없음**(`findTarget`): 버튼은 던지기만, 땅을 눌러도 걷기만.
 - **쓰러지면 천천히 로딩 → 무작위 항구**(`respawnLoad`, ui.js, `#respawn`): 1.6초 쓰러짐 → 어두운 화면 + 초록 줄무늬 로딩 바 4.2초(`RESP_T`) → `portSpawn` → '○○ 앞에서 깨어났어요'. 멀티는 실제로 일어난 뒤 `up`을 보내요(net.js).
 - **텐트가 커졌어요**: `BUILDS.ptent` s 1.45(캐릭터보다 조금 큼), bx 1.8·bz 1.9, 깔개 `foot:[2.05,2.1]`.
+
+## 6-0-1. 특별한 곳 (7차, 기획자 요청, `js/places.js`)
+
+- 땅 모양은 core.js(`FISHISLE`, `SPSUP`, `spBox`, `spRamp`, rawH 안) → 서버도 같은 땅. 구조물·모델·문·주인은 places.js(`buildPorts` 뒤에 `buildPlaces`).
+- **까마귀섬 낚시섬**(메모1 x=137 z=135): 나중에 '낚시 도감을 다 채우면 들어오는 곳'(조건은 기획자가 정할 것, 지금은 누구나). 둘레 12.5m 평평하게, 흰 철조망(가로 17.6 × 세로 15m) 울타리, 앞(+z) 가운데 **철조망 문**(`cgate`, 나무 기둥 + '🎣 낚시섬' 간판). [문 열기] → 문짝이 안쪽으로 열리고 4초(`GATE_OPEN_T`, 실제 시간) 뒤 닫혀요. 문 안에 사람·적이 서 있으면 비킬 때까지 안 닫혀요. 열린 문은 `s.open`이라 `inStruct`가 막지 않아요(world.js). 멀티에서 문 상태 맞추기는 서버 마무리 때.
+  - **낚시섬 주인**(`FNPC`, 노란 비옷: 상인 모델을 다시 칠한 `Actor('fisher')`, 캐릭터 교체 아님): 파랑·흰 줄무늬 차양 생선 매대(`fstall`) 뒤. [말 걸기] → 머리 위 말풍선(`FNPC_LINES`, 임시 대사). 가까이 가면 플레이어 쪽으로 몸을 돌려요. 기능(교환·보상 등)은 기획자가 정한 뒤에.
+  - 꾸밈: 그물(왼쪽 뒤), 드럼통 2(오른쪽 뒤), 팔레트(왼쪽), 모닥불 + 통나무(오른쪽 앞, 요리 가능), 가로등(문 안 왼쪽). 문에서 매대까지 길은 비워 둠.
+- **물개섬 특수 보급지**(x=718 z=849): 네모(13×13, 모서리 둥금) **바위 언덕**, 높이 1.9m(`SPSUP.top`). 둘레는 큰 바위 + 보이지 않는 벽(`iblk`)이라 절벽으로는 못 오르내리고, **앞(+z)쪽 경사로**(폭 3.4, 길이 7.5, 흙길 색)로만 다녀요. 위에 **특수 보급 상자 2개**(`spsupply`, 남색+금색, 앞 띠가 밤에 빛남, `loot:4`): 동전 400~1000 + 총 하나(소총·산탄총·기관단총 중) + 탄약·수류탄·화약·붕대·통조림. 열면 5일(`cd`) 뒤 다시 채워져요. 주황 신호등 기둥(밤에 빛남).
+- 지도에 점(낚시섬 하늘색, 특수 보급 주황), 설치 금지 구역(낚시섬 15m, 특수 보급 15.5m).
 
 ## 6-1. 상점
 
@@ -198,7 +207,7 @@ python3 tools/gt.py tools/check_world.py   # 헤드리스 검사 (상점 shop_ch
 
 ## 11. 지금 상태와 다음 일
 
-끝난 것: 6차 게임 규칙(가격표·20% 팔기·재활용 쓰레기통·1시간 랜덤 자판기, 부활 로딩, 큰 텐트, 나무는 도끼로만, 낚싯대 들면 상호작용 없음, 보급지·센터 소품 간격 정리), 6차 정리(항구 이름 표시·건설 버튼 없음, 상호작용 버튼 하나, 카메라 화각 좁힘, 모닥불·가로등 새 모델, 센터 모닥불·작은 항구 짐더미 자리 옮겨 겹침 없앰, 끼임·오래 돌리기 검사), 화면 정리(얼굴·목표·시계·구르기·아래 칸 없음), 옆에 붙는 가방 + 장비(손) 창(가방 열고도 움직임, 상호작용은 막힘), 디자인 5차(대장간 없음, 통통배 한 척, 남은 설치물), 설치 금지 구역(등대·보급지·항구, 설치 모드에서만 빨간 원), look.js 4차(센터: 가게 하나 + 흰 철조망·소품, 보급지 철조망, 설치형 2단계 외형), 낚시 포인트(기획자 좌표 88곳, 물고기 떼, 사거리 8m, 물 안 금지, 등급·확률, 새 물고기 10종), look.js 3차(롱빈터풍 마을·항구), look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
+끝난 것: 7차 특별한 곳(까마귀섬 낚시섬: 철조망·여닫는 문·낚시섬 주인 / 물개섬 특수 보급지: 네모 바위 언덕·경사로·특수 보급), 6차 게임 규칙(가격표·20% 팔기·재활용 쓰레기통·1시간 랜덤 자판기, 부활 로딩, 큰 텐트, 나무는 도끼로만, 낚싯대 들면 상호작용 없음, 보급지·센터 소품 간격 정리), 6차 정리(항구 이름 표시·건설 버튼 없음, 상호작용 버튼 하나, 카메라 화각 좁힘, 모닥불·가로등 새 모델, 센터 모닥불·작은 항구 짐더미 자리 옮겨 겹침 없앰, 끼임·오래 돌리기 검사), 화면 정리(얼굴·목표·시계·구르기·아래 칸 없음), 옆에 붙는 가방 + 장비(손) 창(가방 열고도 움직임, 상호작용은 막힘), 디자인 5차(대장간 없음, 통통배 한 척, 남은 설치물), 설치 금지 구역(등대·보급지·항구, 설치 모드에서만 빨간 원), look.js 4차(센터: 가게 하나 + 흰 철조망·소품, 보급지 철조망, 설치형 2단계 외형), 낚시 포인트(기획자 좌표 88곳, 물고기 떼, 사거리 8m, 물 안 금지, 등급·확률, 새 물고기 10종), look.js 3차(롱빈터풍 마을·항구), look.js 2차(울타리·문·자연·분위기·새 아이콘, 캐릭터 제외), 텐트 깔개 땅 맞춤, 무작위 항구 부활, 육지 평탄화(1.0~1.25), 롱빈터풍 UI·둥근 글꼴, 새 디자인 look.js(집·텐트·아이템·스티커 아이콘, 캐릭터 제외), 잠자기·침낭 제거(텐트가 기지), 채팅 말풍선, 텐트 내부(롱빈터 참고 화면처럼 단순한 빈 방), 엄격한 설치 규칙, 항구마을 상점(무료 4품목), 현대식 텐트·손도끼·낚싯대·보관 상자, 맵, 지형 평탄화, 항구 8, 보급지 14, 바다 등대 8, 포탑 1종, 신비 몹 4종, 개발자 모드, 전체 화면 지도, 멀티 서버 뼈대.
 
 기획자가 다음에 정할 것(먼저 만들지 말 것): 경제(농사, 상점), 약탈 규칙, 친목 기능, 동물 캐릭터, 서버 배포.
 

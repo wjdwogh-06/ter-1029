@@ -1,6 +1,7 @@
 # 끼임 검사: 항구·센터·보급지·등대 둘레를 0.5m 칸으로 나눠, 바깥과 이어지지 않은 '갇힌 빈 칸'(철조망·건물 사이)이 있는지 찾아요. 부활 자리도 바깥과 이어져야 해요
 async def steps(pg):
-    r=await pg.evaluate("""()=>{const out=[];const E={x:0,z:0,pl:1};const ok=(x,z)=>walk(x,z,.42,E)===null;
+    r=await pg.evaluate("""()=>{structs.forEach(s=>{if(s.t==='cgate')s.open=true});   /* 문은 누르면 열려요 */
+      const out=[];const E={x:0,z:0,pl:1};const ok=(x,z)=>walk(x,z,.42,E)===null;
       for(const n of NOB){const R=n.r+6,st=.5,N=Math.ceil(2*R/st)+1,x0=n.x-R,z0=n.z-R,G=new Uint8Array(N*N);   /* 0 막힘, 1 빈칸, 2 바깥과 이어짐 */
        for(let j=0;j<N;j++)for(let i=0;i<N;i++)if(ok(x0+i*st,z0+j*st))G[j*N+i]=1;
        const q=[];for(let i=0;i<N;i++)for(const j of[0,N-1]){for(const [a,b] of [[i,j],[j,i]]){const k=b*N+a;if(G[k]===1){G[k]=2;q.push(k)}}}

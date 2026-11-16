@@ -30,6 +30,12 @@ function layout(sd){ISL.length=0;RIV.length=0;
 const PORT_SITES=[[438,526,1,'초승달 항구마을'],[144,779,0,'바람섬 항구',1],[699,281,0,'동북섬 항구',2],[588,600,0,'안쪽만 항구',3],[293,696,0,'강어귀 항구',0,13],[308,229,0,'북쪽 항구',4,25],[833,733,0,'이끼섬 항구',5],[212,168,0,'까마귀섬 항구',7]];
 const PORTS=[];
 /* supply spots (marked by hand in admin mode): cleared ground with a few supply crates */
+/* 기획자 요청(7차): 까마귀섬 낚시섬(메모1, 철조망 울타리 + 문 + 낚시섬 주인)과 물개섬 특수 보급지(항구1 메모, 네모난 바위 언덕 + 경사로).
+   땅 모양만 여기서(서버도 같은 땅), 구조물과 모델은 js/places.js. h=둘레 땅 높이(buildHeights에서 정함) */
+const FISHISLE={x:137,z:135,h:1.12,hw:8.75,hd:7.5};
+const SPSUP={x:718,z:849,h:1.12,top:1.9,hw:6.5,cr:2.2,rx:2.0,rw:3.4,rl:7.5};
+function spBox(x,z){const S2=SPSUP,qx=Math.abs(x-S2.x)-(S2.hw-S2.cr),qz=Math.abs(z-S2.z)-(S2.hw-S2.cr);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-S2.cr}   /* 네모 언덕 가장자리까지 거리(안쪽 음수) */
+function spRamp(x,z){const S2=SPSUP,ax=Math.abs(x-S2.x-S2.rx),ez=z-S2.z;if(ez<S2.hw-1.5||ax>S2.rw/2+1.2)return 0;return clamp(1-(ez-(S2.hw-.7))/S2.rl,0,1)*(1-sm(S2.rw/2-.15,S2.rw/2+.9,ax))}   /* 앞(+z)쪽 경사로: 0(땅)~1(언덕 위) */
 const SUPPLY_SITES=[[103,754],[158,162],[822,266],[684,174],[687,843],[905,682],[486,708],[448,726],[451,703],[236,619],[216,401],[463,263],[402,608],[741,547]],SUPS=[];
 function findSupply(sd){SUPS.length=0;SUPPLY_SITES.forEach((q,i)=>{let x=q[0],z=q[1];if(rawH(x,z,sd,1)<1){let ok=false;for(let r=2;r<40&&!ok;r+=2)for(let a=0;a<24;a++){const X=q[0]+Math.cos(a*.262)*r,Z=q[1]+Math.sin(a*.262)*r;if(rawH(X,Z,sd,1)>1.2){x=X;z=Z;ok=true;break}}if(!ok)return}
   let h=0;for(const[ox,oz]of[[0,0],[3,0],[-3,0],[0,3],[0,-3]])h+=rawH(x+ox,z+oz,sd,1)/5;SUPS.push({i,x,z,h:Math.max(1.05,h)})})}
@@ -77,11 +83,13 @@ function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const
   for(const p of PORTS){const ex=x-p.x,ez=z-p.z;if(ex>70||ex<-70||ez>70||ez<-70)continue;const al=ex*p.dx+ez*p.dz,la=Math.abs(ex*p.dz-ez*p.dx),dd=Math.hypot(ex,ez);
    if(al<0&&dd<p.R)h=lerp(h,1.15,(1-sm(p.R*.6,p.R,dd))*sm(-3,-6.5,al));const Lb=p.town?27:(p.L||22)+3,Wb=p.town?22:11;
    if(al>-6&&al<Lb+8&&la<Wb+6){const cap=al<-3?lerp(1.15,.5,(al+6)/3):al<1?lerp(.5,-.15,(al+3)/4):al<5?lerp(-.15,-1.6,(al-1)/4):-1.6;if(h>cap)h=lerp(h,cap,(1-sm(Wb,Wb+6,la))*(1-sm(Lb,Lb+8,al)))}}
-  for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>10||ex<-10||ez>10||ez<-10)continue;h=lerp(h,s.h,1-sm(4.5,9.5,Math.hypot(ex,ez)))}}
+  for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>10||ex<-10||ez>10||ez<-10)continue;h=lerp(h,s.h,1-sm(4.5,9.5,Math.hypot(ex,ez)))}
+  {const ex=x-FISHISLE.x,ez=z-FISHISLE.z;if(ex<18&&ex>-18&&ez<18&&ez>-18)h=lerp(h,FISHISLE.h,1-sm(12.5,17,Math.hypot(ex,ez)))}
+  {const ex=x-SPSUP.x,ez=z-SPSUP.z;if(ex<24&&ex>-24&&ez<24&&ez>-24){h=lerp(h,SPSUP.h,1-sm(15,21,Math.hypot(ex,ez)));h+=SPSUP.top*Math.max(1-sm(-.55,.65,spBox(x,z)),spRamp(x,z))}}}
  return lhRock(x,z,h,sd)}
 function buildHeights(sd){SEED=sd;layout(sd);const A=ISL[0],B=ISL[1];
  findPorts(sd);{const p=PORTS[0];VIL.x=p.x-p.dz*1.6-p.dx*14.4;VIL.z=p.z+p.dx*1.6-p.dz*14.4;VIL.px=p.x-p.dx*13;VIL.pz=p.z-p.dz*13}OUT.x=OUT.z=-9999;   /* the hub (spawn, safe zone, merchant) is the harbour town */
- findSupply(sd);mkPaths(sd);
+ findSupply(sd);FISHISLE.h=Math.max(1.05,rawH(FISHISLE.x,FISHISLE.z,sd,1));SPSUP.h=Math.max(1.05,rawH(SPSUP.x,SPSUP.z,sd,1));mkPaths(sd);
  const N=WS+1;HG=new Float32Array(N*N);IG=new Uint8Array(IGN*IGN);for(let z=0;z<=WS;z++)for(let x=0;x<=WS;x++){HG[z*N+x]=rawH(x,z,sd);if(x%IGS===0&&z%IGS===0)IG[(z/IGS)*IGN+x/IGS]=_bi+1}}
 function hAt(x,z){x=clamp(x,0,WS-.001);z=clamp(z,0,WS-.001);const xi=x|0,zi=z|0,fx=x-xi,fz=z-zi,i=zi*(WS+1)+xi;return (HG[i]*(1-fx)+HG[i+1]*fx)*(1-fz)+(HG[i+WS+1]*(1-fx)+HG[i+WS+2]*fx)*fz}
 const islAt=(x,z)=>{const v=IG[clamp(Math.round(z/IGS),0,IGN-1)*IGN+clamp(Math.round(x/IGS),0,IGN-1)];return v?ISL[v-1]:null};

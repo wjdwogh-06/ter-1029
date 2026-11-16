@@ -4,7 +4,7 @@ async def steps(pg):
     ev=pg.evaluate
     r=await ev("""()=>{const o={};
       let bad=0,tot=0;const badP={};for(const d of DOCKS){for(let a=-d.hl+.3;a<=d.hl-.3;a+=.7)for(let b=-d.hw+.3;b<=d.hw-.3;b+=.6){const x=d.x+b*d.c+a*d.s,z=d.z-b*d.s+a*d.c;tot++;if(hAt(x,z)>d.y-.06){bad++;const p=PORTS.find(p=>dist(p.x,p.z,x,z)<60);badP[p?p.n:'?']=(badP[p?p.n:'?']||0)+1}}}o.dockGround=[bad,tot,badP];
-      let ov=[];const L=structs.filter(s=>!sdef(s).pass);for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];if(Math.abs(a.x-b.x)>8||Math.abs(a.z-b.z)>8)continue;if(inStruct(a,b.x,b.z,Math.min(sdef(b).bx,sdef(b).bz)*.8)||inStruct(b,a.x,a.z,Math.min(sdef(a).bx,sdef(a).bz)*.8))ov.push(a.t+'/'+b.t+'@'+(a.x|0)+','+(a.z|0))}o.overlaps=ov.slice(0,12);o.nOv=ov.length;
+      let ov=[];const L=structs.filter(s=>!sdef(s).pass&&!/^iblk/.test(s.t));   /* iblk: 특수 보급 언덕 절벽의 보이지 않는 벽(일부러 겹치고 비탈에 놓임) */for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];if(Math.abs(a.x-b.x)>8||Math.abs(a.z-b.z)>8)continue;if(inStruct(a,b.x,b.z,Math.min(sdef(b).bx,sdef(b).bz)*.8)||inStruct(b,a.x,a.z,Math.min(sdef(a).bx,sdef(a).bz)*.8))ov.push(a.t+'/'+b.t+'@'+(a.x|0)+','+(a.z|0))}o.overlaps=ov.slice(0,12);o.nOv=ov.length;
       o.wet=structs.filter(s=>!onDock(s.x,s.z)&&hAt(s.x,s.z)<.3).map(s=>s.t+'@'+(s.x|0)+','+(s.z|0)).slice(0,10);
       // ground tilt under each solid structure (corner height spread)
       o.tilt=L.map(s=>{const d=sdef(s),bx=d.bx*1,bz=d.bz*1;const hs=[[-bx,-bz],[bx,-bz],[-bx,bz],[bx,bz],[0,0]].map(q=>hAt(s.x+q[0],s.z+q[1]));return[s.t,(s.x|0),(s.z|0),+(Math.max(...hs)-Math.min(...hs)).toFixed(2)]}).filter(q=>q[3]>.3).slice(0,15);
