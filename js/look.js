@@ -216,6 +216,22 @@ function lkPortGeo(){const S=(k,p)=>{const g=mg(p);lkSmooth(g,50);g.computeBound
  S('psign',[pt(lkRb(.16,2.3,.16,.06,.03),0xa5622f,[0,1.15,0]),pt(lkRb(1.6,.9,.12,.12,.04),0xd99a5c,[0,2.05,.05]),pt(lkRb(1.36,.66,.04,.08,.015),0xf0d9a8,[0,2.05,.12]),pt(lkRb(.1,.3,.03,.04,.01),0xdb5a4c,[-.42,2.1,.15]),pt(lkRb(.1,.1,.03,.04,.01),0xdb5a4c,[-.42,1.86,.15]),...[2.2,2.05,1.9].map((y,i)=>pt(box(i==2?.4:.62,.07,.03),0x8a5a36,[i==2?.09:.2,y,.15]))]);
  S('pstack',[...lkPallet([0,0,0],.2,3),...lkPallet([1.25,0,.3],.9,1),...lkDrum(0xe9c046,[-1.05,0,.35]),...lkDrum(0x4a8fd6,[-.75,0,-.55]),...lkPallet([.5,0,1.25],-.3,0)]);
  S('pcrane',lkLatTower(6.2,.85,[0,.1,0]).concat([pt(box(1.3,.2,1.3),LKH.conc2,[0,.1,0])]))}
+/* ---------- 랜덤 자판기 + 재활용 쓰레기통 (기획자 요청 6차) ----------
+   자판기: 뽑기 기계처럼 청록 몸통 + 크림 테두리 + 위에 둥근 유리구슬(안에 알록달록 캡슐, 밤에 빛남) + 노란 꼭지. 앞에 동전 구멍·손잡이·꺼내는 곳
+   쓰레기통: 초록·파랑 바퀴 달린 통 두 개 + 앞에 크림 판과 재활용 삼각 표시. 정면은 +z */
+function lkVendGeo(){const TL=0x2f8f9d,CR=0xf1ece2,YL=0xe9c046,DK=0x2c3346,FZ=.47;
+ const base=[pt(lkRb(1.36,.18,1.0,.08,.05),DK,[0,.09,0]),pt(lkRb(1.26,1.18,.92,.2,.07),TL,[0,.77,0]),pt(lkRb(1.32,.1,.98,.06,.04),CR,[0,1.39,0]),pt(cyl(.46,.54,.12,24),CR,[0,1.5,0]),
+  pt(new THREE.SphereGeometry(.56,24,16),0xd3f1f6,[0,2.0,0]),pt(new THREE.SphereGeometry(.09,10,8),0xffffff,[-.24,2.26,.4]),pt(cyl(.16,.24,.16,20),YL,[0,2.58,0]),pt(new THREE.SphereGeometry(.09,12,8),CR,[0,2.7,0]),
+  pt(lkRb(.42,.3,.07,.08,.025),DK,[0,.44,FZ]),pt(lkRb(.5,.06,.1,.03,.02),CR,[0,.27,FZ+.02]),
+  pt(lkRb(.3,.36,.04,.07,.015),YL,[-.3,.98,FZ]),pt(lkRb(.06,.16,.03,.02,.01),DK,[-.3,1.02,FZ+.025]),
+  pt(cyl(.15,.15,.06,20),CR,[.28,.96,FZ+.01],[Math.PI/2,0,0]),pt(lkRb(.07,.24,.05,.03,.015),YL,[.28,.96,FZ+.05]),pt(new THREE.SphereGeometry(.05,10,8),YL,[.28,1.08,FZ+.08])];
+ const cap=[],CC=[0xff8a5c,0xffd35c,0x7fe08a,0x7cc7ff,0xff9ac2,0xb79cff];for(let i=0;i<14;i++){const a=hash(i,3,51)*Math.PI*1.2-Math.PI*.6,b=hash(i,5,51)*1.1-.45,r=.5;
+  const x=Math.sin(a)*Math.cos(b)*r,y=Math.sin(b)*r,z=Math.cos(a)*Math.cos(b)*r;if(z<.12)continue;cap.push(pt(new THREE.SphereGeometry(.105,10,8),CC[i%CC.length],[x,2.0+y,z]))}
+ lkModel('lk_vend',base,{glow:{g:cap,pv:[0,0,0],glow:true}});Object.assign(DECO.vend,{g:'lk_vend'});
+ const bin=(cx,c,cd)=>[pt(lkRb(.84,.98,.82,.14,.05),c,[cx,.6,0]),pt(lkRb(.88,.1,.86,.05,.03),cd,[cx,.12,0]),pt(lkRb(.92,.1,.92,.08,.04),cd,[cx,1.13,-.01]),pt(lkRb(.5,.07,.09,.03,.02),cd,[cx,1.2,-.42]),
+  ...[-.3,.3].map(u=>pt(cyl(.12,.12,.08,14),DK,[cx+u,.12,-.4],[0,0,Math.PI/2])),pt(lkRb(.46,.46,.03,.1,.012),CR,[cx,.64,.425]),
+  pt(lkRb(.24,.05,.02,.02,.008),cd,[cx,.565,.445]),pt(lkRb(.24,.05,.02,.02,.008),cd,[cx-.062,.672,.445],[0,0,Math.PI/3]),pt(lkRb(.24,.05,.02,.02,.008),cd,[cx+.062,.672,.445],[0,0,-Math.PI/3])];
+ {const g=mg([...bin(-.48,0x4caf6a,0x2f8a4c),...bin(.48,0x4a8fd6,0x2f6db8),pt(lkRb(2.0,.06,1.0,.05,.03),0xc9c4bd,[0,.03,0])]);lkSmooth(g,50);g.computeBoundingSphere();GEO.lk_recycle=g;Object.assign(DECO.recycle,{g:'lk_recycle'})}}
 function lkBuildTown(){
  /* 자판기 가게 (market): 파란 벽 + 주황 지붕 + 태양광판, 오른쪽 앞에 빛나는 자판기 */
  {const G=0xbff3ff,vx=2.35,vz=.7,base=[pt(lkCottage(4.3,3.3,2.3,1.35,0x4f74c8,0xf0d9a8,0xe9c046,{solar:1}),null,[-.75,0,-.45]),pt(lkRb(1.05,1.95,.8,.1,.05),0xd9483e,[vx,1.0,vz]),pt(lkRb(.5,.2,.04,.04,.015),0x2c3038,[vx,.34,vz+.41]),...lkDrum(0xe9c046,[-2.7,0,1.25],.9),...lkDrum(0x4a8fd6,[-2.05,0,1.5],.9),...lkPallet([2.5,0,-.9],.4,2)];
@@ -255,8 +271,8 @@ function lkFence(x,z,r){const c=Math.cos(r),sn=Math.sin(r);for(const u of[-1.25,
  const hs=[];for(const u of[-1.25,0,1.25])for(const v of[-.3,.3])hs.push(hAt(x+c*u+sn*v,z-sn*u+c*v));for(const q of[[-1.25,-.14],[1.25,-.14],[-1.25,.14],[1.25,.14]])hs.push(hAt(x+q[0],z+q[1]));if(Math.max(...hs)-Math.min(...hs)>.25)return null;return addStruct({t:'cfence',x,z,r})}   /* 기울기: 실제 발자국 + 축 정렬 모서리(check_world 기준) */
 function lkCenter(){for(const p of PORTS){const sx=p.town?1:p.sx,W=(lx,lz)=>{lx*=sx;return[p.x+p.dz*lx+p.dx*lz,p.z-p.dx*lx+p.dz*lz]},F=(lx,lz,q)=>{const[x,z]=W(lx,lz);lkFence(x,z,p.r+(q?Math.PI/2:0))},D=(t,lx,lz,r=0)=>{const[x,z]=W(lx,lz);for(const q of structs)if(inStruct(q,x,z,sdef({t}).bx+.2))return;if(hAt(x,z)<.95)return;addStruct({t,x,z,r})};
   if(p.town){for(let lx=-13.75;lx<14;lx+=2.5)if(Math.abs(lx)>4)F(lx,-21);for(const s of[-1,1])for(const lz of[-19.75,-17.25,-14.75,-9.75,-7.25,-4.75])F(s*15.25,lz,1);
-   D('well',-10.5,-17.5,.2);D('towerB',10.2,-16.6);D('barrel',-12.2,-6);D('barrel',-11.3,-6.9);D('barrel',12.4,-6.2);D('barrel',7.4,-18.8);D('barrel',8.3,-19.4);D('crate',11.2,-10.6,.3);D('crate',-12.6,-12.2,-.2);D('crate',-6.6,-18.6,.5)}
-  else if(p.i%2===0){for(const lx of[1.25,3.75,6.25,8.75])F(lx,-12.5);for(const lz of[-11.25,-8.75])F(10,lz,1);D('barrel',8.6,-11.2);D('crate',6.9,-11)}}}
+   D('well',-10.5,-17.5,.2);D('towerB',10.2,-16.6);D('barrel',-12.7,-5.5);D('barrel',-11.0,-7.3);D('barrel',11.6,-5.0);D('barrel',5.8,-18.6);D('crate',11.2,-10.6,.3);D('crate',-12.6,-12.2,-.2);D('crate',-6.6,-18.6,.5)}
+  else if(p.i%2===0){for(const lx of[1.25,3.75,6.25,8.75])F(lx,-12.5);for(const lz of[-11.25,-8.75])F(10,lz,1);D('barrel',8.0,-10.2);D('crate',5.6,-9.9)}}}
 function lkSupplyFence(){SUPS.forEach(s=>{const m=s.i%2?-1:1;for(const dx of[-2.5,0,2.5])lkFence(s.x+dx,s.z-5.4,0);lkFence(s.x-3.9*m,s.z-4.0,Math.PI/2);lkFence(s.x-3.9*m,s.z-1.5,Math.PI/2)})}
 
 /* ---------- 설치형 2·3단계: 작업대, 모닥불, 난로, 표지판, 텃밭, 발전기, 배터리, 스프링클러 (외형만) ----------
@@ -330,7 +346,7 @@ function lkBuildGeo(){
  Object.assign(DECO.home_A,{g:'lk_cotA_0',s:1});Object.assign(DECO.home_B,{g:'lk_cotB_1',s:1});Object.assign(BUILDS.home,{g:'lk_cotA_3',s:1});
  GEO.mtent=lkTent();GEO.lk_logs=lkLogs();GEO.lk_stones=lkStones();GEO.lk_berry=lkBerry();GEO.can=lkCan();GEO.axe_m=lkAxe();
  ITEMS.wood.ic='lk_logs';ITEMS.stone.ic='lk_stones';ITEMS.berry.ic='lk_berry';
- lkBuildStage1();if(LK_MOOD){lkBuildTown();lkFenceGeo()}lkBuildStage2();if(LK_MOOD)try{lkBuildStage3()}catch(e){console.error('look: 3단계 모델 실패',e)}
+ lkBuildStage1();if(LK_MOOD){lkBuildTown();lkFenceGeo()}lkBuildStage2();if(LK_MOOD)try{lkBuildStage3()}catch(e){console.error('look: 3단계 모델 실패',e)}try{lkVendGeo()}catch(e){console.error('look: 자판기 모델 실패',e)}
  if(LK_MOOD)for(const k in GEO)if(/^lk_/.test(k)||k==='mtent'||k==='can'||k==='axe_m')lkSmooth(GEO[k],50);
  for(const k in GEO)if(!GEO[k].boundingSphere)GEO[k].computeBoundingSphere()}
 

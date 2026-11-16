@@ -88,40 +88,40 @@ const islAt=(x,z)=>{const v=IG[clamp(Math.round(z/IGS),0,IGN-1)*IGN+clamp(Math.r
 const tundraAt=(x,z,h)=>sm(.5,.68,noise(x*.03+3,z*.03+9,2))*sm(5,2.5,h)*sm(.9,1.4,h);
 /* ===== data ===== */
 const ITEMS={
- wood:{n:'나무',ic:'resource_lumber',ty:'res',p:2,d:'건설과 제작의 기본 재료'},stone:{n:'돌',ic:'resource_stone',ty:'res',p:2,d:'바위에서 캐는 재료'},
- scrap:{n:'고철',ic:'scrap',ty:'res',p:6,d:'잔해와 상자에서 얻어요. 총과 탄약의 재료'},powder:{n:'화약',ic:'keg',ty:'res',p:9,d:'탄약과 수류탄에 들어가요'},
- cloth:{n:'천',ic:'cloth',ty:'res',p:5,d:'붕대, 모래주머니에 써요'},
- berry:{n:'산딸기',ic:'berries',ty:'food',food:9,p:3,d:'덤불에서 따요. 배고픔 +9'},can:{n:'통조림',ic:'can',ty:'food',food:38,p:14,d:'든든한 전투식량. 배고픔 +38'},
- bandage:{n:'붕대',ic:'bandage',ty:'heal',heal:40,p:16,d:'체력 +40'},
- ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:1.5,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:2.5,d:'소총, 산탄총, 기관총 진지용'},
- grenade:{n:'수류탄',ic:'grenade',ty:'throw',p:28,d:'던지면 주변에 큰 피해'},
- axe:{n:'손도끼',ic:'axe_m',ty:'tool',p:20,d:'나무와 바위를 빨리 캐요. 근접 14',one:1},
- kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:60,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:40,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
- pistol:{n:'권총',ic:'pistol',ty:'gun',p:90,d:'가볍고 빠른 기본 총. 피해 16',one:1},rifle:{n:'볼트액션 소총',ic:'rifle',ty:'gun',p:260,d:'멀리서 한 발씩 강하게. 피해 48',one:1},
- smg:{n:'기관단총',ic:'smg',ty:'gun',p:420,d:'빠르게 쏟아붓는 연사. 피해 10',one:1},shotgun:{n:'산탄총',ic:'shotgun',ty:'gun',p:340,d:'가까울수록 강해요. 피해 9×6',one:1}};
+ wood:{n:'나무',ic:'resource_lumber',ty:'res',p:20,d:'건설과 제작의 기본 재료'},stone:{n:'돌',ic:'resource_stone',ty:'res',p:20,d:'바위에서 캐는 재료'},
+ scrap:{n:'고철',ic:'scrap',ty:'res',p:60,d:'잔해와 상자에서 얻어요. 총과 탄약의 재료'},powder:{n:'화약',ic:'keg',ty:'res',p:90,d:'탄약과 수류탄에 들어가요'},
+ cloth:{n:'천',ic:'cloth',ty:'res',p:50,d:'붕대, 모래주머니에 써요'},
+ berry:{n:'산딸기',ic:'berries',ty:'food',food:9,p:30,d:'덤불에서 따요. 배고픔 +9'},can:{n:'통조림',ic:'can',ty:'food',food:38,p:140,d:'든든한 전투식량. 배고픔 +38'},
+ bandage:{n:'붕대',ic:'bandage',ty:'heal',heal:40,p:160,d:'체력 +40'},
+ ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:15,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:25,d:'소총, 산탄총, 기관총 진지용'},
+ grenade:{n:'수류탄',ic:'grenade',ty:'throw',p:280,d:'던지면 주변에 큰 피해'},
+ axe:{n:'손도끼',ic:'axe_m',ty:'tool',p:200,d:'나무와 바위를 빨리 캐요. 근접 14',one:1},
+ kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:600,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:400,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
+ pistol:{n:'권총',ic:'pistol',ty:'gun',p:900,d:'가볍고 빠른 기본 총. 피해 16',one:1},rifle:{n:'볼트액션 소총',ic:'rifle',ty:'gun',p:2600,d:'멀리서 한 발씩 강하게. 피해 48',one:1},
+ smg:{n:'기관단총',ic:'smg',ty:'gun',p:4200,d:'빠르게 쏟아붓는 연사. 피해 10',one:1},shotgun:{n:'산탄총',ic:'shotgun',ty:'gun',p:3400,d:'가까울수록 강해요. 피해 9×6',one:1}};
 /* 물고기. g=등급(FGRADE), k=생김새(water.js fishGeoK). old:1은 예전 물고기: 더 이상 낚이지 않고 저장 호환용으로 아이템만 남김 */
 const FGRADE=[['일반','#8C9AA6'],['희귀','#3D8BE0'],['영웅','#9B5BD6'],['전설','#F08A24']];
-const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:5,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
- {id:'f_char',n:'북극곤들매기',old:1,str:2,p:10,food:24,cm:[30,58],back:0x55684f,belly:0xe0743a,len:.9,h:.3,w2:.19},
- {id:'f_cod',n:'대구',old:1,str:2,p:12,food:28,cm:[45,95],back:0x8a7d55,belly:0xe8e0c8,len:1,h:.34,w2:.25},
- {id:'f_lump',n:'도치',old:1,str:2,p:14,food:26,cm:[25,48],back:0x4f7a74,belly:0xa9c59a,len:.68,h:.52,w2:.38},
- {id:'f_salmon',n:'연어',g:0,str:2,p:12,food:30,cm:[55,100],back:0x7d8ea0,belly:0xf1e9e2,len:1.05,h:.32,w2:.21},
- {id:'f_halibut',n:'넙치',old:1,str:4,p:34,food:42,cm:[60,150],back:0x6b5a43,belly:0xece4d8,len:.95,h:.64,w2:.13},
- {id:'f_shark',n:'그린란드상어',old:1,str:5,p:140,food:60,cm:[180,420],back:0x55606b,belly:0x9aa3ab,len:1.35,h:.36,w2:.3,legend:1},
- {id:'f_anch',n:'멸치',g:0,k:'anch',str:1,p:3,food:10,cm:[8,16],back:0x4d7aa8,belly:0xe6eef4,len:.5,h:.13,w2:.09},
- {id:'f_trout',n:'송어',g:0,k:'trout',str:2,p:8,food:22,cm:[28,60],back:0x6f7a4a,belly:0xeadfc0,len:.85,h:.26,w2:.17},
- {id:'f_rainbow',n:'무지개송어',g:1,k:'rainbow',str:3,p:22,food:32,cm:[35,75],back:0x5d8a6c,belly:0xf3ece4,len:.95,h:.28,w2:.18},
- {id:'f_flying',n:'날치',g:1,k:'flying',str:3,p:20,food:26,cm:[20,40],back:0x2f62b8,belly:0xe8f0f8,len:.78,h:.19,w2:.15},
- {id:'f_tuna',n:'참치',g:0,k:'tuna',str:2,p:16,food:36,cm:[80,200],back:0x24406e,belly:0xdde6ee,len:1.25,h:.36,w2:.27},
- {id:'f_jelly',n:'해파리',g:1,k:'jelly',str:3,p:24,food:20,cm:[25,70],back:0xf2a7dc,belly:0xffe1f3,len:.7,h:.5,w2:.7,cn:'데친 해파리'},
- {id:'f_sword',n:'황새치',g:2,k:'sword',str:4,p:70,food:48,cm:[150,320],back:0x3c5878,belly:0xdfe6ec,len:1.35,h:.3,w2:.2},
- {id:'f_hammer',n:'망치상어',g:3,k:'hammer',str:5,p:160,food:64,cm:[220,480],back:0x7a8994,belly:0xe7ebee,len:1.5,h:.34,w2:.3}];
+const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:50,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
+ {id:'f_char',n:'북극곤들매기',old:1,str:2,p:100,food:24,cm:[30,58],back:0x55684f,belly:0xe0743a,len:.9,h:.3,w2:.19},
+ {id:'f_cod',n:'대구',old:1,str:2,p:120,food:28,cm:[45,95],back:0x8a7d55,belly:0xe8e0c8,len:1,h:.34,w2:.25},
+ {id:'f_lump',n:'도치',old:1,str:2,p:140,food:26,cm:[25,48],back:0x4f7a74,belly:0xa9c59a,len:.68,h:.52,w2:.38},
+ {id:'f_salmon',n:'연어',g:0,str:2,p:120,food:30,cm:[55,100],back:0x7d8ea0,belly:0xf1e9e2,len:1.05,h:.32,w2:.21},
+ {id:'f_halibut',n:'넙치',old:1,str:4,p:340,food:42,cm:[60,150],back:0x6b5a43,belly:0xece4d8,len:.95,h:.64,w2:.13},
+ {id:'f_shark',n:'그린란드상어',old:1,str:5,p:1400,food:60,cm:[180,420],back:0x55606b,belly:0x9aa3ab,len:1.35,h:.36,w2:.3,legend:1},
+ {id:'f_anch',n:'멸치',g:0,k:'anch',str:1,p:30,food:10,cm:[8,16],back:0x4d7aa8,belly:0xe6eef4,len:.5,h:.13,w2:.09},
+ {id:'f_trout',n:'송어',g:0,k:'trout',str:2,p:80,food:22,cm:[28,60],back:0x6f7a4a,belly:0xeadfc0,len:.85,h:.26,w2:.17},
+ {id:'f_rainbow',n:'무지개송어',g:1,k:'rainbow',str:3,p:220,food:32,cm:[35,75],back:0x5d8a6c,belly:0xf3ece4,len:.95,h:.28,w2:.18},
+ {id:'f_flying',n:'날치',g:1,k:'flying',str:3,p:200,food:26,cm:[20,40],back:0x2f62b8,belly:0xe8f0f8,len:.78,h:.19,w2:.15},
+ {id:'f_tuna',n:'참치',g:0,k:'tuna',str:2,p:160,food:36,cm:[80,200],back:0x24406e,belly:0xdde6ee,len:1.25,h:.36,w2:.27},
+ {id:'f_jelly',n:'해파리',g:1,k:'jelly',str:3,p:240,food:20,cm:[25,70],back:0xf2a7dc,belly:0xffe1f3,len:.7,h:.5,w2:.7,cn:'데친 해파리'},
+ {id:'f_sword',n:'황새치',g:2,k:'sword',str:4,p:700,food:48,cm:[150,320],back:0x3c5878,belly:0xdfe6ec,len:1.35,h:.3,w2:.2},
+ {id:'f_hammer',n:'망치상어',g:3,k:'hammer',str:5,p:1600,food:64,cm:[220,480],back:0x7a8994,belly:0xe7ebee,len:1.5,h:.34,w2:.3}];
 FISH.forEach(f=>{const gtag=f.old?'':`[${FGRADE[f.g][0]}] `;ITEMS[f.id]={n:f.n,ic:f.id,ty:'fish',food:6,p:f.p,d:`${gtag}${f.legend?'전설의 물고기! ':''}날로 먹으면 배고픔 +6. 모닥불에 구우면 +${f.food}`};ITEMS['c'+f.id]={n:f.cn||'구운 '+f.n,ic:'c'+f.id,ty:'food',food:f.food,p:Math.round(f.p*1.5),d:`잘 익힌 ${f.n}. 배고픔 +${f.food}`}});
 /* 낚시 구역: 포인트마다 나오는 물고기와 확률(%). 같은 등급 안에서는 똑같이 나눔. R=물고기 떼가 도는 반지름 */
 const FISH_ZONES={A:{n:'등대 앞바다',R:1.05,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
  B:{n:'해안',R:.85,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
 const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]===a.id)-FISH_ZONES.A.t.some(q=>q[0]===b.id))||a.g-b.g);
-ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:30,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
+ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:300,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
  pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
  smg:{dmg:10,cd:.095,range:15,ammo:'ammoS',spread:.07},shotgun:{dmg:9,pel:6,cd:.9,range:11,ammo:'ammoL',spread:.17}};
@@ -142,22 +142,32 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 주변 16칸의 탐조등에 전기를 보내요'},
  slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
- ptent:{n:'텐트',g:'mtent',s:1,bx:1.25,bz:1.3,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[1.4,1.45],tilt:.1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
+ ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
-const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',6,1]]},
- gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoL',5,.7],['scrap',2,.6],['coin',9,1]]},
- rgolem:{n:'바위 골렘',hp:240,sp:2.1,dmg:26,reach:3.0,proc:'rg',big:1,blood:0x9aa1a8,loot:[['stone',8,1],['scrap',4,.7],['coin',30,1]]},
- wgolem:{n:'나무 골렘',hp:105,sp:3.0,dmg:14,reach:2.3,proc:'wg',blood:0x8a5a32,loot:[['wood',8,1],['berry',3,.6],['coin',14,1]]},
- wraith:{n:'악령',hp:52,sp:3.3,dmg:12,range:12,proc:'wr',blood:0x9fe8ff,loot:[['powder',3,.8],['cloth',2,.7],['coin',18,1]]},
- plant:{n:'식인 덩굴',hp:85,sp:0,dmg:19,reach:3.4,proc:'pl',root:1,blood:0x5fae4a,loot:[['berry',5,1],['cloth',2,.6],['coin',10,1]]},
- brute:{n:'두목',hp:190,sp:2.9,dmg:22,reach:2.4,w:'axe_2handed',big:1,col:[.5,.16,.14],loot:[['scrap',8,1],['powder',4,1],['can',2,1],['coin',40,1]]}};
+const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
+ gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoL',5,.7],['scrap',2,.6],['coin',90,1]]},
+ rgolem:{n:'바위 골렘',hp:240,sp:2.1,dmg:26,reach:3.0,proc:'rg',big:1,blood:0x9aa1a8,loot:[['stone',8,1],['scrap',4,.7],['coin',300,1]]},
+ wgolem:{n:'나무 골렘',hp:105,sp:3.0,dmg:14,reach:2.3,proc:'wg',blood:0x8a5a32,loot:[['wood',8,1],['berry',3,.6],['coin',140,1]]},
+ wraith:{n:'악령',hp:52,sp:3.3,dmg:12,range:12,proc:'wr',blood:0x9fe8ff,loot:[['powder',3,.8],['cloth',2,.7],['coin',180,1]]},
+ plant:{n:'식인 덩굴',hp:85,sp:0,dmg:19,reach:3.4,proc:'pl',root:1,blood:0x5fae4a,loot:[['berry',5,1],['cloth',2,.6],['coin',100,1]]},
+ brute:{n:'두목',hp:190,sp:2.9,dmg:22,reach:2.4,w:'axe_2handed',big:1,col:[.5,.16,.14],loot:[['scrap',8,1],['powder',4,1],['can',2,1],['coin',400,1]]}};
+/* 경제(기획자 요청 6차): 아이템마다 p = 원래 가격(동전). 지금 값은 바로 쓸 수 있게 넣어 둔 임시값이라 기획자가 고치면 돼요.
+   재활용 쓰레기통에서 팔면 원래 가격의 20%(ECON.sell). 랜덤 자판기는 원래 가격 그대로(VEND.free=1이면 무료). 동전은 10배 단위로 바꿨어요(cx:1). */
+const ECON={sell:.2};
+function sellPrice(id){return Math.max(1,Math.floor(ITEMS[id].p*ECON.sell))}
+/* 랜덤 자판기: 항구마다 하나. 실제 시간으로 1시간마다(정각 기준) 모든 아이템 중 무작위 5개로 바뀌어요. 시간·항구 번호로만 정해서 누구에게나 같아요 */
+const VEND={n:5,per:3600e3,free:0,pack:{ammoS:12,ammoL:8}};
+const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p)return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
+function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=vendPool(),out=[];let k=0;
+ while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
+const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
 const SHOP={sell:['kit_tent','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
-const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:10},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:10},
- {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:15},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:20},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:20},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:15},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:20},
- {t:'작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:25},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:40},{t:'모래주머니 4개로 방어선 만들기',c:s=>s.st.b_sandbag>=4,r:30},
- {t:'첫 밤 습격 막아내기',c:s=>s.st.raids>=1,r:60},{t:'볼트액션 소총 구하기',c:s=>(s.inv.rifle||0)>0,r:50},
- {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:80},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:60},{t:'발전기와 탐조등 세우기',c:s=>s.st.b_slight>0,r:80},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:300}];
+const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:100},
+ {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
+ {t:'작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},{t:'모래주머니 4개로 방어선 만들기',c:s=>s.st.b_sandbag>=4,r:300},
+ {t:'첫 밤 습격 막아내기',c:s=>s.st.raids>=1,r:600},{t:'볼트액션 소총 구하기',c:s=>(s.inv.rifle||0)>0,r:500},
+ {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:800},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:600},{t:'발전기와 탐조등 세우기',c:s=>s.st.b_slight>0,r:800},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:3000}];
 /* ===== dev mode: god/no-clip/fast travel + map markers (kept apart from the save) ===== */
 const MTYPE=[['⚓','항구','#4fc3ff'],['🏠','마을','#ffb547'],['👹','몬스터','#ff6b5e'],['⛏','자원','#7bd88f'],['📝','메모','#d0b4ff']];
 const DEV={on:false,sp:3,type:0,marks:[],mapMark:false,qty:1,q:''};
@@ -165,7 +175,7 @@ function devLoad(){try{const d=JSON.parse(localStorage.getItem('frontisle_dev'))
 function devSave(){try{localStorage.setItem('frontisle_dev',JSON.stringify({on:DEV.on,marks:DEV.marks,sp:DEV.sp}))}catch(e){}}
 /* ===== state ===== */
 let S=null,opt={snd:true,gfx:1};
-function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:30,inv:{pistol:1,ammoS:36,can:2,bandage:1},quick:['pistol',null,'can','bandage',null,null],sel:0,
+function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:300,cx:1,inv:{pistol:1,ammoS:36,can:2,bandage:1},quick:['pistol',null,'can','bandage',null,null],sel:0,
  home:null,q:0,st:{wood:0,stone:0,scrap:0,kills:0,raids:0,camps:0,boss:0,c_ammoS:0,c_ammoL:0,b_fire:0,b_ptent:0,b_sandbag:0,b_mg:0,b_tur:0,b_slight:0,bunk:0,fish:0,cook:0},caught:{},best:{},
  built:[],dep:{},looted:{},lh:{},campDay:{},bag:null,raidDone:0,stash:{}}}
 const invN=id=>S.inv[id]||0;
