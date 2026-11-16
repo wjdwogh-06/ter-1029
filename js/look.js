@@ -379,9 +379,9 @@ function lkSmooth(g,deg){const P=g.attributes.position,n=P.count;if(!n||n%3)retu
  g.setAttribute('normal',new THREE.BufferAttribute(out,3))}
 /* 땅: 진하고 선명한 잔디 + 짧은 연두색 붓자국, 얼룩무늬는 약하게, 모래·흙은 따뜻한 노란빛 */
 if(LK_MOOD){const _ob=TERR.onBeforeCompile;TERR.onBeforeCompile=sh=>{_ob(sh);sh.fragmentShader=sh.fragmentShader.replace('diffuseColor.rgb*=.83+.3*pa;','diffuseColor.rgb*=.94+.09*pa;').replace('1.-.085*smoothstep(.66,.72,n3)+.06*smoothstep(.3,.24,n3)','1.-.03*smoothstep(.66,.72,n3)+.02*smoothstep(.3,.24,n3)').replace('#include <alphamap_fragment>',`{vec3 c=diffuseColor.rgb;float land=smoothstep(.15,.6,vWP.y),gr=smoothstep(-.01,.13,c.g-max(c.r,c.b))*land;
- c=mix(c,c*vec3(.38,.74,.92),gr);c=mix(c,c*vec3(1.14,1.03,.66),(1.-gr)*smoothstep(.03,.2,c.r-c.b)*smoothstep(-.4,.2,vWP.y)*.85);
+ c=mix(c,c*vec3(.6,.85,.6),gr);c=mix(c,c*vec3(1.2,1.12,.9),(1.-gr)*smoothstep(.03,.2,c.r-c.b)*smoothstep(-.4,.2,vWP.y)*.85);
  vec2 q=vWP.xz*1.7,ci=floor(q),f=fract(q),o=vec2(th(ci+3.7),th(ci+11.1))*.5+.25;float an=-.5+(th(ci+5.3)-.5)*.5;vec2 p=f-o;p=vec2(p.x*cos(an)-p.y*sin(an),p.x*sin(an)+p.y*cos(an));
- float ds=(1.-smoothstep(.1,.15,abs(p.x)))*(1.-smoothstep(.022,.045,abs(p.y)))*step(.42,th(ci+23.9));c=mix(c,vec3(.6,.8,.36),ds*gr*.62);diffuseColor.rgb=c;}
+ float ds=(1.-smoothstep(.1,.15,abs(p.x)))*(1.-smoothstep(.022,.045,abs(p.y)))*step(.42,th(ci+23.9));c=mix(c,vec3(.74,.88,.44),ds*gr*.62);diffuseColor.rgb=c;}
  #include <alphamap_fragment>`)}}
 /* ---------- 자연: 롱빈터풍 나무·바위·덤불 (LK_MOOD) ----------
    기존 GEO 키를 그대로 덮어써서 배치·충돌·채집은 하나도 안 바뀌어요. 크기도 예전 모델과 비슷하게 맞췄어요(높이 약 1.1, 월드에서 ×3.4~5.2). */
@@ -425,7 +425,7 @@ const LKC1=new THREE.Color(),LKC2=new THREE.Color();
 function lkMood(){if(!LK_MOOD||(typeof INT!=='undefined'&&INT.on))return;const nt=dark(),day=1-nt;
  if(day>0){hemi.color.lerp(LKC1.setRGB(.6,.62,1.0),.8*day);hemi.groundColor.lerp(LKC2.setRGB(.52,.42,.76),.8*day);sun.color.lerp(LKC1.setRGB(1.0,.87,.68),.7*day);sun.intensity*=1+.14*day;scene.fog.near*=1+.35*day;scene.fog.far*=1+.3*day}
  /* 밤: 깜깜한 대신 보랏빛 남색으로 은은하게 보이게 */
- if(nt>0){hemi.color.lerp(LKC1.setRGB(.6,.52,1.0),.75*nt);hemi.groundColor.lerp(LKC2.setRGB(.36,.28,.66),.75*nt);hemi.intensity*=1+.7*nt;sun.color.lerp(LKC1.setRGB(.66,.62,1.0),.6*nt);
+ if(nt>0){hemi.color.lerp(LKC1.setRGB(.48,.48,1.0),.85*nt);hemi.groundColor.lerp(LKC2.setRGB(.36,.28,.66),.75*nt);hemi.intensity*=1+.3*nt;sun.color.lerp(LKC1.setRGB(.6,.58,1.0),.7*nt);
   if(!WX.b){scene.background.lerp(LKC1.setRGB(.035,.03,.12),.6*nt);scene.fog.color.copy(scene.background)}}}
 
 /* ---------- 다듬기(기획자 요청: 도형 티 나는 것들) ----------
@@ -461,8 +461,8 @@ function lkLampParts(H){const DK=0x39425a,DK2=0x2c3346,CR=0xf1ece2,GLs=0xffe2a0,
 if(LK_MOOD){const _bpo=buildPorts;buildPorts=function(){_bpo();try{for(const b of PBOATS)if(b.m.geometry===GEO.fboat)b.m.add(mesh(GEO.lk_fboat_glow,LKGLOW,false));lkSupplyFence();lkCenter()}catch(e){console.error('look: 철조망 실패',e)}}}
 if(LK_MOOD){pierGeo=lkPier;quayGeo=lkQuay;const _pg=buildPortGeo;buildPortGeo=function(){_pg();try{lkPortGeo()}catch(e){console.error('look: 항구 모델 실패',e)}}}
 {const _bd=buildDressGeo;buildDressGeo=function(){_bd();if(LK_MOOD)try{lkNature();lkSupplyGeo()}catch(e){console.error('look: 자연 모델 실패',e)}}}
-{const _bt=buildTerrain;buildTerrain=function(){_bt();if(LK_MOOD)try{water.material.uniforms.cS.value.setHex(0x4a84ec).convertSRGBToLinear();water.material.uniforms.cD.value.setHex(0x2346b4).convertSRGBToLinear()}catch(e){}}}
-{const _ir=initRenderer;initRenderer=function(){_ir();if(LK_MOOD)R.toneMappingExposure=1.06}}
+{const _bt=buildTerrain;buildTerrain=function(){_bt();if(LK_MOOD)try{water.material.uniforms.cS.value.setHex(0x38b4ea).convertSRGBToLinear();water.material.uniforms.cD.value.setHex(0x2a5ec4).convertSRGBToLinear()}catch(e){}}}
+{const _ir=initRenderer;initRenderer=function(){_ir();if(LK_MOOD)R.toneMappingExposure=1.08}}
 {const _as=addStruct;addStruct=function(s){const r=_as(s);try{lkHouseVar(r);lkAttach(r);if(r&&r.head&&sdef(r).tur&&GEO.lk_teye)r.head.add(mesh(GEO.lk_teye,LKGLOW,false))}catch(e){console.error('look: 구조물 부품 실패',e)}return r}}
 /* 문 부품 움직이기: 나(또는 멀티의 다른 플레이어)가 문 1.9m 안에 오면 앞쪽(+z)으로 열리고, 멀어지면 닫혀요.
    문은 원래 플레이어가 지나갈 수 있어서(blocked) 모양만 맞춰 줘요. 적은 문을 못 지나가니 열리지 않아요 */
