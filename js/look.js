@@ -813,3 +813,94 @@ function lkFloraIc(){if(typeof ITEMS==='undefined')return;for(const [id,mt] of L
   for(const k of ks){const it=ITEMS[k];if(k!==id){GEO['pi_'+k]=GEO['pi_'+id];GEO['pw_'+k]=GEO['pw_'+id];if(GEO['pw_'+id+'_e'])GEO['pw_'+k+'_e']=GEO['pw_'+id+'_e']}if(!it.ic||!GEO[it.ic])it.ic='pi_'+id}}}
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkFloraGeo()}catch(e){console.error('look: 식물 모델 실패',e)}try{lkAOnew(b0)}catch(e){}try{lkFloraIc()}catch(e){}}}
 {const _li=lkIcons;lkIcons=function(){try{lkFloraIc()}catch(e){}_li()}}
+
+/* ---------- 새 아이템 15종 모양 (20차 디자인, 기획자 요청 11-18) ----------
+   기획자 다시 요청으로 '롱빈터처럼 단순한 로우폴리'(굵직한 덩어리 몇 개, 모서리만 둥글게, 잔부품 없음). 색은 2~3가지 + 크림.
+   GEO 이름 = 'lk_'+id. 아이템: chainsaw crossbow arrow fuel / 설치형: sign(이미 있는 lk_sign) fireplace lamp(이미 있는 항구 가로등 모양) fence_garden
+   seat_bench chair oven_garden table_round vase sofa boat2. 설치형은 바닥 y=0·정면 +z(벽에 붙는 것은 뒤가 −z). 캐릭터 키 약 2.3 기준.
+   움직이는 조각·효과 자리(lkModel): fireplace·oven_garden 조각 fire(빛) + 기준점 smoke / chainsaw 조각 chain(체인 돌리기) / crossbow 기준점 bolt(화살 나가는 곳)
+   boat2 조각 motor(모터 흔들기, 회전축 = 뒤판) + 기준점 seat1·seat2(앉는 자리)·wake(물보라) — 보트는 물 높이 y=0, 바닥 y=−0.22. */
+const LK_PROPS=[['chainsaw',n=>/전기\s*톱|체인\s*톱/.test(n),'ITEMS'],['crossbow',n=>/석궁/.test(n),'ITEMS'],['arrow',n=>/화살/.test(n),'ITEMS'],['fuel',n=>/연료|기름통/.test(n),'ITEMS'],
+ ['sign',n=>/표지판|팻말/.test(n),'BUILDS'],['fireplace',n=>/벽난로/.test(n),'BUILDS'],['lamp',n=>/가로등/.test(n),'BUILDS'],['fence_garden',n=>/정원\s*울타리/.test(n),'BUILDS'],
+ ['seat_bench',n=>/벤치/.test(n),'BUILDS'],['chair',n=>/의자/.test(n)&&!/벤치/.test(n),'BUILDS'],['oven_garden',n=>/화덕/.test(n),'BUILDS'],['table_round',n=>/테이블|탁자/.test(n),'BUILDS'],
+ ['vase',n=>/꽃병/.test(n),'BUILDS'],['sofa',n=>/소파/.test(n),'BUILDS'],['boat2',n=>/보트|2인승/.test(n),'BUILDS']];
+function lkProps20(){
+ /* 기획자 다시 요청(11-18 19:49): '너무 현실적이다, 로우폴리 감성으로 더 단순하게, 롱빈터처럼. 소파가 낫다 — 단순하지만 도형으로 자른 것 같지 않게'.
+    → 큰 덩어리 몇 개를 모서리 둥근 상자(lkRb)·면 수 적은 원기둥으로, 굵직한 비율. 못·체인 이·박음질 같은 잔부품은 빼요. 색은 2~3가지 + 크림. */
+ const rbL=(w,h,d,cr,bv)=>{bv=Math.min(bv,w/2-.002,h/2-.002,d/2-.002);const W=w/2-bv,H=h/2-bv,c=Math.max(.001,Math.min(cr,W-.001,H-.001)),sh=new THREE.Shape();
+   sh.moveTo(-W+c,-H);sh.lineTo(W-c,-H);sh.quadraticCurveTo(W,-H,W,-H+c);sh.lineTo(W,H-c);sh.quadraticCurveTo(W,H,W-c,H);sh.lineTo(-W+c,H);sh.quadraticCurveTo(-W,H,-W,H-c);sh.lineTo(-W,-H+c);sh.quadraticCurveTo(-W,-H,-W+c,-H);
+   const g=new THREE.ExtrudeGeometry(sh,{depth:Math.max(.002,d-2*bv),bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:1,steps:1,curveSegments:2});g.translate(0,0,-Math.max(.002,d-2*bv)/2);return g},
+  R_=(w,h,d,c,p,r,cr=.04,bv=.025)=>pt(rbL(w,h,d,cr,bv),c,p,r),C=(a,b,h,c,p,r,n=8)=>pt(cyl(a,b,h,n),c,p,r),S_=(r,c,p,s,rot,w=8,h=6)=>pt(new THREE.SphereGeometry(r,w,h),c,p,rot,s),
+  beam=(a,b,w,d,c)=>{const q=lkAim(a,b);return pt(rbL(w,q.L,d,Math.min(w,d)*.35,Math.min(w,d)*.2),c,q.pos,q.rot)},rod=(a,b,r,c,n=6)=>lkRod(a,b,r,c,n),
+  lathe=(prof,c,p,seg=8)=>pt(new THREE.LatheGeometry(prof.map(q=>new THREE.Vector2(q[0],q[1])),seg),c,p),
+  fin=(p,deg=50)=>{const g=mg(p);lkSmooth(g,deg);g.computeBoundingSphere();return g},
+  WD=0xc08a52,WD2=0x9a6a44,WDL=0xd9a86a,IR=0x3c4250,ST=0xc3cad2,CR=0xf3ece0;
+ /* ① 전기톱: 주황 몸통 + 검은 손잡이 + 둥근 끝 톱날(뒤에 짙은 체인 테두리 = 조각 chain) */
+ {const OR=0xec7b30,BL=0x2e3238,body=[R_(.2,.22,.36,OR,[0,.12,-.06],0,.06,.04),R_(.21,.07,.3,BL,[0,.02,-.06],0,.03,.02),beam([0,.25,-.22],[0,.34,-.04],.07,.06,BL),beam([0,.34,-.04],[0,.28,.1],.07,.06,BL),R_(.08,.05,.07,0xf3d24a,[.0,.26,-.2],0,.02,.015)],
+   bar=[R_(.04,.12,.6,ST,[0,0,.3],0,.05,.015),C(.06,.06,.04,ST,[0,0,.6],[0,0,Math.PI/2],10)];
+  lkModel('lk_chainsaw',body.concat(bar.map(g=>{g.translate(0,.12,.12);return g})),{chain:{g:[R_(.03,.15,.64,BL,[0,0,.31],0,.07,.01),C(.075,.075,.03,BL,[0,0,.61],[0,0,Math.PI/2],10)],pv:[0,.12,.12]}},{tip:[0,.12,.82]})}
+ /* ② 석궁: 굵은 나무 몸통 + 검은 활대 둘 + 크림 시위 + 화살 한 발 */
+ {const p=[R_(.09,.1,.7,WD2,[0,0,0],0,.04,.025),R_(.1,.18,.2,WD,[0,-.06,-.36],[.22,0,0],.05,.03),beam([0,.03,.3],[-.42,.02,.18],.06,.05,IR),beam([0,.03,.3],[.42,.02,.18],.06,.05,IR),
+   rod([-.42,.04,.18],[0,.07,-.1],.012,CR,4),rod([.42,.04,.18],[0,.07,-.1],.012,CR,4),rod([0,.08,-.08],[0,.08,.34],.014,0xb38a58,5),pt(cone(.03,.07,5),ST,[0,.08,.38],[Math.PI/2,0,0]),R_(.012,.05,.07,0xd8352a,[0,.1,-.05],0,.006,.004)];
+  lkModel('lk_crossbow',p,{},{bolt:[0,.08,.4]});
+  {const ri=new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(.3,-1.0,.25)),rd=new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(1.05,-.55,0));GEO.lk_crossbow_i=GEO.lk_crossbow.clone().applyMatrix4(ri.clone().invert().multiply(rd));GEO.lk_crossbow_i.computeBoundingSphere()}}
+ /* ③ 화살: 굵은 화살 세 발 + 큰 깃(빨강·크림) + 가죽 띠 */
+ {const p=[];for(let i=0;i<3;i++){const x=(i-1)*.06,y=(i===1?.04:0);p.push(rod([x,y,-.22],[x,y,.22],.016,0xb38a58,5),pt(cone(.032,.08,5),ST,[x,y,.26],[Math.PI/2,0,0]),R_(.012,.07,.1,i===1?CR:0xd8352a,[x,y+.03,-.18],0,.01,.005))}
+  p.push(R_(.22,.08,.07,0x7a4f35,[0,.02,.02],0,.03,.02));GEO.lk_arrow=fin(p)}
+ /* ④ 연료: 빨간 기름통 + 위 손잡이 + 노란 뚜껑 + 옆 X */
+ {const RD=0xd23f33,RD2=0xb0342a,p=[R_(.38,.46,.2,RD,[0,.23,0],0,.06,.04),R_(.24,.07,.07,RD2,[-.04,.52,0],0,.03,.02),C(.05,.055,.07,0xf3cf4a,[.12,.5,0]),
+   beam([-.11,.12,.1],[.11,.34,.1],.05,.02,RD2),beam([.11,.12,.1],[-.11,.34,.1],.05,.02,RD2)];GEO.lk_fuel=fin(p)}
+ /* ⑤ 벽난로: 회색 돌 몸체 + 큰 아치 불구멍 + 나무 선반 + 굴뚝, 불(조각 fire) */
+ {const SG=0x9d9089,SG2=0x8a7e78,SGL=0xb3a69e,p=[R_(1.5,1.1,.6,SG,[0,.55,0],0,.08,.05),R_(.86,.56,.2,0x2c2522,[0,.32,.24],0,.12,.03),R_(1.0,.14,.24,SG2,[0,.66,.22],0,.05,.03),
+   R_(1.66,.1,.4,WD2,[0,1.14,.08],0,.04,.03),R_(.76,1.06,.44,SG,[0,1.7,-.04],0,.06,.04),R_(.86,.12,.52,SG2,[0,2.26,-.04],0,.05,.03),
+   ...[[-.56,.2],[.58,.5],[-.52,.88],[.5,.94]].map((q,i)=>R_(.26,.16,.08,i%2?SGL:SG2,[q[0],q[1],.31],0,.05,.03)),
+   rod([-.26,.12,.26],[.24,.16,.28],.06,0x7a5030,6),rod([-.2,.17,.32],[.26,.12,.22],.055,WD2,6),C(.04,.04,.14,CR,[-.5,1.26,.14]),C(.05,.05,.12,0x3a7a8a,[.48,1.25,.14])];
+  lkModel('lk_fireplace',p,{fire:{g:[S_(.14,0xff8a3a,[0,.1,0],[1.3,1,.8]),pt(cone(.12,.34,6),0xffb347,[-.05,.22,.02]),pt(cone(.08,.26,6),0xffe07a,[.08,.2,0])],pv:[0,.16,.28],glow:true}},{smoke:[0,2.34,-.04]})}
+ /* ⑥ 가로등: 항구에 이미 있는 가로등 모양 그대로 */
+ if(typeof lkLampParts==='function')GEO.lk_lamp=fin(lkLampParts(2.72),50);
+ /* ⑦ 정원 울타리(참고 그림 같은 크림색 널빤지 울타리): 굵은 기둥 둘 + 널 다섯 + 가로대 (길이 2, 높이 0.9) */
+ {const PC=0xf1eadb,PC2=0xe3dac8,p=[...[-.94,.94].flatMap(x=>[R_(.18,.92,.18,PC,[x,.46,0],0,.04,.03),R_(.24,.07,.24,PC2,[x,.95,0],0,.04,.025)]),R_(1.8,.1,.06,PC2,[0,.52,-.05],0,.03,.02),R_(1.8,.1,.06,PC2,[0,.2,-.05],0,.03,.02)];
+  for(let i=0;i<5;i++)p.push(R_(.26,.74,.07,i%2?PC2:PC,[-.62+i*.31,.4,.0],0,.07,.025));GEO.lk_fence_garden=fin(p)}
+ /* ⑧ 벤치의자: 굵은 널 둘(앉는 판) + 등받이 널 하나 + 짙은 초록 다리 */
+ {const FG=0x34503f,p=[R_(1.5,.08,.2,WDL,[0,.46,.12],0,.03,.02),R_(1.5,.08,.2,WD,[0,.46,-.1],0,.03,.02),R_(1.5,.2,.07,WD,[0,.78,-.24],[-.15,0,0],.05,.025)];
+  for(const x of[-.62,.62])p.push(R_(.09,.44,.36,FG,[x,.22,0],0,.035,.02),beam([x,.44,-.18],[x,.86,-.28],.09,.07,FG));GEO.lk_seat_bench=fin(p)}
+ /* ⑨ 일반의자: 굵은 다리 넷 + 앉는 판 + 빨간 방석 + 넓은 등판 */
+ {const p=[R_(.52,.07,.5,WD,[0,.45,0],0,.04,.025),R_(.46,.07,.42,0xc95b42,[0,.51,.03],0,.05,.03)];
+  for(const x of[-.2,.2])for(const z of[-.19,.19])p.push(R_(.08,.44,.08,WD2,[x,.22,z],0,.03,.02));
+  for(const x of[-.2,.2])p.push(beam([x,.46,-.21],[x,1.0,-.25],.08,.07,WD2));p.push(R_(.5,.22,.06,WDL,[0,.88,-.24],[-.06,0,0],.06,.025));GEO.lk_chair=fin(p)}
+ /* ⑩ 정원화덕: 벽돌색 받침 + 둥근 흙 화덕(아치 입구, 불 = 조각 fire) + 짧은 굴뚝 + 밑에 장작 */
+ {const BR=0xbb5f45,BR2=0xa4513b,CL=0xdba57c,p=[R_(1.3,.6,1.0,BR,[0,.3,0],0,.06,.04),R_(.8,.36,.2,0x2c2522,[0,.24,.42],0,.06,.03),R_(1.38,.09,1.08,0xc7bcae,[0,.64,0],0,.04,.03),
+   pt(new THREE.SphereGeometry(.56,10,6,0,Math.PI*2,0,Math.PI/2),CL,[0,.68,-.04],0,[1,.95,1.02]),R_(.46,.34,.2,BR2,[0,.84,.44],0,.14,.03),R_(.32,.24,.06,0x241e1b,[0,.82,.54],0,.11,.02),
+   C(.07,.07,.42,IR,[.2,1.3,-.2]),C(.1,.08,.06,IR,[.2,1.52,-.2]),...[0,1].map(i=>rod([-.26,.14+i*.1,.38-i*.04],[.26,.14+i*.1,.38-i*.04],.05,i?WD2:0x7a5030,6))];
+  lkModel('lk_oven_garden',p,{fire:{g:[S_(.1,0xff8a3a,[0,.04,0],[1.3,.8,1]),pt(cone(.08,.2,6),0xffb347,[-.04,.12,0]),pt(cone(.06,.16,6),0xffe07a,[.06,.1,0])],pv:[0,.72,.4],glow:true}},{smoke:[.2,1.6,-.2]})}
+ /* ⑪ 원형 테이블: 두꺼운 둥근 판 + 굵은 기둥 + 십자 발 */
+ {const p=[C(.52,.52,.08,WDL,[0,.76,0],0,12),C(.46,.46,.03,WD,[0,.705,0],0,12),C(.09,.11,.66,WD2,[0,.37,0],0,8)];
+  for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;p.push(beam([0,.06,0],[Math.cos(a)*.38,.04,Math.sin(a)*.38],.1,.07,WD2))}GEO.lk_table_round=fin(p)}
+ /* ⑫ 꽃병: 청록 도자기(크림 띠) + 동글동글 꽃 셋 + 잎 둘 */
+ {const p=[lathe([[0,0],[.1,0],[.13,.06],[.14,.16],[.11,.27],[.07,.33],[.085,.38],[0,.38]],0x3d8f9a,[0,0,0]),C(.142,.142,.04,CR,[0,.15,0],0,8)],fl=[[.06,.62,.02,0xf5c63a],[-.08,.58,.04,0x5a86f0],[0,.66,-.05,0xe2402f]];
+  for(const f of fl)p.push(rod([0,.36,0],[f[0],f[1],f[2]],.012,0x4a8a4a,4),pt(ico(.06,0),f[3],[f[0],f[1],f[2]],0,[1,.7,1]),S_(.025,0xf7e9b0,[f[0],f[1]+.035,f[2]],0,0,6,4));
+  for(const s of[-1,1]){const g=new THREE.SphereGeometry(1,6,4);g.scale(.05,.012,.13);g.translate(0,0,.11);g.rotateX(-.5);g.rotateY(s*1.2);p.push(pt(g,0x4f9a55,[0,.38,0]))}GEO.lk_vase=fin(p,45)}
+ /* ⑬ 소파: 기획자가 '그나마 낫다'고 한 모양 그대로(가는 박음질 줄만 뺌) */
+ {const FB=0xb8644a,FB2=0xa3553d,p=[...[-.85,.85].flatMap(x=>[-.3,.3].map(z=>C(.035,.025,.1,WD2,[x,.05,z],0,6))),R_(1.86,.2,.78,FB2,[0,.2,0])];
+  for(const x of[-.43,.43])p.push(R_(.84,.16,.66,FB,[x,.38,.05],0,.06,.04),R_(.82,.44,.18,FB,[x,.68,-.28],[-.12,0,0],.07,.05));
+  for(const x of[-.9,.9])p.push(R_(.18,.5,.78,FB2,[x,.42,0],0,.08,.06));
+  p.push(R_(1.84,.22,.12,FB2,[0,.84,-.36],[-.12,0,0],.05,.04),R_(.32,.3,.1,CR,[.55,.62,-.12],[-.3,-.25,.15],.08,.06));GEO.lk_sofa=fin(p,50)}
+ /* ⑭ 보트 2인승: 크림 선체 + 굵은 청록 뱃전 + 나무 안쪽·앉는 판 둘 + 노 둘 + 뭉툭한 모터(조각 motor) */
+ {const HC=0xf1ece2,HT=0x2f8f9d,IN=0xd4a066,L=1.45,W=.62,D=.42,mk=(sx,sy,sz,c,flip)=>{const g=new THREE.SphereGeometry(1,10,5,0,Math.PI*2,Math.PI/2,Math.PI/2),P=g.attributes.position;
+    for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const t=(z+1)/2;x*=1-Math.pow(Math.max(0,t-.45)/.55,1.6)*.92;if(z<-.82)z=-.82;P.setXYZ(i,x*sx,y*sy,z*sz)}
+    g.computeVertexNormals();const q=pt(g,c,[0,D,0]);if(flip){const a=q.attributes.position.array,b=q.attributes.color.array;for(let i=0;i<a.length;i+=9)for(let k=0;k<3;k++){const t=a[i+3+k];a[i+3+k]=a[i+6+k];a[i+6+k]=t;const u=b[i+3+k];b[i+3+k]=b[i+6+k];b[i+6+k]=u}}return q};
+  const p=[mk(W,D,L,HC),mk(W*.9,D*.88,L*.94,IN,true)],rim=[];for(let i=0;i<=7;i++){const z=-L*.82+i/7*L*1.8,t=(z/L+1)/2;rim.push([W*(1-Math.pow(Math.max(0,t-.45)/.55,1.6)*.92),D,z])}
+  for(let i=0;i<rim.length-1;i++)for(const s of[-1,1])p.push(beam([s*rim[i][0],D+.02,rim[i][2]],[s*rim[i+1][0],D+.02,rim[i+1][2]],.09,.08,HT));
+  p.push(R_(W*2,.09,.08,HT,[0,D+.02,-L*.82],0,.03,.02),R_(W*1.84,.26,.05,HC,[0,D-.11,-L*.815],0,.04,.02));
+  for(const z of[-.55,.35])p.push(R_(W*1.68*(z>0?.92:1),.06,.24,IN,[0,D-.08,z],0,.03,.02));
+  for(const s of[-1,1])p.push(beam([s*W*.82,D+.1,-.3],[s*W*.72,D+.06,.85],.05,.05,WD),R_(.12,.03,.24,WD,[s*W*.7,D+.05,.98],[0,s*.1,0],.03,.012));
+  const mot=[R_(.22,.28,.26,0x4a4f5a,[0,.2,-.1],0,.06,.04),R_(.23,.08,.27,0xec7b30,[0,.36,-.1],0,.04,.03),R_(.08,.42,.1,0x3c4250,[0,-.06,-.12],0,.03,.02),R_(.04,.14,.05,0x8f99a4,[0,-.26,-.2],0,.02,.01)];
+  lkModel('lk_boat2',p,{motor:{g:mot,pv:[0,D+.02,-L*.84]}},{seat1:[0,D-.04,-.55],seat2:[0,D-.04,.35],wake:[0,0,-L*.9]});
+  for(const k of['lk_boat2','lk_boat2_b']){GEO[k].translate(0,-.22,0);GEO[k].computeBoundingSphere()}GEO.lk_boat2_motor.computeBoundingSphere()}
+ for(const k of['lk_chainsaw','lk_crossbow','lk_fireplace','lk_oven_garden','lk_boat2'])for(const s of['','_b'])if(GEO[k+s])lkSmooth(GEO[k+s],50);
+}
+/* 규칙 담당의 아이템·설치형과 이어 붙이기: 같은 id면 그대로, 다르면 이름(n)으로 찾아 모델이 비어 있을 때만 넣어요 */
+function lkPropsIc(){for(const [id,mt,where] of LK_PROPS){const key='lk_'+id;if(!GEO[key])continue;const T=where==='ITEMS'?(typeof ITEMS!=='undefined'&&ITEMS):(typeof BUILDS!=='undefined'&&BUILDS);if(!T)continue;
+  const ks=T[id]?[id]:Object.keys(T).filter(k=>T[k]&&typeof T[k].n==='string'&&mt(T[k].n));for(const k of ks){const d=T[k];if(where==='ITEMS'){if(!d.ic||!GEO[d.ic]||(d.ic===key&&GEO[key+'_i']))d.ic=GEO[key+'_i']?key+'_i':key}else if(!d.g||!GEO[d.g])d.g=key}}}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkProps20()}catch(e){console.error('look: 20차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}try{lkPropsIc()}catch(e){}}}
+{const _li=lkIcons;lkIcons=function(){try{lkPropsIc()}catch(e){}_li()}}
