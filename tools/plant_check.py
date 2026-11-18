@@ -23,7 +23,32 @@ async def steps(pg):
     await pg.wait_for_timeout(400)
     print('model',await ev("()=>{const M=PL.im.wheat;let n=0;for(const id in PL.im)n+=PL.im[id].a.count;return JSON.stringify({has:!!M,grown:M.a.count,drawnNear:n,total:PL.list.length})}"))
     await ev("()=>{S.pgone[TQp.i]=.05}");await pg.wait_for_timeout(600)
-    print('regrow',await ev("()=>JSON.stringify({gone:!!S.pgone[TQp.i],back:!plGone(TQp)})"))
+    print('regrow',await ev("()=>JSON.stringify({gone:!!S.pgone[TQp.i],back:!plGone(TQp),popping:TQp.pop!=null})"))
+    # 22차: 따면 완전히 사라짐(그림·충돌 없음) → 그 자리에 설치 가능 → 덮여 있으면 안 자람 → 치우면 '뿅'
+    # 기대: before 1·after 0 / colBefore true·colAfter false / walkAfter true / ghost ok / covered true / back true·col true
+    await ev("()=>{const p=PL.list.find(q=>q.id==='avocado');window.TQa=p;P.x=p.x;P.z=p.z+3.2;P.rot=Math.PI;unstuck();P.auto=null;S.quick[S.sel]='axe';updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    await pg.wait_for_timeout(900);await pg.screenshot(path=O('plant_gone_before.jpg'),type='jpeg',quality=85)
+    print('gone',await ev("""()=>{const p=TQa,M=PL.im.avocado,cnt=()=>{plUpdate();let n=0;for(let i=0;i<M.a.count;i++){const m=new THREE.Matrix4();M.a.getMatrixAt(i,m);const v=new THREE.Vector3().setFromMatrixPosition(m);if(Math.abs(v.x-p.x)<.01&&Math.abs(v.z-p.z)<.01)n++}return n};
+      const r={before:cnt(),colBefore:structs.includes(p.sb),walkBefore:walk(p.x,p.z,.42,P)!==null};P.x=p.x;P.z=p.z+1.1;P.rot=Math.PI;P.cd=0;target=plTarget(p);interact();
+      r.picked=plGone(p);r.after=cnt();r.colAfter=structs.includes(p.sb);r.walkAfter=walk(p.x,p.z,.42,P)!==null;r.eMesh=Object.values(PL.im).some(m=>m.e);
+      S.inv.wood=50;S.inv.stone=50;setBuild('fire');const b=BUILDS.fire,d=Math.max(b.bx,b.bz)+1.6;P.x=p.x;P.z=p.z-d;P.rot=0;const g=ghostPos();r.ghost={ok:g.ok,why:g.why||'',dx:+(g.x-p.x).toFixed(2),dz:+(g.z-p.z).toFixed(2)};setBuild(null);
+      P.x=p.x;P.z=p.z+3.2;P.rot=Math.PI;return JSON.stringify(r)}"""))
+    await pg.wait_for_timeout(500);await pg.screenshot(path=O('plant_gone_after.jpg'),type='jpeg',quality=85)
+    print('cover',await ev("""()=>{const p=TQa;window.TQf=addStruct({t:'fire',x:p.x,z:p.z,r:0,own:1,hp:BUILDS.fire.hp});S.pgone[p.i]=.05;return JSON.stringify({cover:!!plnCover(p)})}"""))
+    await pg.wait_for_timeout(700);await pg.screenshot(path=O('plant_gone_built.jpg'),type='jpeg',quality=85)
+    print('covered',await ev("()=>JSON.stringify({stillGone:plGone(TQa),t:+(S.pgone[TQa.i]||0).toFixed(1),col:structs.includes(TQa.sb)})"))
+    await ev("()=>{removeStruct(TQf);P.x=TQa.x+.2;P.z=TQa.z+.1}")   # 치웠지만 사람이 그 위에 서 있음 → 기다림
+    await pg.wait_for_timeout(3600)
+    print('standing',await ev("()=>JSON.stringify({stillGone:plGone(TQa)})"))
+    await ev("()=>{P.x=TQa.x;P.z=TQa.z+3.2;P.rot=Math.PI;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    for _ in range(14):
+        await pg.wait_for_timeout(300)
+        if await ev("()=>!plGone(TQa)"): break
+    print('popback',await ev("()=>JSON.stringify({back:!plGone(TQa),popping:TQa.pop!=null,k:TQa.pop!=null?+plnPopK(TQa.pop/PL.POP).toFixed(2):1,col:structs.includes(TQa.sb)})"))
+    await pg.wait_for_timeout(150);await pg.screenshot(path=O('plant_gone_pop.jpg'),type='jpeg',quality=85)
+    await pg.wait_for_timeout(700)
+    print('popdone',await ev("()=>JSON.stringify({pop:TQa.pop,pops:PL.pops.length})"))
+    await ev("()=>{S.quick[S.sel]=null}")
     print('rod',await ev("()=>{give('rod',1);S.quick[S.sel]='rod';P.auto=null;target=findTarget();const r={k:target&&target.k||null};S.quick[S.sel]=null;return JSON.stringify(r)}"))
     # 딸기 구역: 식물을 누르면 걸어가서 따기
     await ev("()=>{const p=PL.list.find(q=>q.id==='strawberry'&&!plGone(q));window.TQpl=p;window.TQs0=invN('strawberry');P.x=p.x+4.5;P.z=p.z+2;unstuck();P.cd=0;P.auto=null;worldTap(p.x,p.z)}")
@@ -33,6 +58,10 @@ async def steps(pg):
     print('tap',await ev("()=>JSON.stringify({got:invN('strawberry')-TQs0,gone:plGone(TQpl)})"))
     await ev("()=>updCamera(0,P.x,groundY(P.x,P.z),P.z,true)");await pg.wait_for_timeout(700);await pg.screenshot(path=O('plant_field2.jpg'),type='jpeg',quality=85)
     print('build',await ev("""()=>{S.inv.wood=50;S.inv.stone=50;setBuild('fire');const why={};for(const p of PL.list){if(plGone(p))continue;P.x=p.x;P.z=p.z-2.4;P.rot=0;const g=ghostPos();why[g.why||'ok']=(why[g.why||'ok']||0)+1}setBuild(null);return JSON.stringify(why)}"""))
+    # 22차: 모두 딴 뒤 같은 자리에 다시 놓아 보기 → '식물과 겹쳐요'·식물 충돌 상자 때문에 막힘이 0이어야 해요(남은 이유는 바위·나무 등 원래 땅)
+    print('buildGone',await ev("""()=>{const keep=Object.assign({},S.pgone);for(const p of PL.list)S.pgone[p.i]=900;for(const p of PL.list)plnCol(p);setBuild('fire');const why={};let ok=0;
+      for(const p of PL.list){P.x=p.x;P.z=p.z-2.4;P.rot=0;const g=ghostPos();if(g.ok)ok++;else why[g.why]=(why[g.why]||0)+1}setBuild(null);
+      const cols=PL.list.filter(p=>p.sb&&structs.includes(p.sb)).length;S.pgone=keep;for(const p of PL.list)plnCol(p);return JSON.stringify({ok,why,colsWhileGone:cols,colsBack:PL.list.filter(p=>p.sb&&structs.includes(p.sb)).length})}"""))
     # 구역마다 사진 몇 장(가운데에 서서)
     for k in ['potato','flower_yellow','avocado','mush_censer']:
         await ev("(k)=>{const st=PLANT_SITES.find(s=>s.p===k);P.x=st.x;P.z=st.z+6;unstuck();P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}",k)
