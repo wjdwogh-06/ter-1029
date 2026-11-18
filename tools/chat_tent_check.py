@@ -1,4 +1,4 @@
-# 채팅 말풍선 + 텐트 내부(빈 방, 문으로 걸어 나가기) 확인. 스크린샷: tools/out/chat*.jpg, room*.jpg
+# 채팅 말풍선 + 텐트 내부(빈 방, 15차: 아래로 걸어도 안 나가지고 문 앞 [나가기]로 나가기) 확인. 스크린샷: tools/out/chat*.jpg, room*.jpg
 async def steps(pg):
     ev=pg.evaluate
     await ev("()=>{S.time=.42;WX.t=1e9;WX.on=false;WX.b=0;enemies.slice().forEach(dropEnemy)}")
@@ -23,6 +23,8 @@ async def steps(pg):
     await ev("()=>{S.time=.42;CHAT.b.clear();P.x=INT.x+1.6;P.z=INT.z-.6;P.rot=Math.PI}");await pg.wait_for_timeout(700);print('far label',await ev("()=>target&&target.lab"));await pg.screenshot(path=os.path.join(OUT,'room_clean.jpg'),type='jpeg',quality=92)
     await ev("()=>{P.x=INT.x-.5;P.z=INT.z+1.3;P.rot=0}");await pg.wait_for_timeout(700);print('door label',await ev("()=>target&&target.lab"));await pg.screenshot(path=os.path.join(OUT,'room_door.jpg'),type='jpeg',quality=92)
     await ev("()=>{P.x=INT.x;P.z=INT.z+1.2;keys.KeyS=1}");await pg.wait_for_timeout(3200);await ev("()=>{keys.KeyS=0}")
+    print('walkdown',await ev("()=>JSON.stringify({on:INT.on,lz:+(P.z-INT.z).toFixed(2),lab:target&&target.lab})"))   # 15차: 아래로 걸어도 안 나가짐 → on:true, 문 앞이면 [나가기]
+    await ev("()=>{inp.actEdge=true;target=findTarget();interact();inp.actEdge=false}");await pg.wait_for_timeout(2600)
     print('out',await ev("()=>JSON.stringify({on:INT.on,p:[P.x|0,P.z|0],blocked:String(walk(P.x,P.z,.42,P))})"))
     await pg.set_viewport_size({'width':400,'height':860});await ev("()=>{const t=structs.find(s=>s.t==='ptent');P.x=t.x;P.z=t.z+2.3;P.rot=Math.PI}");await pg.wait_for_timeout(500);await ev("()=>{inp.actEdge=true;interact();inp.actEdge=false}");await pg.wait_for_timeout(2800);await pg.screenshot(path=os.path.join(OUT,'room_portrait.jpg'),type='jpeg',quality=90)
     await ev("()=>{inp.actEdge=false}");await pg.click('#bChat');await pg.wait_for_timeout(400);await pg.keyboard.type('세로 화면 채팅');await pg.screenshot(path=os.path.join(OUT,'chat_portrait_typing.jpg'),type='jpeg',quality=90);await pg.keyboard.press('Enter');await pg.wait_for_timeout(500);await pg.screenshot(path=os.path.join(OUT,'chat_portrait.jpg'),type='jpeg',quality=90)

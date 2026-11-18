@@ -114,7 +114,7 @@ const ITEMS={
  ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:15,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:25,d:'소총, 산탄총, 기관총 진지용'},
  grenade:{n:'수류탄',ic:'grenade',ty:'throw',p:280,d:'던지면 주변에 큰 피해'},
  axe:{n:'손도끼',ic:'axe_m',ty:'tool',p:200,d:'나무와 바위를 빨리 캐요. 근접 14',one:1},
- kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:600,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:400,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},
+ kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:600,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:400,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},kit_bench:{n:'작업대',ic:'bench',ty:'kit',b:'bench',p:500,d:'텐트 안에 놓아요. 무기·탄약을 만들고, 텐트를 집으로 업그레이드해요'},
  pistol:{n:'권총',ic:'pistol',ty:'gun',p:900,d:'가볍고 빠른 기본 총. 피해 16',one:1},rifle:{n:'볼트액션 소총',ic:'rifle',ty:'gun',p:2600,d:'멀리서 한 발씩 강하게. 피해 48',one:1},
  smg:{n:'기관단총',ic:'smg',ty:'gun',p:4200,d:'빠르게 쏟아붓는 연사. 피해 10',one:1},shotgun:{n:'산탄총',ic:'shotgun',ty:'gun',p:3400,d:'가까울수록 강해요. 피해 9×6',one:1}};
 /* 물고기. g=등급(FGRADE), k=생김새(water.js fishGeoK). old:1은 예전 물고기: 더 이상 낚이지 않고 저장 호환용으로 아이템만 남김 */
@@ -148,7 +148,7 @@ const RECIPES=[{id:'axe',n:1,c:{wood:3,stone:2}},{id:'rod',n:1,c:{wood:4,cloth:1
  {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},bench:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},bench:1},{id:'smg',n:1,c:{scrap:24,wood:3},bench:1}];
 /* builds: g=geometry, s=scale, bx/bz=half extents, hp */
 const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'몸을 녹이고 밤을 밝혀요'},
- bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},d:'총과 탄약을 만들어요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */
+ bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},kit:'kit_bench',d:'총과 탄약을 만들고, 텐트를 집으로 업그레이드해요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */
 
  torch:{n:'횃불',g:'torch_lit',s:1.7,bx:.3,bz:.3,hp:30,c:{wood:2},d:'밤에 주변을 밝혀요'},
  fence:{n:'나무 울타리',g:'fence',s:1,bx:1,bz:.25,hp:70,c:{wood:2},d:'값싼 방어선',grid:1},
@@ -160,7 +160,8 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 주변 16칸의 탐조등에 전기를 보내요'},
  slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
- ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
+ ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,upg:{to:'phouse',c:{wood:120}},d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
+ phouse:{n:'집',g:'phouse',s:1,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
@@ -180,7 +181,7 @@ const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p)retu
 function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=vendPool(),out=[];let k=0;
  while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
 const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
-const SHOP={sell:['kit_tent','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
+const SHOP={sell:['kit_tent','kit_bench','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
 const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:100},
  {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
  {t:'텐트 안에 작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},{t:'모래주머니 4개로 방어선 만들기',c:s=>s.st.b_sandbag>=4,r:300},
