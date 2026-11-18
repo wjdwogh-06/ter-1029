@@ -139,6 +139,21 @@ FISH.forEach(f=>{const gtag=f.old?'':`[${FGRADE[f.g][0]}] `;ITEMS[f.id]={n:f.n,i
 const FISH_ZONES={A:{n:'등대 앞바다',R:1.05,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
  B:{n:'해안',R:.85,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
 const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]===a.id)-FISH_ZONES.A.t.some(q=>q[0]===b.id))||a.g-b.g);
+/* ===== 식물 도감 (17차, 기획자) =====
+   작물·꽃·버섯 12종. 모양은 아직 없고 글자로만 보여요(아이콘·땅 위 이름표 = 글자, 모양은 디자인 담당이 나중에).
+   자라는 곳은 PLANT_SITES(기획자가 찍어 준 좌표) 둘레에 넓게 흩어 심어요(js/plants.js). 가방 아이템은 ty:'plant'(먹거나 쓰는 기능 없음, 팔기만).
+   n1: 한 번에 얻는 수, re: 다시 자라는 시간(초), p: 원래 가격(임시값, 팔면 20%), cr: 부딪히는 반지름(아보카도 나무·포도 말뚝, 없으면 지나감), nov: 랜덤 자판기에 안 나옴 */
+const PCAT={crop:['작물','#5E9E3A','#E4F1D6'],flower:['꽃','#C9558A','#F8E2EC'],mush:['버섯','#9A6438','#F2E4D4']};
+const PLANTS=[
+ {id:'potato',n:'감자',cat:'crop',v:'캐기',n1:2,re:300,p:20},{id:'grape',n:'포도',cat:'crop',v:'따기',n1:2,re:300,p:30,cr:.3},
+ {id:'strawberry',n:'딸기',cat:'crop',v:'따기',n1:2,re:300,p:30},{id:'avocado',n:'아보카도',cat:'crop',v:'따기',n1:1,re:360,p:60,cr:.45},
+ {id:'wheat',n:'밀',cat:'crop',v:'베기',n1:2,re:300,p:15},{id:'poppy',n:'양귀비',cat:'flower',v:'꺾기',n1:1,re:360,p:80},
+ {id:'flower_blue',n:'수레국화',cat:'flower',v:'꺾기',n1:1,re:300,p:40,col:'파란 꽃'},{id:'flower_yellow',n:'해바라기',cat:'flower',v:'꺾기',n1:1,re:300,p:40,col:'노란 꽃'},
+ {id:'flower_black',n:'검은 튤립',cat:'flower',v:'꺾기',n1:1,re:420,p:120,col:'검은 꽃'},{id:'mush_poison',n:'독버섯',cat:'mush',v:'따기',n1:1,re:360,p:50},
+ {id:'mush_censer',n:'향로버섯',cat:'mush',v:'따기',n1:1,re:420,p:150},{id:'mush',n:'버섯',cat:'mush',v:'따기',n1:1,re:300,p:25}];
+for(const q of PLANTS)ITEMS[q.id]={n:q.n,ic:null,txt:1,ty:'plant',p:q.p,nov:1,d:`${PCAT[q.cat][0]}${q.col?' · '+q.col:''}. 섬에서 자라요 (식물 도감)`};
+/* 기획자 좌표: {p:식물 id(여러 개면 배열), x, z, r:흩어 심는 반지름(m), c:포기 수}. 비어 있으면 아직 아무것도 안 자라요 */
+const PLANT_SITES=[];
 ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:300,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
  pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
@@ -177,7 +192,7 @@ const ECON={sell:.2};
 function sellPrice(id){return Math.max(1,Math.floor(ITEMS[id].p*ECON.sell))}
 /* 랜덤 자판기: 항구마다 하나. 실제 시간으로 1시간마다(정각 기준) 모든 아이템 중 무작위 5개로 바뀌어요. 시간·항구 번호로만 정해서 누구에게나 같아요 */
 const VEND={n:5,per:3600e3,free:0,pack:{ammoS:12,ammoL:8}};
-const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p)return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
+const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p||it.nov)return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
 function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=vendPool(),out=[];let k=0;
  while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
 const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
@@ -188,7 +203,7 @@ const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.sto
  {t:'첫 밤 습격 막아내기',c:s=>s.st.raids>=1,r:600},{t:'볼트액션 소총 구하기',c:s=>(s.inv.rifle||0)>0,r:500},
  {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:800},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:600},{t:'발전기와 탐조등 세우기',c:s=>s.st.b_slight>0,r:800},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:3000}];
 /* ===== dev mode: god/no-clip/fast travel + map markers (kept apart from the save) ===== */
-const MTYPE=[['⚓','항구','#4fc3ff'],['🏠','마을','#ffb547'],['👹','몬스터','#ff6b5e'],['⛏','자원','#7bd88f'],['📝','메모','#d0b4ff']];
+const MTYPE=[['⚓','항구','#4fc3ff'],['🏠','마을','#ffb547'],['👹','몬스터','#ff6b5e'],['⛏','자원','#7bd88f'],['📝','메모','#d0b4ff'],['🌱','식물','#9be37a']];
 const DEV={on:false,sp:3,type:0,marks:[],mapMark:false,qty:1,q:''};
 function devLoad(){try{const d=JSON.parse(localStorage.getItem('frontisle_dev'));if(d){DEV.on=!!d.on;DEV.marks=d.marks||[];DEV.sp=d.sp||3}}catch(e){}}
 function devSave(){try{localStorage.setItem('frontisle_dev',JSON.stringify({on:DEV.on,marks:DEV.marks,sp:DEV.sp}))}catch(e){}}
