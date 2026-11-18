@@ -664,3 +664,152 @@ if(LK_MOOD){pierGeo=lkPier;quayGeo=lkQuay;const _pg=buildPortGeo;buildPortGeo=fu
 function lkGates(dt){const ps=[P];if(typeof NET!=='undefined'&&NET.on)NET.players.forEach(p=>{if(p.hp>0)ps.push(p)});const k=Math.min(1,dt*8);
  for(const s of structs){const d=s.lk&&s.lk.parts.door;if(!d||Math.abs(s.x-P.x)>45||Math.abs(s.z-P.z)>45)continue;const t=ps.some(p=>Math.abs(p.x-s.x)<1.9&&Math.abs(p.z-s.z)<1.9)?-1.5:0;if(Math.abs(t-d.rotation.y)>.002)d.rotation.y+=(t-d.rotation.y)*k}}
 {const _ud=updDress;updDress=function(dt,px,pz){_ud(dt,px,pz);try{lkGates(dt)}catch(e){}}}
+
+/* ---------- 식물 12종: 도감 그림 + 땅에 자라는 모습 (18차 디자인, 기획자 요청) ----------
+   기획자가 보여준 참고(롱빈터 꽃·덤불): 말랑한 점토 같은 둥근 잎, 또렷한 꽃잎, 2~3가지 색. 단순하게, 하지만 대충 말고.
+   만드는 GEO (id = potato grape strawberry avocado wheat poppy flower_blue flower_yellow flower_black mush_poison mush_censer mush):
+   - GEO['pi_'+id]  도감·가방 그림용 모델(부팅 때 ITEMS[id].ic 가 비어 있으면 넣어요 → 아이콘이 알아서 그려져요)
+   - GEO['pw_'+id]  땅에 자라는 모습(따기 전). 바닥 y=0, 정면 +z, 크기 1배
+   - GEO['pw_'+id+'_e']  딴 뒤 모습(감자·포도·딸기·아보카도만: 열매 없이 잎만)
+   규칙 담당이 다른 id를 쓰면 이름(n)에 든 말('감자'·'파란 … 꽃' 등)로 찾아서 그 id 이름으로도 같은 GEO를 걸어 둬요(lkFloraIc). */
+const LK_FLORA=[['potato',n=>n==='감자'||/^감자/.test(n)],['grape',n=>/포도/.test(n)],['strawberry',n=>/딸기/.test(n)&&!/산딸기/.test(n)],['avocado',n=>/아보카도/.test(n)],
+ ['wheat',n=>n==='밀'||/^밀( |$|이삭|단)/.test(n)],['poppy',n=>/양귀비/.test(n)],['flower_blue',n=>/꽃/.test(n)&&/(파란|파랑|푸른)/.test(n)],['flower_yellow',n=>/꽃/.test(n)&&/(노란|노랑)/.test(n)],
+ ['flower_black',n=>/꽃/.test(n)&&/(검은|검정|까만)/.test(n)],['mush_poison',n=>/독버섯/.test(n)],['mush_censer',n=>/향로/.test(n)],['mush',n=>/버섯/.test(n)&&!/(독|향로)/.test(n)]];
+function lkFloraGeo(){
+ const S_=(r,c,p,s,rot,w=7,h=5)=>pt(new THREE.SphereGeometry(r,w,h),c,p,rot,s),
+  G1=0x3f9a4f,G2=0x4fae5a,G3=0x358a46,G4=0x2f7a3e,SOIL=0x7a5236,SOIL2=0x5e3d27,
+  fin=(p,deg=62)=>{const g=mg(p);lkSmooth(g,deg);g.computeBoundingSphere();return g},
+  /* 잎: 밑동 b 에서 방향(yaw: y축, pitch: 위로 드는 각)으로 뻗는 둥근 타원. cup>0 이면 끝이 살짝 들려요 */
+  leaf=(b,len,wid,c,yaw,pitch,th=.035)=>{const g=new THREE.SphereGeometry(1,7,4);g.scale(wid/2,th,len/2);g.translate(0,0,len/2);g.rotateX(-pitch);g.rotateY(yaw);return pt(g,c,b)},
+  rod=(a,b,r,c,n=5)=>lkRod(a,b,r,c,n),
+  lathe=(prof,c,pos,rot,scl,seg=12,ps=0,pl=Math.PI*2)=>pt(new THREE.LatheGeometry(prof.map(q=>new THREE.Vector2(q[0],q[1])),seg,ps,pl),c,pos,rot,scl),
+  ring=(n,f)=>{const o=[];for(let i=0;i<n;i++)o.push(...[].concat(f(i,i/n*Math.PI*2)));return o},
+  H=(i,k)=>hash(i,k,77);
+ /* 작은 꽃(감자·딸기 꽃): 흰 꽃잎 5 + 노란 가운데 */
+ const tiny=(p,r,cp,cc,tilt=0)=>[...ring(5,(i,a)=>S_(r*.55,cp,[p[0]+Math.cos(a)*r*.6,p[1],p[2]+Math.sin(a)*r*.6],[1,.32,.75],[0,-a,0],6,4)),S_(r*.32,cc,[p[0],p[1]+r*.12,p[2]],[1,.7,1],0,6,4)];
+ /* ① 감자: 흙 둔덕 + 덩굴 잎 + 흰 꽃, 둔덕 가장자리로 감자 둘이 빼꼼 */
+ {const mound=()=>[S_(.46,SOIL,[0,-.02,0],[1,.3,1],0,12,6),S_(.3,SOIL2,[.12,-.03,-.08],[1,.22,1],0,9,5)],
+   bush=()=>{const p=[];for(let i=0;i<8;i++){const a=i/8*Math.PI*2+H(i,1)*.4;p.push(rod([0,.08,0],[Math.cos(a)*.16,.2+H(i,2)*.08,Math.sin(a)*.16],.016,G4));
+      for(let k=0;k<3;k++){const aa=a+(k-1)*.45,b=[Math.cos(a)*(.12+k*.02),.17+H(i,3)*.08,Math.sin(a)*(.12+k*.02)];p.push(leaf(b,.2+H(i,k)*.06,.13,[G1,G2,G3][(i+k)%3],-aa+Math.PI/2,.35+k*.1))}}
+     for(let i=0;i<5;i++){const a=i/5*Math.PI*2+.3;p.push(leaf([Math.cos(a)*.05,.24,Math.sin(a)*.05],.22,.14,i%2?G2:G1,-a+Math.PI/2,.95))}return p};
+  const fl=[[.04,.5,.02],[-.12,.44,.08],[.14,.42,-.06]],flw=[];for(const q of fl){flw.push(rod([q[0]*.4,.26,q[2]*.4],q,.012,G3),...tiny(q,.06,0xf3eefa,0xf2c94c))}
+  const tub=(x,z,s,r)=>[S_(.11*s,0xc4935a,[x,.03,z],[1.25,.85,.95],[0,r,.2],10,7),S_(.012,0x8a6038,[x+.07*s,.08*s,z+.06*s]),S_(.012,0x8a6038,[x-.05*s,.09*s,z+.07*s])];
+  GEO.pw_potato=fin([...mound(),...bush(),...flw,...tub(.32,.26,1,.6),...tub(-.3,.3,.85,-.4)]);
+  GEO.pw_potato_e=fin([...mound(),S_(.14,SOIL2,[.22,.02,.24],[1,.25,1]),...[0,1,2].map(i=>leaf([0,.05,0],.16,.1,G2,i*2.1,.7)),rod([0,0,0],[0,.08,0],.012,G3)]);
+  const pot=(x,y,z,s,r)=>{const g=new THREE.IcosahedronGeometry(.13*s,2),P=g.attributes.position;for(let i=0;i<P.count;i++){const n=1+(hash(Math.round(P.getX(i)*90),Math.round(P.getY(i)*90),Math.round(P.getZ(i)*90))-.5)*.12;P.setXYZ(i,P.getX(i)*n,P.getY(i)*n,P.getZ(i)*n)}
+    return [pt(g,0xc99a5e,[x,y,z],[0,r,.15],[1.3,.88,1]),...[[.09,.04,.07],[-.06,.07,.08],[.02,-.03,.11],[-.1,0,.04]].map(q=>S_(.013*s,0x8a6038,[x+q[0]*s,y+q[1]*s,z+q[2]*s])),...[[.04,.05,.09],[-.03,-.04,.1]].map(q=>S_(.008*s,0xe3c08a,[x+q[0]*s,y+q[1]*s,z+q[2]*s]))]};
+  GEO.pi_potato=fin([...pot(-.07,0,.03,1,.3),...pot(.12,-.02,-.08,.85,-.5),leaf([.0,.06,-.1],.18,.1,G2,.6,.9),leaf([.0,.06,-.1],.15,.09,G1,-.4,.8)],50)}
+ /* ② 포도: 나무 말뚝 + 가로대, 감긴 덩굴, 세 갈래 큰 잎, 늘어진 보라 송이 */
+ {const WD=0xa9753f,VN=0x6b4a33,PU=[0x6b3fa0,0x7d4bb5,0x5a3388],
+   lf3=(b,s,c,yaw,pitch)=>[leaf(b,.24*s,.2*s,c,yaw,pitch),leaf(b,.2*s,.15*s,c,yaw+.6,pitch-.1),leaf(b,.2*s,.15*s,c,yaw-.6,pitch-.1)],
+   bunch=(x,y,z,s)=>{const p=[rod([x,y+.04*s,z],[x,y-.02,z],.01,VN)];const rows=[4,4,3,3,2,1];let yy=y-.04*s;rows.forEach((n,ri)=>{const rr=.045*s*(n-1)*.55;for(let i=0;i<n;i++){const a=i/n*Math.PI*2+ri*.7;p.push(S_(.042*s,PU[(i+ri)%3],[x+Math.cos(a)*rr,yy,z+Math.sin(a)*rr*.8],0,0,6,4))}yy-=.06*s});return p};
+  const frame=[pt(box(.07,1.32,.07),WD,[0,.66,0]),pt(cone(.05,.06,4),0x8d5f36,[0,1.35,0],[0,Math.PI/4,0]),pt(box(.86,.06,.06),WD,[0,1.18,0]),pt(box(.035,.035,.035),0x4a4038,[.0,1.18,.035]),
+    lkBeam([-.36,1.18,0],[0,.86,0],.04,.04,0x8d5f36),pt(cyl(.05,.07,.05,6),0x8d5f36,[0,.02,0])],
+   vine=[rod([0,.05,.05],[.06,.4,.06],.022,VN),rod([.06,.4,.06],[-.05,.75,.05],.02,VN),rod([-.05,.75,.05],[.05,1.08,.05],.018,VN),rod([.05,1.08,.05],[.38,1.2,.05],.016,VN),rod([.05,1.08,.05],[-.38,1.21,.05],.016,VN),
+    rod([.38,1.2,.05],[.42,1.1,.1],.008,VN),rod([-.38,1.21,.05],[-.43,1.12,.1],.008,VN)],
+   leaves=[...lf3([.3,1.22,.08],1,G1,.3,.25),...lf3([-.28,1.24,.06],1.05,G2,-.4,.3),...lf3([0,1.26,.1],.9,G3,0,.5),...lf3([.12,.8,.08],.85,G2,.8,.2),...lf3([-.1,.55,.08],.8,G1,-.7,.15),...lf3([.48,1.2,0],.8,G3,1.4,.1),...lf3([-.48,1.2,0],.8,G1,-1.4,.1)],
+   fruit=[...bunch(.22,1.08,.1,1),...bunch(-.2,1.08,.1,.9),...bunch(.02,.98,.14,.8)];
+  GEO.pw_grape=fin([...frame,...vine,...leaves,...fruit]);GEO.pw_grape_e=fin([...frame,...vine,...leaves]);
+  GEO.pi_grape=fin([...bunch(0,.36,0,1.7),rod([0,.42,0],[.04,.5,0],.014,VN),rod([.04,.5,0],[.12,.53,0],.012,VN),...lf3([.06,.5,-.04],1,G2,1.1,.55),rod([-.02,.45,.04],[-.1,.5,.06],.006,VN),rod([-.1,.5,.06],[-.12,.45,.05],.006,VN)],55)}
+ /* ③ 딸기: 짚 깔개 위 낮은 포기, 세 장 잎, 흰 꽃, 바닥 쪽으로 늘어진 빨간 딸기(하나는 덜 익음) */
+ {const RD=0xe0453a,RD2=0xc93a32,SD=0xf7e27a,
+   berry=(p,s,c,yaw=0,tilt=0,ns=0)=>{const BP=[[0,-.12],[.018,-.112],[.038,-.088],[.056,-.052],[.07,-.012],[.078,.028],[.074,.054],[.054,.072],[.024,.08],[0,.08]],pr=y=>{for(let i=1;i<BP.length;i++)if(y<=BP[i][1]){const a=BP[i-1],b=BP[i],t=(y-a[1])/((b[1]-a[1])||1);return a[0]+(b[0]-a[0])*t}return 0},g=new THREE.LatheGeometry(BP.map(q=>new THREE.Vector2(q[0],q[1])),12);g.scale(s,s,s);g.rotateZ(tilt);g.rotateY(yaw);
+    const o=[pt(g,c,p)];for(let k=0;k<ns;k++){const a=k*2.39996,yy=-.095+(k+.5)/ns*.16,r=pr(yy)*.995;const v=new THREE.Vector3(Math.cos(a)*r,yy,Math.sin(a)*r).multiplyScalar(s).applyAxisAngle(new THREE.Vector3(0,0,1),tilt).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);o.push(S_((ns>8?.011:.009)*s,SD,[p[0]+v.x,p[1]+v.y,p[2]+v.z],[1,1.3,1],0,5,3))}
+    const top=new THREE.Vector3(0,.075*s,0).applyAxisAngle(new THREE.Vector3(0,0,1),tilt).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);for(let k=0;k<5;k++)o.push(leaf([p[0]+top.x,p[1]+top.y,p[2]+top.z],.06*s,.03*s,G3,k*1.26,-.25,.012));return o},
+   tri=(b,yaw,pitch,s)=>[0,1,2].map(k=>leaf(b,.15*s,.11*s,[G1,G2,G1][k],yaw+(k-1)*.75,pitch+(k===1?.15:0)));
+  const base=[S_(.36,SOIL,[0,-.02,0],[1,.2,1],0,10,5),...ring(9,(i,a)=>pt(box(.16,.012,.018),0xd9bd6a,[Math.cos(a)*(.26+H(i,3)*.08),.035,Math.sin(a)*(.26+H(i,3)*.08)],[0,a+H(i,4),.1]))],
+   plant=[];for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.2,e=[Math.cos(a)*.17,.14+H(i,5)*.05,Math.sin(a)*.17];plant.push(rod([0,.02,0],e,.012,G3),...tri(e,-a+Math.PI/2,.25,1))}
+  const fl=[...tiny([.06,.2,.12],.055,0xf6f3ee,0xf2c94c),...tiny([-.14,.19,-.02],.05,0xf6f3ee,0xf2c94c),rod([0,.03,0],[.06,.19,.12],.008,G3),rod([0,.03,0],[-.14,.18,-.02],.008,G3)],
+   fr=[...berry([.22,.07,.2],.9,RD,.4,.3),...berry([-.2,.07,.2],.8,RD2,-.3,-.25),...berry([.05,.06,.3],.75,RD,0,.1),...berry([-.26,.06,-.12],.7,0xe9e6b4,1,-.2),
+    rod([.12,.12,.12],[.22,.15,.2],.006,G3),rod([-.1,.12,.12],[-.2,.14,.2],.006,G3),rod([0,.12,.16],[.05,.13,.3],.006,G3)];
+  GEO.pw_strawberry=fin([...base,...plant,...fl,...fr]);GEO.pw_strawberry_e=fin([...base,...plant]);
+  GEO.pi_strawberry=fin([...berry([0,.0,0],2.2,RD,.2,.12,16),rod([0,.17,0],[.02,.24,-.01],.01,G3),leaf([.02,.2,0],.13,.08,G2,2.2,.5)],55)}
+ /* ④ 아보카도: 작은 나무(살짝 휜 줄기, 짙은 잎 덩이 + 삐죽 나온 긴 잎), 가지 밑에 매달린 배 모양 열매 */
+ {const TR=0x8d5f36,TR2=0x7a5030,AV=0x3e5f25,AV2=0x4f7a2e,DG=[0x2f7a3e,0x3b8a4a,0x357f42],
+   pear=[[0,-.1],[.05,-.09],[.075,-.05],[.07,0],[.05,.04],[.035,.08],[.02,.1],[0,.105]],
+   fruitW=(x,y,z,s)=>[rod([x,y+.12*s,z],[x,y+.22*s,z],.008,TR2),lathe(pear,AV,[x,y,z],[0,0,0],[s,s,s],10)],
+   trunk=[rod([0,0,0],[.05,.6,0],.07,TR,7),rod([.05,.6,0],[-.02,1.15,0],.055,TR,7),rod([-.02,1.05,0],[-.36,1.4,.05],.035,TR2),rod([.0,.95,0],[.34,1.32,-.04],.035,TR2),rod([-.02,1.15,0],[0,1.6,0],.04,TR2),
+    pt(cyl(.1,.14,.08,7),TR2,[0,.04,0]),S_(.3,SOIL,[0,-.03,0],[1,.18,1],0,10,5)],
+   crown=[S_(.42,DG[0],[0,1.66,0],[1.15,.75,1.05],0,12,8),S_(.34,DG[1],[-.38,1.48,.04],[1,.72,.95],0,12,8),S_(.34,DG[2],[.36,1.44,-.02],[1,.72,.95],0,12,8),S_(.26,DG[1],[.05,1.9,.04],[1,.7,1],0,10,7),S_(.24,DG[2],[-.12,1.42,.3],[1.1,.6,.8],0,10,7)];
+  for(let i=0;i<16;i++){const a=i/16*Math.PI*2,y=1.4+H(i,6)*.5,r=.5+H(i,7)*.12;crown.push(leaf([Math.cos(a)*r*.75,y,Math.sin(a)*r*.65],.26,.09,DG[i%3],-a+Math.PI/2,-.15+H(i,8)*.4,.03))}
+  const fr=[...fruitW(-.3,1.12,.18,1),...fruitW(.28,1.08,.12,.95),...fruitW(.02,1.16,.3,.9),...fruitW(-.06,1.1,-.24,1)];
+  GEO.pw_avocado=fin([...trunk,...crown,...fr],55);GEO.pw_avocado_e=fin([...trunk,...crown],55);
+  const half=[lathe(pear,AV2,[0,0,0],[0,0,0],[1.6,1.6,1.6],12,Math.PI/2,Math.PI)],out=[],inn=[];pear.forEach(q=>{out.push([q[0],q[1]])});
+  const sh=(k)=>{const s=new THREE.Shape();s.moveTo(0,pear[0][1]*1.6*k);for(const q of pear)s.lineTo(q[0]*1.6*k,q[1]*1.6*k);for(const q of pear.slice().reverse())s.lineTo(-q[0]*1.6*k,q[1]*1.6*k);return new THREE.ShapeGeometry(s)};
+  const face=[pt(sh(1),0x9cc25a,[0,0,.001]),pt(sh(.86),0xd9e38c,[0,-.006,.003]),pt(sh(.62),0xe8e9a6,[0,-.016,.005]),S_(.055,0x8a5a33,[0,-.045,.01],[1,1.05,.75],0,12,8)];
+  GEO.pi_avocado=fin([...half,...face,lathe(pear,AV,[.13,.02,-.12],[0,0,-.25],[1.5,1.5,1.5],10),rod([.13+.035,.18,-.12],[.17,.23,-.12],.01,TR2)],55)}
+ /* ⑤ 밀: 금빛 줄기 아홉 + 낟알 이삭 + 까끄라기, 아래쪽 가는 잎 */
+ {const ST=0xd9b860,EA=0xe8c46a,EA2=0xd6ad52,
+   ear=(b,dir,len,th=1)=>{const o=[],up=new THREE.Vector3(...dir).normalize();for(let k=0;k<6;k++){const t=k/5,c=new THREE.Vector3(...b).addScaledVector(up,t*len);for(const s of[-1,1]){const side=new THREE.Vector3(up.y,-up.x,0).normalize().multiplyScalar(.018*s*(1-t*.4));const g=new THREE.IcosahedronGeometry(.024*th*(1-t*.35),0);g.scale(.9,1.5,.9);o.push(pt(g,k%2?EA:EA2,[c.x+side.x,c.y+side.y,c.z+(s*.008)],[0,0,Math.atan2(-up.x,up.y)+s*.35]))}}
+     const tip=new THREE.Vector3(...b).addScaledVector(up,len);for(let k=0;k<3;k++)o.push(rod([tip.x,tip.y,tip.z],[tip.x+up.x*.14+(k-1)*.04,tip.y+up.y*.14,tip.z+(k-1)*.02],.003,0xe9d08a,3));return o},
+   stalk=(x,z,h,lean,yaw)=>{const top=[x+Math.cos(yaw)*lean,h,z+Math.sin(yaw)*lean],mid=[x+Math.cos(yaw)*lean*.4,h*.55,z+Math.sin(yaw)*lean*.4];
+     return [rod([x,0,z],mid,.011,ST,4),rod(mid,top,.009,ST,4),...ear(top,[Math.cos(yaw)*lean*.6,1,Math.sin(yaw)*lean*.6],.2),leaf([x,.18,z],.3,.045,0xb9b55a,-yaw+Math.PI/2,.6,.012)]};
+  const p=[];for(let i=0;i<7;i++){const a=i/7*Math.PI*2+H(i,9),r=i?.09+H(i,10)*.08:0;p.push(...stalk(Math.cos(a)*r,Math.sin(a)*r,.72+H(i,11)*.22,.06+r*.5,a))}
+  p.push(S_(.2,0x8a7a3a,[0,0,0],[1,.08,1],0,10,4));GEO.pw_wheat=fin(p,55);
+  const b=[];for(let i=0;i<5;i++){const a=(i-2)*.2,top=[Math.sin(a)*.42,.62,Math.cos(a)*.03+(i%2)*.03];b.push(rod([-Math.sin(a)*.1,0,0],top,.02,ST,5),...ear(top,[Math.sin(a)*1.4,1,0],.26,1.6))}
+  b.push(pt(new THREE.TorusGeometry(.05,.016,6,12),0xb5483c,[0,.2,0],[Math.PI/2,0,0],[1,1,.8]),pt(box(.03,.08,.012),0xb5483c,[.03,.15,.05],[0,0,.4]),pt(box(.03,.07,.012),0xb5483c,[-.02,.15,.05],[0,0,-.3]));GEO.pi_wheat=fin(b,55)}
+ /* 꽃 머리들 */
+ const poppyHead=(p,s,yaw,tilt)=>{const o=[],q=new THREE.Euler(tilt,yaw,0,'YXZ');for(let k=0;k<4;k++){const a=k*Math.PI/2+.4;const g=new THREE.SphereGeometry(1,8,5,0,Math.PI*2,0,Math.PI*.55);g.scale(.085*s,.06*s,.07*s);g.rotateX(-1.15);g.translate(0,.01*s,.06*s);g.rotateY(a);g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(q));o.push(pt(g,k%2?0xe2402f:0xd5372a,p))}
+   const c=new THREE.Vector3(0,.035*s,0).applyEuler(q);o.push(S_(.032*s,0x2a2a33,[p[0]+c.x,p[1]+c.y,p[2]+c.z],[1,.8,1]),S_(.018*s,0x5a6a3a,[p[0]+c.x*1.25,p[1]+c.y*1.25,p[2]+c.z*1.25],[1,.6,1]));
+   for(let k=0;k<6;k++){const a=k*1.047,v=new THREE.Vector3(Math.cos(a)*.04*s,.03*s,Math.sin(a)*.04*s).applyEuler(q);o.push(S_(.009*s,0x1f1f26,[p[0]+v.x,p[1]+v.y,p[2]+v.z],0,0,4,3))}return o},
+  cornHead=(p,s,yaw,tilt)=>{const o=[],q=new THREE.Euler(tilt,yaw,0,'YXZ');for(let k=0;k<9;k++){const a=k/9*Math.PI*2;const g=new THREE.ConeGeometry(.034*s,.1*s,6,1,false);g.rotateX(Math.PI);g.translate(0,.05*s,0);g.rotateZ(-1.25);g.rotateY(a);g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(q));o.push(pt(g,k%2?0x3f6fe0:0x5a86f0,p))}
+   for(let k=0;k<9;k++){const a=k/9*Math.PI*2+.35;const g=new THREE.ConeGeometry(.024*s,.07*s,5,1,false);g.rotateX(Math.PI);g.translate(0,.035*s,0);g.rotateZ(-.8);g.rotateY(a);g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(q));o.push(pt(g,0x2f58c8,p))}
+   const c=new THREE.Vector3(0,.02*s,0).applyEuler(q);o.push(S_(.034*s,0x35307a,[p[0]+c.x,p[1]+c.y,p[2]+c.z],[1,.6,1],0,8,5),S_(.034*s,0x5a8a4a,[p[0]-c.x*2,p[1]-c.y*2,p[2]-c.z*2],[1,1.2,1],0,7,5));
+   for(let k=0;k<5;k++){const a=k*1.257,v=new THREE.Vector3(Math.cos(a)*.016*s,.04*s,Math.sin(a)*.016*s).applyEuler(q);o.push(S_(.008*s,0xb7c8ff,[p[0]+v.x,p[1]+v.y,p[2]+v.z],0,0,4,3))}return o},
+  yelHead=(p,s,yaw,tilt)=>{const o=[],q=new THREE.Euler(tilt,yaw,0,'YXZ');for(let k=0;k<6;k++){const a=k/6*Math.PI*2;const g=new THREE.SphereGeometry(1,8,6);g.scale(.045*s,.014*s,.085*s);g.translate(0,0,.07*s);g.rotateX(-.25);g.rotateY(a);g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(q));o.push(pt(g,k%2?0xf5c63a:0xf7d14e,p))}
+   const cup=new THREE.LatheGeometry([[0,0],[.035,0],[.04,.03],[.05,.065],[.046,.07],[.032,.04],[0,.035]].map(v=>new THREE.Vector2(v[0]*s,v[1]*s)),12);cup.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(q));o.push(pt(cup,0xf29a24,p));return o},
+  tulHead=(p,s,yaw)=>{const pr=[[0,0],[.028,.004],[.055,.026],[.071,.062],[.074,.104],[.066,.142],[.058,.16]].map(v=>new THREE.Vector2(v[0]*s,v[1]*s)),cup=new THREE.LatheGeometry(pr,12);
+   const o=[pt(cup,0x2c2138,p),S_(.05*s,0x1c1424,[p[0],p[1]+.13*s,p[2]],[1,.25,1],0,8,4)];
+   for(let k=0;k<6;k++){const a=k/6*Math.PI*2+yaw,r=(k%2?.05:.062)*s,h=(k%2?.15:.165)*s;const g=new THREE.SphereGeometry(1,6,5);g.scale(.032*s,.05*s,.014*s);g.rotateX(k%2?.12:.22);g.rotateY(-a+Math.PI/2);o.push(pt(g,k%2?0x3a2b4c:0x46345c,[p[0]+Math.cos(a)*r,p[1]+h,p[2]+Math.sin(a)*r]))}
+   return o};
+ const stemTo=(a,b,c=0x5a9a4a,r=.009)=>{const m=[a[0]*.6+b[0]*.4+(b[0]-a[0])*.1,(a[1]+b[1])*.55,a[2]*.6+b[2]*.4];return [rod(a,m,r,c,4),rod(m,b,r*.9,c,4)]};
+ /* ⑥ 양귀비 */
+ {const LV=0x7aa86a,p=[],F=[[[.02,.58,.04],1,0,.35],[[-.14,.48,-.04],.9,1.5,.5],[[.15,.45,-.08],.85,-1.2,.45]];
+  for(let i=0;i<5;i++){const a=i/5*Math.PI*2;p.push(leaf([0,.02,0],.24,.07,i%2?LV:0x6a9a5a,-a,.35,.02))}
+  for(const f of F){p.push(...stemTo([0,.02,0],f[0]),...poppyHead(f[0],f[1]*1.25,f[2],f[3]))}
+  p.push(...stemTo([0,.02,0],[.08,.36,.12]),S_(.03,0x7a9a5a,[.1,.33,.15],[1,1.4,1],[0,0,.9]));GEO.pw_poppy=fin(p,55);
+  GEO.pi_poppy=fin([...poppyHead([0,.3,0],2.2,0,.75),...stemTo([0,-.2,-.06],[0,.25,-.03],0x5a9a4a,.014),leaf([0,-.06,-.05],.2,.06,LV,.8,.7,.02)],55)}
+ /* ⑦ 파란 꽃(수레국화) */
+ {const LV=0x6f9a6a,p=[],F=[[[.0,.52,.03],1,0,.3],[[-.13,.44,-.06],.9,1.2,.4],[[.13,.4,.06],.85,-1.1,.5],[[.04,.34,-.14],.8,2.6,.45]];
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.2;p.push(leaf([0,.02,0],.22,.045,i%2?LV:0x7fa878,-a,.5,.015))}
+  for(const f of F)p.push(...stemTo([0,.02,0],f[0],0x6f9a5a,.008),...cornHead(f[0],f[1]*1.25,f[2],f[3]));GEO.pw_flower_blue=fin(p,55);
+  GEO.pi_flower_blue=fin([...cornHead([0,.3,0],2.3,0,.8),...stemTo([0,-.22,-.05],[0,.26,-.04],0x6f9a5a,.014),leaf([0,-.04,-.05],.2,.05,LV,.9,.7,.02)],55)}
+ /* ⑧ 노란 꽃(참고 그림처럼: 둥근 잎 로제트 + 별 꽃잎 + 주황 나팔) */
+ {const LV=[0x2f8a55,0x37975e],p=[];for(let i=0;i<7;i++){const a=i/7*Math.PI*2+.1;p.push(leaf([0,.03,0],.22,.18,LV[i%2],-a,.12,.05))}
+  const F=[[[.03,.3,.04],1.2,0,.25],[[-.12,.24,-.06],1.05,1.4,.35]];for(const f of F)p.push(...stemTo([0,.03,0],f[0],0x3f8a4a,.012),...yelHead(f[0],f[1]*1.2,f[2],f[3]));GEO.pw_flower_yellow=fin(p,55);
+  GEO.pi_flower_yellow=fin([...yelHead([0,.24,0],2.4,0,.85),...stemTo([0,-.16,-.06],[0,.2,-.04],0x3f8a4a,.016),leaf([0,-.1,-.04],.2,.16,LV[0],.6,.4,.04),leaf([0,-.1,-.04],.18,.14,LV[1],-.7,.35,.04)],55)}
+ /* ⑨ 검은 꽃(검은 튤립) */
+ {const LV=[0x4a9a5a,0x55a865],p=[],F=[[[0,.5,.02],1.1,0],[[-.12,.42,-.05],1,.8],[[.12,.38,.05],.95,-.6]];
+  for(let i=0;i<5;i++){const a=i/5*Math.PI*2+.4;p.push(leaf([0,.02,0],.3,.09,LV[i%2],-a,.9-H(i,12)*.3,.02))}
+  for(const f of F)p.push(rod([f[0][0]*.3,.02,f[0][2]*.3],f[0],.011,0x4a8a4a,5),...tulHead(f[0],f[1]*1.15,f[2]));GEO.pw_flower_black=fin(p,55);
+  GEO.pi_flower_black=fin([...tulHead([0,.12,0],2.3,0),rod([0,-.3,0],[0,.12,0],.016,0x4a8a4a),leaf([0,-.22,0],.3,.1,LV[0],.5,1.0,.03),leaf([0,-.2,0],.26,.09,LV[1],-2.2,.95,.03)],55)}
+ /* 버섯 */
+ const cap=(p,r,h,c,c2,spots)=>{const g=new THREE.SphereGeometry(r,12,7,0,Math.PI*2,0,Math.PI/2);g.scale(1,h/r,1);const o=[pt(g,c,p),pt(new THREE.CircleGeometry(r*.98,12),c2,[p[0],p[1]+.002,p[2]],[Math.PI/2,0,0])];
+   if(spots)for(let k=0;k<spots;k++){const a=k*2.39,t=.25+((k*.61)%1)*.55,v=new THREE.Vector3(Math.cos(a)*Math.sin(t*1.5)*r,Math.cos(t*1.5)*h,Math.sin(a)*Math.sin(t*1.5)*r);o.push(S_(r*.13*(k%3?1:1.3),0xf7f2e8,[p[0]+v.x*1.01,p[1]+v.y*1.01,p[2]+v.z*1.01],[1,.45,1],[Math.atan2(v.z,v.y)*0,0,0],7,4))}return o},
+  stalk=(p,h,r,c)=>lathe([[0,0],[r*1.35,0],[r*1.4,h*.12],[r,h*.3],[r*.9,h*.8],[r*.95,h],[0,h]],c,p,0,0,10);
+ /* ⑩ 독버섯(빨간 갓 흰 점) */
+ {const one=(x,z,s,tilt)=>{const o=[stalk([x,0,z],.26*s,.04*s,0xf2ece0),pt(new THREE.CylinderGeometry(.075*s,.055*s,.04*s,10,1,true),0xf4eee2,[x,.19*s,z]),...cap([x,.25*s,z],.15*s,.11*s,0xd8352a,0xf0e2c8,11)];if(tilt){const m=new THREE.Matrix4().makeTranslation(-x,0,-z).premultiply(new THREE.Matrix4().makeRotationZ(tilt)).premultiply(new THREE.Matrix4().makeTranslation(x,0,z));o.forEach(g=>g.applyMatrix4(m))}return o};
+  GEO.pw_mush_poison=fin([...one(0,0,1.3,0),...one(.17,.1,.8,-.25),...one(-.14,.12,.55,.3),...[0,1,2,3].map(i=>leaf([0,.0,0],.14,.04,G2,i*1.6+.3,.7,.015))],55);GEO.pi_mush_poison=fin(one(0,0,1.6,0),55)}
+ /* ⑪ 향로버섯: 받침 줄기 + 위로 벌어진 그릇 갓(청동빛, 가장자리 물결, 둘레에 구멍 줄), 그릇 안은 연한 빛 포자 + 위로 피어오르는 포자 연기 */
+ {const BR=0xc98a3a,BR2=0xa86e2c,PAT=0x5fae9e,IN=0xffe6a0,PU=0xf6efe2,
+   one=(x,z,s)=>{const bowl=lathe([[0,.0],[.03,.0],[.065,.03],[.105,.08],[.135,.13],[.15,.16],[.155,.175],[.14,.168],[.115,.14],[.07,.1],[0,.09]].map(q=>[q[0]*s,q[1]*s]),BR,[x,.3*s,z],0,0,14),
+     o=[lathe([[0,0],[.075,0],[.08,.02],[.05,.04],[.034,.07],[.03,.22],[.04,.3],[0,.3]].map(q=>[q[0]*s,q[1]*s]),0xe6dcef,[x,0,z],0,0,10),pt(new THREE.TorusGeometry(.062*s,.012*s,5,12),BR2,[x,.022*s,z],[Math.PI/2,0,0]),bowl,
+       S_(.118*s,0x5a4d48,[x,.42*s,z],[1,.1,1],0,12,4)];
+     for(let k=0;k<5;k++){const a=k*1.4+.3,r=(.03+((k*.37)%1)*.06)*s;o.push(S_(.016*s,0xff8a3a,[x+Math.cos(a)*r,.43*s,z+Math.sin(a)*r],[1,.6,1],0,5,3))}
+     for(let k=0;k<10;k++){const a=k/10*Math.PI*2;o.push(S_(.026*s,BR2,[x+Math.cos(a)*.152*s,.477*s,z+Math.sin(a)*.152*s],[1,.6,1],0,6,3));o.push(S_(.013*s,0x2e2218,[x+Math.cos(a+.26)*.122*s,.4*s,z+Math.sin(a+.26)*.122*s],[1,1.2,1],0,5,3))}
+     for(let k=0;k<5;k++){const a=k*1.7+.5;o.push(S_(.024*s,PAT,[x+Math.cos(a)*.11*s,.38*s,z+Math.sin(a)*.11*s],[1,.55,1],0,6,3))}
+     [[0,.52,0,.045],[.035,.6,.01,.038],[-.01,.68,.02,.03],[.025,.75,-.01,.022]].forEach(q=>o.push(S_(q[3]*s,0xe9e4ee,[x+q[0]*s,q[1]*s,z+q[2]*s],0,0,7,5)));return o};
+  GEO.pw_mush_censer=fin([...one(0,0,1.25),...one(.2,.1,.75),...[0,1,2].map(i=>leaf([0,0,0],.12,.05,0x6a8a5a,i*2.1,.6,.015))],55);GEO.pi_mush_censer=fin(one(0,0,1.6),55)}
+ /* ⑫ 버섯(갈색 갓 셋, 떨어진 잔가지) */
+ {const one=(x,z,s,t)=>{const o=[stalk([x,0,z],.15*s,.035*s,0xefe2c8),...cap([x,.14*s,z],.11*s,.075*s,0x9a6a44,0xe9d6b4,0),S_(.112*s,0xc49a6c,[x,.143*s,z],[1,.12,1],0,12,4)];if(t){const m=new THREE.Matrix4().makeTranslation(-x,0,-z).premultiply(new THREE.Matrix4().makeRotationX(t)).premultiply(new THREE.Matrix4().makeTranslation(x,0,z));o.forEach(g=>g.applyMatrix4(m))}return o};
+  GEO.pw_mush=fin([...one(0,0,1.4,0),...one(.15,.08,1,.25),...one(-.1,.14,.8,-.3),...one(.05,-.14,.7,.1),rod([-.25,.01,-.05],[.0,.02,-.22],.012,0x7a5030),rod([-.12,.015,-.13],[-.16,.06,-.2],.006,0x7a5030)],55);
+  GEO.pi_mush=fin([...one(-.04,0,1.8,0),...one(.14,.06,1.2,.3)],55)}
+ /* 캐릭터 옆에 두고 본 크기 맞춤(꽃·버섯은 무릎 높이쯤까지 키워 멀리서도 보이게) */
+ for(const [id,k] of [['potato',1.25],['grape',1.1],['strawberry',1.35],['wheat',1.2],['poppy',1.35],['flower_blue',1.5],['flower_yellow',1.35],['flower_black',1.4],['mush_poison',1.5],['mush_censer',1.45],['mush',1.5]])
+  for(const sf of['','_e'])if(GEO['pw_'+id+sf]){GEO['pw_'+id+sf].scale(k,k,k);GEO['pw_'+id+sf].computeBoundingSphere()}
+}
+/* 규칙 담당의 아이템과 이어 붙이기: 같은 id면 그대로, 다르면 이름으로 찾아 그 id로도 GEO를 걸고, ic 가 비어 있으면 넣어요 */
+function lkFloraIc(){if(typeof ITEMS==='undefined')return;for(const [id,mt] of LK_FLORA){if(!GEO['pi_'+id])continue;const ks=ITEMS[id]?[id]:Object.keys(ITEMS).filter(k=>ITEMS[k]&&typeof ITEMS[k].n==='string'&&mt(ITEMS[k].n));
+  for(const k of ks){const it=ITEMS[k];if(k!==id){GEO['pi_'+k]=GEO['pi_'+id];GEO['pw_'+k]=GEO['pw_'+id];if(GEO['pw_'+id+'_e'])GEO['pw_'+k+'_e']=GEO['pw_'+id+'_e']}if(!it.ic||!GEO[it.ic])it.ic='pi_'+id}}}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkFloraGeo()}catch(e){console.error('look: 식물 모델 실패',e)}try{lkAOnew(b0)}catch(e){}try{lkFloraIc()}catch(e){}}}
+{const _li=lkIcons;lkIcons=function(){try{lkFloraIc()}catch(e){}_li()}}
