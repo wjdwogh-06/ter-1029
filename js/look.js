@@ -815,7 +815,7 @@ function lkFloraIc(){if(typeof ITEMS==='undefined')return;for(const [id,mt] of L
 {const _li=lkIcons;lkIcons=function(){try{lkFloraIc()}catch(e){}_li()}}
 
 /* ---------- 새 아이템 15종 모양 (20차 디자인, 기획자 요청 11-18) ----------
-   기획자 다시 요청으로 '롱빈터처럼 단순한 로우폴리'(굵직한 덩어리 몇 개, 모서리만 둥글게, 잔부품 없음). 색은 2~3가지 + 크림.
+   기획자 피드백 세 번째 버전: 롱빈터 사진처럼 매끈하고 둥글둥글한 장난감 디오라마(첫 소파 기준). 색은 2~3가지 + 크림, 밝고 따뜻하게.
    GEO 이름 = 'lk_'+id. 아이템: chainsaw crossbow arrow fuel / 설치형: sign(이미 있는 lk_sign) fireplace lamp(이미 있는 항구 가로등 모양) fence_garden
    seat_bench chair oven_garden table_round vase sofa boat2. 설치형은 바닥 y=0·정면 +z(벽에 붙는 것은 뒤가 −z). 캐릭터 키 약 2.3 기준.
    움직이는 조각·효과 자리(lkModel): fireplace·oven_garden 조각 fire(빛) + 기준점 smoke / chainsaw 조각 chain(체인 돌리기) / crossbow 기준점 bolt(화살 나가는 곳)
@@ -825,79 +825,81 @@ const LK_PROPS=[['chainsaw',n=>/전기\s*톱|체인\s*톱/.test(n),'ITEMS'],['cr
  ['seat_bench',n=>/벤치/.test(n),'BUILDS'],['chair',n=>/의자/.test(n)&&!/벤치/.test(n),'BUILDS'],['oven_garden',n=>/화덕/.test(n),'BUILDS'],['table_round',n=>/테이블|탁자/.test(n),'BUILDS'],
  ['vase',n=>/꽃병/.test(n),'BUILDS'],['sofa',n=>/소파/.test(n),'BUILDS'],['boat2',n=>/보트|2인승/.test(n),'BUILDS']];
 function lkProps20(){
- /* 기획자 다시 요청(11-18 19:49): '너무 현실적이다, 로우폴리 감성으로 더 단순하게, 롱빈터처럼. 소파가 낫다 — 단순하지만 도형으로 자른 것 같지 않게'.
-    → 큰 덩어리 몇 개를 모서리 둥근 상자(lkRb)·면 수 적은 원기둥으로, 굵직한 비율. 못·체인 이·박음질 같은 잔부품은 빼요. 색은 2~3가지 + 크림. */
- const rbL=(w,h,d,cr,bv)=>{bv=Math.min(bv,w/2-.002,h/2-.002,d/2-.002);const W=w/2-bv,H=h/2-bv,c=Math.max(.001,Math.min(cr,W-.001,H-.001)),sh=new THREE.Shape();
-   sh.moveTo(-W+c,-H);sh.lineTo(W-c,-H);sh.quadraticCurveTo(W,-H,W,-H+c);sh.lineTo(W,H-c);sh.quadraticCurveTo(W,H,W-c,H);sh.lineTo(-W+c,H);sh.quadraticCurveTo(-W,H,-W,H-c);sh.lineTo(-W,-H+c);sh.quadraticCurveTo(-W,-H,-W+c,-H);
-   const g=new THREE.ExtrudeGeometry(sh,{depth:Math.max(.002,d-2*bv),bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:1,steps:1,curveSegments:2});g.translate(0,0,-Math.max(.002,d-2*bv)/2);return g},
-  R_=(w,h,d,c,p,r,cr=.04,bv=.025)=>pt(rbL(w,h,d,cr,bv),c,p,r),C=(a,b,h,c,p,r,n=8)=>pt(cyl(a,b,h,n),c,p,r),S_=(r,c,p,s,rot,w=8,h=6)=>pt(new THREE.SphereGeometry(r,w,h),c,p,rot,s),
-  beam=(a,b,w,d,c)=>{const q=lkAim(a,b);return pt(rbL(w,q.L,d,Math.min(w,d)*.35,Math.min(w,d)*.2),c,q.pos,q.rot)},rod=(a,b,r,c,n=6)=>lkRod(a,b,r,c,n),
-  lathe=(prof,c,p,seg=8)=>pt(new THREE.LatheGeometry(prof.map(q=>new THREE.Vector2(q[0],q[1])),seg),c,p),
-  fin=(p,deg=50)=>{const g=mg(p);lkSmooth(g,deg);g.computeBoundingSphere();return g},
-  WD=0xc08a52,WD2=0x9a6a44,WDL=0xd9a86a,IR=0x3c4250,ST=0xc3cad2,CR=0xf3ece0;
- /* ① 전기톱: 주황 몸통 + 검은 손잡이 + 둥근 끝 톱날(뒤에 짙은 체인 테두리 = 조각 chain) */
- {const OR=0xec7b30,BL=0x2e3238,body=[R_(.2,.22,.36,OR,[0,.12,-.06],0,.06,.04),R_(.21,.07,.3,BL,[0,.02,-.06],0,.03,.02),beam([0,.25,-.22],[0,.34,-.04],.07,.06,BL),beam([0,.34,-.04],[0,.28,.1],.07,.06,BL),R_(.08,.05,.07,0xf3d24a,[.0,.26,-.2],0,.02,.015)],
-   bar=[R_(.04,.12,.6,ST,[0,0,.3],0,.05,.015),C(.06,.06,.04,ST,[0,0,.6],[0,0,Math.PI/2],10)];
-  lkModel('lk_chainsaw',body.concat(bar.map(g=>{g.translate(0,.12,.12);return g})),{chain:{g:[R_(.03,.15,.64,BL,[0,0,.31],0,.07,.01),C(.075,.075,.03,BL,[0,0,.61],[0,0,Math.PI/2],10)],pv:[0,.12,.12]}},{tip:[0,.12,.82]})}
- /* ② 석궁: 굵은 나무 몸통 + 검은 활대 둘 + 크림 시위 + 화살 한 발 */
- {const p=[R_(.09,.1,.7,WD2,[0,0,0],0,.04,.025),R_(.1,.18,.2,WD,[0,-.06,-.36],[.22,0,0],.05,.03),beam([0,.03,.3],[-.42,.02,.18],.06,.05,IR),beam([0,.03,.3],[.42,.02,.18],.06,.05,IR),
-   rod([-.42,.04,.18],[0,.07,-.1],.012,CR,4),rod([.42,.04,.18],[0,.07,-.1],.012,CR,4),rod([0,.08,-.08],[0,.08,.34],.014,0xb38a58,5),pt(cone(.03,.07,5),ST,[0,.08,.38],[Math.PI/2,0,0]),R_(.012,.05,.07,0xd8352a,[0,.1,-.05],0,.006,.004)];
-  lkModel('lk_crossbow',p,{},{bolt:[0,.08,.4]});
+ /* 기획자 피드백 순서: ① 첫 버전 '너무 현실적'(가는 막대·못·박음질) → ② 두 번째 '단순한데 너무 투박'(각진 두꺼운 판).
+    지금(③) = 롱빈터 사진처럼 '매끈하고 둥글둥글한 장난감 디오라마': 기획자가 낫다고 한 첫 소파처럼 모서리를 부드럽게 굴린 상자(lkRb)와
+    매끈한 원기둥·돌림체, 적당히 가는 비율, 읽히는 만큼의 작은 디테일(널 사이 틈, 둥근 기둥 머리, 꽃), 밝고 따뜻한 색. */
+ const R_=(w,h,d,c,p,r,cr=.035,bv=.02)=>pt(lkRb(w,h,d,cr,bv),c,p,r),C=(a,b,h,c,p,r,n=12)=>pt(cyl(a,b,h,n),c,p,r),S_=(r,c,p,s,rot,w=12,h=8)=>pt(new THREE.SphereGeometry(r,w,h),c,p,rot,s),
+  beam=(a,b,w,d,c)=>{const q=lkAim(a,b);return pt(lkRb(w,q.L,d,Math.min(w,d)*.4,Math.min(w,d)*.22),c,q.pos,q.rot)},rod=(a,b,r,c,n=8)=>lkRod(a,b,r,c,n),
+  lathe=(prof,c,p,seg=14)=>pt(new THREE.LatheGeometry(prof.map(q=>new THREE.Vector2(q[0],q[1])),seg),c,p),
+  fin=(p,deg=60)=>{const g=mg(p);lkSmooth(g,deg);g.computeBoundingSphere();return g},
+  WD=0xd6965a,WD2=0xb57a45,WD3=0x8f5d36,WDL=0xe8b47a,IR=0x3d4456,ST=0xd0d6dd,CR=0xf7f0e3,RD=0xe0533f,TL=0x3aa6b0;
+ /* ① 전기톱: 둥근 주황 몸통 + 검은 손잡이 + 끝이 둥근 은빛 날(짙은 체인 테두리 = 조각 chain) */
+ {const OR=0xf08236,BL=0x2f343c,body=[R_(.2,.22,.36,OR,[0,.12,-.06],0,.07,.045),R_(.21,.07,.3,BL,[0,.02,-.06],0,.03,.025),beam([0,.24,-.22],[0,.34,-.06],.06,.055,BL),beam([0,.34,-.06],[0,.27,.1],.06,.055,BL),
+    C(.04,.04,.06,0xf6d24a,[.0,.26,-.2],0,10)],bar=[R_(.035,.11,.6,ST,[0,0,.3],0,.05,.012),C(.055,.055,.035,ST,[0,0,.6],[0,0,Math.PI/2],14)];
+  lkModel('lk_chainsaw',body.concat(bar.map(g=>{g.translate(0,.12,.12);return g})),{chain:{g:[R_(.025,.14,.64,BL,[0,0,.31],0,.065,.008),C(.07,.07,.025,BL,[0,0,.61],[0,0,Math.PI/2],14)],pv:[0,.12,.12]}},{tip:[0,.12,.8]})}
+ /* ② 석궁: 매끈한 나무 몸통 + 검은 활대 + 크림 시위 + 화살 */
+ {const p=[R_(.08,.09,.7,WD2,[0,0,0],0,.035,.025),R_(.09,.17,.2,WD,[0,-.06,-.36],[.22,0,0],.05,.03),beam([0,.03,.3],[-.42,.02,.18],.05,.045,IR),beam([0,.03,.3],[.42,.02,.18],.05,.045,IR),
+   rod([-.42,.04,.18],[0,.07,-.1],.01,CR,5),rod([.42,.04,.18],[0,.07,-.1],.01,CR,5),rod([0,.075,-.08],[0,.075,.34],.012,0xc0925a,6),pt(cone(.026,.06,8),ST,[0,.075,.38],[Math.PI/2,0,0]),R_(.01,.045,.07,RD,[0,.095,-.05],0,.006,.004)];
+  lkModel('lk_crossbow',p,{},{bolt:[0,.075,.4]});
   {const ri=new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(.3,-1.0,.25)),rd=new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(1.05,-.55,0));GEO.lk_crossbow_i=GEO.lk_crossbow.clone().applyMatrix4(ri.clone().invert().multiply(rd));GEO.lk_crossbow_i.computeBoundingSphere()}}
- /* ③ 화살: 굵은 화살 세 발 + 큰 깃(빨강·크림) + 가죽 띠 */
- {const p=[];for(let i=0;i<3;i++){const x=(i-1)*.06,y=(i===1?.04:0);p.push(rod([x,y,-.22],[x,y,.22],.016,0xb38a58,5),pt(cone(.032,.08,5),ST,[x,y,.26],[Math.PI/2,0,0]),R_(.012,.07,.1,i===1?CR:0xd8352a,[x,y+.03,-.18],0,.01,.005))}
-  p.push(R_(.22,.08,.07,0x7a4f35,[0,.02,.02],0,.03,.02));GEO.lk_arrow=fin(p)}
- /* ④ 연료: 빨간 기름통 + 위 손잡이 + 노란 뚜껑 + 옆 X */
- {const RD=0xd23f33,RD2=0xb0342a,p=[R_(.38,.46,.2,RD,[0,.23,0],0,.06,.04),R_(.24,.07,.07,RD2,[-.04,.52,0],0,.03,.02),C(.05,.055,.07,0xf3cf4a,[.12,.5,0]),
-   beam([-.11,.12,.1],[.11,.34,.1],.05,.02,RD2),beam([.11,.12,.1],[-.11,.34,.1],.05,.02,RD2)];GEO.lk_fuel=fin(p)}
- /* ⑤ 벽난로: 회색 돌 몸체 + 큰 아치 불구멍 + 나무 선반 + 굴뚝, 불(조각 fire) */
- {const SG=0x9d9089,SG2=0x8a7e78,SGL=0xb3a69e,p=[R_(1.5,1.1,.6,SG,[0,.55,0],0,.08,.05),R_(.86,.56,.2,0x2c2522,[0,.32,.24],0,.12,.03),R_(1.0,.14,.24,SG2,[0,.66,.22],0,.05,.03),
-   R_(1.66,.1,.4,WD2,[0,1.14,.08],0,.04,.03),R_(.76,1.06,.44,SG,[0,1.7,-.04],0,.06,.04),R_(.86,.12,.52,SG2,[0,2.26,-.04],0,.05,.03),
-   ...[[-.56,.2],[.58,.5],[-.52,.88],[.5,.94]].map((q,i)=>R_(.26,.16,.08,i%2?SGL:SG2,[q[0],q[1],.31],0,.05,.03)),
-   rod([-.26,.12,.26],[.24,.16,.28],.06,0x7a5030,6),rod([-.2,.17,.32],[.26,.12,.22],.055,WD2,6),C(.04,.04,.14,CR,[-.5,1.26,.14]),C(.05,.05,.12,0x3a7a8a,[.48,1.25,.14])];
-  lkModel('lk_fireplace',p,{fire:{g:[S_(.14,0xff8a3a,[0,.1,0],[1.3,1,.8]),pt(cone(.12,.34,6),0xffb347,[-.05,.22,.02]),pt(cone(.08,.26,6),0xffe07a,[.08,.2,0])],pv:[0,.16,.28],glow:true}},{smoke:[0,2.34,-.04]})}
+ /* ③ 화살: 화살 세 발 + 빨강·크림 깃 + 가죽 띠 */
+ {const p=[];for(let i=0;i<3;i++){const x=(i-1)*.055,y=(i===1?.035:0);p.push(rod([x,y,-.22],[x,y,.22],.013,0xc0925a,6),pt(cone(.028,.07,8),ST,[x,y,.255],[Math.PI/2,0,0]),R_(.01,.06,.09,i===1?CR:RD,[x,y+.028,-.18],0,.02,.004))}
+  p.push(R_(.2,.07,.06,0x8a5a3c,[0,.017,.02],0,.03,.02));GEO.lk_arrow=fin(p)}
+ /* ④ 연료: 둥근 빨간 기름통 + 손잡이 + 노란 뚜껑 + 옆 X */
+ {const RD2=0xc23c30,p=[R_(.36,.44,.18,RD,[0,.22,0],0,.07,.04),R_(.22,.06,.06,RD2,[-.04,.49,0],0,.03,.02),C(.045,.05,.06,0xf6d24a,[.12,.47,0],0,12),
+   beam([-.1,.12,.09],[.1,.32,.09],.04,.016,RD2),beam([.1,.12,.09],[-.1,.32,.09],.04,.016,RD2)];GEO.lk_fuel=fin(p)}
+ /* ⑤ 벽난로: 둥근 돌 몸체 + 둥근 아치 불구멍(가장자리 돌) + 나무 선반 + 굴뚝, 불(조각 fire) */
+ {const SG=0xa59a93,SG2=0x938880,SGL=0xbcb1aa,p=[R_(1.5,1.08,.58,SG,[0,.54,0],0,.1,.06),R_(.8,.54,.2,0x2c2522,[0,.31,.24],0,.2,.03)];
+  for(let i=0;i<7;i++){const a=Math.PI*(i/6);p.push(S_(.11,i%2?SGL:SG2,[Math.cos(a)*-.46,.32+Math.sin(a)*.32,.3],[1,.8,.55],0,10,7))}
+  p.push(S_(.12,SGL,[-.56,.12,.3],[1,.75,.55],0,10,7),S_(.12,SG2,[.56,.12,.3],[1,.75,.55],0,10,7),
+   R_(1.64,.09,.38,WD2,[0,1.12,.08],0,.04,.035),R_(.74,1.04,.44,SG,[0,1.66,-.04],0,.08,.05),R_(.84,.1,.5,SG2,[0,2.2,-.04],0,.05,.035),
+   rod([-.24,.12,.26],[.22,.16,.28],.055,0x7a5030,8),rod([-.2,.17,.32],[.24,.12,.22],.05,WD2,8),C(.035,.035,.13,CR,[-.5,1.23,.12],0,10),C(.012,.012,.03,0xffd35c,[-.5,1.31,.12],0,6),
+   lathe([[0,0],[.05,0],[.06,.04],[.045,.1],[.05,.13],[0,.13]],TL,[.46,1.165,.12],12));
+  lkModel('lk_fireplace',p,{fire:{g:[S_(.13,0xff8a3a,[0,.1,0],[1.3,1,.8]),pt(cone(.11,.32,10),0xffb347,[-.05,.22,.02]),pt(cone(.075,.25,10),0xffe07a,[.08,.2,0])],pv:[0,.16,.28],glow:true}},{smoke:[0,2.28,-.04]})}
  /* ⑥ 가로등: 항구에 이미 있는 가로등 모양 그대로 */
  if(typeof lkLampParts==='function')GEO.lk_lamp=fin(lkLampParts(2.72),50);
- /* ⑦ 정원 울타리(참고 그림 같은 크림색 널빤지 울타리): 굵은 기둥 둘 + 널 다섯 + 가로대 (길이 2, 높이 0.9) */
- {const PC=0xf1eadb,PC2=0xe3dac8,p=[...[-.94,.94].flatMap(x=>[R_(.18,.92,.18,PC,[x,.46,0],0,.04,.03),R_(.24,.07,.24,PC2,[x,.95,0],0,.04,.025)]),R_(1.8,.1,.06,PC2,[0,.52,-.05],0,.03,.02),R_(1.8,.1,.06,PC2,[0,.2,-.05],0,.03,.02)];
-  for(let i=0;i<5;i++)p.push(R_(.26,.74,.07,i%2?PC2:PC,[-.62+i*.31,.4,.0],0,.07,.025));GEO.lk_fence_garden=fin(p)}
- /* ⑧ 벤치의자: 굵은 널 둘(앉는 판) + 등받이 널 하나 + 짙은 초록 다리 */
- {const FG=0x34503f,p=[R_(1.5,.08,.2,WDL,[0,.46,.12],0,.03,.02),R_(1.5,.08,.2,WD,[0,.46,-.1],0,.03,.02),R_(1.5,.2,.07,WD,[0,.78,-.24],[-.15,0,0],.05,.025)];
-  for(const x of[-.62,.62])p.push(R_(.09,.44,.36,FG,[x,.22,0],0,.035,.02),beam([x,.44,-.18],[x,.86,-.28],.09,.07,FG));GEO.lk_seat_bench=fin(p)}
- /* ⑨ 일반의자: 굵은 다리 넷 + 앉는 판 + 빨간 방석 + 넓은 등판 */
- {const p=[R_(.52,.07,.5,WD,[0,.45,0],0,.04,.025),R_(.46,.07,.42,0xc95b42,[0,.51,.03],0,.05,.03)];
-  for(const x of[-.2,.2])for(const z of[-.19,.19])p.push(R_(.08,.44,.08,WD2,[x,.22,z],0,.03,.02));
-  for(const x of[-.2,.2])p.push(beam([x,.46,-.21],[x,1.0,-.25],.08,.07,WD2));p.push(R_(.5,.22,.06,WDL,[0,.88,-.24],[-.06,0,0],.06,.025));GEO.lk_chair=fin(p)}
- /* ⑩ 정원화덕: 벽돌색 받침 + 둥근 흙 화덕(아치 입구, 불 = 조각 fire) + 짧은 굴뚝 + 밑에 장작 */
- {const BR=0xbb5f45,BR2=0xa4513b,CL=0xdba57c,p=[R_(1.3,.6,1.0,BR,[0,.3,0],0,.06,.04),R_(.8,.36,.2,0x2c2522,[0,.24,.42],0,.06,.03),R_(1.38,.09,1.08,0xc7bcae,[0,.64,0],0,.04,.03),
-   pt(new THREE.SphereGeometry(.56,10,6,0,Math.PI*2,0,Math.PI/2),CL,[0,.68,-.04],0,[1,.95,1.02]),R_(.46,.34,.2,BR2,[0,.84,.44],0,.14,.03),R_(.32,.24,.06,0x241e1b,[0,.82,.54],0,.11,.02),
-   C(.07,.07,.42,IR,[.2,1.3,-.2]),C(.1,.08,.06,IR,[.2,1.52,-.2]),...[0,1].map(i=>rod([-.26,.14+i*.1,.38-i*.04],[.26,.14+i*.1,.38-i*.04],.05,i?WD2:0x7a5030,6))];
-  lkModel('lk_oven_garden',p,{fire:{g:[S_(.1,0xff8a3a,[0,.04,0],[1.3,.8,1]),pt(cone(.08,.2,6),0xffb347,[-.04,.12,0]),pt(cone(.06,.16,6),0xffe07a,[.06,.1,0])],pv:[0,.72,.4],glow:true}},{smoke:[.2,1.6,-.2]})}
- /* ⑪ 원형 테이블: 두꺼운 둥근 판 + 굵은 기둥 + 십자 발 */
- {const p=[C(.52,.52,.08,WDL,[0,.76,0],0,12),C(.46,.46,.03,WD,[0,.705,0],0,12),C(.09,.11,.66,WD2,[0,.37,0],0,8)];
-  for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;p.push(beam([0,.06,0],[Math.cos(a)*.38,.04,Math.sin(a)*.38],.1,.07,WD2))}GEO.lk_table_round=fin(p)}
- /* ⑫ 꽃병: 청록 도자기(크림 띠) + 동글동글 꽃 셋 + 잎 둘 */
- {const p=[lathe([[0,0],[.1,0],[.13,.06],[.14,.16],[.11,.27],[.07,.33],[.085,.38],[0,.38]],0x3d8f9a,[0,0,0]),C(.142,.142,.04,CR,[0,.15,0],0,8)],fl=[[.06,.62,.02,0xf5c63a],[-.08,.58,.04,0x5a86f0],[0,.66,-.05,0xe2402f]];
-  for(const f of fl)p.push(rod([0,.36,0],[f[0],f[1],f[2]],.012,0x4a8a4a,4),pt(ico(.06,0),f[3],[f[0],f[1],f[2]],0,[1,.7,1]),S_(.025,0xf7e9b0,[f[0],f[1]+.035,f[2]],0,0,6,4));
-  for(const s of[-1,1]){const g=new THREE.SphereGeometry(1,6,4);g.scale(.05,.012,.13);g.translate(0,0,.11);g.rotateX(-.5);g.rotateY(s*1.2);p.push(pt(g,0x4f9a55,[0,.38,0]))}GEO.lk_vase=fin(p,45)}
- /* ⑬ 소파: 기획자가 '그나마 낫다'고 한 모양 그대로(가는 박음질 줄만 뺌) */
- {const FB=0xb8644a,FB2=0xa3553d,p=[...[-.85,.85].flatMap(x=>[-.3,.3].map(z=>C(.035,.025,.1,WD2,[x,.05,z],0,6))),R_(1.86,.2,.78,FB2,[0,.2,0])];
+ /* ⑦ 정원 울타리(참고 그림 같은 크림색 울타리): 둥근 머리 기둥 둘 + 사이 뜬 널 여섯 + 가로대 둘 (길이 2, 높이 0.9) */
+ {const PC=0xf6efe2,PC2=0xe9e0cf,p=[...[-.94,.94].flatMap(x=>[R_(.14,.86,.14,PC,[x,.43,0],0,.04,.03),S_(.085,PC,[x,.9,0],[1,.8,1],0,10,6)]),R_(1.82,.07,.05,PC2,[0,.56,-.045],0,.03,.02),R_(1.82,.07,.05,PC2,[0,.22,-.045],0,.03,.02)];
+  for(let i=0;i<6;i++){const x=-.7+i*.28;p.push(R_(.18,.66,.045,i%2?PC2:PC,[x,.38,0],0,.06,.018),S_(.09,i%2?PC2:PC,[x,.71,0],[1,.55,.25],0,10,4))}GEO.lk_fence_garden=fin(p)}
+ /* ⑧ 벤치의자: 사이가 뜬 널 셋(앉는 판) + 등받이 널 둘 + 둥근 짙은 다리·팔걸이 */
+ {const FG=0x3b5a48,p=[];for(let i=0;i<3;i++)p.push(R_(1.46,.05,.12,i%2?WD:WDL,[0,.46,.15-i*.14],0,.025,.018));for(let i=0;i<2;i++)p.push(R_(1.46,.1,.04,i%2?WD:WDL,[0,.66+i*.15,-.22-i*.03],[-.18,0,0],.035,.016));
+  for(const x of[-.64,.64])p.push(rod([x,0,.16],[x,.44,.13],.032,FG),rod([x,0,-.16],[x,.44,-.12],.032,FG),rod([x,.44,-.15],[x,.9,-.3],.03,FG),rod([x,.62,.2],[x,.62,-.18],.03,FG),rod([x,.44,.15],[x,.62,.18],.026,FG),S_(.04,FG,[x,.62,.2],0,0,8,5));
+  GEO.lk_seat_bench=fin(p)}
+ /* ⑨ 일반의자: 살짝 가늘어지는 다리 + 둥근 앉는 판 + 폭신한 방석 + 등판 둘 */
+ {const p=[R_(.5,.06,.48,WD,[0,.45,0],0,.06,.025),R_(.44,.08,.4,RD,[0,.51,.03],0,.1,.04)];
+  for(const x of[-.2,.2])for(const z of[-.18,.18])p.push(C(.035,.028,.44,WD2,[x,.22,z],0,8));
+  for(const x of[-.2,.2])p.push(beam([x,.46,-.2],[x,1.0,-.25],.06,.05,WD2));p.push(R_(.48,.14,.05,WDL,[0,.92,-.245],[-.06,0,0],.05,.02),R_(.44,.1,.04,WDL,[0,.72,-.23],[-.06,0,0],.04,.016));GEO.lk_chair=fin(p)}
+ /* ⑩ 정원화덕: 벽돌색 받침 + 매끈한 흙 돔(둥근 돌 아치 입구, 불 = 조각 fire) + 굴뚝, 밑에 장작 */
+ {const BR=0xc4664a,BR2=0xad583f,CL=0xe2ad84,p=[R_(1.28,.6,.98,BR,[0,.3,0],0,.06,.04),R_(.78,.34,.2,0x2c2522,[0,.24,.41],0,.12,.03),R_(1.36,.08,1.06,0xd3c8ba,[0,.64,0],0,.04,.03),
+   pt(new THREE.SphereGeometry(.55,16,10,0,Math.PI*2,0,Math.PI/2),CL,[0,.68,-.04],0,[1,.95,1.02]),R_(.34,.24,.06,0x241e1b,[0,.82,.53],0,.12,.02),
+   C(.065,.065,.42,IR,[.2,1.3,-.2],0,10),C(.09,.075,.06,IR,[.2,1.52,-.2],0,10),...[0,1].map(i=>rod([-.26,.14+i*.1,.38-i*.04],[.26,.14+i*.1,.38-i*.04],.048,i?WD2:0x7a5030,10))];
+  for(let i=0;i<7;i++){const a=Math.PI*(i/6);p.push(S_(.075,i%2?BR:BR2,[Math.cos(a)*-.22,.72+Math.sin(a)*.2,.5],[1,.8,.7],0,10,7))}
+  lkModel('lk_oven_garden',p,{fire:{g:[S_(.1,0xff8a3a,[0,.04,0],[1.3,.8,1]),pt(cone(.08,.2,10),0xffb347,[-.04,.12,0]),pt(cone(.06,.16,10),0xffe07a,[.06,.1,0])],pv:[0,.74,.4],glow:true}},{smoke:[.2,1.6,-.2]})}
+ /* ⑪ 원형 테이블: 가장자리가 둥근 판 + 잘록한 기둥 + 둥근 발 셋 */
+ {const p=[lathe([[0,.72],[.5,.72],[.52,.735],[.52,.775],[.5,.79],[0,.79]],WDL,[0,0,0],24),lathe([[0,.08],[.1,.1],[.07,.2],[.065,.55],[.09,.66],[.14,.7],[0,.72]],WD2,[0,0,0],12)];
+  for(let i=0;i<3;i++){const a=i/3*Math.PI*2;p.push(beam([0,.1,0],[Math.cos(a)*.38,.04,Math.sin(a)*.38],.08,.06,WD2),S_(.05,WD3,[Math.cos(a)*.38,.03,Math.sin(a)*.38],[1,.6,1],0,10,6))}GEO.lk_table_round=fin(p)}
+ /* ⑫ 꽃병: 매끈한 청록 도자기(크림 띠) + 꽃잎 달린 꽃 셋 + 잎 */
+ {const p=[lathe([[0,0],[.09,0],[.12,.04],[.135,.13],[.12,.24],[.075,.32],[.06,.35],[.08,.39],[.07,.395],[0,.395]],TL,[0,0,0],18),C(.137,.137,.035,CR,[0,.15,0],0,18)],fl=[[.06,.62,.02,0xf5c63a],[-.08,.58,.04,0x5a86f0],[0,.66,-.05,RD]];
+  for(const f of fl){p.push(rod([0,.36,0],[f[0],f[1],f[2]],.009,0x4a9a4a,5));for(let k=0;k<5;k++){const a=k*1.257;p.push(S_(.03,f[3],[f[0]+Math.cos(a)*.032,f[1],f[2]+Math.sin(a)*.032],[1,.5,1],0,8,5))}p.push(S_(.02,0xfff1b0,[f[0],f[1]+.012,f[2]],0,0,8,5))}
+  for(const s of[-1,1]){const g=new THREE.SphereGeometry(1,8,5);g.scale(.045,.01,.12);g.translate(0,0,.1);g.rotateX(-.5);g.rotateY(s*1.2);p.push(pt(g,0x4f9a55,[0,.38,0]))}GEO.lk_vase=fin(p,55)}
+ /* ⑬ 소파: 기획자가 낫다고 한 첫 소파 그대로(박음질 줄만 뺌) */
+ {const FB=0xc76a4d,FB2=0xb05a40,p=[...[-.85,.85].flatMap(x=>[-.3,.3].map(z=>C(.03,.022,.1,WD3,[x,.05,z],0,8))),R_(1.86,.2,.78,FB2,[0,.2,0],0,.04,.03)];
   for(const x of[-.43,.43])p.push(R_(.84,.16,.66,FB,[x,.38,.05],0,.06,.04),R_(.82,.44,.18,FB,[x,.68,-.28],[-.12,0,0],.07,.05));
   for(const x of[-.9,.9])p.push(R_(.18,.5,.78,FB2,[x,.42,0],0,.08,.06));
   p.push(R_(1.84,.22,.12,FB2,[0,.84,-.36],[-.12,0,0],.05,.04),R_(.32,.3,.1,CR,[.55,.62,-.12],[-.3,-.25,.15],.08,.06));GEO.lk_sofa=fin(p,50)}
- /* ⑭ 보트 2인승: 크림 선체 + 굵은 청록 뱃전 + 나무 안쪽·앉는 판 둘 + 노 둘 + 뭉툭한 모터(조각 motor) */
- {const HC=0xf1ece2,HT=0x2f8f9d,IN=0xd4a066,L=1.45,W=.62,D=.42,mk=(sx,sy,sz,c,flip)=>{const g=new THREE.SphereGeometry(1,10,5,0,Math.PI*2,Math.PI/2,Math.PI/2),P=g.attributes.position;
+ /* ⑭ 보트 2인승: 매끈한 크림 선체 + 청록 뱃전 관 + 나무 안쪽·앉는 판 둘 + 노 + 둥근 모터(조각 motor) */
+ {const HC=0xf6f0e4,IN=0xddaa6c,L=1.45,W=.62,D=.42,mk=(sx,sy,sz,c,flip)=>{const g=new THREE.SphereGeometry(1,16,8,0,Math.PI*2,Math.PI/2,Math.PI/2),P=g.attributes.position;
     for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const t=(z+1)/2;x*=1-Math.pow(Math.max(0,t-.45)/.55,1.6)*.92;if(z<-.82)z=-.82;P.setXYZ(i,x*sx,y*sy,z*sz)}
     g.computeVertexNormals();const q=pt(g,c,[0,D,0]);if(flip){const a=q.attributes.position.array,b=q.attributes.color.array;for(let i=0;i<a.length;i+=9)for(let k=0;k<3;k++){const t=a[i+3+k];a[i+3+k]=a[i+6+k];a[i+6+k]=t;const u=b[i+3+k];b[i+3+k]=b[i+6+k];b[i+6+k]=u}}return q};
-  const p=[mk(W,D,L,HC),mk(W*.9,D*.88,L*.94,IN,true)],rim=[];for(let i=0;i<=7;i++){const z=-L*.82+i/7*L*1.8,t=(z/L+1)/2;rim.push([W*(1-Math.pow(Math.max(0,t-.45)/.55,1.6)*.92),D,z])}
-  for(let i=0;i<rim.length-1;i++)for(const s of[-1,1])p.push(beam([s*rim[i][0],D+.02,rim[i][2]],[s*rim[i+1][0],D+.02,rim[i+1][2]],.09,.08,HT));
-  p.push(R_(W*2,.09,.08,HT,[0,D+.02,-L*.82],0,.03,.02),R_(W*1.84,.26,.05,HC,[0,D-.11,-L*.815],0,.04,.02));
-  for(const z of[-.55,.35])p.push(R_(W*1.68*(z>0?.92:1),.06,.24,IN,[0,D-.08,z],0,.03,.02));
-  for(const s of[-1,1])p.push(beam([s*W*.82,D+.1,-.3],[s*W*.72,D+.06,.85],.05,.05,WD),R_(.12,.03,.24,WD,[s*W*.7,D+.05,.98],[0,s*.1,0],.03,.012));
-  const mot=[R_(.22,.28,.26,0x4a4f5a,[0,.2,-.1],0,.06,.04),R_(.23,.08,.27,0xec7b30,[0,.36,-.1],0,.04,.03),R_(.08,.42,.1,0x3c4250,[0,-.06,-.12],0,.03,.02),R_(.04,.14,.05,0x8f99a4,[0,-.26,-.2],0,.02,.01)];
+  const p=[mk(W,D,L,HC),mk(W*.92,D*.9,L*.95,IN,true)],rim=[];for(let i=0;i<=12;i++){const z=-L*.82+i/12*L*1.8,t=(z/L+1)/2;rim.push([W*(1-Math.pow(Math.max(0,t-.45)/.55,1.6)*.92),D,z])}
+  for(let i=0;i<rim.length-1;i++)for(const s of[-1,1])p.push(rod([s*rim[i][0],D+.02,rim[i][2]],[s*rim[i+1][0],D+.02,rim[i+1][2]],.04,TL,8));
+  p.push(rod([-W,D+.02,-L*.82],[W,D+.02,-L*.82],.04,TL,8),R_(W*1.86,.24,.04,HC,[0,D-.1,-L*.815],0,.05,.02));
+  for(const z of[-.55,.35])p.push(R_(W*1.66*(z>0?.92:1),.05,.22,IN,[0,D-.08,z],0,.04,.02));
+  for(const s of[-1,1])p.push(rod([s*W*.82,D+.1,-.3],[s*W*.72,D+.06,.85],.024,WD,8),R_(.11,.025,.22,WD,[s*W*.7,D+.05,.98],[0,s*.1,0],.04,.01));
+  const mot=[R_(.2,.26,.24,0x4a5060,[0,.2,-.1],0,.08,.05),R_(.21,.07,.25,0xf08236,[0,.35,-.1],0,.05,.03),R_(.07,.4,.09,IR,[0,-.06,-.12],0,.03,.02),R_(.035,.12,.05,0x9aa3ad,[0,-.26,-.2],0,.02,.01)];
   lkModel('lk_boat2',p,{motor:{g:mot,pv:[0,D+.02,-L*.84]}},{seat1:[0,D-.04,-.55],seat2:[0,D-.04,.35],wake:[0,0,-L*.9]});
   for(const k of['lk_boat2','lk_boat2_b']){GEO[k].translate(0,-.22,0);GEO[k].computeBoundingSphere()}GEO.lk_boat2_motor.computeBoundingSphere()}
- for(const k of['lk_chainsaw','lk_crossbow','lk_fireplace','lk_oven_garden','lk_boat2'])for(const s of['','_b'])if(GEO[k+s])lkSmooth(GEO[k+s],50);
+ for(const k of['lk_chainsaw','lk_crossbow','lk_fireplace','lk_oven_garden','lk_boat2'])for(const s of['','_b'])if(GEO[k+s])lkSmooth(GEO[k+s],55);
 }
 /* 규칙 담당의 아이템·설치형과 이어 붙이기: 같은 id면 그대로, 다르면 이름(n)으로 찾아 모델이 비어 있을 때만 넣어요 */
 function lkPropsIc(){for(const [id,mt,where] of LK_PROPS){const key='lk_'+id;if(!GEO[key])continue;const T=where==='ITEMS'?(typeof ITEMS!=='undefined'&&ITEMS):(typeof BUILDS!=='undefined'&&BUILDS);if(!T)continue;
