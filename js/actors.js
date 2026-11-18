@@ -85,7 +85,16 @@ function onDock(x,z){const L=DOCKG[((z/16)|0)*64+((x/16)|0)];if(!L)return null;f
 const groundY=(x,z)=>{const sp=spSurf(x,z);if(sp!==null)return sp;   /* 특수 보급지 테두리·경사로·계단(core.js) */
  const d=onDock(x,z);return d?Math.max(hAt(x,z),d.y):DEV.on?Math.max(hAt(x,z),.02):hAt(x,z)};
 const walk=(x,z,r,e)=>{if(INT.on&&e===P)return intWalk(x,z,r);if(DEV.on&&e===P)return x<4||z<4||x>WS-4||z>WS-4?true:null;if(onDock(x,z))return null;return blocked(x,z,r,e?(e.pl?2:1):0,e&&e.pl)};
-function moveEnt(e,dx,dz,r=.42){let m=false;if(walk(e.x+dx,e.z,r,e)===null){e.x+=dx;m=true}if(walk(e.x,e.z+dz,r,e)===null){e.z+=dz;m=true}return m}
+/* 높낮이(13차, 기획자: '높낮이 차이가 나면 못 올라가게. 바다에 빠졌을 때 부두 나무판에 순간이동하듯 올라가면 안 됨'):
+   발 높이 = 땅·부두·특수 보급지 높이, 물속이면 물 표면 근처(STEP_WL). 한 걸음에 STEP_UP보다 높이 올라가는 곳은 못 가요. 내려가는 건 돼요(떨어지기 → plFall).
+   땅은 가장 가파른 곳도 0.2m 걸음에 0.34m라 막히지 않고, 부두·데크 가장자리처럼 뚝 끊긴 곳만 막혀요. 개발자 모드(벽 통과)·텐트 안은 그대로. */
+const STEP_UP=.45,STEP_WL=-.2,stepY=(x,z)=>Math.max(groundY(x,z),STEP_WL),canStep=(e,x,z,fx=0,fz=0)=>{if(e===P&&(DEV.on||INT.on))return true;const y0=stepY(e.x,e.z),k=e===P&&WTR.st==='swim'?1.35:.38,px=x+fx*k,pz=z+fz*k;if(stepY(x,z)-y0>STEP_UP)return false;return !(fx||fz)||!(onDock(px,pz)||spSurf(px,pz)!==null)||stepY(px,pz)-y0<=STEP_UP};   /* 앞쪽 끝은 부두·특수 보급지 같은 '끊긴 바닥'만 봐요(땅 비탈은 막지 않게) */   /* 헤엄칠 땐 머리가 앞으로 나와 있어서 더 앞까지 봐요 */   /* fx·fz: 가는 방향(몸 앞쪽 끝도 봐서 부두 가장자리에 몸이 겹치지 않게) */
+function moveEnt(e,dx,dz,r=.42){let m=false;if(walk(e.x+dx,e.z,r,e)===null&&canStep(e,e.x+dx,e.z,Math.sign(dx),0)){e.x+=dx;m=true}if(walk(e.x,e.z+dz,r,e)===null&&canStep(e,e.x,e.z+dz,0,Math.sign(dz))){e.z+=dz;m=true}return m}
+/* 보이는 높이: 내려갈 땐 중력으로 떨어지고(물이면 첨벙, 땅이면 먼지), 작은 계단은 부드럽게 올라가요. 순간이동(3m 넘게)은 바로 맞춰요 */
+function plFall(dt){const g=groundY(P.x,P.z),tg=WTR.st==='swim'?-.6:g;   /* 헤엄칠 땐 몸이 물에 잠긴 높이(-.6)까지 선 채로 떨어진 뒤 헤엄 자세로(waterPose) */if(P.yv===undefined||Math.hypot(P.x-P.ylx,P.z-P.ylz)>3){P.yv=tg;P.vy=0}P.ylx=P.x;P.ylz=P.z;
+ if(tg<P.yv-.03){const y0=P.yv;P.vy-=22*dt;P.yv+=P.vy*dt;if(WTR.st!=='land'&&y0>.05&&P.yv<=.05&&P.vy<-2){splash(P.x,P.z,12);sfx(160,.22,'sine',.05,.4)}   /* 물 표면을 지날 때 첨벙 */
+  if(P.yv<=tg){const v=-P.vy;P.yv=tg;P.vy=0;if(v>2.6&&WTR.st==='land'){puff(P.x,tg+.1,P.z,0xd9cbb0,6,.6);sfx(110,.08,'square',.025)}}}
+ else{P.vy=0;P.yv+=(tg-P.yv)*Math.min(1,dt*16)}return P.yv}
 const turn=(a,b,k)=>{let d=b-a;while(d>Math.PI)d-=6.283;while(d<-Math.PI)d+=6.283;return a+d*Math.min(1,k)};
 function unstuck(){if(walk(P.x,P.z,.42,P)===null)return;for(let r=.3;r<14;r+=.3)for(let a=0;a<16;a++){const x=P.x+Math.cos(a*.39)*r,z=P.z+Math.sin(a*.39)*r;if(walk(x,z,.42,P)===null){P.x=x;P.z=z;return}}P.x=S.home.x;P.z=S.home.z}
 const curId=()=>{const q=S.quick[S.sel];return q&&WEAP[q]&&invN(q)>0?q:'fist'};
@@ -214,7 +223,7 @@ function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of struct
 function spawnEnemy(kind,x,z,o={}){const T=ENEMY[kind],a=T.proc?new Creature(T.proc):new Actor(kind==='gunner'?'gunner':kind==='brute'?'brute':'bandit');a.weapon(T.w);if(T.helmet)a.helmet();const e=Object.assign({a,kind,x,z,rot:rand(0,6),hp:T.hp,max:T.hp,cd:rand(.3,1),agg:0,ax:x,az:z,wt:0,wx:x,wz:z,dead:false,aimT:0,hitT:0,side:Math.random()<.5?1:-1,big:!!T.big,hpT:0,sT:null,scan:0},o);enemies.push(e);return e}
 function spawnCamps(force){POI.camps.forEach((c,i)=>{if(dist(P.x,P.z,c.x,c.z)>130||enemies.some(e=>e.camp===i))return;if(S.campDay[i]&&S.day-S.campDay[i]<3&&!force)return;if(S.campDay[i]){delete S.campDay[i];for(const k of['a','b','c'])delete S.looted['c'+i+k]}
   const mk=(k,dx,dz)=>spawnEnemy(k,c.x+dx,c.z+dz,{camp:i});mk('bandit',3,-1);mk('bandit',-3,1);mk('gunner',-6,4);mk('gunner',5,4);if(i%3===2||S.day>6)mk('brute',0,-3);else mk('bandit',1,5)})}
-function steer(e,tx,tz,sp,dt){const an=Math.atan2(tx-e.x,tz-e.z);for(const off of[0,.6,-.6,1.2,-1.2,1.9,-1.9]){const a=an+off*e.side,nx=e.x+Math.sin(a)*sp*dt,nz=e.z+Math.cos(a)*sp*dt,b=walk(nx,nz,.42,e);
+function steer(e,tx,tz,sp,dt){const an=Math.atan2(tx-e.x,tz-e.z);for(const off of[0,.6,-.6,1.2,-1.2,1.9,-1.9]){const a=an+off*e.side,nx=e.x+Math.sin(a)*sp*dt,nz=e.z+Math.cos(a)*sp*dt,b=canStep(e,nx,nz,Math.sin(a),Math.cos(a))?walk(nx,nz,.42,e):true;
   if(b===null){e.x=nx;e.z=nz;e.rot=turn(e.rot,a,dt*10);return true}if(off===0&&b!==true&&b.own&&e.raid){e.sT=b;return false}}e.side=-e.side;return false}
 function updEnemy(e,dt){const T=ENEMY[e.kind],a=e.a,dp=dist(e.x,e.z,P.x,P.z);
  if(e.dead){e.deadT-=dt;a.mixer.update(dt);if(e.deadT<0){a.dispose();enemies.splice(enemies.indexOf(e),1)}return}
@@ -278,7 +287,7 @@ function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=d
   if(a.lock<=0){if(swim)a.play('T-Pose',{fade:.3});else if(fishing)a.play('1H_Ranged_Aiming',{fade:.2});
    else if(P.moving){const run=(l>.55||P.auto)&&ws==='land';a.play(run?'Running_A':'Walking_A');a.curA.timeScale=run?(firing&&!w.melee?.85:1.18)*(P.auto?1:.55+.45*l):ws==='land'?.7+l*1.1:.6+l*.35;P.stepT-=dt*(run?1:.6);if(P.stepT<=0){P.stepT=.3;if(ws==='land')sfx(90+Math.random()*30,.04,'triangle',.018);else sfx(300+Math.random()*90,.06,'sine',.02,.5)}}
    else if(ws==='spring')a.play('Sit_Floor_Idle',{fade:.35});else if(firing&&!w.melee)a.play(w.h1?'1H_Ranged_Aiming':'2H_Ranged_Aiming');else a.play(w.melee||w.h1?'Idle':'2H_Melee_Idle')}}
- inp.actEdge=false;if(a.wid!==id)a.weapon(id);a.set(P.x,P.z,P.rot);unpose(a);a.mixer.update(dt);waterPose(dt);S.px=INT.on?INT.ret.x:P.x;S.pz=INT.on?INT.ret.z:P.z}
+ inp.actEdge=false;if(a.wid!==id)a.weapon(id);a.set(P.x,P.z,P.rot);if(!INT.on)a.root.position.y=plFall(dt);unpose(a);a.mixer.update(dt);waterPose(dt);S.px=INT.on?INT.ret.x:P.x;S.pz=INT.on?INT.ret.z:P.z}
 function updWorld(dt){
  for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.t+=dt;s.x+=s.dx*s.sp*dt;s.z+=s.dz*s.sp*dt;s.m.position.set(s.x,s.y,s.z);s.m.rotation.y=Math.atan2(s.dx,s.dz);let hit=s.t>s.life;const b=walk(s.x,s.z,.1,P);
   if(dist(s.x,s.z,P.x,P.z)<.75&&!P.dead){if(P.inv<=0)hurtPlayer(10);hit=P.inv<=0}else if(b&&b!==true&&b.own){b.hp-=4;b.hpT=4;hit=true;if(b.hp<=0)removeStruct(b)}else if(b)hit=true;if(hit){scene.remove(s.m);shots.splice(i,1)}}

@@ -69,11 +69,11 @@ const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quater
 function unpose(a){if(a._mod){for(const m of a._mod)m[0].quaternion.copy(m[1]);a._mod=null}}
 function boneMap(a){if(!a._b){a._b={};a.root.traverse(o=>{if(o.isBone)a._b[o.name]=o})}return a._b}
 function rotB(b,x,y,z,ang){if(!b||Math.abs(ang)<1e-4)return;b.parent.getWorldQuaternion(_q1);_ax.set(x,y,z).applyQuaternion(_rq).normalize();_q2.setFromAxisAngle(_ax,ang);_q3.copy(_q1).invert().multiply(_q2).multiply(_q1);b.quaternion.premultiply(_q3);b.updateMatrixWorld(true)}
-function waterPose(dt){const a=P.a,r=a.root;r.rotation.order='YXZ';const sw=WTR.st==='swim'&&!P.dead;a.holder.visible=!sw;
+function waterPose(dt){const a=P.a,r=a.root;r.rotation.order='YXZ';const sw=WTR.st==='swim'&&!P.dead&&!(P.yv>-.45);   /* 부두에서 떨어지는 중엔 선 자세로 물에 잠긴 뒤 헤엄 */a.holder.visible=!sw;
  if(WTR.st==='spring'&&!P.dead)r.position.y-=P.moving?.22:.42;
  if(!sw){r.rotation.x=0;WTR.mv=0;if(WTR.st==='wade'&&!P.dead){WTR.ripT-=dt;if(WTR.ripT<=0){WTR.ripT=P.moving?.28:.9;ripple(P.x,P.z,P.moving?1:.8);if(P.moving&&Math.random()<.5)puff(P.x+rand(-.3,.3),.1,P.z+rand(-.3,.3),0xe6f3ff,2,.5)}}return}
  const mv=WTR.mv=lerp(WTR.mv,P.moving?1:0,Math.min(1,dt*4.5));WTR.ph+=dt*lerp(3.4,6.6,mv);const ph=WTR.ph,pitch=lerp(.14,1.02,mv),fx=Math.sin(P.rot),fz=Math.cos(P.rot);
- const cy=lerp(-.02,-.1,mv)+Math.sin(ph*(mv>.5?2:1))*lerp(.05,.03,mv);r.rotation.x=pitch;r.position.set(P.x-fx*.74*Math.sin(pitch),cy-.74*Math.cos(pitch),P.z-fz*.74*Math.sin(pitch));
+ const cy=lerp(-.02,-.1,mv)+Math.sin(ph*(mv>.5?2:1))*lerp(.05,.03,mv);r.rotation.x=pitch;r.position.set(P.x-fx*.74*Math.sin(pitch),cy-.74*Math.cos(pitch),P.z-fz*.74*Math.sin(pitch));   /* 부두에서 떨어지는 중이면 그 높이에서 물로 */
  const B=boneMap(a);a._mod=['spine','head','upperarml','lowerarml','upperarmr','lowerarmr','upperlegl','lowerlegl','upperlegr','lowerlegr'].map(n=>[B[n],B[n].quaternion.clone()]);r.updateMatrixWorld(true);r.getWorldQuaternion(_rq);
  rotB(B.spine,0,0,1,Math.sin(ph)*.16*mv);rotB(B.head,1,0,0,-pitch*.82);rotB(B.head,0,0,1,-Math.sin(ph)*.12*mv);
  for(const s of[1,-1]){const ua=B[s>0?'upperarml':'upperarmr'],la=B[s>0?'lowerarml':'lowerarmr'],o=s>0?0:Math.PI,phi=ph+o;
