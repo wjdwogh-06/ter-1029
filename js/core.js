@@ -180,6 +180,29 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  phouse:{n:'집',g:'phouse',s:1,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
+/* ===== 25차(기획자: '넣어봐라'): 새 아이템 15종. 모양·아이콘은 디자인 20·21·23차(look.js 'lk_'+id).
+   기능·재료·가격·놓는 곳은 기획자가 아직 안 정해서 **임시값**이에요(이름 뒤 설명에 '임시'). 정해지면 여기 숫자만 고치면 돼요.
+   - 손에 드는 것: 전기톱(손도끼처럼 나무를 베고 더 빨리), 석궁(화살을 쏨), 화살(석궁 탄약, 상점에서 10발 묶음), 연료(쓰는 곳 없음)
+   - 설치형(건설 탭): inok:1 = 텐트·집 안에도 놓을 수 있는 가구(소파·의자·원형 테이블·꽃병·벽난로). water:1 = 물 위에만(보트 2인승, 타기는 아직 없음).
+     가로등은 밤에 켜져요(lamp). 나머지는 놓아 두기만 해요. ===== */
+Object.assign(ITEMS,{
+ chainsaw:{n:'전기톱',ic:'lk_chainsaw',hg:'lk_chainsaw',gh:1,hs:1.2,ty:'tool',p:1500,d:'나무를 손도끼보다 빨리 베요. 근접 18 (임시)',one:1},
+ crossbow:{n:'석궁',ic:'lk_crossbow_i',hg:'lk_crossbow',hs:1.35,ty:'gun',p:1800,d:'화살을 쏴요. 피해 30, 사거리 22 (임시)',one:1},
+ arrow:{n:'화살',ic:'lk_arrow',ty:'ammo',p:30,d:'석궁에 넣어 쏴요'},
+ fuel:{n:'연료',ic:'lk_fuel',ty:'res',p:120,d:'기름통. 쓰는 곳은 아직 없어요 (임시)'}});
+Object.assign(BUILDS,{
+ sign:{n:'표지판',g:'lk_sign',s:1,bx:.3,bz:.15,hp:40,c:{wood:3},d:'세워 두는 나무 표지판 (임시)'},
+ lamp:{n:'가로등',g:'lk_lamp',s:1,bx:.25,bz:.25,hp:120,c:{scrap:6,wood:2},lamp:2.72,d:'밤이 되면 저절로 켜져요 (임시)'},
+ fence_garden:{n:'정원 울타리',g:'lk_fence_garden',s:1,bx:1,bz:.2,hp:60,c:{wood:3},d:'크림색 낮은 울타리 (임시)',grid:1},
+ seat_bench:{n:'벤치의자',g:'lk_seat_bench',s:1,bx:.75,bz:.3,hp:80,c:{wood:6},d:'바깥에 두는 긴 의자 (임시)'},
+ oven_garden:{n:'정원화덕',g:'lk_oven_garden',s:1,bx:.69,bz:.54,hp:260,c:{stone:10,wood:3},d:'벽돌 화덕 (임시)'},
+ fireplace:{n:'벽난로',g:'lk_fireplace',s:1,bx:.83,bz:.32,hp:300,c:{stone:12,wood:4},inok:1,d:'벽돌 벽난로. 텐트·집 안에도 놓아요 (임시)'},
+ sofa:{n:'소파',g:'lk_sofa',s:1,bx:.95,bz:.4,hp:120,c:{wood:6,cloth:4},inok:1,d:'푹신한 소파. 텐트·집 안에도 놓아요 (임시)'},
+ chair:{n:'일반의자',g:'lk_chair',s:1,bx:.27,bz:.27,hp:50,c:{wood:3},inok:1,d:'나무 의자. 텐트·집 안에도 놓아요 (임시)'},
+ table_round:{n:'원형 테이블',g:'lk_table_round',s:1,bx:.52,bz:.52,hp:80,c:{wood:5},inok:1,d:'둥근 탁자. 텐트·집 안에도 놓아요 (임시)'},
+ vase:{n:'꽃병',g:'lk_vase',s:1,bx:.15,bz:.15,hp:20,c:{stone:1},inok:1,d:'꽃을 꽂은 병. 텐트·집 안에도 놓아요 (임시)'},
+ boat2:{n:'보트 2인승',g:'lk_boat2',s:1,bx:.68,bz:1.45,hp:200,c:{wood:14,scrap:4},water:1,flat:1,d:'바닷가 물 위에 띄워 둬요. 타기는 아직 없어요 (임시)'}});
+Object.assign(WEAP,{chainsaw:{melee:1,dmg:18,cd:.4,range:2.4},crossbow:{dmg:30,cd:1.1,range:22,ammo:'arrow',spread:.01}});
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
  gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoL',5,.7],['scrap',2,.6],['coin',90,1]]},
  rgolem:{n:'바위 골렘',hp:240,sp:2.1,dmg:26,reach:3.0,proc:'rg',big:1,blood:0x9aa1a8,loot:[['stone',8,1],['scrap',4,.7],['coin',300,1]]},
@@ -198,6 +221,7 @@ function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=
  while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
 const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
 const SHOP={sell:['kit_tent','kit_bench','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
+SHOP.sell.push('chainsaw','crossbow','arrow','fuel');VEND.pack.arrow=10;   /* 25차: 새 아이템(임시). 상점은 지금 무료(SHOP.free), 화살은 10발 묶음 */
 const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:100},
  {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
  {t:'텐트 안에 작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},

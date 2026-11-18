@@ -21,8 +21,9 @@ class Actor{constructor(kind){this.kind=kind;const src=kind==='hero'?CH.hero:(ki
   this.holder=new THREE.Object3D();this.hand.add(this.holder);this.mixer=new THREE.AnimationMixer(root);this.acts={};this.cur='';this.curA=null;this.lock=0;scene.add(root);if(kind==='brute')root.scale.setScalar(1.22)}
  play(n,o={}){if(this.cur===n&&!o.force)return;if(this.lock>0&&!o.lock&&!o.force)return;let a=this.acts[n];if(!a){a=this.acts[n]=this.mixer.clipAction(CLIPS[n])}a.reset();a.setLoop(o.once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!o.once;a.timeScale=o.speed||1;
   if(this.curA&&this.curA!==a)a.crossFadeFrom(this.curA,o.fade===undefined?.14:o.fade,false);a.play();this.curA=a;this.cur=n;if(o.lock)this.lock=o.lock}
- weapon(id){const h=this.holder;while(h.children.length)h.remove(h.children[0]);this.wid=id;if(!id||id==='fist')return;const g=GEO[id==='axe'?'axe_m':id];if(!g)return;const m=mesh(g,MATT);if(this.xr){m.material=xrMat(MATT);m.renderOrder=5}
-  this.tip=null;if(WEAP[id]&&!WEAP[id].melee){h.rotation.set(0,Math.PI/2,0);h.position.set(-.1,-.02,0)}else{h.rotation.set(0,Math.PI,0);h.position.set(0,0,0)}h.add(m);if(id==='rod'){const t=new THREE.Object3D();t.position.fromArray(g.userData.tip);m.add(t);this.tip=t}}
+ weapon(id){const h=this.holder;while(h.children.length)h.remove(h.children[0]);this.wid=id;if(!id||id==='fist')return;const g=GEO[id==='axe'?'axe_m':ITEMS[id]&&ITEMS[id].hg||id];if(!g)return;const m=mesh(g,MATT);if(this.xr){m.material=xrMat(MATT);m.renderOrder=5}
+  const it=ITEMS[id];if(it&&it.hs)m.scale.setScalar(it.hs);   /* 25차: 손에 든 모양 크기(hs)·총처럼 앞으로 드는 근접 도구(gh) */
+  this.tip=null;if(WEAP[id]&&(!WEAP[id].melee||it&&it.gh)){h.rotation.set(0,Math.PI/2,0);h.position.set(-.1,-.02,0)}else{h.rotation.set(0,Math.PI,0);h.position.set(0,0,0)}h.add(m);if(id==='rod'){const t=new THREE.Object3D();t.position.fromArray(g.userData.tip);m.add(t);this.tip=t}}
  /* show a faint silhouette of this actor wherever something hides it (the camera cannot be turned) */
  xray(){this.xr=1;const sk=[];this.root.traverse(o=>{if(o.isMesh){o.renderOrder=5;o.material=xrMat(o.material);if(o.isSkinnedMesh)sk.push(o)}});for(const o of sk){const c=new THREE.SkinnedMesh(o.geometry,XRAY);c.bind(o.skeleton,o.bindMatrix);c.position.copy(o.position);c.quaternion.copy(o.quaternion);c.scale.copy(o.scale);c.frustumCulled=false;c.renderOrder=30;o.parent.add(c)}}
  helmet(){const m=mesh(GEO.helmet,MATT);m.position.set(0,.6,.03);m.rotation.x=-.08;this.head.add(m)}
@@ -98,6 +99,7 @@ function plFall(dt){const g=groundY(P.x,P.z),tg=WTR.st==='swim'?-.6:g;   /* 헤�
 const turn=(a,b,k)=>{let d=b-a;while(d>Math.PI)d-=6.283;while(d<-Math.PI)d+=6.283;return a+d*Math.min(1,k)};
 function unstuck(){if(walk(P.x,P.z,.42,P)===null)return;for(let r=.3;r<14;r+=.3)for(let a=0;a<16;a++){const x=P.x+Math.cos(a*.39)*r,z=P.z+Math.sin(a*.39)*r;if(walk(x,z,.42,P)===null){P.x=x;P.z=z;return}}P.x=S.home.x;P.z=S.home.z}
 const curId=()=>{const q=S.quick[S.sel];return q&&WEAP[q]&&invN(q)>0?q:'fist'};
+const canChop=()=>{const c=curId();return c==='axe'||c==='chainsaw'};   /* 25차: 전기톱도 나무를 벨 수 있어요(임시) */
 function nearestEnemy(x,z,r){let b=null,bd=r;for(const e of enemies){if(e.dead)continue;const d=dist(x,z,e.x,e.z);if(d<bd){bd=d;b=e}}return b}
 /* ---- combat ---- */
 function hitscan(ox,oz,dx,dz,range,dmg){let best=null,bt=range;for(const e of enemies){if(e.dead)continue;const rx=e.x-ox,rz=e.z-oz,t=rx*dx+rz*dz;if(t<0||t>bt)continue;if(Math.abs(rx*dz-rz*dx)<(e.big?1.05:.78)){bt=t;best=e}}
@@ -138,7 +140,7 @@ function sLabel(s){const df=sdef(s);if(s.t==='lighthouse')return S.lh[s.li]?'빠
 function findNear(ox,oz,fx,fz,reach){let best=null,bs=1e9;const con=(d,o)=>{if(d<bs){bs=d;best=o}};
  if(S.bag&&dist(ox,oz,S.bag.x,S.bag.z)<reach+.4)con(-1,{k:'bag',x:S.bag.x,z:S.bag.z,lab:'가방 줍기',rr:1});
  for(const s of structs){const df=sdef(s),ex=Math.max(df.bx,df.bz);if(dist(ox,oz,s.x,s.z)>reach+1+ex)continue;const lab=sLabel(s);if(lab)con(dist(fx,fz,s.x,s.z)-.5,{k:'s',s,x:s.x,z:s.z,lab,rr:s.t==='ferry'?3.4:ex+.4})}
- const cx=(ox/CELL)|0,cz=(oz/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const key=(cz+j)*CN+cx+i,o=objs.get(key);if(!o||o.re>0)continue;const T=OBJT[o.t];if(dist(ox,oz,o.x,o.z)>reach+T.r)continue;con(dist(fx,fz,o.x,o.z),{k:'o',o,key,x:o.x,z:o.z,lab:isTree(T)&&curId()!=='axe'?'도끼 필요':T.lab,rr:T.r+.7})}
+ const cx=(ox/CELL)|0,cz=(oz/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const key=(cz+j)*CN+cx+i,o=objs.get(key);if(!o||o.re>0)continue;const T=OBJT[o.t];if(dist(ox,oz,o.x,o.z)>reach+T.r)continue;con(dist(fx,fz,o.x,o.z),{k:'o',o,key,x:o.x,z:o.z,lab:isTree(T)&&!canChop()?'도끼 필요':T.lab,rr:T.r+.7})}
  return best}
 const isTree=T=>T.drop&&T.drop[0]==='wood';
 /* 낚싯대를 들고 있으면 상호작용 없음(기획자 요청 6차): 던지기만 */
@@ -155,9 +157,9 @@ function worldTap(x,z){if(bmode||P.dead||busy)return;let e=null,bd=2.6;for(const
 const LOOT=[['ammoS',10,18],['ammoL',6,10],['can',1,2],['cloth',2,3],['powder',2,4],['bandage',1,1],['wood',4,8]];
 function interact(){const t=target;if(!t)return;
  if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=.42;P.rot=Math.atan2(o.x-P.x,o.z-P.z);
-  if(isTree(T)&&curId()!=='axe'){P.cd=.9;P.auto=null;toast(invN('axe')?'가방에서 손도끼를 장착해야 나무를 벨 수 있어요':'나무는 손도끼로만 벨 수 있어요. 상인에게 받거나 제작해요');sfx(240,.06,'square',.03);return}
+  if(isTree(T)&&!canChop()){P.cd=.9;P.auto=null;toast(invN('axe')||invN('chainsaw')?'가방에서 손도끼나 전기톱을 장착해야 나무를 벨 수 있어요':'나무는 손도끼나 전기톱으로만 벨 수 있어요. 상인에게 받거나 제작해요');sfx(240,.06,'square',.03);return}
   if(T.berry){P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6})}else{P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.34,force:1,speed:1.6});sfx(o.t===3?330:o.t===5?520:170,.06,'square',.04)}
-  o.hp-=invN('axe')?2:1;o.sh=.28;depSet.add(t.key);puff(o.x,groundY(o.x,o.z)+1.2,o.z,o.t===3?0xb9c0c9:o.t===5?0x8a929c:0x6fae5a,4);
+  o.hp-=curId()==='chainsaw'?3:invN('axe')?2:1;o.sh=.28;depSet.add(t.key);puff(o.x,groundY(o.x,o.z)+1.2,o.z,o.t===3?0xb9c0c9:o.t===5?0x8a929c:0x6fae5a,4);
   if(o.hp<=0){const n=T.drop[1]+(Math.random()<.4?1:0);give(T.drop[0],n);ftext(o.x,groundY(o.x,o.z)+2.6,o.z,`+${n} ${ITEMS[T.drop[0]].n}`,'#b8f0c0');o.re=T.re;depSet.add(t.key);sfx(520,.1);hudDirty=true}refreshObj(o);return}
  if(!inp.actEdge)return;
  if(t.k==='bag'){for(const k in S.bag.inv)if(S.bag.inv[k]>0)give(k,S.bag.inv[k]);S.bag=null;placeBag();P.a.play('PickUp',{once:1,lock:.5,force:1});toast('가방을 되찾았어요!');jingle([523,784]);hudDirty=true;return}
@@ -211,16 +213,21 @@ function drawNoBuild(c,k){if(!bmode||bmode==='demo')return;const g=ghost&&ghost.
 function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=P.x+Math.sin(P.rot)*d,z=P.z+Math.cos(P.rot)*d,r=brot;if(b.grid){x=Math.round(x);z=Math.round(z)}else r=brot+P.rot+Math.PI;if(b.fixR)r=0;   /* 정면이 늘 카메라(+z)를 보게 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
  /* 실내 설치(14차): 작업대(b.indoor)는 텐트 안에서만, 텐트 안에는 실내 설치물만. 방 안으로 끌어당기고 앞쪽 1.2m(나가는 길)는 비워요 */
- if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor)why='텐트 안에는 작업대만 놓을 수 있어요';else{const ax=INT.hw-b.bx-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+b.bz+.1,INT.z+INT.hd-1.3-b.bz);pr.r=0;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
+ if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const ax=INT.hw-b.bx-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+b.bz+.1,INT.z+INT.hd-1.3-b.bz);pr.r=0;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
    if(!canBuild(bmode))why='재료가 부족해요';else if(Math.abs(P.x-pr.x)<b.bx+.45&&Math.abs(P.z-pr.z)<b.bz+.45)why='너무 가까워요. 조금 물러나요';else for(const s of structs){if(!s.in)continue;const q=sdef(s);if(Math.abs(s.x-pr.x)<q.bx+b.bx+.1&&Math.abs(s.z-pr.z)<q.bz+b.bz+.1){why='다른 물건과 겹쳐요';break}}}
   pr.why=why;pr.ok=!why;return pr}
  if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(nobAt(x,z,R0)){const n=nobAt(x,z,R0);why=`${NOB_N[n.k]} 주변은 설치 금지 구역이에요`}else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';
- if(!why){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r),fx=b.foot?b.foot[0]:b.bx,fz=b.foot?b.foot[1]:b.bz,st=b.foot?.25:1;   /* ground sheets (b.foot) are checked over their whole area */
+ if(!why&&b.water)why=waterSpotWhy(x,z,r,b);   /* 25차: 보트처럼 물 위에만 놓는 것 */
+ if(!why&&!b.water){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r),fx=b.foot?b.foot[0]:b.bx,fz=b.foot?b.foot[1]:b.bz,st=b.foot?.25:1;   /* ground sheets (b.foot) are checked over their whole area */
   for(let ax=-1;ax<=1.001;ax+=st)for(let az=-1;az<=1.001;az+=st){const lx=ax*fx,lz=az*fz,h=b.foot?gridH(x+lx*c+lz*sn,z-lx*sn+lz*c):hAt(x+lx*c+lz*sn,z-lx*sn+lz*c);if(h<lo)lo=h;if(h>hi)hi=h}
   if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.tilt||(b.grid?.4:.16+R0*.07)))why='땅이 기울어서 놓을 수 없어요'}
  if(!why)for(const s of structs){if(dist(s.x,s.z,x,z)<.9||(!b.grid||!sdef(s).grid)&&inStruct(s,x,z,R0+.12)){why='다른 구조물과 겹쳐요';break}}
  if(!why){const n=Math.ceil((R0+2.2)/CELL),cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-n;j<=n&&!why;j++)for(let i=-n;i<=n;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const cl=o.t<3?(R0<.9?.75:1.35)+(o.t===2?.7:0):o.t===3?OBJT[3].r*o.sc/5.6+.3:.6;if(dist(o.x,o.z,x,z)<cl+R0){why=o.t<3?'나무와 겹쳐요':o.t===3?'바위와 겹쳐요':'덤불과 겹쳐요';break}}}
  pr.why=why;pr.ok=!why;return pr}
+/* 물 위 설치(25차, 보트 2인승): 배 밑 9점이 모두 물(깊이 0.25 넘게, 배 바닥이 0.22)·부두 아님, 7m 안에 땅이 있어야 해요(바닷가 가까운 물) */
+function waterSpotWhy(x,z,r,b){const c=Math.cos(r),sn=Math.sin(r);for(let ax=-1;ax<=1;ax++)for(let az=-1;az<=1;az++){const lx=ax*(b.bx+.15),lz=az*(b.bz+.15),px=x+lx*c+lz*sn,pz=z-lx*sn+lz*c;
+  if(onDock(px,pz))return'부두와 겹쳐요';if(hAt(px,pz)>-.25)return'물이 얕거나 땅에 걸려요. 조금 더 물 쪽에 놓아요'}
+ for(const rr of[3,5,7])for(let k=0;k<16;k++){const a=k/16*Math.PI*2;if(hAt(x+Math.cos(a)*rr,z+Math.sin(a)*rr)>.3)return''}return'바닷가 가까운 물에만 띄울 수 있어요'}
 function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of structs)if(s.own){const d=dist(P.x,P.z,s.x,s.z);if(d<bd){bd=d;b=s}}if(!b){toast('가까이에 철거할 내 건물이 없어요');return}const c=BUILDS[b.t].c;if(b.kit)give(BUILDS[b.t].kit,1);if(!b.kit||BUILDS[b.t].hide)for(const k in c)give(k,Math.ceil(c[k]*.5));if(b.upc)for(const k in b.upc)give(k,b.upc[k]);removeStruct(b);sfx(200,.1,'square',.05);toast(b.kit?'걷어서 가방에 넣었어요':'철거했어요 (재료 절반 반환)');hudDirty=true;return}
  const g=ghostPos(),b=BUILDS[bmode];if(!g.ok){toast(g.why||'여기엔 놓을 수 없어요');sfx(160,.1,'square',.04);return}const kit=payBuild(bmode);const s=addStruct({t:bmode,x:g.x,z:g.z,r:g.r,own:1,fresh:1,kit,in:g.in,yo:g.yo});const k='b_'+bmode;if(S.st[k]!==undefined)S.st[k]++;if(b.tur){S.st.b_tur++;sfx(180,.25,'sawtooth',.04,2.2);if(DEV.on)s.ammo=b.tur.cap}
  if(b.home){S.home={x:g.x,z:g.z+b.bz+1.1};toast('텐트를 쳤어요. 여기가 내 기지예요')}puff(g.x,groundY(g.x,g.z)+.6,g.z,0xffffff,8);sfx(300,.08,'square',.05);P.a.play('Interact',{once:1,lock:.3,force:1,speed:1.5});hudDirty=true;if(!canBuild(bmode)){toast(kit?'키트를 다 썼어요':'재료를 다 썼어요');setBuild(null)}}
