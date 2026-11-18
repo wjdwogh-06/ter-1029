@@ -91,14 +91,14 @@ function closePanel(){if(fmap)fmap.style.display='none';panel=null;selItem=null;
 const nearBench=()=>structs.some(s=>s.t==='bench'&&dist(s.x,s.z,P.x,P.z)<7);
 const buyP=id=>SHOP.free?0:Math.ceil(ITEMS[id].p*1.7*(id==='ammoS'?12:id==='ammoL'?8:1)),sellP=id=>sellPrice(id);   /* 팔기는 어디서든 원래 가격의 20% (core.js ECON) */
 let VENDAT=0;   /* 지금 열어 둔 랜덤 자판기의 항구 번호 */
-/* 배편(11차, 기획자: '배 가까이 가서 누르면 가고 싶은 항구로, 로딩 기간 필요'): 항구마다 통통배 [배 타기] → 항구 고르기 → 거리만큼 3.5~7초 로딩 → 그 항구 앞에 내려요. 지금은 무료(뱃삯은 기획자가 정할 것) */
+/* 배편(11차, 기획자: '배 가까이 가서 누르면 가고 싶은 항구로, 로딩 기간 필요'): 항구마다 통통배 [배 타기] → 항구 고르기 → 거리만큼 3.5~7초 로딩 → 그 항구 통통배 바로 앞에 내려요(ferrySpot, 12차). 지금은 무료(뱃삯은 기획자가 정할 것) */
 const FERRY={from:0,on:false};const ferrySec=d=>clamp(3.5+d/180,3.5,7);
 const jong=w=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<11172?c%28:0},jo=(w,a,b)=>w+(jong(w)?a:b),ro=w=>w+(jong(w)&&jong(w)!==8?'으로':'로');   /* 받침에 맞는 조사 */
 function ferryGo(i){const to=PORTS[i],fr=PORTS[FERRY.from];if(!to||FERRY.on)return;const T=ferrySec(dist(fr.x,fr.z,to.x,to.z))*1000;closePanel();if(typeof fishing!=='undefined'&&fishing)endFish();joyEnd();P.auto=null;
  FERRY.on=true;busy=true;const f=$('respawn'),bar=$('rsBar'),st=$('rsSt');f.classList.add('ferry','on');f.querySelector('.rsT').textContent='⛴ '+ro(to.n)+' 가는 중…';f.querySelector('.rsH').textContent='통통배를 타고 바다를 건너요';bar.style.width='0%';
  const msgs=[[0,jo(fr.n,'을','를')+' 떠나요'],[.3,'바다를 건너는 중…'],[.72,jo(to.n,'이','가')+' 보여요']];sfx(330,.15,'sine',.04);sfx(250,.25,'sine',.03);let t0=0;
  const step=now=>{if(!t0)t0=now;const k=Math.min(1,(now-t0)/T);bar.style.width=(k*100).toFixed(1)+'%';let m='';for(const [a,q] of msgs)if(k>=a)m=q;if(st.textContent!==m)st.textContent=m;if(k<1){requestAnimationFrame(step);return}
-  const sp=portSpawn(i);P.x=sp.x;P.z=sp.z;P.auto=null;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true);st.textContent=jo(to.n,'에','에')+' 도착했어요';hudDirty=true;save();jingle([523,659,784]);
+  const sp=ferrySpot(i)||portSpawn(i);P.x=sp.x;P.z=sp.z;if(sp.rot!=null)P.rot=sp.rot;P.auto=null;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true);st.textContent=jo(to.n,'에','에')+' 도착했어요';hudDirty=true;save();jingle([523,659,784]);
   setTimeout(()=>{f.classList.remove('on');toast('⛴ '+to.n+'에 도착했어요');setTimeout(()=>{f.classList.remove('ferry');FERRY.on=false;busy=false},500)},700)};requestAnimationFrame(step)}
 {const _up=updPlayer;updPlayer=function(dt){if(FERRY.on)return;_up(dt)}}   /* 배 타는 동안은 움직이지 않아요 */
 function renderPanel(){const B=$('pbody');$('pcoin').innerHTML=mode==='play'?`<span style="display:flex;align-items:center;gap:6px;margin-right:14px">${invIcon('coin').replace('<img','<img style="width:36px;height:36px"')}${S.coins}</span>`:'';
