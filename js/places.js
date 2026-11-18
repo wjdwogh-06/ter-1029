@@ -37,10 +37,18 @@ function plGeoParts(){const R=(w,h,d,c,b)=>typeof lkRb==='function'?lkRb(w,h,d,c
   const leaf=[pt(R(2.42,.09,.09,.035,.02),PO,[1.25,1.82,0]),pt(R(2.42,.09,.09,.035,.02),PO,[1.25,.16,0]),pt(R(.09,1.74,.09,.035,.02),PO,[.07,.99,0]),pt(R(.09,1.74,.09,.035,.02),PO,[2.43,.99,0]),
    ...(typeof lkLattice==='function'?lkLattice(2.3,1.6,.1,.18,0,.3,WI,.03):[]),pt(R(.08,.26,.08,.03,.02),GD,[2.25,1.0,.06])];
   if(LM)lkModel('pl_cgate',base,{leaf:{g:leaf,pv:[-1.25,0,0]}});else GEO.pl_cgate=mg(base.concat(leaf))}
- {const body=[pt(R(1.26,.92,1.0,.1,.05),NV,[0,.5,0]),pt(R(1.3,.12,1.04,.04,.03),GD,[0,.18,0]),pt(R(1.3,.12,1.04,.04,.03),GD,[0,.82,0])];for(const x of[-.6,.6])body.push(pt(R(.1,.94,1.05,.03,.02),GD,[x,.5,0]));
-  const lid=[pt(R(1.32,.16,1.06,.05,.04),0x24304a,[0,1.04,0]),pt(R(.34,.08,.34,.03,.02),GD,[0,1.14,0])],glow=[pt(R(.62,.12,.03,.04,.012),0xffb547,[0,.5,.515])];
-  if(LM)lkModel('pl_spcrate',body.concat(lid),{glow:{g:glow,pv:[0,0,0],glow:true}});else GEO.pl_spcrate=mg(body.concat(lid,glow));
-  const g=mg(body.concat([pt(R(1.32,.16,1.06,.05,.04),0x24304a,[0,.86,-.7],[1.05,0,0])]));if(typeof lkSmooth==='function')lkSmooth(g,50);GEO.pl_spcrate_open=g}
+ {/* 특수 보급 상자(디자인 7차): 나무 받침 위 남색 철제 수송 궤짝. 가로 주름 철판, 금색 모서리 보강·걸쇠, 주황 화물 끈, 뚜껑에 흰 스텐실. 앞 불빛 띠(조각 `glow`)는 그대로. 크기·충돌 그대로 */
+  const NV2=0x24304a,OR=0xf08a3c,WH=0xe9e4d6,DK=0x1c2436,body=[pt(box(1.3,.08,.16),0xa9753f,[0,.04,-.34]),pt(box(1.3,.08,.16),0xa9753f,[0,.04,.34]),pt(box(1.22,.84,.98),NV,[0,.52,0])];
+  for(let k=0;k<4;k++)body.push(pt(box(1.25,.035,1.0),NV2,[0,.26+k*.17,0]));
+  for(const sx of[-1,1])for(const sz of[-1,1]){body.push(pt(box(.07,.86,.07),GD,[sx*.6,.52,sz*.48]));for(const y of[.14,.9])body.push(pt(box(.2,.07,.03),GD,[sx*.52,y,sz*.495]),pt(box(.03,.07,.2),GD,[sx*.615,y,sz*.4]))}
+  for(const sx of[-1,1])body.push(pt(box(.03,.07,.3),DK,[sx*.635,.62,0]),pt(box(.05,.04,.04),DK,[sx*.63,.62,.15]),pt(box(.05,.04,.04),DK,[sx*.63,.62,-.15]),pt(box(.12,.16,.03),GD,[sx*.36,.84,.5]),pt(box(.06,.05,.02),DK,[sx*.36,.8,.52]));
+  body.push(pt(box(.7,.18,.02),DK,[0,.5,.495]),pt(box(.2,.2,.012),WH,[-.42,.3,.497]),pt(box(.12,.03,.006),NV,[-.42,.33,.505]),pt(box(.08,.03,.006),NV,[-.44,.28,.505]));
+  const strap=z=>[pt(box(.09,.02,1.02),OR,[.22,z?z:1.03,0]),pt(box(.09,.86,.02),OR,[.22,.52,.5]),pt(box(.09,.86,.02),OR,[.22,.52,-.5]),pt(box(.13,.09,.035),0x8f99a4,[.22,.7,.515])];
+  const lid=[pt(box(1.28,.1,1.04),NV2,[0,.97,0]),pt(box(1.32,.04,1.08),GD,[0,.93,0]),pt(box(.3,.03,.3),WH,[-.3,1.025,.06],[0,.2,0]),pt(box(.15,.035,.15),NV2,[-.3,1.03,.06],[0,.2+Math.PI/4,0]),pt(box(.07,.04,.07),GD,[-.3,1.03,.06],[0,.2+Math.PI/4,0]),...strap().slice(0,1)],glow=[pt(box(.6,.1,.02),0xffb547,[0,.5,.51])];
+  if(LM)lkModel('pl_spcrate',body.concat(strap().slice(1),lid),{glow:{g:glow,pv:[0,0,0],glow:true}});else GEO.pl_spcrate=mg(body.concat(strap().slice(1),lid,glow));
+  /* 열린 모습: 뚜껑은 뒤로 젖히고, 안에 짚 + 탄통 + 천 꾸러미, 끈은 풀려 앞에 늘어짐 */
+  const g=mg(body.concat([pt(box(1.28,.1,1.04),NV2,[0,1.2,-.78],[1.15,0,0]),pt(box(1.32,.04,1.08),GD,[0,1.18,-.74],[1.15,0,0]),pt(box(1.14,.04,.9),0xd9b860,[0,.9,0]),pt(box(.3,.16,.2),0x6f7a4a,[-.3,.98,.1],[0,.3,0]),pt(box(.3,.16,.2),0x6f7a4a,[.05,.98,-.15],[0,-.2,0]),pt(box(.34,.12,.3),0xc9b28a,[.34,.96,.16],[0,.4,0]),pt(box(.09,.02,.5),OR,[.22,.02,.78],[0,.3,0]),pt(box(.09,.5,.02),OR,[.22,.3,.52],[-.12,0,0])]));
+  if(typeof lkSmooth==='function')lkSmooth(g,50);if(typeof lkAO==='function'&&LM)lkAO(g);GEO.pl_spcrate_open=g;if(LM&&typeof lkAO==='function')for(const k of['pl_spcrate','pl_spcrate_b'])if(GEO[k])lkAO(GEO[k])}
  {const base=[pt(R(.5,.16,.5,.05,.04),0x6a7078,[0,.08,0]),pt(R(.12,3.1,.12,.04,.03),0x3f4450,[0,1.6,0]),pt(R(.5,.32,.03,.03,.01),0xff7a3d,[.3,2.9,0])],gl=[pt(new THREE.SphereGeometry(.17,12,8),0xffa24a,[0,3.25,0])];
   if(LM)lkModel('pl_beacon',base,{glow:{g:gl,pv:[0,0,0],glow:true}});else GEO.pl_beacon=mg(base.concat(gl))}}
 function plSignText(txt,w=2.7,h=.5,px=74){const cv=document.createElement('canvas');cv.width=512;cv.height=96;const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;
