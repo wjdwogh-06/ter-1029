@@ -2,7 +2,7 @@
 /* ===== 텐트 내부 (롱빈터식, 단순하게) =====
    텐트에 들어가면 맵 구석 바다 위 높은 곳(INT.x, INT.y, INT.z)에 있는 방으로 옮겨져요. 기획자가 준 롱빈터 참고 화면처럼:
    - 까만 어둠 속에 파란 바닥 한 장(가운데가 조명으로 밝음), 뒤쪽에 둥근 연보라 벽 하나(반구의 뒷쪽 절반). 옆벽·지붕·장식 없음.
-   - 안은 비어 있어요(가구는 기획자가 정한 뒤에).
+   - 작업대는 텐트 안에만 놓을 수 있어요(14차, BUILDS.bench.indoor). 다른 가구는 기획자가 정한 뒤에.
    - 앞쪽 가장자리로 걸어 나가면(또는 [나가기]) 밖으로 나가요.
    바닥은 addDock 판(들어가 있을 때만 켜짐)이라 groundY가 그대로 동작하고, 가장자리 충돌은 intWalk가 맡아요. */
 const INT={on:false,x:40,z:40,y:60,hw:3.2,hd:2.8,g:null,dock:null,s:null,ret:null,it:[],L:null};
@@ -29,10 +29,12 @@ function intWalk(x,z,r){const lx=x-INT.x,lz=z-INT.z;if(lx<-INT.hw+r||lx>INT.hw-r
 /* soft, cool light inside whatever the time outside (called at the end of updEnv) */
 function intLight(dk){const k=lerp(1,.85,dk);scene.background.setRGB(.016,.02,.024);scene.fog.color.setRGB(.016,.02,.024);scene.fog.near=300;scene.fog.far=600;
  hemi.intensity=.2*k;hemi.color.setRGB(.82,.86,1);hemi.groundColor.setRGB(.25,.28,.4);sun.intensity=.17*k;sun.color.setRGB(.9,.92,1);sun.position.set(INT.x-5,INT.y+15,INT.z+8);sun.target.position.set(INT.x,INT.y,INT.z);pLights.forEach(L=>L.intensity=0)}
-function intEnter(s){if(P.dead||busy)return;fadeDo('텐트 안으로…',()=>{intBuild();setBuild(null);if(fishing)endFish();INT.ret={x:s.x,z:s.z+sdef(s).bz+1.1};INT.s=s;S.home={x:INT.ret.x,z:INT.ret.z};INT.on=true;INT.dock.hw=INT.full;INT.g.visible=true;
+function intEnter(s){if(P.dead||busy)return;fadeDo('텐트 안으로…',()=>{intBuild();setBuild(null);if(fishing)endFish();INT.ret={x:s.x,z:s.z+sdef(s).bz+1.1};INT.s=s;S.home={x:INT.ret.x,z:INT.ret.z};INT.on=true;INT.dock.hw=INT.full;INT.g.visible=true;intShow(true);
   INT.it=[addStruct({t:'int_exit',x:INT.x,z:INT.z+INT.hd-.2,yo:INT.y-hAt(INT.x,INT.z+INT.hd-.2),hp:1e9})];
   P.x=INT.x;P.z=INT.z+1.6;P.rot=Math.PI;P.auto=null;enemies.forEach(e=>{if(!e.raid)e.agg=0});sfx(260,.12,'sine',.05,.6)})}
-function intOut(){INT.it.forEach(removeStruct);INT.it=[];INT.on=false;INT.dock.hw=0;INT.g.visible=false;P.x=INT.ret.x;P.z=INT.ret.z;P.rot=0;P.auto=null}
+/* 텐트 안에 놓은 것(s.in: 작업대)은 들어가 있을 때만 보여요 */
+function intShow(on){for(const s of structs)if(s.in&&s.m)s.m.visible=on}
+function intOut(){INT.it.forEach(removeStruct);INT.it=[];INT.on=false;INT.dock.hw=0;INT.g.visible=false;intShow(false);P.x=INT.ret.x;P.z=INT.ret.z;P.rot=0;P.auto=null}
 function intLeave(){if(busy||!INT.on)return;fadeDo('밖으로…',()=>{intOut();sfx(220,.12,'sine',.05,.6)})}
 /* walking off the front edge takes you outside */
 function intUpd(){if(!INT.on)return;const ex=INT.it[0];if(ex)ex.x=clamp(P.x,INT.x-INT.hw+.5,INT.x+INT.hw-.5);   /* [나가기] follows you along the front edge */

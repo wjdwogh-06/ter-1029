@@ -76,7 +76,7 @@ function buildPorts(){buildPortGeo();let sv=0;
    put('pcrane',12.4,13,Math.PI/2);put('pstack',-16.4,.4,.3);put('pstack',16.6,.2,-2);put('pstack',1.2,12,1.2,.8);put('pnet',-7,-3.6,.1).rotation.y=.15;put('prack',7.4,-3.8,-.1).rotation.y=-.12;put('psign',3.2,-3,0).rotation.y=0;
    for(const [lx,lz] of[[-1.4,5],[1.4,5],[-1.4,17],[1.4,17],[-10.4,13],[-12.6,13],[10.4,14],[4.6,22.9],[-4.6,22.9]])put('pboll',lx,lz);
    S_('market',0,-9,0);   /* 센터: 건물은 가게 하나만 (기획자 요청으로 술집·집·창고·대장간·우물·깃발 제거). 철조망과 소품은 look.js lkCenter */
-   S_('fire',-3.4,-16.4,0,{hp:1e9});S_('bench',5.2,-6.9,-.2,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});S_('barrel',-8.4,-8.0);S_('crate',-10.4,-6.4,.4);S_('barrel',13.2,-8.2);
+   S_('fire',-3.4,-16.4,0,{hp:1e9});S_('stash',-6.2,-6.9,.2,{hp:1e9});   /* 센터 작업대는 뺐어요(14차: 작업대는 텐트 안에만) */S_('barrel',-8.4,-8.0);S_('crate',-10.4,-6.4,.4);S_('barrel',13.2,-8.2);
    {const [mx,mz]=W(0,-9);VIL.mx=mx+2.3;VIL.mz=mz+3.4}}
   else{const v=PVAR[p.vi%PVAR.length],L=p.L||v.L,w=v.w;sv++;p.v=v;rect(0,L/2-2.5,L,w);
    if(v.sh==='T')rect(0,L-3.9,9.5,2.8,Math.PI/2);if(v.sh==='L')rect(w/2+3.2,L-3.9,6.6,2.8,Math.PI/2);if(v.sh==='II'){rect(7,L/2-2.5,L,w);rect(3.5,-1.2,9.6,2.6,Math.PI/2)}if(v.sh==='U'){rect(7,L/2-2.5,L,w);rect(3.5,L-3.9,9.8,2.8,Math.PI/2)}
