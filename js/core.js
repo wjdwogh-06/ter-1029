@@ -108,7 +108,7 @@ const tundraAt=(x,z,h)=>sm(.5,.68,noise(x*.03+3,z*.03+9,2))*sm(5,2.5,h)*sm(.9,1.
 const ITEMS={
  wood:{n:'나무',ic:'resource_lumber',ty:'res',p:20,d:'건설과 제작의 기본 재료'},stone:{n:'돌',ic:'resource_stone',ty:'res',p:20,d:'바위에서 캐는 재료'},
  scrap:{n:'고철',ic:'scrap',ty:'res',p:60,d:'잔해와 상자에서 얻어요. 총과 탄약의 재료'},powder:{n:'화약',ic:'keg',ty:'res',p:90,d:'탄약과 수류탄에 들어가요'},
- cloth:{n:'천',ic:'cloth',ty:'res',p:50,d:'붕대, 모래주머니에 써요'},
+ cloth:{n:'천',ic:'cloth',ty:'res',p:50,d:'붕대에 써요'},
  berry:{n:'산딸기',ic:'berries',ty:'food',food:9,p:30,d:'덤불에서 따요. 배고픔 +9'},can:{n:'통조림',ic:'can',ty:'food',food:38,p:140,d:'든든한 전투식량. 배고픔 +38'},
  bandage:{n:'붕대',ic:'bandage',ty:'heal',heal:40,p:160,d:'체력 +40'},
  ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:15,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:25,d:'소총, 산탄총, 기관총 진지용'},
@@ -120,7 +120,6 @@ const ITEMS={
 /* 물고기. g=등급(FGRADE), k=생김새(water.js fishGeoK). old:1은 예전 물고기: 더 이상 낚이지 않고 저장 호환용으로 아이템만 남김 */
 const FGRADE=[['일반','#8C9AA6'],['희귀','#3D8BE0'],['영웅','#9B5BD6'],['전설','#F08A24']];
 const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:50,food:18,cm:[22,36],back:0x5f7f9f,belly:0xdfe7ef,len:.8,h:.26,w2:.17},
- {id:'f_char',n:'북극곤들매기',old:1,str:2,p:100,food:24,cm:[30,58],back:0x55684f,belly:0xe0743a,len:.9,h:.3,w2:.19},
  {id:'f_cod',n:'대구',old:1,str:2,p:120,food:28,cm:[45,95],back:0x8a7d55,belly:0xe8e0c8,len:1,h:.34,w2:.25},
  {id:'f_lump',n:'도치',old:1,str:2,p:140,food:26,cm:[25,48],back:0x4f7a74,belly:0xa9c59a,len:.68,h:.52,w2:.38},
  {id:'f_salmon',n:'연어',g:0,str:2,p:120,food:30,cm:[55,100],back:0x7d8ea0,belly:0xf1e9e2,len:1.05,h:.32,w2:.21},
@@ -128,7 +127,6 @@ const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:50,food:18,cm:[22,36],back:0x
  {id:'f_shark',n:'그린란드상어',old:1,str:5,p:1400,food:60,cm:[180,420],back:0x55606b,belly:0x9aa3ab,len:1.35,h:.36,w2:.3,legend:1},
  {id:'f_anch',n:'멸치',g:0,k:'anch',str:1,p:30,food:10,cm:[8,16],back:0x4d7aa8,belly:0xe6eef4,len:.5,h:.13,w2:.09},
  {id:'f_trout',n:'송어',g:0,k:'trout',str:2,p:80,food:22,cm:[28,60],back:0x6f7a4a,belly:0xeadfc0,len:.85,h:.26,w2:.17},
- {id:'f_rainbow',n:'무지개송어',g:1,k:'rainbow',str:3,p:220,food:32,cm:[35,75],back:0x5d8a6c,belly:0xf3ece4,len:.95,h:.28,w2:.18},
  {id:'f_flying',n:'날치',g:1,k:'flying',str:3,p:200,food:26,cm:[20,40],back:0x2f62b8,belly:0xe8f0f8,len:.78,h:.19,w2:.15},
  {id:'f_tuna',n:'참치',g:0,k:'tuna',str:2,p:160,food:36,cm:[80,200],back:0x24406e,belly:0xdde6ee,len:1.25,h:.36,w2:.27},
  {id:'f_jelly',n:'해파리',g:1,k:'jelly',str:3,p:240,food:20,cm:[25,70],back:0xf2a7dc,belly:0xffe1f3,len:.7,h:.5,w2:.7,cn:'데친 해파리'},
@@ -137,7 +135,7 @@ const FISH=[{id:'f_herring',n:'청어',g:0,str:1,p:50,food:18,cm:[22,36],back:0x
 FISH.forEach(f=>{const gtag=f.old?'':`[${FGRADE[f.g][0]}] `;ITEMS[f.id]={n:f.n,ic:f.id,ty:'fish',food:6,p:f.p,d:`${gtag}${f.legend?'전설의 물고기! ':''}날로 먹으면 배고픔 +6. 모닥불에 구우면 +${f.food}`};ITEMS['c'+f.id]={n:f.cn||'구운 '+f.n,ic:'c'+f.id,ty:'food',food:f.food,p:Math.round(f.p*1.5),d:`잘 익힌 ${f.n}. 배고픔 +${f.food}`}});
 /* 낚시 구역: 포인트마다 나오는 물고기와 확률(%). 같은 등급 안에서는 똑같이 나눔. R=물고기 떼가 도는 반지름 */
 const FISH_ZONES={A:{n:'등대 앞바다',R:1.05,t:[['f_tuna',71],['f_jelly',18],['f_sword',8],['f_hammer',3]]},
- B:{n:'해안',R:.85,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_rainbow',9],['f_flying',9]]}};
+ B:{n:'해안',R:.85,t:[['f_trout',20.5],['f_salmon',20.5],['f_anch',20.5],['f_herring',20.5],['f_flying',18]]}};   /* 24차: 무지개송어를 빼서 희귀는 날치 혼자 18% */
 const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]===a.id)-FISH_ZONES.A.t.some(q=>q[0]===b.id))||a.g-b.g);
 /* ===== 식물 도감 (17차, 기획자) =====
    작물·꽃·버섯 12종. 모양은 아직 없고 글자로만 보여요(아이콘·땅 위 이름표 = 글자, 모양은 디자인 담당이 나중에).
@@ -173,13 +171,10 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
 
  torch:{n:'횃불',g:'torch_lit',s:1.7,bx:.3,bz:.3,hp:30,c:{wood:2},d:'밤에 주변을 밝혀요'},
  fence:{n:'나무 울타리',g:'fence',s:1,bx:1,bz:.25,hp:70,c:{wood:2},d:'값싼 방어선',grid:1},
- sandbag:{n:'모래주머니',g:'sandbag',s:1,bx:1,bz:.45,hp:220,c:{cloth:1,stone:3},d:'튼튼한 엄폐물',grid:1},
  wall:{n:'석벽',g:'wall_straight',s:1,bx:1,bz:.4,hp:420,c:{stone:10,wood:2},d:'가장 단단한 벽',grid:1},
  gate:{n:'성문',g:'gateB',s:1,bx:1,bz:.4,hp:380,c:{stone:8,wood:6},d:'나는 지나가고 적은 막아요',grid:1,gate:1},
- spike:{n:'가시 함정',g:'spike',s:1,bx:.9,bz:.9,hp:90,c:{wood:6,scrap:2},d:'밟은 적이 다쳐요. 쓸수록 닳아요',pass:1,trap:1},
  mine:{n:'지뢰',g:'mine',s:1,bx:.4,bz:.4,hp:20,c:{scrap:4,powder:4},d:'적이 밟으면 크게 터져요. 한 번 쓰면 사라져요',pass:1,trap:2},
- gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 주변 16칸의 탐조등에 전기를 보내요'},
- slight:{n:'탐조등',g:'slbase',s:1,bx:.5,bz:.5,hp:120,c:{scrap:10,wood:4},d:'밤에 적을 비춰요. 비친 적은 피해를 30% 더 받고, 악령은 빛에 타요. 발전기가 필요해요'},
+ gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 전기를 만들어요'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
  ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,upg:{to:'phouse',c:{wood:120}},d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  phouse:{n:'집',g:'phouse',s:1,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
@@ -205,9 +200,22 @@ const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
 const SHOP={sell:['kit_tent','kit_bench','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
 const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:100},
  {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
- {t:'텐트 안에 작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},{t:'모래주머니 4개로 방어선 만들기',c:s=>s.st.b_sandbag>=4,r:300},
+ {t:'텐트 안에 작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},
  {t:'첫 밤 습격 막아내기',c:s=>s.st.raids>=1,r:600},{t:'볼트액션 소총 구하기',c:s=>(s.inv.rifle||0)>0,r:500},
- {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:800},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:600},{t:'발전기와 탐조등 세우기',c:s=>s.st.b_slight>0,r:800},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:3000}];
+ {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:800},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:600},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:3000}];
+/* ===== 24차(기획자 결정): 없앤 아이템·설치물 = 물고기 북극곤들매기·무지개송어(+구운 것), 설치형 모래주머니·가시 함정·탐조등.
+   예전 저장을 불러올 때 dropRemoved()가 가방·보관 상자·떨어뜨린 가방·손에서 치우고, 지어 둔 설치물은 재료를 돌려줘요(ui.js boot).
+   목표 목록에서 '모래주머니'·'탐조등' 목표 둘도 뺐어요 → 예전 저장의 목표 번호를 한 번 맞춰요(S.qv). 보급지 장식 모래주머니(모델)는 그대로 ===== */
+const REMOVED={n:{f_char:'북극곤들매기',cf_char:'구운 북극곤들매기',f_rainbow:'무지개송어',cf_rainbow:'구운 무지개송어',sandbag:'모래주머니',spike:'가시 함정',slight:'탐조등'},
+ c:{sandbag:{cloth:1,stone:3},spike:{wood:6,scrap:2},slight:{scrap:10,wood:4}}};
+function dropRemoved(){const got=[],add=k=>{const n=REMOVED.n[k];if(n&&!got.includes(n))got.push(n)};
+ const purge=o=>{if(!o)return;for(const k in o)if(!ITEMS[k]){if(o[k]>0)add(k);delete o[k]}};
+ purge(S.inv);purge(S.stash);if(S.bag){purge(S.bag.inv);if(!Object.keys(S.bag.inv).some(k=>S.bag.inv[k]>0))S.bag=null}
+ S.quick=(S.quick||[]).map(k=>k&&!ITEMS[k]?null:k);
+ for(const k of['f_char','f_rainbow']){if(S.caught)delete S.caught[k];if(S.best)delete S.best[k]}
+ S.built=(S.built||[]).filter(b=>{const c=REMOVED.c[b.t];if(!c)return true;add(b.t);got.refund=1;for(const k in c)give(k,c[k]);return false});
+ if(S.qv!==1){if(S.q>14)S.q--;if(S.q>9)S.q--;S.qv=1}
+ return got}
 /* ===== dev mode: god/no-clip/fast travel + map markers (kept apart from the save) ===== */
 const MTYPE=[['⚓','항구','#4fc3ff'],['🏠','마을','#ffb547'],['👹','몬스터','#ff6b5e'],['⛏','자원','#7bd88f'],['📝','메모','#d0b4ff'],['🌱','식물','#9be37a']];
 const DEV={on:false,sp:3,type:0,marks:[],mapMark:false,qty:1,q:''};
@@ -216,7 +224,7 @@ function devSave(){try{localStorage.setItem('frontisle_dev',JSON.stringify({on:D
 /* ===== state ===== */
 let S=null,opt={snd:true,gfx:1};
 function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:300,cx:1,inv:{pistol:1,ammoS:36,can:2,bandage:1},quick:['pistol',null,'can','bandage',null,null],sel:0,
- home:null,q:0,st:{wood:0,stone:0,scrap:0,kills:0,raids:0,camps:0,boss:0,c_ammoS:0,c_ammoL:0,b_fire:0,b_ptent:0,b_sandbag:0,b_mg:0,b_tur:0,b_slight:0,bunk:0,fish:0,cook:0},caught:{},best:{},
+ home:null,q:0,qv:1,st:{wood:0,stone:0,scrap:0,kills:0,raids:0,camps:0,boss:0,c_ammoS:0,c_ammoL:0,b_fire:0,b_ptent:0,b_sandbag:0,b_mg:0,b_tur:0,b_slight:0,bunk:0,fish:0,cook:0},caught:{},best:{},
  built:[],dep:{},looted:{},lh:{},campDay:{},bag:null,raidDone:0,stash:{}}}
 const invN=id=>S.inv[id]||0;
 function give(id,n){if(id==='coin'){S.coins+=n;return}S.inv[id]=(S.inv[id]||0)+n;if(S.st[id]!==undefined)S.st[id]+=n;if(ITEMS[id].ty!=='res'&&ITEMS[id].ty!=='ammo'&&ITEMS[id].ty!=='fish'&&!S.quick.includes(id)){const i=S.quick.indexOf(null);if(i>=0)S.quick[i]=id}}

@@ -62,6 +62,6 @@ async def steps(pg):
     await pg.wait_for_timeout(300);await pg.screenshot(path=os.path.join(OUT,'fish_icons.jpg'),type='jpeg',quality=90)
     await ev("()=>document.getElementById('fishsheet').remove()")
     # 도감
-    await ev("()=>{S.caught.f_tuna=1;S.best.f_tuna=150;S.caught.f_hammer=1;S.best.f_hammer=388;S.caught.f_rainbow=2;S.best.f_rainbow=60;openPanel('menu')}");await pg.wait_for_timeout(300)
+    await ev("()=>{S.caught.f_tuna=1;S.best.f_tuna=150;S.caught.f_hammer=1;S.best.f_hammer=388;S.caught.f_flying=2;S.best.f_flying=30;openPanel('menu')}");await pg.wait_for_timeout(300)
     await ev("()=>{const b=document.querySelector('#pbody')||document.querySelector('.pbody');if(b)b.scrollTop=9999}");await pg.wait_for_timeout(200)
     await pg.screenshot(path=os.path.join(OUT,'fish_book.jpg'),type='jpeg',quality=85)
