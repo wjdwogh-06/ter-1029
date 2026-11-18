@@ -125,8 +125,14 @@ const lkPlank=(x,y,h,c,w=.36)=>pt(lkRb(w,h,.1,w*.46,.025),c,[x,y,0]);
 const LKPK=[0xd99a55,0xcc8b47,0xe0a662,0xd2924f,0xc98644];
 const lkPicket=(x,w,h,c,z=0)=>pt(ex([[-w/2,0],[w/2,0],[w/2,h-w*.5],[0,h],[-w/2,h-w*.5]],.04,.006),c,[x,.06,z],[0,Math.PI/2,0]);
 const lkWPost=(x,h)=>[pt(box(.13,h,.13),LKW.post,[x,h/2,0]),pt(cone(.115,.12,4),LKW.cap,[x,h+.06,0],[0,Math.PI/4,0]),pt(box(.16,.03,.16),LKW.cap,[x,h,0])];
-function lkFenceWood(){const p=[...lkWPost(-.93,1.2),...lkWPost(.93,1.2)];for(const y of[.38,.86])p.push(pt(box(1.74,.09,.05),LKW.rail,[0,y,-.05]));
- for(let i=0;i<7;i++){const x=-.72+i*.24;p.push(lkPicket(x,.19,1.0+[.06,0,.04,.08,.02,.06,0][i],LKPK[i%5]));for(const y of[.38,.86])p.push(pt(new THREE.SphereGeometry(.014,5,4),0x5e3e22,[x,y,.03]))}return p}
+/* 롱빈터식 널 울타리(23차, 기획자: '울타리 좀 보고 배워라'): 널을 틈 거의 없이 촘촘히 세우고 위는 평평하게(모서리만 살짝 둥글게),
+   기둥은 널보다 조금 높고 작은 네모 갓. 뒤에 가로대 둘. 한 칸 길이 2(기둥 ±0.95), 바닥 y=0, 정면 +z. */
+/* 23차: 롱빈터식 울타리 널 — 가벼운 둥근 판(굽은 면 2·모서리 1단) */
+function lkBoardG(w,h,d,cr,bv){bv=Math.min(bv,w/2-.002,h/2-.002,d/2-.002);const W=w/2-bv,H=h/2-bv,c=Math.max(.001,Math.min(cr,W-.001,H-.001)),s=new THREE.Shape();s.moveTo(-W+c,-H);s.lineTo(W-c,-H);s.quadraticCurveTo(W,-H,W,-H+c);s.lineTo(W,H-c);s.quadraticCurveTo(W,H,W-c,H);s.lineTo(-W+c,H);s.quadraticCurveTo(-W,H,-W,H-c);s.lineTo(-W,-H+c);s.quadraticCurveTo(-W,-H,-W+c,-H);const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(.002,d-2*bv),bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:1,steps:1,curveSegments:2});g.translate(0,0,-Math.max(.002,d-2*bv)/2);return g}
+function lkBoardRun(x0,x1,H,cols,z=0,th=.06){const p=[],n=Math.max(2,Math.round((x1-x0)/.19)),w=(x1-x0)/n;for(let i=0;i<n;i++)p.push(pt(lkBoardG(w-.016,H,th,.03,.012),cols[i%cols.length],[x0+w*(i+.5),H/2+.02,z]));return p}
+function lkBoardPost(x,H,c,cap){return[pt(lkRb(.15,H,.15,.035,.02),c,[x,H/2,0]),pt(lkRb(.2,.05,.2,.03,.018),cap,[x,H+.025,0])]}
+function lkFenceWood(){const WC=[0xb96a40,0xab5f38,0xc27548],p=[...lkBoardPost(-.95,1.06,0x9e5833,0xc98a5a),...lkBoardPost(.95,1.06,0x9e5833,0xc98a5a),
+  pt(lkRb(1.78,.08,.05,.025,.015),0x8f4f2e,[0,.3,-.055]),pt(lkRb(1.78,.08,.05,.025,.015),0x8f4f2e,[0,.74,-.055]),...lkBoardRun(-.86,.86,.94,WC)];return p}
 /* 돌담: 반듯하게 다듬은 돌을 세 단으로 엇갈려 쌓고 덮개돌을 얹어요 (말랑한 덩어리 대신 또렷한 모서리) */
 const LKSB=[0xb7a59c,0xa8958c,0xc4b3aa,0xae9c93,0xbcab9f];
 function lkStoneCourse(p,x0,x1,y,h,d,ws,k0,z=0){const sc=(x1-x0)/ws.reduce((a,b)=>a+b,0);let x=x0;ws.forEach((w,i)=>{const W=w*sc;p.push(pt(lkRb(W-.03,h-.03,d-(i%2?.03:0),.03,.022),LKSB[(k0+i*2)%5],[x+W/2,y+h/2,z]));x+=W})}
@@ -142,9 +148,8 @@ function lkTiPanel(x0,x1,y0,y1,z){const p=[],W=x1-x0,n=Math.max(4,Math.round(W/.
 function lkFenceTiBase(){const p=[];for(const x of[-.93,.93])p.push(pt(box(.13,1.66,.13),LKTI.post,[x,.83,0]),pt(box(.18,.05,.18),LKTI.cap,[x,1.68,0]),pt(box(.2,.04,.2),LKTI.cap,[x,.02,0]));return p.concat(lkTiPanel(-.86,.86,.16,1.5,0))}
 const lkTiGlow=()=>[pt(box(1.5,.035,.11),LKT.g,[0,1.4,0]),...[-.93,.93].map(x=>pt(box(.06,.06,.15),LKT.g,[x,1.52,0]))];
 /* 문: 경첩이 왼쪽. 문짝은 부품 'door' (경첩 기준 +x로 뻗음) */
-function lkGateWood(){const base=[...lkWPost(-.95,1.36),...lkWPost(.95,1.36)],door=[];
- for(let i=0;i<6;i++){const u=.17+i*.27;door.push(lkPicket(u,.22,1.04+[.04,.08,.1,.1,.08,.04][i],LKPK[(i+2)%5]))}
- for(const y of[.34,.9])door.push(pt(box(1.62,.1,.05),LKW.rail,[.84,y,-.05]),pt(box(.16,.07,.06),0x3a3f46,[.02,y,-.02]));door.push(lkBeam([.1,.36,-.05],[1.58,.88,-.05],.09,.045,LKW.rail),pt(new THREE.TorusGeometry(.06,.016,5,10),0x3a3f46,[1.5,.66,.04]),pt(box(.05,.05,.03),0x3a3f46,[1.5,.74,.03]));
+function lkGateWood(){const WC=[0xb96a40,0xab5f38,0xc27548],base=[...lkBoardPost(-.95,1.16,0x9e5833,0xc98a5a),...lkBoardPost(.95,1.16,0x9e5833,0xc98a5a)],
+  door=[...lkBoardRun(.02,1.7,.98,WC,0),pt(lkRb(1.64,.08,.05,.025,.015),0x8f4f2e,[.86,.3,-.055]),pt(lkRb(1.64,.08,.05,.025,.015),0x8f4f2e,[.86,.78,-.055]),pt(lkRb(.06,.07,.04,.02,.01),0x3d4456,[1.6,.56,.05])];
  lkModel('lk_gate_wood',base,{door:{g:door,pv:[-.86,0,0]}})}
 function lkGateStone(){const base=[],door=[];for(const sx of[-1,1]){const x=sx*.8;for(let r=0;r<4;r++)lkStoneCourse(base,x-.2,x+.2,r*.32,.32,.5,r%2?[1]:[.55,.45],r+(sx>0?2:0));lkStoneCourse(base,x-.25,x+.25,1.28,.1,.58,[1],1)}
  [.17,.47,.77,1.07].forEach((u,i)=>door.push(pt(box(.28,1.12,.07),[0x9a6236,0x8c582f,0xa66b3d,0x93603a][i],[u,.62,0])));for(const y of[.3,.94])door.push(pt(box(1.2,.09,.1),0x4a4f57,[.62,y,0]),...[.1,.62,1.14].map(u=>pt(new THREE.SphereGeometry(.03,6,5),0x8a9099,[u,y,.055])));
@@ -848,19 +853,23 @@ function lkProps20(){
  /* ④ 연료: 둥근 빨간 기름통 + 손잡이 + 노란 뚜껑 + 옆 X */
  {const RD2=0xc23c30,p=[R_(.36,.44,.18,RD,[0,.22,0],0,.07,.04),R_(.22,.06,.06,RD2,[-.04,.49,0],0,.03,.02),C(.045,.05,.06,0xf6d24a,[.12,.47,0],0,12),
    beam([-.1,.12,.09],[.1,.32,.09],.04,.016,RD2),beam([.1,.12,.09],[-.1,.32,.09],.04,.016,RD2)];GEO.lk_fuel=fin(p)}
- /* ⑤ 벽난로: 둥근 돌 몸체 + 둥근 아치 불구멍(가장자리 돌) + 나무 선반 + 굴뚝, 불(조각 fire) */
- {const SG=0xa59a93,SG2=0x938880,SGL=0xbcb1aa,p=[R_(1.5,1.08,.58,SG,[0,.54,0],0,.1,.06),R_(.8,.54,.2,0x2c2522,[0,.31,.24],0,.2,.03)];
-  for(let i=0;i<7;i++){const a=Math.PI*(i/6);p.push(S_(.11,i%2?SGL:SG2,[Math.cos(a)*-.46,.32+Math.sin(a)*.32,.3],[1,.8,.55],0,10,7))}
-  p.push(S_(.12,SGL,[-.56,.12,.3],[1,.75,.55],0,10,7),S_(.12,SG2,[.56,.12,.3],[1,.75,.55],0,10,7),
-   R_(1.64,.09,.38,WD2,[0,1.12,.08],0,.04,.035),R_(.74,1.04,.44,SG,[0,1.66,-.04],0,.08,.05),R_(.84,.1,.5,SG2,[0,2.2,-.04],0,.05,.035),
-   rod([-.24,.12,.26],[.22,.16,.28],.055,0x7a5030,8),rod([-.2,.17,.32],[.24,.12,.22],.05,WD2,8),C(.035,.035,.13,CR,[-.5,1.23,.12],0,10),C(.012,.012,.03,0xffd35c,[-.5,1.31,.12],0,6),
-   lathe([[0,0],[.05,0],[.06,.04],[.045,.1],[.05,.13],[0,.13]],TL,[.46,1.165,.12],12));
+ /* ⑤ 벽난로(기획자가 고른 C): 회색 돌 몸체 앞에 벽돌을 엇갈려 쌓고, 돌 아치 불구멍 + 나무 선반(촛불·액자·화분) + 벽돌 굴뚝, 옆에 장작 상자. 불 = 조각 fire */
+ {const BRK=[0xd2694c,0xc25d42,0xdd7a5a],SG=0x9d928b,rbS=(w,h,d,cr,bv)=>{const W=w/2-bv,H=h/2-bv,c=Math.min(cr,W-.001,H-.001),sh=new THREE.Shape();
+    sh.moveTo(-W+c,-H);sh.lineTo(W-c,-H);sh.quadraticCurveTo(W,-H,W,-H+c);sh.lineTo(W,H-c);sh.quadraticCurveTo(W,H,W-c,H);sh.lineTo(-W+c,H);sh.quadraticCurveTo(-W,H,-W,H-c);sh.lineTo(-W,-H+c);sh.quadraticCurveTo(-W,-H,-W+c,-H);
+    const g=new THREE.ExtrudeGeometry(sh,{depth:Math.max(.002,d-2*bv),bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:1,steps:1,curveSegments:2});g.translate(0,0,-Math.max(.002,d-2*bv)/2);return g},
+   BK=(w,h,d,c,p,r)=>pt(rbS(w,h,d,.035,.016),c,p,r),p=[R_(1.5,1.1,.58,SG,[0,.55,-.02],0,.06,.04),R_(.8,.54,.2,0x2c2522,[0,.31,.24],0,.2,.03)];
+  for(let y=0;y<4;y++)for(let x=0;x<5;x++){const xx=-.6+x*.3+(y%2)*.15;if(Math.abs(xx)<.42&&y<3)continue;if(xx>.72)continue;p.push(BK(.27,.24,.06,BRK[(x+y)%3],[xx,.15+y*.26,.28]))}
+  for(let i=0;i<7;i++){const a=Math.PI*(i/6);p.push(BK(.14,.1,.08,0xb7aca4,[Math.cos(a)*-.44,.32+Math.sin(a)*.32,.3],[0,0,a-Math.PI/2]))}
+  p.push(R_(1.66,.09,.38,WD2,[0,1.12,.08],0,.04,.035),C(.03,.03,.13,CR,[-.55,1.23,.12],0,10),C(.012,.012,.03,0xffd35c,[-.55,1.31,.12],0,6),R_(.22,.18,.03,WD,[-.15,1.26,.0],[-.12,0,0],.03,.012),R_(.17,.13,.01,0x8fc4e0,[-.15,1.26,.018],[-.12,0,0],.02,.004),
+   lathe([[0,0],[.06,0],[.07,.05],[.05,.1],[0,.1]],TL,[.45,1.165,.12],12),S_(.08,0x4f9a55,[.45,1.32,.12],0,0,10,7),R_(.74,1.04,.44,SG,[0,1.66,-.04],0,.06,.04));
+  for(let y=0;y<3;y++)for(let x=0;x<2;x++)p.push(BK(.33,.24,.05,BRK[(x+y+1)%3],[-.17+x*.34+(y%2)*.06-.03,1.32+y*.28,.19]));
+  p.push(R_(.84,.1,.5,0x8a7f78,[0,2.2,-.04],0,.05,.035),rod([-.24,.12,.26],[.22,.16,.28],.055,0x7a5030,8),rod([-.2,.17,.32],[.24,.12,.22],.05,WD2,8),R_(.34,.22,.3,WD3,[.98,.11,.18],0,.05,.03),...[0,1,2].map(i=>rod([.86,.24,.1+i*.08],[1.1,.24,.1+i*.08],.045,0x8a5a36,8)));
   lkModel('lk_fireplace',p,{fire:{g:[S_(.13,0xff8a3a,[0,.1,0],[1.3,1,.8]),pt(cone(.11,.32,10),0xffb347,[-.05,.22,.02]),pt(cone(.075,.25,10),0xffe07a,[.08,.2,0])],pv:[0,.16,.28],glow:true}},{smoke:[0,2.28,-.04]})}
  /* ⑥ 가로등: 항구에 이미 있는 가로등 모양 그대로 */
  if(typeof lkLampParts==='function')GEO.lk_lamp=fin(lkLampParts(2.72),50);
- /* ⑦ 정원 울타리(참고 그림 같은 크림색 울타리): 둥근 머리 기둥 둘 + 사이 뜬 널 여섯 + 가로대 둘 (길이 2, 높이 0.9) */
- {const PC=0xf6efe2,PC2=0xe9e0cf,p=[...[-.94,.94].flatMap(x=>[R_(.14,.86,.14,PC,[x,.43,0],0,.04,.03),S_(.085,PC,[x,.9,0],[1,.8,1],0,10,6)]),R_(1.82,.07,.05,PC2,[0,.56,-.045],0,.03,.02),R_(1.82,.07,.05,PC2,[0,.22,-.045],0,.03,.02)];
-  for(let i=0;i<6;i++){const x=-.7+i*.28;p.push(R_(.18,.66,.045,i%2?PC2:PC,[x,.38,0],0,.06,.018),S_(.09,i%2?PC2:PC,[x,.71,0],[1,.55,.25],0,10,4))}GEO.lk_fence_garden=fin(p)}
+ /* ⑦ 정원 울타리(롱빈터 크림색 울타리처럼): 촘촘한 크림 널 + 평평한 머리 + 작은 네모 갓 기둥 (길이 2, 높이 0.78) */
+ {const PC=[0xf4e8d8,0xece0ce,0xf7eddf],p=[...lkBoardPost(-.95,.8,0xf4e8d8,0xfaf3e8),...lkBoardPost(.95,.8,0xf4e8d8,0xfaf3e8),pt(lkRb(1.78,.07,.045,.02,.012),0xe2d4bf,[0,.22,-.05]),pt(lkRb(1.78,.07,.045,.02,.012),0xe2d4bf,[0,.56,-.05]),
+   ...lkBoardRun(-.86,.86,.7,PC,0,.055)];GEO.lk_fence_garden=fin(p,50)}
  /* ⑧ 벤치의자: 사이가 뜬 널 셋(앉는 판) + 등받이 널 둘 + 둥근 짙은 다리·팔걸이 */
  {const FG=0x3b5a48,p=[];for(let i=0;i<3;i++)p.push(R_(1.46,.05,.12,i%2?WD:WDL,[0,.46,.15-i*.14],0,.025,.018));for(let i=0;i<2;i++)p.push(R_(1.46,.1,.04,i%2?WD:WDL,[0,.66+i*.15,-.22-i*.03],[-.18,0,0],.035,.016));
   for(const x of[-.64,.64])p.push(rod([x,0,.16],[x,.44,.13],.032,FG),rod([x,0,-.16],[x,.44,-.12],.032,FG),rod([x,.44,-.15],[x,.9,-.3],.03,FG),rod([x,.62,.2],[x,.62,-.18],.03,FG),rod([x,.44,.15],[x,.62,.18],.026,FG),S_(.04,FG,[x,.62,.2],0,0,8,5));
