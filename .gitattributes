@@ -1,0 +1,2 @@
+# 작업판은 두 클로드가 동시에 고쳐도 두 쪽 줄이 모두 남게 합쳐요 (AGENTS.md §0-1)
+WORKBOARD.md merge=union
