@@ -166,7 +166,7 @@ const RECIPES=[{id:'axe',n:1,c:{wood:3,stone:2}},{id:'rod',n:1,c:{wood:4,cloth:1
  {id:'ammoS',n:12,c:{scrap:1,powder:1},bench:1},{id:'ammoL',n:8,c:{scrap:2,powder:1},bench:1},{id:'grenade',n:1,c:{scrap:3,powder:3},bench:1},
  {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},bench:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},bench:1},{id:'smg',n:1,c:{scrap:24,wood:3},bench:1}];
 /* builds: g=geometry, s=scale, bx/bz=half extents, hp */
-const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'몸을 녹이고 밤을 밝혀요'},
+const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'밤을 밝히고 생선을 구워요. 옆에 있으면 에너지가 조금 빨리 차요'},
  bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},kit:'kit_bench',d:'총과 탄약을 만들고, 텐트를 집으로 업그레이드해요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */
 
  torch:{n:'횃불',g:'torch_lit',s:1.7,bx:.3,bz:.3,hp:30,c:{wood:2},d:'밤에 주변을 밝혀요'},
@@ -174,7 +174,7 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  wall:{n:'석벽',g:'wall_straight',s:1,bx:1,bz:.4,hp:420,c:{stone:10,wood:2},d:'가장 단단한 벽',grid:1},
  gate:{n:'성문',g:'gateB',s:1,bx:1,bz:.4,hp:380,c:{stone:8,wood:6},d:'나는 지나가고 적은 막아요',grid:1,gate:1},
  mine:{n:'지뢰',g:'mine',s:1,bx:.4,bz:.4,hp:20,c:{scrap:4,powder:4},d:'적이 밟으면 크게 터져요. 한 번 쓰면 사라져요',pass:1,trap:2},
- gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'나무를 연료로 전기를 만들어요'},
+ gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'연료(기름통)를 넣으면 전기를 만들어요. 1통에 5분, 3통까지'},
  turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
  ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,upg:{to:'phouse',c:{wood:120}},d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
  phouse:{n:'집',g:'phouse',s:1,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
@@ -189,7 +189,7 @@ Object.assign(ITEMS,{
  chainsaw:{n:'전기톱',ic:'lk_chainsaw',hg:'lk_chainsaw',gh:1,hs:1.2,ty:'tool',p:1500,d:'나무를 손도끼보다 빨리 베요. 근접 18 (임시)',one:1},
  crossbow:{n:'석궁',ic:'lk_crossbow_i',hg:'lk_crossbow',hs:1.35,ty:'gun',p:1800,d:'화살을 쏴요. 피해 30, 사거리 22 (임시)',one:1},
  arrow:{n:'화살',ic:'lk_arrow',ty:'ammo',p:30,d:'석궁에 넣어 쏴요'},
- fuel:{n:'연료',ic:'lk_fuel',ty:'res',p:120,d:'기름통. 쓰는 곳은 아직 없어요 (임시)'}});
+ fuel:{n:'연료',ic:'lk_fuel',ty:'res',p:120,d:'발전기에 넣는 기름통. 1통에 5분 (임시)'}});
 Object.assign(BUILDS,{
  sign:{n:'표지판',g:'lk_sign',s:1,bx:.3,bz:.15,hp:40,c:{wood:3},d:'세워 두는 나무 표지판 (임시)'},
  lamp:{n:'가로등',g:'lk_lamp',s:1,bx:.25,bz:.25,hp:120,c:{scrap:6,wood:2},lamp:2.72,d:'밤이 되면 저절로 켜져요 (임시)'},
@@ -202,6 +202,10 @@ Object.assign(BUILDS,{
  table_round:{n:'원형 테이블',g:'lk_table_round',s:1,bx:.52,bz:.52,hp:80,c:{wood:5},inok:1,d:'둥근 탁자. 텐트·집 안에도 놓아요 (임시)'},
  vase:{n:'꽃병',g:'lk_vase',s:1,bx:.15,bz:.15,hp:20,c:{stone:1},inok:1,d:'꽃을 꽂은 병. 텐트·집 안에도 놓아요 (임시)'},
  boat2:{n:'보트 2인승',g:'lk_boat2',s:1,bx:.68,bz:1.45,hp:200,c:{wood:14,scrap:4},water:1,flat:1,d:'바닷가 물 위에 띄워 둬요. 타기는 아직 없어요 (임시)'}});
+/* 27차: 배고픔·체온 대신 에너지 10칸 → 설명 글의 '배고픔 +N'·'체력 +N'·'구우면 +N'을 '에너지 +N칸'(10 = 1칸, 반 칸 단위)으로 */
+const nrgTx=v=>'에너지 +'+(Math.round(v/5)/2)+'칸';
+for(const T of [ITEMS,BUILDS])for(const k in T){const it=T[k];if(it.d)it.d=it.d.replace(/배고픔 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/구우면 \+(\d+)/g,(m,v)=>'구우면 '+nrgTx(+v)).replace(/체력 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/체력/g,'에너지')}
+const GEN_PER=300,GEN_CAP=900;   /* 27차(기획자: '연료는 발전기 연료 넣을 때'): 연료 1통 = 5분, 최대 3통(임시) */
 Object.assign(WEAP,{chainsaw:{melee:1,dmg:18,cd:.4,range:2.4},crossbow:{dmg:30,cd:1.1,range:22,ammo:'arrow',spread:.01}});
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
  gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoL',5,.7],['scrap',2,.6],['coin',90,1]]},

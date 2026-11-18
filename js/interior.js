@@ -36,7 +36,7 @@ function intHouseRoom(G){const H=INT.gr.house=new THREE.Group(),W=INT_ROOM.house
  {const q=[];for(let i=1;i<9;i++)q.push(pt(box(2*W,.004,.022),0x5e3a20,[0,.002,-D+i*2*D/9]));H.add(new THREE.Mesh(mg(q),new THREE.MeshLambertMaterial({vertexColors:true})))}   /* faint board seams */
  const ed=new THREE.Mesh(new THREE.BoxGeometry(2*W,.08,2*D),new THREE.MeshLambertMaterial({color:0x6b4528}));ed.position.y=-.041;H.add(ed);
  const r=.17,p=[];for(let i=0;i<7;i++){const y=r+i*r*1.9;p.push(pt(cyl(r,r,2*W+.5,10),i%2?0x8a5b37:0x9c6b43,[0,y,-D-.05],[0,0,Math.PI/2]));
-  for(const sx of[-1,1]){p.push(pt(cyl(r*.84,r*.84,.02,10),0xd9b48a,[sx*(W+.26),y,-D-.05],[0,0,Math.PI/2]));if(i<6)p.push(pt(cyl(r,r,.8,10),i%2?0x9c6b43:0x8a5b37,[sx*(W+.1),y+r*.95,-D+.2],[Math.PI/2,0,0]),pt(cyl(r*.84,r*.84,.02,10),0xd9b48a,[sx*(W+.1),y+r*.95,-D+.61],[Math.PI/2,0,0]))}}
+  for(const sx of[-1,1]){p.push(pt(cyl(r*.84,r*.84,.02,10),0xd9b48a,[sx*(W+.26),y,-D-.05],[0,0,Math.PI/2]));if(i<6){const z1=D-(i/5)*D*1.25,L=z1+D+.05,yy=y+r*.95;p.push(pt(cyl(r,r,L,10),i%2?0x9c6b43:0x8a5b37,[sx*(W+.1),yy,(-D-.05+z1)/2],[Math.PI/2,0,0]),pt(cyl(r*.84,r*.84,.02,10),0xd9b48a,[sx*(W+.1),yy,z1+.01],[Math.PI/2,0,0]))}}}   /* 27차(기획자: '벽 표시가 애매해, 양옆도 통나무 벽으로'): 양옆 통나무 벽. 아래 통나무는 앞까지, 위로 갈수록 짧아져서 앞쪽은 낮은 계단 모양(카메라에서 방 안이 가리지 않게) */
  p.push(pt(box(2*W,.1,.12),0x6b4528,[0,.05,-D+.1]));const lw=new THREE.Mesh(mg(p),new THREE.MeshLambertMaterial({vertexColors:true}));lw.receiveShadow=true;H.add(lw);   /* one merged mesh: back log wall, corner logs, skirting */
  intDoor(H,D)}
 /* camera inside: fit the whole room (front edge included) on any screen shape, above the hotbar, barely following the player */

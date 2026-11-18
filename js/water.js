@@ -58,7 +58,7 @@ function ripple(x,z,s=1,l=1.1){const r=ripples.find(r=>r.t>=r.l);if(!r)return;r.
 function splash(x,z,n){puff(x,.15,z,0xe6f3ff,n,.9);ripple(x,z,1.4,1)}
 /* ---- state per frame ---- */
 function updWaterState(dt){if(DEV.on){if(WTR.st!=='land'){WTR.st='land';hudDirty=true}WTR.depth=0;return'land'}const d=waterDepth(P.x,P.z),prev=WTR.st;WTR.depth=d;let st;if(d>(prev==='swim'?DEEP-.1:DEEP))st='swim';else if(d>SHALLOW)st='wade';else st=inSpring(P.x,P.z)?'spring':'land';
- if(st!==prev){if(st==='swim'){splash(P.x,P.z,10);sfx(170,.35,'sine',.07,.45);if(fishing)endFish();if(!WTR.toldSwim){WTR.toldWade=WTR.toldSwim=1;toast('🌊 깊은 물이에요! 헤엄쳐요. 오래 있으면 몸이 식어요')}}
+ if(st!==prev){if(st==='swim'){splash(P.x,P.z,10);sfx(170,.35,'sine',.07,.45);if(fishing)endFish();if(!WTR.toldSwim){WTR.toldWade=WTR.toldSwim=1;toast('🌊 깊은 물이에요! 헤엄치는 동안 ⚡ 에너지가 줄어요')}}
   else if(st==='wade'&&prev!=='swim'){splash(P.x,P.z,4);sfx(320,.12,'sine',.04,.5);if(!WTR.toldWade){WTR.toldWade=1;toast('얕은 물이라 걸음이 느려져요')}}else if(prev==='swim')splash(P.x,P.z,5);
   if(st==='spring')toast('♨ 온천이에요. 가만히 있으면 몸을 담가요');hudDirty=true}
  WTR.st=st;if(st==='swim'){WTR.edgeT-=dt;if((P.x<7||P.z<7||P.x>WS-7||P.z>WS-7)&&WTR.edgeT<=0){WTR.edgeT=8;toast('물살이 거세서 더 나갈 수 없어요')}}

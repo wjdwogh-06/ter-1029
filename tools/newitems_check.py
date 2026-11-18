@@ -53,7 +53,7 @@ async def steps(pg):
       ['sofa','fireplace','table_round','chair','vase'].forEach((k,i)=>{setBuild(k);let done=false;for(let t=0;t<40&&!done;t++){P.x=INT.x+spots[i][0]+(t%5-2)*.3;P.z=INT.z+spots[i][1]+1.6+((t/5)|0)*.25;P.rot=Math.PI;const g=ghostPos();if(g.ok&&g.in){placeBuild();r.ok.push(k);done=true}else r.why[k]=g.why}setBuild(null)});
       setBuild('lamp');P.x=INT.x;P.z=INT.z;const gl=ghostPos();r.lamp=gl.why;setBuild(null);P.x=INT.x;P.z=INT.z+1.6;return JSON.stringify(r)}"""))
     await shot('ni_indoor.jpg',900)
-    print('buildTab',await ev("""(B)=>{openPanel('bag');const b=[...document.querySelectorAll('button,div')].find(e=>e.textContent.trim()==='🏠 건설');if(b)b.click();const t=document.getElementById('pbody').textContent;closePanel();
+    print('buildTab',await ev("""(B)=>{openPanel('build');const t=document.getElementById('pbody').textContent;closePanel();
       return JSON.stringify({names:B.filter(k=>t.includes(BUILDS[k].n)).length,inok:(t.match(/안에도 OK/g)||[]).length,water:t.includes('물 위')})}""",NEW_B))
     await ev("()=>{intOut&&INT.on&&intOut()}");await pg.wait_for_timeout(1500)
     # 저장 → 다시 켜기

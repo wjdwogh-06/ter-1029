@@ -10,7 +10,7 @@ async def steps(pg):
     print('zoneB',await ev("()=>{const t=FISH_ZONES.B.t;return JSON.stringify({sum:t.reduce((a,q)=>a+q[1],0),rare:t.filter(q=>FISH.find(f=>f.id===q[0]).g===1),sumA:FISH_ZONES.A.t.reduce((a,q)=>a+q[1],0)})}"))
     print('roll',await ev("()=>{const n={};for(let i=0;i<40000;i++){const k=rollFish?rollFish('B'):null;if(k)n[k]=(n[k]||0)+1}return JSON.stringify(n)}") if await ev("()=>typeof rollFish==='function'") else 'roll skip')
     print('quests',await ev("()=>JSON.stringify({n:QUESTS.length,txt:QUESTS.filter(q=>/모래주머니|탐조등/.test(q.t)).length,qv:S.qv})"))
-    await ev("()=>{openPanel('bag');const b=[...document.querySelectorAll('[data-tab],.tab')].find(e=>/건설/.test(e.textContent));if(b)b.click()}");await pg.wait_for_timeout(300)
+    await ev("()=>{openPanel('build')}")   # 27차: 가방 창에 탭이 없어서 건설 창을 바로 열어요;await pg.wait_for_timeout(300)
     print('buildTab',await ev("()=>{const t=document.getElementById('pbody').textContent;return JSON.stringify({has:/모닥불/.test(t),bad:['모래주머니','가시 함정','탐조등'].filter(n=>t.includes(n)),gen:t.includes('발전기')})}"))
     await ev("()=>closePanel()")
     await ev("()=>{openPanel('menu')}");await pg.wait_for_timeout(300)
