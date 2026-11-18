@@ -4,7 +4,7 @@ async def steps(pg):
     print('zones',await ev("""()=>{const o={};for(const n of NOB){(o[n.k]=o[n.k]||[]).push(+n.r.toFixed(1))}return JSON.stringify({n:NOB.length,lh:o.lh,sup:o.sup,port:o.port})}"""))
     # 그 자리의 실제 구조물이 원 안에 다 들어가는지(항구·보급지), 등대섬 땅이 다 들어가는지
     print('cover',await ev("""()=>{const out=[];const supT={supply:1,chest:1,blk:1,suplamp:1};
-      for(const q of structs){if(q.own)continue;const n=NOB.filter(z=>dist(z.x,z.z,q.x,q.z)<z.r+20);if(!n.length)continue;if(!nobAt(q.x,q.z,0))out.push(q.t+'@'+(q.x|0)+','+(q.z|0))}
+      for(const q of structs){if(q.own)continue;if(typeof PL!=='undefined'&&PL.list.some(p=>p.x===q.x&&p.z===q.z))continue;/* 식물 충돌 상자는 구조물이 아님 */const n=NOB.filter(z=>dist(z.x,z.z,q.x,q.z)<z.r+20);if(!n.length)continue;if(!nobAt(q.x,q.z,0))out.push(q.t+'@'+(q.x|0)+','+(q.z|0))}
       return JSON.stringify({outsideButNear:out.slice(0,20),count:out.length})}"""))
     # 설치 시도: 각 구역 안쪽/바깥쪽에 텐트 놓기
     print('place',await ev("""()=>{give('kit_tent',3);setBuild('ptent');const b=BUILDS.ptent,d=Math.max(b.bx,b.bz)+1.6;const res={inBlocked:0,inN:0,outZoneMsg:0,outN:0,water:''};

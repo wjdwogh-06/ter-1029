@@ -22,13 +22,20 @@ function plIcons(){for(const q of PLANTS){const it=ITEMS[q.id];if(it&&(!it.ic||!
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{try{if(PL.list.ready)plIcons()}catch(e){}});
 /* ---- 심기: 좌표마다 반지름 r 안에 c포기, 서로 1.6m 넘게, 물·부두·구조물·나무·바위는 피해서 ---- */
 function plOk(x,z){if(hAt(x,z)<.95||onDock(x,z))return false;for(const s of structs)if(!sdef(s).pass&&inStruct(s,x,z,.55))return false;
- const cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const o=objs.get((cz+j)*CN+cx+i);if(o&&dist(x,z,o.x,o.z)<OBJT[o.t].r+.7)return false}
+ const cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const o=objs.get((cz+j)*CN+cx+i);if(o&&dist(x,z,o.x,o.z)<(o.t<3?Math.max(OBJT[o.t].r+.7,2.3):OBJT[o.t].r+.7))return false}   /* 나무는 2.3m 넘게 띄워 잎 그늘에 안 가려지게 */
  for(const p of PL.list)if(dist(x,z,p.x,p.z)<1.6)return false;return true}
-function plPlace(x,z){const I=islAt(x,z);let pn=null,pd=150;for(const p of PORTS){const d=dist(x,z,p.x,p.z);if(d<pd){pd=d;pn=p.n}}return (I?I.n:'바다 섬')+(pn?' · '+pn+' 근처':'')}
+/* 자라는 곳 이름: 섬 이름 + 섬 가운데에서 본 방향(8방향, 위가 북쪽) + 같은 섬의 가까운 항구(110m 안) */
+const PL_DIR=['동쪽','북동쪽','북쪽','북서쪽','서쪽','남서쪽','남쪽','남동쪽'];
+function plPlace(x,z){const I=islAt(x,z);if(!I)return'바다 섬';const dx=x-I.x,dz=z-I.z,dir=Math.hypot(dx,dz)<40?'가운데':PL_DIR[Math.round(((Math.atan2(-dz,dx)*180/Math.PI+360)%360)/45)%8];
+ let pn=null,pd=110;for(const p of PORTS){const d=dist(x,z,p.x,p.z),J=islAt(p.x,p.z);if(d<pd&&J===I){pd=d;pn=p.n}}return I.n+' '+dir+(pn?' · '+pn+' 근처':'')}
 function plantsInit(){if(PL.list.ready)return;PL.list.ready=1;
  PLANT_SITES.forEach((st,si)=>{const ids=[].concat(st.p).filter(id=>PLD[id]),r=st.r||12,c=st.c||14;if(!ids.length)return;let put=0;
-  for(let t=0;t<c*40&&put<c;t++){const a=hash(si,t,71)*Math.PI*2,d=Math.sqrt(hash(si,t,72))*r,x=st.x+Math.cos(a)*d,z=st.z+Math.sin(a)*d;if(!plOk(x,z))continue;
-   PL.list.push({i:PL.list.length,id:ids[put%ids.length],x,z});put++}
+  /* 골고루(19차): 해바라기 씨 나선(황금각)으로 구역 전체에 c자리를 고르게 잡고, 나무·바위 등에 막히면 3.6m 안에서 가장 가까운 빈 곳으로 비켜요.
+     그래도 못 놓으면 무작위 자리로 채워서 c포기를 맞춰요 */
+  const rot=hash(si,1,73)*Math.PI*2;
+  for(let k=0;k<c*4&&put<c;k++){const t=k<c?(k+.5)/c:hash(si,k,74),rad=r*.9*Math.sqrt(t),a=rot+k*2.39996323,bx=st.x+Math.cos(a)*rad,bz=st.z+Math.sin(a)*rad;let ok=null;
+   for(let d=0;d<=3.61&&!ok;d+=.6)for(let j=0;j<(d?12:1)&&!ok;j++){const aa=j/12*Math.PI*2+k,x=bx+Math.cos(aa)*d,z=bz+Math.sin(aa)*d;if(dist(x,z,st.x,st.z)<=r&&plOk(x,z))ok=[x,z]}
+   if(ok){PL.list.push({i:PL.list.length,id:ids[put%ids.length],x:ok[0],z:ok[1],si});put++}}
   const w=plPlace(st.x,st.z);for(const id of ids){const L=PL.where[id]=PL.where[id]||[];if(!L.includes(w))L.push(w)}});
  for(const p of PL.list){const cr=PLD[p.id].cr;if(cr&&typeof PLB==='function')addStruct({t:PLB(cr,cr),x:p.x,z:p.z,r:0,hp:1e9})}   /* 아보카도 나무·포도 말뚝은 부딪혀요(디자인 18차 크기) */
  try{plIcons()}catch(e){console.error('식물 아이콘 실패',e)}try{plMeshes()}catch(e){console.error('식물 모양 실패',e)}}

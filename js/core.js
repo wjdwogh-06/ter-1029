@@ -142,18 +142,24 @@ const FISH_LIST=FISH.filter(f=>!f.old).sort((a,b)=>(FISH_ZONES.A.t.some(q=>q[0]=
 /* ===== 식물 도감 (17차, 기획자) =====
    작물·꽃·버섯 12종. 모양은 아직 없고 글자로만 보여요(아이콘·땅 위 이름표 = 글자, 모양은 디자인 담당이 나중에).
    자라는 곳은 PLANT_SITES(기획자가 찍어 준 좌표) 둘레에 넓게 흩어 심어요(js/plants.js). 가방 아이템은 ty:'plant'(먹거나 쓰는 기능 없음, 팔기만).
-   n1: 한 번에 얻는 수, re: 다시 자라는 시간(초), p: 원래 가격(임시값, 팔면 20%), cr: 부딪히는 반지름(아보카도 나무·포도 말뚝, 없으면 지나감), nov: 랜덤 자판기에 안 나옴 */
+   n1: 한 번에 얻는 수, re: 다시 자라는 시간(초, 19차 기획자: 15분=900), p: 원래 가격(임시값, 팔면 20%), cr: 부딪히는 반지름(아보카도 나무·포도 말뚝, 없으면 지나감), nov: 랜덤 자판기에 안 나옴 */
 const PCAT={crop:['작물','#5E9E3A','#E4F1D6'],flower:['꽃','#C9558A','#F8E2EC'],mush:['버섯','#9A6438','#F2E4D4']};
 const PLANTS=[
- {id:'potato',n:'감자',cat:'crop',v:'캐기',n1:2,re:300,p:20},{id:'grape',n:'포도',cat:'crop',v:'따기',n1:2,re:300,p:30,cr:.3},
- {id:'strawberry',n:'딸기',cat:'crop',v:'따기',n1:2,re:300,p:30},{id:'avocado',n:'아보카도',cat:'crop',v:'따기',n1:1,re:360,p:60,cr:.45},
- {id:'wheat',n:'밀',cat:'crop',v:'베기',n1:2,re:300,p:15},{id:'poppy',n:'양귀비',cat:'flower',v:'꺾기',n1:1,re:360,p:80},
- {id:'flower_blue',n:'수레국화',cat:'flower',v:'꺾기',n1:1,re:300,p:40,col:'파란 꽃'},{id:'flower_yellow',n:'해바라기',cat:'flower',v:'꺾기',n1:1,re:300,p:40,col:'노란 꽃'},
- {id:'flower_black',n:'검은 튤립',cat:'flower',v:'꺾기',n1:1,re:420,p:120,col:'검은 꽃'},{id:'mush_poison',n:'독버섯',cat:'mush',v:'따기',n1:1,re:360,p:50},
- {id:'mush_censer',n:'향로버섯',cat:'mush',v:'따기',n1:1,re:420,p:150},{id:'mush',n:'버섯',cat:'mush',v:'따기',n1:1,re:300,p:25}];
+ {id:'potato',n:'감자',cat:'crop',v:'캐기',n1:2,re:900,p:20},{id:'grape',n:'포도',cat:'crop',v:'따기',n1:2,re:900,p:30,cr:.3},
+ {id:'strawberry',n:'딸기',cat:'crop',v:'따기',n1:2,re:900,p:30},{id:'avocado',n:'아보카도',cat:'crop',v:'따기',n1:1,re:900,p:60,cr:.45},
+ {id:'wheat',n:'밀',cat:'crop',v:'베기',n1:2,re:900,p:15},{id:'poppy',n:'양귀비',cat:'flower',v:'꺾기',n1:1,re:900,p:80},
+ {id:'flower_blue',n:'수레국화',cat:'flower',v:'꺾기',n1:1,re:900,p:40,col:'파란 꽃'},{id:'flower_yellow',n:'해바라기',cat:'flower',v:'꺾기',n1:1,re:900,p:40,col:'노란 꽃'},
+ {id:'flower_black',n:'검은 튤립',cat:'flower',v:'꺾기',n1:1,re:900,p:120,col:'검은 꽃'},{id:'mush_poison',n:'독버섯',cat:'mush',v:'따기',n1:1,re:900,p:50},
+ {id:'mush_censer',n:'향로버섯',cat:'mush',v:'따기',n1:1,re:900,p:150},{id:'mush',n:'버섯',cat:'mush',v:'따기',n1:1,re:900,p:25}];
 for(const q of PLANTS)ITEMS[q.id]={n:q.n,ic:null,txt:1,ty:'plant',p:q.p,nov:1,d:`${PCAT[q.cat][0]}${q.col?' · '+q.col:''}. 섬에서 자라요 (식물 도감)`};
-/* 기획자 좌표: {p:식물 id(여러 개면 배열), x, z, r:흩어 심는 반지름(m), c:포기 수}. 비어 있으면 아직 아무것도 안 자라요 */
-const PLANT_SITES=[];
+/* 자라는 곳(19차, 기획자: '맵에서 가장 작은 섬(조약돌섬, 땅 약 1,570㎡ = 반지름 22m 원) 크기 하나에 한 종류, 초승달 본섬에만 12곳,
+   마을·보급 구조물과 겹치지 않게, 한 곳에 11포기쯤 골고루'). {p:식물 id, x, z, r:구역 반지름(m), c:포기 수}.
+   자리는 tools/plant_zones.py로 골랐어요: 본섬 땅이 97% 넘는 곳, 항구·보급지·등대의 설치 금지 원과 5m 넘게 떨어짐, 스폰 마을 광장에서 67m 넘게,
+   구역끼리 56m 넘게(섬 전체에 고르게). 스폰에 가까운 곳일수록 값싼 작물, 버섯 셋은 나무가 가장 빽빽한 세 곳(그늘). */
+const PLANT_SITES=[
+ {p:'wheat',x:364,z:556,r:22,c:11},{p:'potato',x:300,z:452,r:22,c:11},{p:'grape',x:388,z:372,r:22,c:11},{p:'strawberry',x:260,z:652,r:22,c:11},
+ {p:'flower_blue',x:564,z:700,r:22,c:11},{p:'flower_yellow',x:196,z:532,r:22,c:11},{p:'avocado',x:204,z:364,r:22,c:11},{p:'poppy',x:300,z:276,r:22,c:11},
+ {p:'flower_black',x:772,z:572,r:22,c:11},{p:'mush',x:364,z:724,r:22,c:11},{p:'mush_poison',x:636,z:588,r:22,c:11},{p:'mush_censer',x:484,z:212,r:22,c:11}];
 ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:300,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
  pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
