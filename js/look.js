@@ -471,8 +471,8 @@ function lkBuildGeo(){const _before=Object.assign({},GEO);
    분류: build 설치형(산호) / tool 도구(하늘) / food 음식·회복(연두) / gun 무기·탄약(회청) / res 재료(베이지) / rare 고급(보라)
    ICON[아이템 id] 에 들어가요. 설치형 카탈로그(LKB)도 ICON['fence_iron'] 처럼 같은 id로 미리 만들어 둬요. */
 const LK_CAT={build:['#f9a08a','#ec735a'],tool:['#b6dbef','#86b9d8'],food:['#b7e6c4','#82cc9c'],gun:['#d3d8e0','#a9b3c0'],res:['#f8ebcd','#e6cf9f'],rare:['#cdb4f0','#a386dc']};
-const lkCatOf=id=>{const it=ITEMS[id];if(!it)return'build';const t=it.ty;return t==='kit'?'build':(t==='tool')?'tool':(t==='food'||t==='heal'||t==='fish')?'food':(t==='gun'||t==='throw'||t==='ammo')?'gun':'res'};
-const lkRotOf=id=>{const it=ITEMS[id];return it.ty==='gun'?[.3,-1.0,.25]:/^c?f_hammer/.test(id)?[.85,-Math.PI/2+.5,0]:/^c?f_/.test(id)?[.32,-Math.PI/2+.32,0]:id==='rod'?[0,-1.57,-.25]:(it.ty==='tool'||id==='grenade')?[.2,.3,-.6]:[.5,-.7,0]};
+const lkCatOf=id=>{const it=ITEMS[id];if(!it)return'build';const t=it.ty;if(/^gkit_/.test(id))return'gun';return t==='kit'?'build':(t==='tool')?'tool':(t==='food'||t==='heal'||t==='fish')?'food':(t==='gun'||t==='throw'||t==='ammo')?'gun':'res'};
+const lkRotOf=id=>{const it=ITEMS[id];return /^gkit_/.test(id)?[.42,-.5,0]:it.ty==='gun'?[.3,-1.0,.25]:/^c?f_hammer/.test(id)?[.85,-Math.PI/2+.5,0]:/^c?f_/.test(id)?[.32,-Math.PI/2+.32,0]:/^rod[23]?$/.test(id)?[0,-1.57,-.25]:(it.ty==='tool'||id==='grenade')?[.2,.3,-.6]:[.5,-.7,0]};
 let LKR=null;
 function lkIconKit(){if(LKR)return LKR;const r=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});r.outputEncoding=THREE.sRGBEncoding;r.setPixelRatio(1);r.setSize(128,128);
  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0xb4bccb,1.0));const d=new THREE.DirectionalLight(0xfff6e6,1.0);d.position.set(2,4,3);sc.add(d);
@@ -915,3 +915,54 @@ function lkPropsIc(){for(const [id,mt,where] of LK_PROPS){const key='lk_'+id;if(
   const ks=T[id]?[id]:Object.keys(T).filter(k=>T[k]&&typeof T[k].n==='string'&&mt(T[k].n));for(const k of ks){const d=T[k];if(where==='ITEMS'){if(!d.ic||!GEO[d.ic]||(d.ic===key&&GEO[key+'_i']))d.ic=GEO[key+'_i']?key+'_i':key}else if(!d.g||!GEO[d.g])d.g=key}}}
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkProps20()}catch(e){console.error('look: 20차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}try{lkPropsIc()}catch(e){}}}
 {const _li=lkIcons;lkIcons=function(){try{lkPropsIc()}catch(e){}_li()}}
+
+/* ===== 35차(디자인, 기획자: '총은 전부 키트 — 적당히 상자 안에 총 그림, 이름은 총 이름 뒤에 키트. 중급 낚싯대는 철제, 고급도 철제인데 더 밝은 느낌.
+   자판기 랜덤 목록에 다 있어야 해'): 그림·모양만(설치형 아님).
+   - 총 키트 4종 `lk_gkit_pistol/rifle/shotgun/smg`: 둥근 크라프트 종이 상자 + 윗면 뚜껑 이음매 + 총마다 다른 색 테이프(권총 파랑·소총 초록·산탄총 빨강·기관단총 보라)
+     + 앞면 크림 라벨에 그 총의 실루엣(납작하게 돋은 짙은 갈색) + 라벨 귀퉁이 같은 색 동그라미 + 옆면 손잡이 구멍. 작은 글씨는 넣지 않아요.
+   - 낚싯대 `lk_rod2`(중급: 쇠빛 강철 대·짙은 회색 손잡이·강철 릴·파란 쇠 띠) · `lk_rod3`(고급: 밝은 은빛 크롬 대·금색 띠·금빛 스풀·밝은 손잡이).
+     기본 낚싯대(water.js GEO.rod)와 길이·기울기·줄 끝(userData.tip)이 똑같아서 손에 들면 같은 자리에서 줄이 나가요. ===== */
+function lkKits35(){
+ const R_=(w,h,d,c,p,r,cr=.04,bv=.022)=>pt(lkRb(w,h,d,cr,bv),c,p,r);
+ const KR=0xcf9a5c,KRD=0xb47f45,KRL=0xe0b277,LB=0xf7f0e3,SIL=0x3a2c26;
+ /* 총 실루엣(라벨 평면, 총구가 +x): [모양 여러 개] → 납작하게 돋은 판 */
+ const poly=(pts,holes)=>{const s=new THREE.Shape();pts.forEach((q,i)=>i?s.lineTo(q[0],q[1]):s.moveTo(q[0],q[1]));if(holes)for(const h of holes){const p=new THREE.Path();h.forEach((q,i)=>i?p.lineTo(q[0],q[1]):p.moveTo(q[0],q[1]));s.holes.push(p)}return s};
+ const rect=(x0,y0,x1,y1)=>poly([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),ring=(cx,cy,r1,r2,n=14)=>{const s=new THREE.Shape();s.absarc(cx,cy,r1,0,Math.PI*2,false);const h=new THREE.Path();h.absarc(cx,cy,r2,0,Math.PI*2,true);s.holes.push(h);return s},
+  disc=(cx,cy,r)=>{const s=new THREE.Shape();s.absarc(cx,cy,r,0,Math.PI*2,false);return s};
+ const SH={
+  pistol:[rect(-.17,.02,.17,.085),rect(-.17,-.005,.13,.025),poly([[-.17,0],[-.065,0],[-.09,-.17],[-.205,-.17]]),poly([[-.07,0],[.035,0],[.035,-.025],[0,-.065],[-.06,-.065]],[[[-.05,-.012],[.02,-.012],[.012,-.03],[-.01,-.052],[-.045,-.052]]]),rect(.12,.085,.14,.1),rect(-.16,.085,-.135,.1)],
+  rifle:[poly([[-.31,-.03],[-.31,.04],[-.14,.03],[-.1,-.012],[-.17,-.055],[-.29,-.075]]),rect(-.14,-.012,.06,.034),rect(.06,-.006,.17,.024),rect(.06,.011,.31,.025),rect(-.095,.052,.035,.074),rect(.03,.046,.07,.08),rect(-.12,.049,-.09,.077),rect(-.07,.034,-.05,.052),rect(.0,.034,.02,.052),disc(-.115,.0,.014),
+   poly([[-.07,-.012],[-.03,-.012],[-.03,-.03],[-.05,-.05],[-.075,-.04]],[[[-.062,-.018],[-.038,-.018],[-.038,-.028],[-.051,-.04],[-.066,-.033]]])],
+  shotgun:[poly([[-.31,-.03],[-.31,.04],[-.15,.032],[-.11,-.01],[-.18,-.055],[-.29,-.075]]),rect(-.15,-.016,.0,.036),rect(.0,.016,.31,.036),rect(.0,-.006,.25,.013),rect(.06,-.022,.17,.02),
+   ...[.08,.105,.13,.155].map(x=>rect(x,-.026,x+.008,.024)),poly([[-.08,-.016],[-.035,-.016],[-.035,-.034],[-.055,-.055],[-.085,-.044]],[[[-.072,-.022],[-.043,-.022],[-.043,-.032],[-.056,-.045],[-.076,-.038]]]),rect(.29,.036,.3,.046)],
+  smg:[rect(-.11,0,.12,.058),rect(.12,.018,.2,.044),rect(.2,.024,.235,.038),poly([[.0,0],[.048,0],[.065,-.145],[.018,-.145]]),poly([[-.075,0],[-.03,0],[-.05,-.105],[-.095,-.105]]),
+   poly([[-.24,-.012],[-.11,-.012],[-.11,.045],[-.24,.045]],[[[-.225,.004],[-.125,.004],[-.125,.03],[-.225,.03]]]),rect(-.09,.058,-.07,.072),rect(.09,.058,.11,.072),poly([[-.03,0],[.0,0],[-.005,-.022],[-.025,-.03]])]};
+ const silGeo=(k,z)=>{const g=mg(SH[k].map(s=>{const e=new THREE.ExtrudeGeometry(s,{depth:.012,bevelEnabled:true,bevelThickness:.004,bevelSize:.004,bevelSegments:1,curveSegments:6});return pt(e,SIL,[0,0,z])}));return g};
+ const TAPE={pistol:0x3f8fd6,rifle:0x4fa150,shotgun:0xe0533f,smg:0x8b5cc9};
+ for(const k in SH){const W=.9,H=.62,D=.62,tc=TAPE[k],p=[];
+  p.push(R_(W,H,D,KR,[0,H/2,0],0,.06,.035));                                      /* 상자 */
+  p.push(R_(W-.04,.022,.012,KRD,[0,H-.004,0],0,.006,.004));                        /* 윗면 뚜껑 이음매(가로) */
+  p.push(R_(.16,.012,D+.012,tc,[0,H+.002,0],0,.005,.004),R_(.16,.16,.012,tc,[0,H-.07,D/2+.004],0,.005,.004),R_(.16,.12,.012,tc,[0,H-.05,-D/2-.004],0,.005,.004));   /* 테이프(앞뒤로 조금 내려옴) */
+  for(const s of[1,-1])p.push(R_(.014,.07,.2,KRD*1,[s*(W/2+.002),H*.68,0],0,.03,.006));   /* 옆 손잡이 구멍 */
+  p.push(R_(.74,.36,.016,LB,[0,H*.43,D/2+.006],0,.04,.006));                       /* 앞 라벨 */
+  p.push(pt(new THREE.CylinderGeometry(.04,.04,.014,16),tc,[.3,H*.43+.12,D/2+.016],[Math.PI/2,0,0]));   /* 라벨 귀퉁이 동그라미 */
+  const sg=silGeo(k,0);const sc=k==='pistol'?1.25:k==='smg'?1.18:1.02;sg.scale(sc,sc,1);sg.translate(k==='pistol'?-.02:0,H*.43-.005,D/2+.012);p.push(sg);
+  p.push(R_(W+.004,.03,D+.004,KRD,[0,.015,0],0,.012,.008));                        /* 바닥 쪽 진한 띠 */
+  GEO['lk_gkit_'+k]=mg(p)}
+ /* 낚싯대: water.js GEO.rod와 같은 배치(T=-.62, 길이 2.3), 색만 철제로 */
+ const rodGeo=(P,rl=2.3,K=1)=>{const T=-.62,A=(d,o=0)=>[0,Math.sin(-T)*d+o,Math.cos(-T)*d+.12],X=Math.PI/2+T,c=(a,b,h,n)=>cyl(a*K,b*K,h,n);
+  const p=[pt(c(.05,.054,.34,12),P.grip,[0,0,-.12],[X,0,0]),pt(c(.058,.058,.04,12),P.cap,[0,Math.sin(-T)*-.3,Math.cos(-T)*-.3],[X,0,0]),pt(c(.036,.036,.16,12),P.seat,A(-.02),[X,0,0]),
+   pt(c(.042,.046,.2,12),P.grip,A(.16),[X,0,0]),pt(c(.03,.034,.03,12),P.acc,A(.27),[X,0,0]),pt(c(.012,.03,rl,8),P.blank,A(rl/2+.28),[X,0,0]),
+   pt(c(.016,.016,.11,6),P.stem,[0,-.06,.06]),pt(c(.058,.058,.12,14),P.body,[0,-.14,.1],[X,0,0]),pt(c(.068,.06,.08,14),P.spool,[0,-.12,.2],[X,0,0]),pt(c(.07,.07,.015,14),P.acc,[0,-.11,.245],[X,0,0]),
+   pt(box(.1,.012,.012),P.hand,[.06,-.15,.1]),pt(box(.012,.07,.012),P.hand,[.11,-.18,.1]),pt(box(.04,.025,.025),P.knob,[.11,-.22,.1]),
+   ...[[.62,.035],[1.05,.026],[1.5,.02],[1.95,.016],[2.3,.014]].filter(q=>q[0]<=rl).map(([d,r])=>pt(new THREE.TorusGeometry(r*K,.006*K,4,10),P.guide,A(d+.28,-r*K-.012*K),[X,0,0]))];
+  /* 대에 감은 띠(장식): 중급은 파란 쇠 띠, 고급은 금색 띠 + 밝은 마디 */
+  for(const d of P.bands)if(d<rl)p.push(pt(c(.033-d*.006,.034-d*.006,.03,10),P.band,A(.3+d),[X,0,0]));
+  if(P.hi)for(const d of[.55,.95,1.35,1.75].filter(d=>d<rl))p.push(pt(c(.026-d*.006,.027-d*.006,.08,8),P.hi,A(.3+d),[X,0,0]));
+  const g=mg(p);g.userData.tip=A(rl+.28);return g};
+ const P2={grip:0x4a525c,cap:0x66707b,seat:0xb4bcc5,acc:0x4f86c4,blank:0x8e99a6,stem:0x9aa4ae,body:0xa7b0ba,spool:0xccd3db,hand:0xb0b8c2,knob:0x3b424b,guide:0xdfe3e8,band:0x4f7fb8,bands:[.04,.1,.62]},P3={grip:0xc9ced5,cap:0xe6b84a,seat:0xf0f3f6,acc:0xe6b84a,blank:0xd5dbe2,stem:0xe8ecf0,body:0xe3e8ed,spool:0xe9bd52,hand:0xf2f5f8,knob:0xe6b84a,guide:0xf6f8fa,band:0xe6b84a,bands:[.04,.1,.62,1.12],hi:0xf4f7fa};
+ GEO.lk_rod2=rodGeo(P2);GEO.lk_rod3=rodGeo(P3);
+ /* 가방·자판기 아이콘: 짧고 굵게 그려서 쇠 색이 보이게 */
+ GEO.lk_rod2_i=rodGeo(P2,1.2,1.75);GEO.lk_rod3_i=rodGeo(P3,1.2,1.75);
+ for(const k of['lk_rod2','lk_rod3','lk_rod2_i','lk_rod3_i'])GEO[k].computeBoundingSphere()}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkKits35()}catch(e){console.error('look: 35차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
