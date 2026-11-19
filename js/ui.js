@@ -192,16 +192,16 @@ function actApply(){const e=ACT.e;if(!e)return;const w=WEAP[curId()]||{};let md=
 function actCancel(){ACT.id=null;ACT.go=0;ACT.pend=0;ACT.rel=0;inp.fire=inp.act=inp.actEdge=inp.aiming=false}
 cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}
  const[jx,jy,jr]=joyC();if(joy.id===null&&Math.hypot(e.clientX-jx,e.clientY-jy)<=jr*1.5){joy.id=e.pointerId;joy.ox=jx;joy.oy=jy;joyMove(e);return}
- if(ACT.id!==null)return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=actGoTap(ACT.g);ACT.pend=ACT.go?0:ACT.t+90});
+ if(ACT.id!==null)return;if(touchHook('down',e))return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=actGoTap(ACT.g);ACT.pend=ACT.go?0:ACT.t+90});
 function aimAt(e){_v.set(P.x,groundY(P.x,P.z)+1.2,P.z).project(cam);const dx=e.clientX-(_v.x*.5+.5)*innerWidth,dy=e.clientY-(-_v.y*.5+.5)*innerHeight,l=Math.hypot(dx,dy)||1;inp.ax=dx/l;inp.az=dy/l;inp.aiming=true;inp.fire=true}
-cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
+cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(touchHook('move',e))return;if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
  if(ACT.go){if(ACT.mv>14){ACT.go=0;ACT.pend=performance.now()}return}   /* 누른 채 끌면 걸어가기 대신 쓰기·조준 */
  if(inp.fire&&!(WEAP[curId()]||{}).rod){aimAt(e);ACT.g=groundAt(e.clientX,e.clientY)}});
-const cvUp=e=>{joyEnd(e);if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup',go=ACT.go,g=ACT.g,quick=ACT.mv<14&&performance.now()-ACT.t<450;
+const cvUp=e=>{joyEnd(e);if(touchHook(e.type==='pointerup'?'up':'cancel',e))return;if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup',go=ACT.go,g=ACT.g,quick=ACT.mv<14&&performance.now()-ACT.t<450;
  if(ACT.pend&&up){ACT.pend=0;actApply();ACT.id=null;ACT.go=0;ACT.rel=1;return}   /* 90ms 안에 뗀 톡: 한 번만 쓰고 다음 장면에서 놓아요 */
  actCancel();if(go&&up&&quick&&g)worldTap(g[0],g[1])};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
-const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z)))return[x,z]}return null}
+const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z))){let a=t-.4,b=t;for(let i=0;i<7;i++){const m=(a+b)/2,mx=o.x+d.x*m,mz=o.z+d.z*m;if(o.y+d.y*m<=Math.max(0,groundY(mx,mz)))b=m;else a=m}return[o.x+d.x*b,o.z+d.z*b]}}return null}   /* 33차: 마지막 칸은 반씩 나눠 정확하게(누른 곳 설치) */
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
    아니면(또는 적이 가까우면) 손에 든 것 쓰기(공격·던지기·감기). 누른 채 끌면 그쪽으로 조준 */
 function actMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(fishing)return'fire';if(!w.rod&&nearestEnemy(P.x,P.z,w.melee||id==='fist'?3.4:Math.min(w.range||3.4,12)))return'fire';return target&&target.lab?'act':'fire'}
@@ -348,7 +348,7 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 /* ③ 두 손가락 확대·축소 */
 const ZOOM={t:null,min:.74,max:1.3,pts:{},on:0,d0:1,z0:1};
 $('bZoom').style.display='none';
-{const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{aimP.id=null;actCancel();for(const id in taps)delete taps[id]};   /* 쓰기·조준·톡 누르기를 끊어요(32차: 조이스틱 손가락은 그대로) */
+{const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{aimP.id=null;actCancel();thCancel();for(const id in taps)delete taps[id]};   /* 쓰기·조준·톡 누르기를 끊어요(32차: 조이스틱 손가락은 그대로) */
  cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel()||e.pointerId===joy.id)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
   if(p.length>=2){ZOOM.on=1;ZOOM.d0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.z0=ZOOM.t==null?zoomK:ZOOM.t;stopOthers()}});
  cv.addEventListener('pointermove',e=>{const q=ZOOM.pts[e.pointerId];if(!q)return;q.x=e.clientX;q.y=e.clientY;if(!ZOOM.on)return;const p=two();if(p.length<2)return;
@@ -432,5 +432,85 @@ const NADE={held:false};
 function throwNadeAt(g){if(!g||!inp.aiming){throwNade();return}if(!take('grenade',1))return;let dx=g[0]-P.x,dz=g[1]-P.z,d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;d=clamp(d,3,14);P.rot=Math.atan2(dx,dz);
  P.a.play('Throw',{once:1,lock:.5,force:1,speed:1.4});const m=mesh(GEO.grenade);m.scale.setScalar(.8);scene.add(m);nades.push({m,x:P.x,z:P.z,dx,dz,d,t:0,T:.75,y0:groundY(P.x,P.z)+1.6});hudDirty=true}
 {const _a=attack;attack=function(){if(curId()!=='grenade')return _a();if(P.cd>0||NADE.held)return;NADE.held=true;P.cd=WEAP.grenade.cd;throwNadeAt(ACT.g)}}   /* 누를 때마다 하나(누르고 있어도 하나) */
+/* ===== 33차(기획자 11-19 21:27) =====
+   ① 설치: 설치 모드에서 화면을 누르면 미리보기가 누른 곳으로 가고(누른 채 끌면 따라와요), 떼면 거기에 놓아요(BPIN, actors.js ghostPos). 철거 모드는 누른 건물을 철거.
+   ② 관리자 모드 크리에이티브(CRV): 1m 정사각형 블록. 땅을 누르면 그 칸에, 블록 윗면을 누르면 위에, 옆면을 누르면 옆에 쌓여요. 누른 채 끌면 같은 층에 줄지어 칠해요.
+      지우기·되돌리기·색 6가지. 블록은 걸어서 지나갈 수 있어요(틀 그리기용). 바뀔 때마다 저장: 이 폰(localStorage 'frontisle_blocks') +
+      게임 링크 데이터 'creative/main'(주인만 읽고 써요, Claude가 db_get으로 읽어요). 📋는 글로 복사(백업). */
+const TCH={id:null,kind:null,pend:0,e:null};
+function touchHook(type,e){
+ if(type==='down'){
+  if(CRV.on&&DEV.on){TCH.id=e.pointerId;TCH.kind='cre';TCH.e={clientX:e.clientX,clientY:e.clientY};TCH.pend=performance.now()+90;return true}   /* 두 손가락 확대와 헷갈리지 않게 90ms 뒤 */
+  if(bmode){TCH.id=e.pointerId;TCH.kind='bld';bldPin(e);return true}
+  return false}
+ if(e.pointerId!==TCH.id)return false;
+ if(type==='move'){if(TCH.kind==='cre'){TCH.e={clientX:e.clientX,clientY:e.clientY};if(!TCH.pend)creDrag(TCH.e)}else bldPin(e);return true}
+ const k=TCH.kind;TCH.id=null;TCH.kind=null;
+ if(k==='cre'){if(type==='up'&&TCH.pend){TCH.pend=0;creDown(TCH.e)}TCH.pend=0;creEnd()}
+ else if(k==='bld'){if(type==='up'&&bmode){if(bmode==='demo')demoAt(BPIN.x,BPIN.z);else placeBuild()}BPIN.on=0}
+ return true}
+function thCancel(){if(TCH.kind==='cre'&&CRV.stroke){const st=CRV.stroke;CRV.stroke=null;creRevert(st)}TCH.id=null;TCH.kind=null;TCH.pend=0;BPIN.on=0}
+function bldPin(e){const g=groundAt(e.clientX,e.clientY);if(g){BPIN.on=1;BPIN.x=g[0];BPIN.z=g[1]}}
+function demoAt(x,z){let b=null,bd=2.8;for(const s of structs){if(!s.own||!!s.in!==!!INT.on)continue;const q=sdef(s),d=dist(x,z,s.x,s.z)-Math.max(q.bx,q.bz)*.6;if(d<bd){bd=d;b=s}}
+ if(!b){toast('누른 곳에 철거할 내 건물이 없어요');return}if(dist(P.x,P.z,b.x,b.z)>16){toast('너무 멀어요. 조금 더 가까이 가요');return}
+ const px=P.x,pz=P.z;P.x=b.x;P.z=b.z;try{placeBuild()}finally{P.x=px;P.z=pz}}   /* 철거 자체는 placeBuild(철거 모드)가 그대로(멀티 포함) */
+{const _u=updPlayer;updPlayer=function(dt){if(TCH.pend&&performance.now()>=TCH.pend){TCH.pend=0;if(TCH.kind==='cre')creDown(TCH.e)}_u(dt)}}
+/* ----- 크리에이티브 블록 ----- */
+const CRV={on:false,col:0,mode:'add',map:new Map(),keys:[],mesh:null,cap:0,mat:null,undo:[],stroke:null,db:null,dbTried:false,saveT:0,saving:false,again:false,st:'',at:0,bar:null,clrArm:0,inited:false};
+const CRV_COL=[[0xf0e6d0,'크림'],[0xb06c36,'나무'],[0x858c93,'돌'],[0xc93c36,'빨강'],[0x479a43,'초록'],[0x2f7cc8,'파랑']],CRV_MAX=12000;
+const crvKey=(x,z,k)=>x+','+z+','+k;
+function crvMat(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,64,64);g.strokeStyle='rgba(40,24,12,.32)';g.lineWidth=5;g.strokeRect(2.5,2.5,59,59);const t=new THREE.CanvasTexture(c);return new THREE.MeshLambertMaterial({map:t})}
+function crvRebuild(){const n=CRV.map.size;if(!CRV.mat)CRV.mat=crvMat();if(!CRV.mesh||CRV.cap<n){const cap=Math.max(256,Math.ceil(n*1.5));if(CRV.mesh)scene.remove(CRV.mesh);const m=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),CRV.mat,cap);m.frustumCulled=false;m.renderOrder=2;scene.add(m);CRV.mesh=m;CRV.cap=cap}
+ const m=CRV.mesh,M=new THREE.Matrix4(),C=new THREE.Color();let i=0;CRV.keys.length=0;for(const [key,c] of CRV.map){const [x,z,k]=key.split(',').map(Number);M.makeTranslation(x+.5,k+.5,z+.5);m.setMatrixAt(i,M);C.setHex((CRV_COL[c]||CRV_COL[0])[0]);m.setColorAt(i,C);CRV.keys[i]=key;i++}
+ if(!i){m.setColorAt(0,C.setHex(0xffffff))}m.count=i;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;m.visible=DEV.on&&mode==='play'}
+function crvRay(cx,cy){if(!CRV.mesh||!CRV.mesh.count)return null;_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const h=_ray.intersectObject(CRV.mesh,false)[0];if(!h||h.instanceId==null||!CRV.keys[h.instanceId])return null;return {key:CRV.keys[h.instanceId],n:h.face.normal}}
+const crvBase=(x,z)=>Math.floor(Math.max(groundY(x+.5,z+.5),0)+.35);
+function creSet(key,c){if(c!=null&&!CRV.map.has(key)&&CRV.map.size>=CRV_MAX){toast(`블록은 ${CRV_MAX}개까지예요`);return}const prev=CRV.map.has(key)?CRV.map.get(key):null;if(prev===c)return;if(CRV.stroke)CRV.stroke.ops.push({key,prev,c});if(c==null)CRV.map.delete(key);else CRV.map.set(key,c);crvRebuild();sfx(c==null?300:640+Math.random()*80,.03,'triangle',.02)}
+function creDown(ev){const h=crvRay(ev.clientX,ev.clientY);CRV.stroke={ops:[],k:null};if(CRV.mode==='del'){if(h)creSet(h.key,null);return}
+ let x,z,k;if(h){[x,z,k]=h.key.split(',').map(Number);x+=Math.round(h.n.x);k+=Math.round(h.n.y);z+=Math.round(h.n.z)}
+ else{const g=groundAt(ev.clientX,ev.clientY);if(!g)return;x=Math.floor(g[0]);z=Math.floor(g[1]);k=crvBase(x,z);while(CRV.map.has(crvKey(x,z,k)))k++}
+ if(k<0||k>60)return;CRV.stroke.k=k;creSet(crvKey(x,z,k),CRV.col)}
+function creDrag(ev){if(!CRV.stroke)return;if(CRV.mode==='del'){const h=crvRay(ev.clientX,ev.clientY);if(h)creSet(h.key,null);return}const k=CRV.stroke.k;if(k==null)return;
+ _ray.setFromCamera({x:ev.clientX/innerWidth*2-1,y:-(ev.clientY/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;if(Math.abs(d.y)<1e-4)return;const t=(k+.5-o.y)/d.y;if(t<0)return;   /* 같은 층(높이 k+0.5) 평면에서 칸을 찾아 줄지어 칠해요 */
+ const key=crvKey(Math.floor(o.x+d.x*t),Math.floor(o.z+d.z*t),k);if(!CRV.map.has(key))creSet(key,CRV.col)}
+function creEnd(){const st=CRV.stroke;CRV.stroke=null;if(st&&st.ops.length){CRV.undo.push(st);if(CRV.undo.length>300)CRV.undo.shift();creSaveSoon()}creBarUpd()}
+function creRevert(st){for(let i=st.ops.length-1;i>=0;i--){const o=st.ops[i];if(o.prev==null)CRV.map.delete(o.key);else CRV.map.set(o.key,o.prev)}crvRebuild()}
+function creUndo(){const st=CRV.undo.pop();if(!st){toast('되돌릴 것이 없어요');return}creRevert(st);sfx(420,.05);creSaveSoon();creBarUpd()}
+function creClear(){if(!CRV.map.size)return;if(performance.now()-CRV.clrArm>2500){CRV.clrArm=performance.now();toast('🗑 한 번 더 누르면 블록을 모두 지워요 (↩로 되돌릴 수 있어요)');return}CRV.clrArm=0;const st={ops:[]};for(const [key,c] of CRV.map)st.ops.push({key,prev:c,c:null});CRV.map.clear();CRV.undo.push(st);crvRebuild();creSaveSoon();creBarUpd();toast('블록을 모두 지웠어요')}
+function crvStr(){const a=[];for(const [key,c] of CRV.map){const [x,z,k]=key.split(',');a.push(x+'.'+z+'.'+k+'.'+c)}return a.join(';')}
+function crvLoad(s){CRV.map.clear();if(s)for(const t of String(s).split(';')){const p=t.split('.').map(Number);if(p.length<4||p.some(isNaN))continue;CRV.map.set(crvKey(p[0],p[1],p[2]),p[3])}crvRebuild()}
+function creSaveSoon(){clearTimeout(CRV.saveT);CRV.st='💾 저장 중…';creBarUpd();CRV.saveT=setTimeout(creSave,700)}
+function creSave(){const s=crvStr(),at=Date.now();CRV.at=at;try{localStorage.setItem('frontisle_blocks',JSON.stringify({v:1,at,blocks:s}))}catch(e){}
+ if(!CRV.db){CRV.st=CRV.dbTried?'📱 이 폰에만 저장됨':'📱 저장됨';creBarUpd();return}
+ if(CRV.saving){CRV.again=true;return}CRV.saving=true;   /* 한 문서에는 한 번에 하나씩만 써요 */
+ Promise.resolve().then(()=>CRV.db.doc('creative/main').set({v:1,at,n:CRV.map.size,blocks:s,px:Math.round(P.x),pz:Math.round(P.z)})).then(()=>{CRV.st='☁ 저장됨 · Claude가 볼 수 있어요'},err=>{CRV.st='📱 이 폰에만 저장(☁ 안 됨'+(err&&err.code?' · '+err.code:'')+')'}).then(()=>{CRV.saving=false;creBarUpd();if(CRV.again){CRV.again=false;creSave()}})}
+function creInit(){if(CRV.inited)return;CRV.inited=true;try{const r=JSON.parse(localStorage.getItem('frontisle_blocks')||'null');if(r){CRV.at=r.at||0;crvLoad(r.blocks)}}catch(e){}crvRebuild();
+ const cl=window.claude;if(!cl||typeof cl.use!=='function'){CRV.st='📱 이 폰에만 저장';creBarUpd();return}CRV.dbTried=true;CRV.st='☁ 연결 중…';creBarUpd();
+ const to=setTimeout(()=>{if(!CRV.db){CRV.st='📱 이 폰에만 저장(☁ 연결 안 됨)';creBarUpd()}},10000);
+ Promise.resolve(cl.use('db')).then(d=>{if(!d){clearTimeout(to);CRV.st='📱 이 폰에만 저장(☁ 로그인 필요)';creBarUpd();return}CRV.db=d;return d.doc('creative/main').get().then(sn=>{clearTimeout(to);const r=sn&&sn.exists?sn.data():null;
+  if(r&&typeof r.blocks==='string'&&(r.at||0)>(CRV.at||0)){CRV.at=r.at;crvLoad(r.blocks);try{localStorage.setItem('frontisle_blocks',JSON.stringify({v:1,at:r.at,blocks:r.blocks}))}catch(e){}toast(`☁ 저장된 블록 ${CRV.map.size}개를 불러왔어요`)}
+  else if(CRV.map.size&&!(r&&(r.at||0)>=(CRV.at||0)))creSave();   /* 이 폰에만 있던 것을 올려요 */
+  CRV.st='☁ 연결됨';creBarUpd()})}).catch(err=>{clearTimeout(to);CRV.st='📱 이 폰에만 저장(☁ 안 됨)';creBarUpd()})}
+function creCopy(){const s='BLK1:'+crvStr(),n=CRV.map.size;const done=()=>toast(`📋 블록 ${n}개를 글로 복사했어요. 대화창에 붙여 보내도 돼요`);
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(done,()=>creCopyBox(s));else creCopyBox(s)}
+function creCopyBox(s){let t=$('creCopyBox');if(!t){t=document.createElement('textarea');t.id='creCopyBox';t.style.cssText='position:fixed;left:5%;top:20%;width:90%;height:40%;z-index:80;font:12px monospace;border-radius:12px;padding:10px';t.onblur=()=>t.remove();document.body.appendChild(t)}t.value=s;t.focus();t.select();toast('글을 길게 눌러 복사해요. 다른 곳을 누르면 닫혀요')}
+function creBar(){if(CRV.bar)return CRV.bar;const b=document.createElement('div');b.id='creBar';b.className='pn';b.style.cssText='position:absolute;z-index:6;padding:7px 9px;border-radius:16px;border-color:#4fc3ff;font-size:12.5px;font-weight:800';
+ b.innerHTML='<div id="creTx" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 2px 6px"></div><div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'+CRV_COL.map((c,i)=>`<button data-c="col" data-i="${i}" title="${c[1]}" style="width:28px;height:28px;border-radius:8px;border:3px solid #fff;background:#${c[0].toString(16).padStart(6,'0')};box-shadow:0 0 0 2px rgba(91,61,43,.25);padding:0"></button>`).join('')
+  +'<span style="width:4px"></span>'+[['add','＋ 쌓기'],['del','－ 지우기'],['undo','↩'],['copy','📋'],['clr','🗑'],['off','✕']].map(([k,t])=>`<button class="btn g" data-c="${k}" style="min-height:32px;padding:4px 8px;font-size:12px;width:auto">${t}</button>`).join('')+'</div>';
+ b.addEventListener('pointerdown',e=>{const t=e.target.closest('[data-c]');if(!t)return;e.preventDefault();e.stopPropagation();const c=t.dataset.c;
+  if(c==='col'){CRV.col=+t.dataset.i;CRV.mode='add';sfx(700,.03)}else if(c==='add'||c==='del'){CRV.mode=c;sfx(600,.03)}else if(c==='undo')creUndo();else if(c==='copy')creCopy();else if(c==='clr')creClear();else if(c==='off')creOff();creBarUpd()});
+ $('ui').insertBefore(b,$('shade'));CRV.bar=b;return b}
+function creBarUpd(){const b=CRV.bar;if(!b)return;const show=CRV.on&&DEV.on&&mode==='play';b.style.display=show?'':'none';if(!show)return;const port=VW<=VH;Object.assign(b.style,port?{left:'12px',right:'12px',top:'58px',transform:'none'}:{left:'50%',right:'',top:'8px',transform:'translateX(-50%)'});
+ $('creTx').textContent=`🧱 크리에이티브 · 블록 ${CRV.map.size}개 · ${CRV.mode==='del'?'지우기':'쌓기'} · ${CRV.st}`;
+ b.querySelectorAll('[data-c=col]').forEach(x=>x.style.boxShadow=+x.dataset.i===CRV.col&&CRV.mode==='add'?'0 0 0 3px #5B3D2B':'0 0 0 2px rgba(91,61,43,.25)');
+ b.querySelectorAll('[data-c=add],[data-c=del]').forEach(x=>x.classList.toggle('on',x.dataset.c===CRV.mode));b.querySelectorAll('[data-c=add],[data-c=del]').forEach(x=>{x.style.background=x.dataset.c===CRV.mode?'var(--brn)':'';x.style.color=x.dataset.c===CRV.mode?'#fff':''})}
+function creOn(){if(!DEV.on){toast('관리자 모드에서만 돼요');return}creInit();creBar();CRV.on=true;setBuild(null);crvRebuild();creBarUpd();devHud();toast('🧱 땅이나 블록 윗면·옆면을 누르면 쌓여요 · 누른 채 끌면 줄지어 · 조이스틱으로 걸으며 해요')}
+function creOff(){CRV.on=false;creEnd();creBarUpd();devHud()}
+{const _d=devInit;devInit=function(){_d();const row=devBar.querySelector('div[style*="flex-wrap"]');if(!row)return;const b=document.createElement('button');b.className='btn g';b.id='devCre';b.style.cssText='min-height:38px;padding:8px 10px;font-size:13px;width:auto;border:2px solid #4fc3ff';b.textContent='🧱 크리에이티브';row.appendChild(b);
+ b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(CRV.on)creOff();else creOn()})}}
+{const _h=devHud;devHud=function(){_h();const b=$('devCre');if(b)b.textContent=CRV.on?'🧱 크리에이티브 끄기':'🧱 크리에이티브';if(!DEV.on&&CRV.on){CRV.on=false}if(CRV.mesh)CRV.mesh.visible=DEV.on&&mode==='play';creBarUpd()}}
+{const _h=hud;hud=function(){_h();if(DEV.on&&mode==='play'&&!CRV.inited&&!CRV.chk){CRV.chk=1;let has=false;try{has=!!localStorage.getItem('frontisle_blocks')}catch(e){}if(has)creInit()}if(CRV.mesh){const v=DEV.on&&mode==='play';if(CRV.mesh.visible!==v)CRV.mesh.visible=v}}}   /* 관리자 모드면 저장된 블록을 보여 줘요 */
+{const _r=resize;resize=function(){_r();creBarUpd()}}
+{const _f=findTarget;findTarget=function(){return CRV.on&&DEV.on?null:_f()}}   /* 크리에이티브 중에는 상호작용 글자·대상 없음 */
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

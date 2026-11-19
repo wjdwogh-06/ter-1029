@@ -54,9 +54,10 @@ async def steps(pg):
         q=json.loads(r);await pg.touchscreen.tap(q[0],q[1]);await pg.wait_for_timeout(200)
         r2=await ev("()=>JSON.stringify({auto:P.auto&&P.auto.k,toTree:!!(P.auto&&P.auto.o===_TT)})");R=json.loads(r2);R['ok']=R['toTree'];res['goTree']=R
     # 7. 설치 모드에서 화면 톡 = 설치
-    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));P.auto=null;give('kit_stash',1);setBuild('stash');for(let k=0;k<60;k++){P.x=VIL.x+20+(k%8)*7;P.z=VIL.z+30+((k/8)|0)*7;P.rot=0;unstuck();await sl(60);if(ghostPos().ok)break}await sl(200);return JSON.stringify({ok:ghostPos().ok,n:structs.filter(s=>s.t==='stash'&&s.own).length})}""")
-    await pg.touchscreen.tap(650,150);await pg.wait_for_timeout(400)
-    r2=await ev("()=>JSON.stringify({n:structs.filter(s=>s.t==='stash'&&s.own).length,bmode})");R={'before':json.loads(r),'after':json.loads(r2)};R['ok']=R['before']['ok'] and R['after']['n']==R['before']['n']+1;res['build']=R
+    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));P.auto=null;give('kit_stash',1);setBuild('stash');for(let k=0;k<60;k++){P.x=VIL.x+20+(k%8)*7;P.z=VIL.z+30+((k/8)|0)*7;P.rot=0;unstuck();await sl(60);if(ghostPos().ok)break}updCamera(0,P.x,groundY(P.x,P.z),P.z,true);await sl(300);const g=ghostPos(),q=scr(g.x,groundY(g.x,g.z),g.z);window._Q=q;return JSON.stringify({ok:g.ok,n:structs.filter(s=>s.t==='stash'&&s.own).length})}""")
+    q=await ev("()=>_Q")   # 33차: 설치는 누른 곳에 → 앞쪽 미리보기 자리를 눌러요
+    await pg.touchscreen.tap(q[0],q[1]);await pg.wait_for_timeout(400)
+    r2=await ev("()=>JSON.stringify({n:structs.filter(s=>s.t==='stash'&&s.own).length,bmode,toast:document.getElementById('toast').textContent,kit:invN('kit_stash')})");R={'before':json.loads(r),'after':json.loads(r2)};R['ok']=R['before']['ok'] and R['after']['n']==R['before']['n']+1;res['build']=R
     await ev("()=>setBuild(null)")
     for k,v in res.items():print(k,json.dumps(v,ensure_ascii=False))
     await pg.screenshot(path=O('p32_hud.jpg'),type='jpeg',quality=85)
