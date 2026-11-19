@@ -14,9 +14,9 @@ async def steps(pg):
     print('axe/rod',await ev("""()=>{let t=null;objs.forEach(o=>{if(!t&&o.re<=0&&OBJT[o.t].drop[0]==='wood'&&dist(o.x,o.z,330,420)<60)t=o});P.x=t.x;P.z=t.z+OBJT[t.t].r+.9;P.rot=Math.PI;P.auto=null;P.cd=0;
       const r={};S.quick[S.sel]=null;let g=findTarget();r.fist=g&&g.lab;const h0=t.hp;target=g;interact();r.fistHit=h0-t.hp;
       give('axe',1);S.quick[S.sel]='axe';P.cd=0;g=findTarget();r.axe=g&&g.lab;const h1=g.o.hp;target=g;interact();r.axeHit=h1-g.o.hp;
-      give('rod',1);S.quick[S.sel]='rod';g=findTarget();r.rod=g?g.lab:null;const v=structs.find(q=>q.t==='vend');P.x=v.x;P.z=v.z+1.6;r.rodVend=findTarget()?'보임':null;S.quick[S.sel]='pistol';P.x=v.x;P.z=v.z+1.6;r.pistolVend=(findTarget()||{}).lab;return JSON.stringify(r)}"""))
+      give('rod',1);S.quick[S.sel]='rod';g=findTarget();r.rod=g?g.lab:null;const v=structs.find(q=>q.t==='vend');P.x=v.x;P.z=v.z+sdef(v).bz+.7;r.rodVend=findTarget()?'보임':null;S.quick[S.sel]='pistol';P.x=v.x;P.z=v.z+sdef(v).bz+.7;r.pistolVend=(findTarget()||{}).lab;return JSON.stringify(r)}"""))
     # 센터 자판기 앞으로 가서 [자판기] → 사기
-    await ev("()=>{const s=structs.find(q=>q.t==='vend'&&q.pi===0);P.x=s.x+.2;P.z=s.z+2.1;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    await ev("()=>{const s=structs.find(q=>q.t==='vend'&&q.pi===0);P.x=s.x+.2;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(900)
     print('label',await ev("()=>{const t=findTarget();return t&&t.lab}"))
     await pg.screenshot(path=O('econ_vend_world.jpg'),type='jpeg',quality=85)
@@ -26,7 +26,7 @@ async def steps(pg):
     print('poor',await ev("()=>{S.coins=0;renderPanel();return document.querySelectorAll('[data-a=\"vbuy\"]:disabled').length}"))
     await ev("()=>closePanel()")
     # 쓰레기통: 팔기 20%
-    await ev("()=>{const s=structs.find(q=>q.t==='recycle'&&q.pi===0);P.x=s.x;P.z=s.z+2.0;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    await ev("()=>{const s=structs.find(q=>q.t==='recycle'&&q.pi===0);P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(700)
     print('label2',await ev("()=>{const t=findTarget();return t&&t.lab}"))
     print('sell',await ev("""()=>{give('wood',10);give('f_tuna',2);give('rifle',1);S.coins=0;const t=findTarget();target=t;inp.actEdge=true;interact();inp.actEdge=false;

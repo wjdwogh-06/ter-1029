@@ -1,6 +1,6 @@
 # 식물 도감·배치·채집 검사(17·19차)
 # 기대: items 12·icons 12·inVend 0 / sites 12·본섬만·종류 12개 한 번씩·구역마다 11포기·설치 금지 원과 안 겹침·구조물 안 0·bad 0·다시 자라기 900초
-#       라벨 '○○ 캐기·따기·꺾기' / 따면 가방+도감·다시 안 보임·다시 자람 / 모양: 가까운 것만 그림 / 낚싯대 들면 대상 아님 / 눌러서 따기
+#       라벨 '○○ 캐기·따기·꺾기' / 따면 가방+도감·다시 안 보임·다시 자람 / 모양: 가까운 것만 그림 / 낚싯대 들면 대상 아님 / 멀리서 누르면 그대로(tapFar got 0·moved 0), 붙어서 누르면 따기
 #       식물 위 설치 막힘 / 도감 창에 자라는 곳(본섬 ○쪽) / 저장에 pdex·pgone / errs []
 import os
 async def steps(pg):
@@ -16,7 +16,7 @@ async def steps(pg):
       r.total=PL.list.length;r.where=PLANTS.map(q=>q.n+': '+(PL.where[q.id]||[]).join(', '));return JSON.stringify(r)}"""))
     print('solid',await ev("()=>{const a=PL.list.find(p=>p.id==='avocado'),m=PL.list.find(p=>p.id==='mush');return JSON.stringify({avocado:walk(a.x+.3,a.z,.42,P)!==null,mush:walk(m.x,m.z,.42,P)!==null})}"))
     # 밀 구역(스폰에서 가장 가까움) 가까이 서면 라벨
-    print('label',await ev("""()=>{const p=PL.list.find(q=>q.id==='wheat');window.TQp=p;P.x=p.x;P.z=p.z+1.3;P.rot=Math.PI;P.auto=null;S.quick[S.sel]=null;target=findTarget();return JSON.stringify({k:target&&target.k,lab:target&&target.lab})}"""))
+    print('label',await ev("""()=>{const p=PL.list.find(q=>q.id==='wheat');window.TQp=p;P.x=p.x;P.z=p.z+1.0;P.rot=Math.PI;P.auto=null;S.quick[S.sel]=null;target=findTarget();return JSON.stringify({k:target&&target.k,lab:target&&target.lab})}"""))
     await ev("()=>updCamera(0,P.x,groundY(P.x,P.z),P.z,true)");await pg.wait_for_timeout(900);await pg.screenshot(path=O('plant_field.jpg'),type='jpeg',quality=85)
     print('pick',await ev("""()=>{const w0=invN('wheat');P.cd=0;inp.actEdge=true;target=findTarget();interact();inp.actEdge=false;const p=TQp;
       return JSON.stringify({got:invN('wheat')-w0,dex:S.pdex.wheat,gone:S.pgone[p.i],toast:document.getElementById('toast').textContent})}"""))
@@ -50,11 +50,11 @@ async def steps(pg):
     print('popdone',await ev("()=>JSON.stringify({pop:TQa.pop,pops:PL.pops.length})"))
     await ev("()=>{S.quick[S.sel]=null}")
     print('rod',await ev("()=>{give('rod',1);S.quick[S.sel]='rod';P.auto=null;target=findTarget();const r={k:target&&target.k||null};S.quick[S.sel]=null;return JSON.stringify(r)}"))
-    # 딸기 구역: 식물을 누르면 걸어가서 따기
-    await ev("()=>{const p=PL.list.find(q=>q.id==='strawberry'&&!plGone(q));window.TQpl=p;window.TQs0=invN('strawberry');P.x=p.x+4.5;P.z=p.z+2;unstuck();P.cd=0;P.auto=null;worldTap(p.x,p.z)}")
-    for _ in range(16):
-        await pg.wait_for_timeout(500)
-        if await ev("()=>!P.auto"): break
+    # 딸기 구역(34차): 멀리서 누르면 걸어가지 않고 안 따짐, 바짝 붙어서 누르면 따짐
+    await ev("()=>{const p=PL.list.find(q=>q.id==='strawberry'&&!plGone(q));window.TQpl=p;window.TQs0=invN('strawberry');P.x=p.x+4.5;P.z=p.z+2;unstuck();P.cd=0;P.auto=null;window.TQp0=[P.x,P.z];worldTap(p.x,p.z)}")
+    await pg.wait_for_timeout(1000)
+    print('tapFar',await ev("()=>JSON.stringify({got:invN('strawberry')-TQs0,gone:plGone(TQpl),moved:+Math.hypot(P.x-TQp0[0],P.z-TQp0[1]).toFixed(2),auto:!!P.auto})"))
+    await ev("()=>{const p=TQpl;P.x=p.x;P.z=p.z+1.0;P.rot=Math.PI;P.cd=0;target=findTarget();worldTap(p.x,p.z)}");await pg.wait_for_timeout(500)
     print('tap',await ev("()=>JSON.stringify({got:invN('strawberry')-TQs0,gone:plGone(TQpl)})"))
     await ev("()=>updCamera(0,P.x,groundY(P.x,P.z),P.z,true)");await pg.wait_for_timeout(700);await pg.screenshot(path=O('plant_field2.jpg'),type='jpeg',quality=85)
     print('build',await ev("""()=>{S.inv.wood=50;S.inv.stone=50;setBuild('fire');const why={};for(const p of PL.list){if(plGone(p))continue;P.x=p.x;P.z=p.z-2.4;P.rot=0;const g=ghostPos();why[g.why||'ok']=(why[g.why||'ok']||0)+1}setBuild(null);return JSON.stringify(why)}"""))

@@ -44,9 +44,9 @@ async def steps(pg):
       await sl(100);b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:42,bubbles:true,pointerType:'touch',clientX:r.x+20,clientY:r.y+20}));await sl(200);openPanel('bag');await sl(400);const still=inp.fire;b.dispatchEvent(new PointerEvent('pointerup',{pointerId:42,bubbles:true,pointerType:'touch'}));closePanel();
       return JSON.stringify({used,still,ok:used>0&&still})}""")
     print('fire with bag',r6)
-    # 5. 걸으면서 자판기 톡 → 멈추지 않고 바로 / 가방 연 채 큰 버튼으로 상호작용
-    r7=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const v=structs.find(s=>s.t==='vend'&&dist(s.x,s.z,VIL.x,VIL.z)<60);S.quick[S.sel]=null;P.x=v.x;P.z=v.z+2.6;P.rot=Math.PI;P.yv=undefined;await sl(200);P.moving=true;worldTap(v.x,v.z);const p1=panel;closePanel();await sl(100);
-      openPanel('bag');P.x=v.x;P.z=v.z+2.4;P.rot=Math.PI;await sl(300);const lab=target&&target.lab,md=actMode(),b=document.getElementById('bAtk'),r=b.getBoundingClientRect();b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:43,bubbles:true,pointerType:'touch',clientX:r.x+20,clientY:r.y+20}));await sl(150);const p2=panel;b.dispatchEvent(new PointerEvent('pointerup',{pointerId:43,bubbles:true,pointerType:'touch'}));closePanel();
+    # 5. 걸으면서 자판기 톡(34차: 바짝 붙어서) → 멈추지 않고 바로 / 가방 연 채 큰 버튼으로 상호작용
+    r7=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const v=structs.find(s=>s.t==='vend'&&dist(s.x,s.z,VIL.x,VIL.z)<60);S.quick[S.sel]=null;P.x=v.x;P.z=v.z+sdef(v).bz+.75;P.rot=Math.PI;P.yv=undefined;await sl(200);P.moving=true;worldTap(v.x,v.z);const p1=panel;closePanel();await sl(100);
+      openPanel('bag');P.x=v.x;P.z=v.z+sdef(v).bz+.75;P.rot=Math.PI;await sl(300);const lab=target&&target.lab,md=actMode(),b=document.getElementById('bAtk'),r=b.getBoundingClientRect();b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:43,bubbles:true,pointerType:'touch',clientX:r.x+20,clientY:r.y+20}));await sl(150);const p2=panel;b.dispatchEvent(new PointerEvent('pointerup',{pointerId:43,bubbles:true,pointerType:'touch'}));closePanel();
       return JSON.stringify({tapMoving:p1,bagLab:lab,md,bagAct:p2,ok:p1==='vend'&&p2==='vend'})}""")
     print('interact',r7)
     ok=json.loads(r1)['panel']=='bag' and json.loads(r1)['can']==c0 and json.loads(r2)['ate']==1 and json.loads(r3)['ate']==1 and json.loads(r3)['moved']>.5 and not json.loads(r4)['over'] and r5a is None and json.loads(r5b)['panel']=='bag'

@@ -178,28 +178,26 @@ const taps={};
 /* 32차(기획자: '낚시·주먹질 같은 걸 조이스틱 같은 칸으로 만들지 말고, 조이스틱 칸 말고 다른 쪽을 누르면 상호작용하게. 조이스틱은 고정'):
    조이스틱은 왼쪽 아래에 늘 보이게 고정(joyFix). 그 둘레(반지름 1.5배)에서 시작한 손가락만 움직이기.
    그 밖의 화면 = 예전 큰 버튼: 설치 모드면 설치, 가까운 대상이 있으면 상호작용, 아니면 손에 든 것 쓰기(누른 곳 쪽으로 조준, 누르고 있으면 계속).
-   두 손가락 확대와 헷갈리지 않게 누른 뒤 90ms에 시작해요(ACT.pend). 총·수류탄이 아닌 것을 들고 멀리 있는 물건·물고기 떼·배를 톡 누르면 예전처럼 걸어가서 해요(ACT.go). */
+   두 손가락 확대와 헷갈리지 않게 누른 뒤 90ms에 시작해요(ACT.pend). 34차: 누르면 걸어가는 것(ACT.go)은 없앴어요 — 멀리 있는 물건을 누르면 '더 가까이 가요'만. */
 const ACT={id:null,md:'fire',x:0,y:0,t:0,mv:0,g:null,go:0,pend:0,rel:0,e:null};
 function joyC(){const r=$('joy').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2,r.width/2]}
 function joyMove(e){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),M=44*UIS;if(l>M){dx*=M/l;dy*=M/l}inp.mx=l<8?0:dx/M;inp.mz=l<8?0:dy/M;$('joy').firstChild.style.transform=`translate(${dx/UIS}px,${dy/UIS}px)`}
-function actGoTap(g){if(!g||fishing||bmode||target&&target.lab)return 0;const id=curId(),w=WEAP[id]||{};if(w.ammo||w.nade||nearestEnemy(P.x,P.z,w.melee||id==='fist'?3.4:12))return 0;const[x,z]=g;   /* 가까운 대상·적이 있으면 그게 먼저 */
- for(const o of enemies)if(!o.dead&&dist(x,z,o.x,o.z)<2.6)return 0;
- if(w.rod){if(ferryTarget(x,z,3))return 1;return waterDepth(x,z)>.05&&spotAt(x,z)?1:0}
- const t=findNear(x,z,x,z,2.8);return t&&dist(P.x,P.z,t.x,t.z)>(t.rr||1)+1.6?1:0}   /* 가까운 건 그냥 상호작용 */
 function actApply(){const e=ACT.e;if(!e)return;const w=WEAP[curId()]||{};let md=actMode();
+ if(md==='fire'&&!w.ammo&&!w.nade&&ACT.g&&!(nearestEnemy(P.x,P.z,w.melee||curId()==='fist'?3.4:12))){const[gx,gz]=ACT.g;   /* 34차 */
+  if(w.rod&&!fishing&&waterDepth(gx,gz)>.05&&spotAt(gx,gz)){worldTap(gx,gz);ACT.md='tap';return}   /* 낚싯대로 물고기 떼를 누르면 그 자리에 던지기(사거리 밖이면 안내만, 걸어가지 않아요) */
+  const ft=tapThing(gx,gz);if(ft&&!sameT(ft,target)){farHint(ft);ACT.md='tap';return}}   /* 멀리 있는 자판기·상인 등을 누르면 걸어가지 않고 '더 가까이 가요' */
  if(md==='act'&&(w.ammo||w.nade)){const g=ACT.g,t=target;if(!(g&&t&&dist(g[0],g[1],t.x,t.z)<=2.8))md='fire'}   /* 총·수류탄을 들었으면 대상을 직접 누를 때만 상호작용, 아니면 누른 곳으로 쏘기·던지기 */
  ACT.md=md;if(md==='fire'){inp.fire=true;if(!w.rod)aimAt(e);else inp.aiming=false}else{inp.act=true;inp.actEdge=true}}
 function actCancel(){ACT.id=null;ACT.go=0;ACT.pend=0;ACT.rel=0;inp.fire=inp.act=inp.actEdge=inp.aiming=false}
 cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}
  const[jx,jy,jr]=joyC();if(joy.id===null&&Math.hypot(e.clientX-jx,e.clientY-jy)<=jr*1.5){joy.id=e.pointerId;joy.ox=jx;joy.oy=jy;joyMove(e);return}
- if(ACT.id!==null)return;if(touchHook('down',e))return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=actGoTap(ACT.g);ACT.pend=ACT.go?0:ACT.t+90});
+ if(ACT.id!==null)return;if(touchHook('down',e))return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=0;ACT.pend=ACT.t+90});
 function aimAt(e){_v.set(P.x,groundY(P.x,P.z)+1.2,P.z).project(cam);const dx=e.clientX-(_v.x*.5+.5)*innerWidth,dy=e.clientY-(-_v.y*.5+.5)*innerHeight,l=Math.hypot(dx,dy)||1;inp.ax=dx/l;inp.az=dy/l;inp.aiming=true;inp.fire=true}
 cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(touchHook('move',e))return;if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
- if(ACT.go){if(ACT.mv>14){ACT.go=0;ACT.pend=performance.now()}return}   /* 누른 채 끌면 걸어가기 대신 쓰기·조준 */
  if(inp.fire&&!(WEAP[curId()]||{}).rod){aimAt(e);ACT.g=groundAt(e.clientX,e.clientY)}});
-const cvUp=e=>{joyEnd(e);if(touchHook(e.type==='pointerup'?'up':'cancel',e))return;if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup',go=ACT.go,g=ACT.g,quick=ACT.mv<14&&performance.now()-ACT.t<450;
+const cvUp=e=>{joyEnd(e);if(touchHook(e.type==='pointerup'?'up':'cancel',e))return;if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup';
  if(ACT.pend&&up){ACT.pend=0;actApply();ACT.id=null;ACT.go=0;ACT.rel=1;return}   /* 90ms 안에 뗀 톡: 한 번만 쓰고 다음 장면에서 놓아요 */
- actCancel();if(go&&up&&quick&&g)worldTap(g[0],g[1])};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
+ actCancel()};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
 const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z))){let a=t-.4,b=t;for(let i=0;i<7;i++){const m=(a+b)/2,mx=o.x+d.x*m,mz=o.z+d.z*m;if(o.y+d.y*m<=Math.max(0,groundY(mx,mz)))b=m;else a=m}return[o.x+d.x*b,o.z+d.z*b]}}return null}   /* 33차: 마지막 칸은 반씩 나눠 정확하게(누른 곳 설치) */
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
@@ -414,9 +412,7 @@ function atkDodge(){const b=$('bAtk'),el=$('panel');if(!b)return;if(sidePanel()&
 {const css=document.createElement('style');css.textContent='#bAtk{transition:right .18s,bottom .18s}#bAtk.dodge{transform:scale(.86)}';document.head.appendChild(css)}
 {const _l=layoutPanel;layoutPanel=function(){_l();atkDodge()}}
 {const _c=closePanel;closePanel=function(){_c();atkDodge()}}
-/* ③ 걸으면서 가까운 것 톡 */
-{const _w=worldTap;worldTap=function(x,z){const mv=P.moving;_w(x,z);const t=P.auto;if(!mv||!t||t.k==='move'||t.k==='cast')return;const d=dist(P.x,P.z,t.x,t.z);
-  if(d<=(t.rr||1)+1.6){P.rot=Math.atan2(t.x-P.x,t.z-P.z);target=t;if(t.k==='o'){if(!(t.o&&t.o.re>0))interact()}else{inp.actEdge=true;interact();inp.actEdge=false}P.auto=null}}}
+/* ③ 걸으면서 가까운 것 톡 → 34차: 누르면 걸어가는 게 없어져서 따로 할 일이 없어요(가까운 대상은 걸으면서 눌러도 바로 상호작용) */
 /* ===== 32차(기획자 11-19 20:56) =====
    ① 큰 버튼 없음 → 조이스틱 말고 화면 아무 데나 누르면 상호작용·쓰기(위 cv 손가락 처리, ACT). ② 조이스틱은 왼쪽 아래에 고정·늘 보임(joyFix).
    ③ 수류탄은 가방에서 누르면 손에 들기만, 화면을 누를 때마다 누른 곳으로 하나씩 던져요(throwNadeAt, 3~14m). */
@@ -512,5 +508,9 @@ function creOff(){CRV.on=false;creEnd();creBarUpd();devHud()}
 {const _h=hud;hud=function(){_h();if(DEV.on&&mode==='play'&&!CRV.inited&&!CRV.chk){CRV.chk=1;let has=false;try{has=!!localStorage.getItem('frontisle_blocks')}catch(e){}if(has)creInit()}if(CRV.mesh){const v=DEV.on&&mode==='play';if(CRV.mesh.visible!==v)CRV.mesh.visible=v}}}   /* 관리자 모드면 저장된 블록을 보여 줘요 */
 {const _r=resize;resize=function(){_r();creBarUpd()}}
 {const _f=findTarget;findTarget=function(){return CRV.on&&DEV.on?null:_f()}}   /* 크리에이티브 중에는 상호작용 글자·대상 없음 */
+/* ===== 34차(기획자 11-19 22:01) =====
+   ① 가방 버튼(🎒)은 오른쪽 아래 구석: 큰 버튼이 없어져서 가운데쯤 떠 있던 것을 조이스틱과 마주 보게(아래 줄을 조이스틱과 맞춤).
+   ② 조이스틱이 아닌 곳을 눌러도 캐릭터가 걸어가지 않아요(actors.js worldTap, P.auto를 만드는 곳 없음). ③ 상호작용은 바짝 붙어야(actors.js TREACH). */
+{const css=document.createElement('style');css.textContent='#ui #bBag{right:28px;bottom:30px;width:70px;height:70px}#ui.port #bBag{right:22px;bottom:58px}';document.head.appendChild(css)}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

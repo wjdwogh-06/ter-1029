@@ -139,10 +139,17 @@ function throwNade(){if(!take('grenade',1))return;const e=nearestEnemy(P.x,P.z,1
 function explode(x,z,r,dmg){shake=.8;boom(x,groundY(x,z)+.6,z,r);for(const e of enemies.slice()){const d=dist(x,z,e.x,e.z);if(!e.dead&&d<r)hurtEnemy(e,dmg*(1-d/r*.6),(e.x-x)/(d||1),(e.z-z)/(d||1))}if(dist(x,z,P.x,P.z)<r*.7)hurtPlayer(18)}
 /* ---- interaction ---- */
 function sLabel(s){const df=sdef(s);if(s.t==='lighthouse')return S.lh[s.li]?'빠른 이동':'불 켜기';if(df.loot===3)return S.looted[s.li]&&S.day-S.looted[s.li]<5?null:'폭파';if(s.t==='gen')return s.fuel>=GEN_CAP-1?null:invN('fuel')>0?'연료 넣기':'연료 필요';   /* 27차: 발전기는 연료 아이템으로 */if(df.loot)return S.looted[s.li]&&S.day-S.looted[s.li]<3?null:'열기';if(s.t==='market')return'거래';if(s.t==='ferry')return'배 타기';if(s.t==='vend')return'자판기';if(s.t==='recycle')return'팔기';if(s.t==='bench')return'작업대';if(s.t==='forge'||s.t==='blacksmith')return'제작';if(df.home)return s.own?'들어가기':null;if(s.t==='int_exit')return dist(P.x,P.z,s.x,s.z)<1.5||P.auto&&P.auto.s===s?'나가기':null;if(s.t==='stash')return'보관';if(s.t==='fire'&&Object.keys(S.inv).some(k=>ITEMS[k]&&ITEMS[k].ty==='fish'))return'요리';if(s.t==='mg'&&invN('ammoS')>0&&s.ammo<240)return'장전';if(df.tur&&s.own&&invN(df.tur.ammo)>0&&s.ammo<df.tur.cap)return'장전';if(s.own&&s.hp<s.max-1&&invN('wood')>0)return'수리';return null}
+/* 34차(기획자 11-19 22:01: '자판기나 거래상 같은 모든 것, 좀 더 많이 붙어야 상호작용하게. 좀 떨어져 있는데도 눌리냐'):
+   상호작용은 몸이 대상에 거의 닿아야 돼요. reach = 대상 가장자리까지 거리(구조물은 충돌 상자 가장자리, 나무·바위는 몸통 반지름 바깥).
+   몸 반지름이 0.42라 닿으면 0.42, TREACH(0.9)면 몸과 대상 사이가 반 뼘쯤. 배(통통배)는 물 위에 떠 있어서 항구마다 따로(ferThr) */
+const TREACH=.9;
+/* 배는 물에 떠 있어서 항구마다 부두에서 닿을 수 있는 거리가 달라요(0~1.6m) → 그 항구에서 가장 가까이 설 수 있는 자리 + 0.6m까지(처음 가까이 갈 때 한 번 재요) */
+function ferThr(s){if(s.fthr==null){let mg=9;for(let x=s.x-6;x<=s.x+6;x+=.15)for(let z=s.z-6;z<=s.z+6;z+=.15){if(!onDock(x,z)&&waterDepth(x,z)>DEEP-.05)continue;const g=sGap(x,z,s);if(g>=mg||walk(x,z,.42,P)!==null)continue;mg=g}s.fthr=Math.max(TREACH,mg+.6)}return s.fthr}
+function sGap(x,z,s){const d=sdef(s),dx=x-s.x,dz=z-s.z,c=Math.cos(s.r||0),sn=Math.sin(s.r||0),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.hypot(Math.max(0,Math.abs(lx)-d.bx),Math.max(0,Math.abs(lz)-d.bz))}
 function findNear(ox,oz,fx,fz,reach){let best=null,bs=1e9;const con=(d,o)=>{if(d<bs){bs=d;best=o}};
  if(S.bag&&dist(ox,oz,S.bag.x,S.bag.z)<reach+.4)con(-1,{k:'bag',x:S.bag.x,z:S.bag.z,lab:'가방 줍기',rr:1});
- for(const s of structs){const df=sdef(s),ex=Math.max(df.bx,df.bz);if(dist(ox,oz,s.x,s.z)>reach+1+ex)continue;const lab=sLabel(s);if(lab)con(dist(fx,fz,s.x,s.z)-.5,{k:'s',s,x:s.x,z:s.z,lab,rr:s.t==='ferry'?3.4:ex+.4})}
- const cx=(ox/CELL)|0,cz=(oz/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const key=(cz+j)*CN+cx+i,o=objs.get(key);if(!o||o.re>0)continue;const T=OBJT[o.t];if(dist(ox,oz,o.x,o.z)>reach+T.r)continue;con(dist(fx,fz,o.x,o.z),{k:'o',o,key,x:o.x,z:o.z,lab:isTree(T)&&!canChop()?'도끼 필요':T.lab,rr:T.r+.7})}
+ for(const s of structs){const df=sdef(s),ex=Math.max(df.bx,df.bz);if(dist(ox,oz,s.x,s.z)>reach+2+ex)continue;if(sGap(ox,oz,s)>reach+(s.t==='ferry'?ferThr(s)-TREACH:0))continue;const lab=sLabel(s);if(lab)con(sGap(fx,fz,s),{k:'s',s,x:s.x,z:s.z,lab,rr:s.t==='ferry'?3.4:ex+.4})}
+ const cx=(ox/CELL)|0,cz=(oz/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const key=(cz+j)*CN+cx+i,o=objs.get(key);if(!o||o.re>0)continue;const T=OBJT[o.t];if(dist(ox,oz,o.x,o.z)>reach+T.r)continue;con(Math.max(0,dist(fx,fz,o.x,o.z)-T.r),{k:'o',o,key,x:o.x,z:o.z,lab:isTree(T)&&!canChop()?'도끼 필요':T.lab,rr:T.r+.7})}
  return best}
 const isTree=T=>T.drop&&T.drop[0]==='wood';
 /* 낚싯대를 들고 있으면 상호작용 없음(기획자 요청 6차): 던지기만 */
@@ -157,12 +164,21 @@ function ferryDockSpot(s){let best=null,bs=1e9;for(const d of DOCKS){if(dist(d.x
   for(let k=0;k<=20;k++){const lz=lz0+(k%2?1:-1)*Math.ceil(k/2)*.3;if(lz<-d.hl+m||lz>d.hl-m)continue;const x=d.x+lx*d.c+lz*d.s,z=d.z-lx*d.s+lz*d.c,db=dist(x,z,s.x,s.z);
    if(db<1.6||walk(x,z,.42,P)!==null||onDock(x,z)!==d)continue;const sc=db+Math.abs(lz-lz0)*.5;if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),dock:1}}break}}return best}
 function ferrySpot(i){const s=structs.find(q=>q.t==='ferry'&&q.pi===i);if(!s)return null;{const q=ferryDockSpot(s);if(q){q.p=PORTS[i];return q}}let best=null,bs=1e9;for(let r=1.7;r<5.2;r+=.15)for(let a=0;a<36;a++){const an=a/36*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r,dk=onDock(x,z);if(!dk&&hAt(x,z)<.9)continue;if(walk(x,z,.42,P)!==null)continue;const sc=r-(dk?.35:0);if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),p:PORTS[i]}}}return best}
-function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(curId()==='rod'&&!INT.on){if(P.auto&&(P.auto.k==='cast'||P.auto.s&&P.auto.s.t==='ferry'))return P.auto;return ferryTarget(P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,5.2)}if(P.auto&&P.auto.k!=='move')return P.auto;return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,2.5)}
-function worldTap(x,z){if(bmode||P.dead||busy)return;let e=null,bd=2.6;for(const o of enemies){if(o.dead)continue;const d=dist(x,z,o.x,o.z);if(d<bd){bd=d;e=o}}
- if(e&&curId()!=='rod'){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;P.auto=null;return}
- if(INT.on){const ex=intDoorAt(x,z);if(ex){P.autoT=0;P.auto={k:'s',s:ex,x:ex.x,z:ex.z,lab:'나가기',rr:1.1};sfx(700,.03,'sine',.02);return}const t=findNear(x,z,x,z,2.8);P.autoT=0;P.auto=t||(walk(x,z,.42,P)===null?{k:'move',x,z,rr:.5}:null);if(P.auto)sfx(700,.03,'sine',.02);return}   /* 텐트·집 안: 문을 누르면 걸어가서 [나가기], 낚싯대를 들고 있어도 보통처럼 */
- if(curId()==='rod'&&!fishing){const fy=ferryTarget(x,z,3);if(fy){P.autoT=0;P.auto=fy;sfx(700,.03,'sine',.02);return}}   /* 낚싯대를 들고 배를 눌러도 배 타기 */
- if(curId()==='rod'&&waterDepth(x,z)>.05&&WTR.st!=='swim'){if(fishing&&fishing.st!=='cast')return;const sp=spotAt(x,z);if(sp){if(inWater()){fishWarn('물 안에서는 낚시할 수 없어요. 물 밖으로 나가요');return}const d=dist(P.x,P.z,x,z);if(d<=ROD_R&&d>=1.6){castAt(x,z,sp);return}if(d>ROD_R){P.autoT=0;P.auto={k:'cast',x,z,sp,rr:ROD_R-1.6};return}}else fishWarn('여기엔 물고기가 없어요. 물고기 그림자가 도는 곳에 던져요')}const t=curId()==='rod'?null:findNear(x,z,x,z,2.8);P.autoT=0;P.auto=t||(walk(x,z,.42,P)===null?{k:'move',x,z,rr:.5}:null);if(P.auto)sfx(700,.03,'sine',.02)}
+function ferryNear(){let b=null,bd=1e9;for(const s of structs){if(s.t!=='ferry'||dist(P.x,P.z,s.x,s.z)>8)continue;const g=sGap(P.x,P.z,s);if(g<=ferThr(s)&&g<bd){bd=g;b={k:'s',s,x:s.x,z:s.z,lab:'배 타기',rr:3.4}}}return b}   /* 34차: 낚싯대를 들었을 때 배 타기도 바짝 붙어야 */
+function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(curId()==='rod'&&!INT.on)return ferryNear();return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,TREACH)}
+/* 34차(기획자: '조이스틱이 아닌 다른 곳을 터치했는데 캐릭터가 움직이면 이상하다, 멀리 있는 자판기를 클릭했다고 따라가는 것 없애라'):
+   누르면 걸어가는 것(P.auto: 물건·문·배·낚시 자리·땅으로 걸어가기)을 모두 없앴어요. 움직임은 조이스틱으로만.
+   worldTap(x,z) = 그 자리를 누름: 적이면 그쪽으로 공격, 낚싯대로 사거리 안 떼면 던지기, 바짝 붙은 대상이면 상호작용, 멀면 '더 가까이' 알림만 */
+function tapThing(x,z){if(S.bag&&dist(x,z,S.bag.x,S.bag.z)<1.2)return{k:'bag',x:S.bag.x,z:S.bag.z};let b=null,bd=1.4;
+ for(const s of structs){if(dist(x,z,s.x,s.z)>9)continue;const g=sGap(x,z,s);if(g<bd&&(s.t==='ferry'||s.t==='int_exit'||sLabel(s))){bd=g;b={k:'s',s,x:s.x,z:s.z}}}
+ if(typeof plNear==='function'&&!INT.on){const p=plNear(x,z,1);if(p&&!b)b={k:'pl',pl:p,x:p.x,z:p.z}}return b}   /* 누른 자리의 상호작용 대상(가까이 있든 멀든) */
+const sameT=(a,b)=>!!a&&!!b&&a.k===b.k&&(a.k==='s'?a.s===b.s:a.k==='pl'?a.pl===b.pl:a.k==='o'?a.o===b.o:true);
+function farHint(t){const y=(t.k==='s'?groundY(t.x,t.z)+Math.min(3.2,1.4+(sdef(t.s).s||1)*.5):groundY(t.x,t.z)+1.4);ftext(t.x,y,t.z,'더 가까이 가요','#fff3d6');sfx(300,.05,'sine',.03)}
+function worldTap(x,z){if(bmode||P.dead||busy)return 0;let e=null,bd=2.6;for(const o of enemies){if(o.dead)continue;const d=dist(x,z,o.x,o.z);if(d<bd){bd=d;e=o}}
+ if(e&&curId()!=='rod'){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;return 1}
+ if(curId()==='rod'&&!INT.on&&!fishing&&waterDepth(x,z)>.05&&WTR.st!=='swim'){const sp=spotAt(x,z);if(sp){if(inWater()){fishWarn('물 안에서는 낚시할 수 없어요. 물 밖으로 나가요');return 0}const d=dist(P.x,P.z,x,z);if(d<=ROD_R&&d>=1.6){castAt(x,z,sp);return 1}fishWarn(d>ROD_R?'너무 멀어요. 물가로 더 가까이 가서 던져요':'너무 가까워요');return 0}}
+ const t=tapThing(x,z);if(!t)return 0;const tg=findTarget();if(sameT(tg,t)||t.k==='bag'&&tg&&tg.k==='bag'){target=tg;P.rot=Math.atan2(tg.x-P.x,tg.z-P.z)||P.rot;if(tg.k==='o'||tg.k==='pl')interact();else{inp.actEdge=true;interact();inp.actEdge=false}return 1}
+ farHint(t);return 0}
 const LOOT=[['ammoS',12,22],['can',1,2],['cloth',2,3],['powder',2,4],['bandage',1,1],['wood',4,8]];
 function interact(){const t=target;if(!t)return;
  if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=.42;P.rot=Math.atan2(o.x-P.x,o.z-P.z);

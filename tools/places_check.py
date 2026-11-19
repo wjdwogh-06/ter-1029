@@ -10,14 +10,14 @@ async def steps(pg):
        h:{deck:+groundY(F.x+FCAMP.deck[0]+2,F.z-1).toFixed(2),pier:+groundY(F.x+FCAMP.pier[0]+1,F.z-1).toFixed(2),rim:+groundY(S2.x-S2.AX+1.75,S2.z).toFixed(2),floor:+groundY(S2.x+3,S2.z+2).toFixed(2),out:+groundY(S2.x-S2.AX-3,S2.z).toFixed(2),
         ramp:[S2.rp.x0+.5,-8,-4,S2.rp.x1-.3,S2.rp.x2-.5].map(x=>+groundY(S2.x+x,S2.z+S2.AZ+S2.rp.z0+S2.rp.w/2).toFixed(2)),stairs:[S2.st.x0+.5,S2.st.x1+.4,-2,S2.st.x2-.3].map(x=>+groundY(S2.x+x,S2.z-S2.BZ+S2.st.w/2).toFixed(2))}})}"""))
     print('gate',await ev("""()=>{const g=structs.find(s=>s.t==='cgate'),E={x:0,z:0,pl:1},r={};r.closedBlocks=walk(g.x,g.z,.42,E)!==null;
-      P.x=g.x;P.z=g.z+1.6;P.rot=Math.PI;P.auto=null;let t=findTarget();r.label=t&&t.lab;target=t;inp.actEdge=true;interact();inp.actEdge=false;r.open=g.open;r.openPass=walk(g.x,g.z,.42,E)===null;return JSON.stringify(r)}"""))
+      P.x=g.x;P.z=g.z+sdef(g).bz+.7;P.rot=Math.PI;P.auto=null;let t=findTarget();r.label=t&&t.lab;target=t;inp.actEdge=true;interact();inp.actEdge=false;r.open=g.open;r.openPass=walk(g.x,g.z,.42,E)===null;return JSON.stringify(r)}"""))
     await pg.wait_for_timeout(900);await ev("()=>{updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(300)
     await pg.screenshot(path=O('pl_gate_open.jpg'),type='jpeg',quality=85)
     await pg.wait_for_timeout(4200)
     print('gate later',await ev("()=>{const g=structs.find(s=>s.t==='cgate');return JSON.stringify({open:g.open,leaf:g.lk&&+g.lk.parts.leaf.rotation.y.toFixed(2)})}"))
     print('gate stand',await ev("""()=>new Promise(res=>{const g=structs.find(s=>s.t==='cgate');openGate(g);P.x=g.x;P.z=g.z;setTimeout(()=>{const a=g.open;P.x=g.x;P.z=g.z-1.8;setTimeout(()=>res(JSON.stringify({stillOpenWhileStanding:a,closedAfterLeave:!g.open})),1500)},5000)})"""))
     # 주인
-    await ev("()=>{P.x=FNPC.x+.4;P.z=FNPC.z+2.4;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    await ev("()=>{const f=structs.find(s=>s.t==='fstall');P.x=f.x+.4;P.z=f.z+sdef(f).bz+.6;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(900)
     print('npc',await ev("()=>{const t=findTarget();const r={label:t&&t.lab,actor:!!(FNPC&&FNPC.a),py:+P.a.root.position.y.toFixed(2)};target=t;inp.actEdge=true;interact();inp.actEdge=false;r.bubble=CHAT.b.has('fisher');return JSON.stringify(r)}"))
     await pg.wait_for_timeout(700);await pg.screenshot(path=O('pl_fish_npc.jpg'),type='jpeg',quality=85)

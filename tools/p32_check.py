@@ -21,7 +21,7 @@ async def steps(pg):
     R=json.loads(r);res['move+shoot']=R;R['hold']=hold;R['ok']=R['shot']>=1 and hold and R['moving'] and R['joy'] and R['moved']>1 and R['adx']>0
     res['fixed']={'joy':j0,'after':j1,'ok':j0[3]!='none' and j0[4]=='none' and abs(j0[0]-j1[0])<1 and abs(j0[1]-j1[1])<1}
     # 3. 가까이 자판기가 있으면 화면 아무 데나 톡 = 자판기
-    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const v=structs.find(s=>s.t==='vend'&&dist(s.x,s.z,VIL.x,VIL.z)<60);P.x=v.x;P.z=v.z+2.4;P.rot=Math.PI;P.yv=undefined;S.quick[S.sel]=null;await sl(400);return JSON.stringify({lab:target&&target.lab})}""")
+    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const v=structs.find(s=>s.t==='vend'&&dist(s.x,s.z,VIL.x,VIL.z)<60);P.x=v.x;P.z=v.z+sdef(v).bz+.75;P.rot=Math.PI;P.yv=undefined;S.quick[S.sel]=null;await sl(400);return JSON.stringify({lab:target&&target.lab})}""")
     await pg.touchscreen.tap(620,240);await pg.wait_for_timeout(400)
     r2=await ev("()=>{const p=panel;closePanel();return p}");res['tapAct']={'lab':json.loads(r)['lab'],'panel':r2,'ok':r2=='vend'}
     # 4. 두 손가락(조이스틱 아님) 확대: 쏘지 않음 / 조이스틱 누른 채 확대해도 걷기 그대로

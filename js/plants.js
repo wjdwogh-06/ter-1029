@@ -72,7 +72,7 @@ function plNear(x,z,r){let b=null,bd=r;for(const p of PL.list){if(plGone(p))cont
 const plTarget=p=>({k:'pl',pl:p,x:p.x,z:p.z,lab:PLD[p.id].n+' '+PLD[p.id].v,rr:.7});
 /* 가까운 대상 찾기에 식물을 끼워 넣어요(나무·상자 등과 거리로 겨뤄서 더 가까운 쪽) */
 {const _fn=findNear;findNear=function(ox,oz,fx,fz,reach){const b=_fn(ox,oz,fx,fz,reach);if(INT.on||!PL.list.length)return b;
- const p=plNear(ox,oz,reach+.6);if(!p)return b;if(b&&b.k!=='move'&&dist(fx,fz,b.x,b.z)<=dist(fx,fz,p.x,p.z))return b;return plTarget(p)}}
+ const p=plNear(ox,oz,reach+.35);   /* 34차: 바짝 붙어야(1.25m) */if(!p)return b;if(b&&b.k!=='move'&&dist(fx,fz,b.x,b.z)<=dist(fx,fz,p.x,p.z))return b;return plTarget(p)}}
 function plantPick(t){const p=t.pl,q=PLD[p.id];if(!p||plGone(p)||P.cd>0)return;if(typeof bagHas==='function'&&!bagHas(q.id)){bagFullMsg();P.auto=null;return}   /* 27차: 가방이 꽉 차면 못 따요(식물은 그대로) */P.cd=.45;P.rot=Math.atan2(p.x-P.x,p.z-P.z);P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6});
  const first=!(S.pdex&&S.pdex[q.id]);give(q.id,q.n1);S.pdex=S.pdex||{};S.pdex[q.id]=(S.pdex[q.id]||0)+q.n1;S.pgone=S.pgone||{};S.pgone[p.i]=q.re;plnCol(p);PL.tU=0;
  const y=groundY(p.x,p.z);puff(p.x,y+.4,p.z,q.cat==='flower'?0xe9a3c4:q.cat==='mush'?0xc9a27a:0x8fc46a,4,.5);ftext(p.x,y+1.6,p.z,`+${q.n1} ${q.n}`,'#b8f0c0');sfx(620,.06,'sine',.04);

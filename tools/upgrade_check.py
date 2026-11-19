@@ -1,5 +1,5 @@
 # 텐트 문·작업대 창·집 업그레이드 검사(15차)
-# 기대: shop.has=true·bought=1 / 아래로 걸어도 안 나가짐(stay.on=true) / 문 앞에서만 [나가기] / 문 누르면 걸어가서 나감(tapExit.on=false)
+# 기대: shop.has=true·bought=1 / 아래로 걸어도 안 나가짐(stay.on=true) / 문 앞에서만 [나가기] / 멀리서 문 누르면 그대로(farDoor.on=true·moved 0) / 문 앞에서 누르면 나감(tapExit.on=false)
 #       키트로 작업대(밖에서는 안 됨) / 작업대 → bench 창, 넣기 10→50→120, 업그레이드 버튼은 120일 때만
 #       업그레이드 뒤 phouse 1·ptent 0·같은 자리·작업대 그대로 / 집 안 = 넓은 방(house) / 집 철거 = 텐트 키트 + 나무 60
 import os
@@ -24,8 +24,10 @@ async def steps(pg):
     print('stay',await ev("()=>JSON.stringify({on:INT.on,lz:+(P.z-INT.z).toFixed(2),hd:INT.hd,lab:(findTarget()||{}).lab||null})"))
     # 옆쪽 앞 가장자리(문에서 먼 곳)에서는 [나가기] 없음
     print('side',await ev("()=>{P.x=INT.x+2.4;P.z=INT.z+INT.hd-.5;P.rot=0;return JSON.stringify({lab:(findTarget()||{}).lab||null})}"))
-    # 4) 문을 누르면 걸어가서 나가요
-    await ev("()=>{P.x=INT.x-1.5;P.z=INT.z-1.2;P.auto=null;worldTap(INT.x,INT.z+INT.hd-.25)}");await pg.wait_for_timeout(3600)
+    # 4) 34차: 멀리서 문을 누르면 걸어가지 않고 '더 가까이 가요'(그대로 안), 문 앞에서 누르면 나가요
+    await ev("()=>{P.x=INT.x-1.5;P.z=INT.z-1.2;P.auto=null;window._p0=[P.x,P.z];worldTap(INT.x,INT.z+INT.hd-.25)}");await pg.wait_for_timeout(400)
+    print('farDoor',await ev("()=>JSON.stringify({on:INT.on,moved:+Math.hypot(P.x-_p0[0],P.z-_p0[1]).toFixed(2),hint:floats.some(f=>f.s==='더 가까이 가요')})"))
+    await ev("()=>{P.x=INT.x;P.z=INT.z+INT.hd-.5;P.rot=0;target=findTarget();worldTap(INT.x,INT.z+INT.hd-.25)}");await pg.wait_for_timeout(1800)
     print('tapExit',await ev("()=>JSON.stringify({on:INT.on,dx:+(P.x-_T.x).toFixed(1),dz:+(P.z-_T.z).toFixed(1)})"))
     # 5) 다시 들어가 키트로 작업대 놓기
     await ev("()=>{const t=structs.find(s=>s.t==='ptent'&&s.own);intEnter(t)}");await pg.wait_for_timeout(1700)
@@ -50,7 +52,7 @@ async def steps(pg):
     await ev("()=>{S.time=.93;const h=structs.find(s=>s.t==='phouse');P.x=h.x;P.z=h.z+3.2;P.rot=0;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await shot('up_house_night.jpg',1500)
     await ev("()=>{S.time=.42}")
     # 8) 집 안 = 더 넓은 방, 작업대 그대로, 업그레이드 끝 표시
-    await ev("()=>{const h=structs.find(s=>s.t==='phouse');P.x=h.x;P.z=h.z+3.4;P.auto=null;worldTap(h.x,h.z+.8)}");await pg.wait_for_timeout(3600)
+    await ev("()=>{const h=structs.find(s=>s.t==='phouse');P.x=h.x;P.z=h.z+sdef(h).bz+.7;P.rot=Math.PI;P.auto=null;target=findTarget();worldTap(h.x,h.z+.8)}");await pg.wait_for_timeout(3600)
     print('houseIn',await ev("()=>{const b=structs.find(s=>s.t==='bench');return JSON.stringify({on:INT.on,kind:INT.kind,hw:INT.hw,hd:INT.hd,benchVis:b.m.visible,exLz:+(INT.it[0].z-INT.z).toFixed(2)})}"))
     await shot('up_house_in.jpg',400)
     await ev("()=>{const b=structs.find(s=>s.t==='bench');P.x=b.x;P.z=b.z+1.5;P.rot=Math.PI;target=findTarget();inp.actEdge=true;interact();inp.actEdge=false}");await shot('up_house_panel.jpg',400)
