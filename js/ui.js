@@ -512,5 +512,51 @@ function creOff(){CRV.on=false;creEnd();creBarUpd();devHud()}
    ① 가방 버튼(🎒)은 오른쪽 아래 구석: 큰 버튼이 없어져서 가운데쯤 떠 있던 것을 조이스틱과 마주 보게(아래 줄을 조이스틱과 맞춤).
    ② 조이스틱이 아닌 곳을 눌러도 캐릭터가 걸어가지 않아요(actors.js worldTap, P.auto를 만드는 곳 없음). ③ 상호작용은 바짝 붙어야(actors.js TREACH). */
 {const css=document.createElement('style');css.textContent='#ui #bBag{right:28px;bottom:30px;width:70px;height:70px}#ui.port #bBag{right:22px;bottom:58px}';document.head.appendChild(css)}
+/* ===== 36차(기획자 11-19 22:09: '보급 상자 같은 것들 전부 열자마자 바로 먹어지는 게 아니라, 열면 상자 스무 칸이 나오고 몇 개씩만 아이템이 나오게.
+   아래는 모두 가져가기, 옆에는 내 인벤. 누르면 내 인벤으로 넘어오고, 한 번 넘어온 건 다시 상자로 못 넘어가고, 내 인벤이 가득 차면 눌러도 못 가져가게') =====
+   보급 상자(loot 1)·보물 상자(2)·벙커(3, 수류탄으로 폭파)·특수 보급(4)을 열면 상자 창(panel 'box'): 왼쪽 상자 20칸(들어 있는 것만 무작위 칸에) + 오른쪽 내 가방 20칸.
+   상자 칸을 누르면 그 묶음이 통째로 내 가방으로(동전은 칸을 안 차지해요). 내 가방 칸을 눌러도 상자로는 안 가요. 가방이 꽉 차면(새 종류가 들어갈 칸이 없으면) 안 가져와져요.
+   남은 것은 상자에 그대로(S.box[li] = {d:연 날, c:20칸}, 저장됨) → 다시 열면 그대로. 다 비우면 창이 닫히고, 예전처럼 며칠 뒤(보급 3일·벙커 5일·특수 5일) 새로 채워져요. */
+const BOX={s:null,msg:''};
+const boxCd=s=>{const d=sdef(s);return d.loot===3?5:(d.cd||3)};
+function boxGet(s){if(!S.box)S.box={};const b=S.box[s.li];if(b&&S.day-b.d>=boxCd(s)){delete S.box[s.li];return null}return b||null}
+const boxLeft=b=>b?b.c.filter(Boolean).length:0;
+const boxName=s=>({supply:'📦 보급 상자',chest:'🧰 보물 상자',bunker:'🛡 벙커',spsupply:'⭐ 특수 보급 상자'})[s.t]||'📦 상자';
+function boxOpen(s){const d=sdef(s);let b=boxGet(s);
+ if(!b||!boxLeft(b)){if(S.looted[s.li]&&S.day-S.looted[s.li]<boxCd(s)){toast('비어 있어요. 며칠 뒤 다시 채워져요');return}
+  if(d.loot===3){if(!take('grenade',1)){toast('벙커 문이 잠겨 있어요. 수류탄 1개가 있으면 폭파할 수 있어요');return}S.st.bunk++;boom(s.x+Math.sin(s.r)*2,groundY(s.x,s.z)+1,s.z+Math.cos(s.r)*2,3);shake=.7}
+  const got=lootGen(s),c=Array(20).fill(null),free=[...Array(20).keys()];
+  for(const k in got){if(!(got[k]>0)||!free.length)continue;const j=free.splice(Math.random()*free.length|0,1)[0];c[j]=[k,got[k]]}
+  b=S.box[s.li]={d:S.day,c};S.looted[s.li]=S.day;
+  if((d.loot===1||d.loot===4)&&s.m&&s.m.children[0])s.m.children[0].geometry=GEO[d.og||'crate_open'];if(d.loot===4&&s.lk&&s.lk.parts&&s.lk.parts.glow)s.lk.parts.glow.visible=false;
+  P.a.play('PickUp',{once:1,lock:.5,force:1});jingle(d.loot===4?[659,880,1175]:[659,880]);save()}
+ else sfx(520,.05,'sine',.03);
+ BOX.s=s;BOX.msg='';openPanel('box')}
+function boxTake(i){const b=BOX.s&&boxGet(BOX.s),e=b&&b.c[i];if(!e)return 0;const[k,n]=e;
+ if(k!=='coin'){if(ITEMS[k].one&&invN(k)){BOX.msg=`${jo(ITEMS[k].n,'은','는')} 이미 가지고 있어요`;return 0}if(!bagHas(k)){BOX.msg='🎒 가방이 꽉 찼어요 — 팔거나 버려서 칸을 비워요';sfx(240,.06,'square',.03);return 0}}
+ b.c[i]=null;give(k,n);ftext(P.x,groundY(P.x,P.z)+2.3,P.z,`+${n} ${k==='coin'?'동전':ITEMS[k].n}`,'#ffe08a');hudDirty=true;return 1}
+function boxAfter(){const b=BOX.s&&boxGet(BOX.s),nm=BOX.s?boxName(BOX.s):'상자';save();if(!boxLeft(b)){closePanel();toast(`${jo(nm,'을','를')} 다 비웠어요`);jingle([523,784]);return}renderPanel()}
+function boxHtml(){const s=BOX.s,b=s&&boxGet(s);if(!b)return'';const num=(k,n)=>k==='coin'||!ITEMS[k].one?`<b>${n}</b>`:'';
+ const box=b.c.map((e,i)=>e?`<div class="slot" data-a="boxget" data-i="${i}">${invIcon(e[0])}${num(e[0],e[1])}</div>`:'<div class="slot bxe"></div>').join('');
+ const ks=bagList(),mine=Array.from({length:Math.max(BAG_N,ks.length)},(_,i)=>{const k=ks[i];return k?`<div class="slot" data-a="boxmine" data-k="${k}">${invIcon(k)}${num(k,S.inv[k])}</div>`:'<div class="slot bxe"></div>'}).join('');
+ return `<div class="bx2"><div><div class="sec">${boxName(s)} · 누르면 내 가방으로</div><div class="grid bxg">${box}</div></div><div><div class="sec">🎒 내 가방 ${ks.length}/${BAG_N}</div><div class="grid bxg mine">${mine}</div></div></div>`+
+  `<div class="bxf"><span class="bxm">${BOX.msg}</span><button class="btn" data-a="boxall"${boxLeft(b)?'':' disabled'}>모두 가져가기</button></div>`}
+/* 상자 창 칸 크기: 창 안에 두 칸판(가로: 나란히, 세로: 위아래)과 [모두 가져가기]가 스크롤 없이 다 들어가게 */
+function boxFit(){const B=$('pbody'),g=[...B.querySelectorAll('.bxg')];if(g.length<2)return;const port=VW<=VH,cs=getComputedStyle(B),pv=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),ph=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight);
+ const gh=port?g[0].offsetHeight+g[1].offsetHeight:g[0].offsetHeight,bx=B.querySelector('.bx2'),bf=B.querySelector('.bxf'),extra=bx.offsetHeight+bf.offsetHeight+parseFloat(getComputedStyle(bf).marginTop)-gh+pv,rows=(port?(B.clientHeight-extra)/2:B.clientHeight-extra)-2,colW=port?B.clientWidth-ph:(B.clientWidth-ph-16)/2;
+ const sz=Math.max(38,Math.floor(Math.min((rows-18)/4,(colW-24)/5,74)));for(const q of g){q.style.width=(5*sz+24)+'px';q.style.gridTemplateColumns=`repeat(5,${sz}px)`}}
+{const css=document.createElement('style');css.textContent='#pbody .bx2{display:grid;grid-template-columns:1fr 1fr;gap:16px}#ui.port #pbody .bx2{grid-template-columns:1fr;gap:6px}'+
+ '#pbody .bxg{grid-template-columns:repeat(5,1fr);gap:6px}#pbody .bxg .slot{width:auto;height:auto;aspect-ratio:1}#pbody .bxg .slot.bxe{opacity:.5}#pbody .bxg.mine .slot{opacity:.92}'+
+ '#pbody .bxf{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:10px}#pbody .bxm{flex:1;color:var(--red);font-weight:800;font-size:13px}';document.head.appendChild(css)}
+{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='box')return;if(!BOX.s||!boxGet(BOX.s)){closePanel();return}$('ptabs').innerHTML=`<div class="tab on">${boxName(BOX.s)}</div>`;$('pbody').innerHTML=boxHtml();boxFit()}}
+{const _c=closePanel;closePanel=function(){_c();BOX.s=null;BOX.msg=''}}
+{const _l=layoutPanel;layoutPanel=function(){_l();if(panel==='box'&&VW<=VH)$('panel').style.height=(VH-24)+'px'}}   /* 세로 화면은 상자 창을 길게 써서 칸을 크게 */
+$('pbody').addEventListener('click',e=>{if(panel!=='box')return;const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a;
+ if(a==='boxget'){if(boxTake(+b.dataset.i)){BOX.msg='';sfx(660,.05,'sine',.03)}boxAfter()}
+ else if(a==='boxall'){const bx=boxGet(BOX.s);let got=0,left=0;if(bx)for(let i=0;i<20;i++)if(bx.c[i]){if(boxTake(i))got++;else left++}if(got)sfx(700,.06,'sine',.03);if(left)BOX.msg=`${BOX.msg.startsWith('🎒')?'🎒 가방이 꽉 차서':'가져오지 못한 것'} ${left}가지가 남았어요`;boxAfter()}
+ else if(a==='boxmine'){BOX.msg='가방에 넣은 건 상자로 다시 옮길 수 없어요';renderPanel()}});
+/* 상자에 남은 게 있으면 며칠 안이라도 [열기]. 바로 먹던 예전 열기(actors.js·places.js)보다 먼저 상자 창을 열어요 */
+{const _sl=sLabel;sLabel=function(s){const d=sdef(s);if(d.loot&&s.li!=null&&boxLeft(boxGet(s)))return'열기';return _sl(s)}}
+{const _ia=interact;interact=function(){const t=target;if(t&&t.k==='s'&&sdef(t.s).loot){if(inp.actEdge)boxOpen(t.s);return}_ia()}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
