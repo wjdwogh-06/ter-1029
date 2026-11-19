@@ -481,13 +481,13 @@ function crvStr(){const a=[];for(const [key,c] of CRV.map){const [x,z,k]=key.spl
 function crvLoad(s){CRV.map.clear();if(s)for(const t of String(s).split(';')){const p=t.split('.').map(Number);if(p.length<4||p.some(isNaN))continue;CRV.map.set(crvKey(p[0],p[1],p[2]),p[3])}crvRebuild()}
 function creSaveSoon(){clearTimeout(CRV.saveT);CRV.st='💾 저장 중…';creBarUpd();CRV.saveT=setTimeout(creSave,700)}
 function creSave(){const s=crvStr(),at=Date.now();CRV.at=at;try{localStorage.setItem('frontisle_blocks',JSON.stringify({v:1,at,blocks:s}))}catch(e){}
- if(!CRV.db){CRV.st=CRV.dbTried?'📱 이 폰에만 저장됨':'📱 저장됨';creBarUpd();return}
+ if(!CRV.db){CRV.st='📱 이 폰에 저장됨 · 📋로 복사해 보내기';creBarUpd();return}
  if(CRV.saving){CRV.again=true;return}CRV.saving=true;   /* 한 문서에는 한 번에 하나씩만 써요 */
  Promise.resolve().then(()=>CRV.db.doc('creative/main').set({v:1,at,n:CRV.map.size,blocks:s,px:Math.round(P.x),pz:Math.round(P.z)})).then(()=>{CRV.st='☁ 저장됨 · Claude가 볼 수 있어요'},err=>{CRV.st='📱 이 폰에만 저장(☁ 안 됨'+(err&&err.code?' · '+err.code:'')+')'}).then(()=>{CRV.saving=false;creBarUpd();if(CRV.again){CRV.again=false;creSave()}})}
 function creInit(){if(CRV.inited)return;CRV.inited=true;try{const r=JSON.parse(localStorage.getItem('frontisle_blocks')||'null');if(r){CRV.at=r.at||0;crvLoad(r.blocks)}}catch(e){}crvRebuild();
- const cl=window.claude;if(!cl||typeof cl.use!=='function'){CRV.st='📱 이 폰에만 저장';creBarUpd();return}CRV.dbTried=true;CRV.st='☁ 연결 중…';creBarUpd();
+ const cl=window.claude;if(!cl||typeof cl.use!=='function'){CRV.st='📱 이 폰에 저장됨 · 📋로 복사해 보내기';creBarUpd();return}CRV.dbTried=true;CRV.st='☁ 연결 중…';creBarUpd();
  const to=setTimeout(()=>{if(!CRV.db){CRV.st='📱 이 폰에만 저장(☁ 연결 안 됨)';creBarUpd()}},10000);
- Promise.resolve(cl.use('db')).then(d=>{if(!d){clearTimeout(to);CRV.st='📱 이 폰에만 저장(☁ 로그인 필요)';creBarUpd();return}CRV.db=d;return d.doc('creative/main').get().then(sn=>{clearTimeout(to);const r=sn&&sn.exists?sn.data():null;
+ Promise.resolve(cl.use('db')).then(d=>{if(!d){clearTimeout(to);CRV.st='📱 이 폰에 저장됨 · 📋로 복사해 보내기';creBarUpd();return}CRV.db=d;return d.doc('creative/main').get().then(sn=>{clearTimeout(to);const r=sn&&sn.exists?sn.data():null;
   if(r&&typeof r.blocks==='string'&&(r.at||0)>(CRV.at||0)){CRV.at=r.at;crvLoad(r.blocks);try{localStorage.setItem('frontisle_blocks',JSON.stringify({v:1,at:r.at,blocks:r.blocks}))}catch(e){}toast(`☁ 저장된 블록 ${CRV.map.size}개를 불러왔어요`)}
   else if(CRV.map.size&&!(r&&(r.at||0)>=(CRV.at||0)))creSave();   /* 이 폰에만 있던 것을 올려요 */
   CRV.st='☁ 연결됨';creBarUpd()})}).catch(err=>{clearTimeout(to);CRV.st='📱 이 폰에만 저장(☁ 안 됨)';creBarUpd()})}
