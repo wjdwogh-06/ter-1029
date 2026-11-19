@@ -291,10 +291,15 @@ const jingle=a=>a.forEach((f,i)=>setTimeout(()=>sfx(f,.14),i*90));
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 /* ===== 35차(디자인 담당이 새 줄만 덧붙임 — 기획자: '총은 전부 키트로, 상자 안에 총 그림, 이름은 총 이름 뒤에 키트. 중급·고급 낚싯대. 자판기 랜덤 목록에 다 있어야 해')
    그림·모양은 look.js 35차(lk_gkit_*, lk_rod2·lk_rod3). p가 있어서 랜덤 자판기 목록(vendPool)에 저절로 들어가요. 가격·설명은 임시.
-   아직 없는 것(규칙 담당·기획자): 키트를 열면 총이 나오는 기능, 중급·고급 낚싯대로 실제 낚시(지금 낚시 코드는 'rod'만 봐요)·성능 차이. ===== */
-Object.assign(ITEMS,{gkit_pistol:{n:ITEMS.pistol.n+' 키트',ic:'lk_gkit_pistol',ty:'res',p:900,d:ITEMS.pistol.n+'이 들어 있는 상자 (여는 기능은 아직, 임시)'},
- gkit_rifle:{n:ITEMS.rifle.n+' 키트',ic:'lk_gkit_rifle',ty:'res',p:2600,d:ITEMS.rifle.n+'이 들어 있는 상자 (여는 기능은 아직, 임시)'},
- gkit_shotgun:{n:ITEMS.shotgun.n+' 키트',ic:'lk_gkit_shotgun',ty:'res',p:3400,d:ITEMS.shotgun.n+'이 들어 있는 상자 (여는 기능은 아직, 임시)'},
- gkit_smg:{n:ITEMS.smg.n+' 키트',ic:'lk_gkit_smg',ty:'res',p:4200,d:ITEMS.smg.n+'이 들어 있는 상자 (여는 기능은 아직, 임시)'},
+   37차 기획자 결정: 키트는 열어서 총이 나오는 게 아니라 나중에 제작해서 합칠 때 쓰는 재료(석궁 키트는 없음).
+   아직 없는 것(규칙 담당·기획자): 키트를 재료로 쓰는 제작법, 중급·고급 낚싯대로 실제 낚시(지금 낚시 코드는 'rod'만 봐요)·성능 차이. ===== */
+Object.assign(ITEMS,{gkit_pistol:{n:ITEMS.pistol.n+' 키트',ic:'lk_gkit_pistol',ty:'res',p:900,d:ITEMS.pistol.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
+ gkit_rifle:{n:ITEMS.rifle.n+' 키트',ic:'lk_gkit_rifle',ty:'res',p:2600,d:ITEMS.rifle.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
+ gkit_shotgun:{n:ITEMS.shotgun.n+' 키트',ic:'lk_gkit_shotgun',ty:'res',p:3400,d:ITEMS.shotgun.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
+ gkit_smg:{n:ITEMS.smg.n+' 키트',ic:'lk_gkit_smg',ty:'res',p:4200,d:ITEMS.smg.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
  rod2:{n:'중급 낚싯대',ic:'lk_rod2_i',hg:'lk_rod2',ty:'tool',p:900,d:'튼튼한 철제 낚싯대 (낚시 기능·성능은 아직, 임시)',one:1},
  rod3:{n:'고급 낚싯대',ic:'lk_rod3_i',hg:'lk_rod3',ty:'tool',p:2400,d:'밝게 빛나는 고급 철제 낚싯대 (낚시 기능·성능은 아직, 임시)',one:1}});
+/* ===== 37차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-19 22:54: '아이템 중에서 금속부품, 구리 추가') ===== 
+   모양·아이콘은 look.js 37차(lk_mparts, lk_copper). p가 있어서 랜덤 자판기 목록에 저절로 들어가요. 가격·설명·쓰는 곳은 임시(기획자가 정하면 숫자만). */
+Object.assign(ITEMS,{mparts:{n:'금속부품',ic:'lk_mparts',ty:'res',p:120,d:'톱니바퀴·볼트·스프링 같은 쇠 부품. 제작 재료 (임시)'},
+ copper:{n:'구리',ic:'lk_copper',ty:'res',p:90,d:'붉게 빛나는 구리 덩어리. 제작 재료 (임시)'}});

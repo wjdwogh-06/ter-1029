@@ -962,7 +962,42 @@ function lkKits35(){
   const g=mg(p);g.userData.tip=A(rl+.28);return g};
  const P2={grip:0x4a525c,cap:0x66707b,seat:0xb4bcc5,acc:0x4f86c4,blank:0x8e99a6,stem:0x9aa4ae,body:0xa7b0ba,spool:0xccd3db,hand:0xb0b8c2,knob:0x3b424b,guide:0xdfe3e8,band:0x4f7fb8,bands:[.04,.1,.62]},P3={grip:0xc9ced5,cap:0xe6b84a,seat:0xf0f3f6,acc:0xe6b84a,blank:0xd5dbe2,stem:0xe8ecf0,body:0xe3e8ed,spool:0xe9bd52,hand:0xf2f5f8,knob:0xe6b84a,guide:0xf6f8fa,band:0xe6b84a,bands:[.04,.1,.62,1.12],hi:0xf4f7fa};
  GEO.lk_rod2=rodGeo(P2);GEO.lk_rod3=rodGeo(P3);
+ /* 37차: 기본 낚싯대 = 나무 낚싯대(기획자: '일반 낚시대는 그냥 나무 낚시대로'). 밝은 나무 대 + 대나무 마디 + 실 감은 띠 + 코르크 손잡이 + 나무 릴·놋쇠 고리 */
+ {const P1={grip:0xd2a26a,cap:0x7d5232,seat:0xd9a441,acc:0x8c3a2f,blank:0xc98f55,stem:0x9c6a3d,body:0xa8744a,spool:0xdba068,hand:0xd9a441,knob:0x7d5232,guide:0xe0b45a,band:0x8c3a2f,bands:[.04,.1,.62,1.12,1.62],hi:0xa8744a};
+  GEO.lk_rod1=rodGeo(P1);GEO.lk_rod1_i=rodGeo(P1,1.2,1.75);GEO.lk_rod1.computeBoundingSphere();GEO.lk_rod1_i.computeBoundingSphere()}
  /* 가방·자판기 아이콘: 짧고 굵게 그려서 쇠 색이 보이게 */
  GEO.lk_rod2_i=rodGeo(P2,1.2,1.75);GEO.lk_rod3_i=rodGeo(P3,1.2,1.75);
  for(const k of['lk_rod2','lk_rod3','lk_rod2_i','lk_rod3_i'])GEO[k].computeBoundingSphere()}
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkKits35()}catch(e){console.error('look: 35차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
+
+/* ===== 37차(디자인): 나무 낚싯대 · 금속부품 · 구리 =====
+   - 기본 낚싯대(ITEMS.rod) = 나무 낚싯대: water.js가 만든 GEO.rod(카본)를 같은 배치·같은 줄 끝(userData.tip)의 나무 대(lk_rod1, 35차 rodGeo)로 바꿔 끼워요.
+     가방·자판기 아이콘은 짧고 굵은 lk_rod1_i.
+   - 금속부품 lk_mparts: 톱니바퀴 + 육각 볼트·너트 + 스프링 + ㄱ자 쇠붙이. 구리 lk_copper: 구리 괴 셋(위가 좁은 괴) + 구리선 타래 + 작은 덩이. */
+function lkItems37(){const R=(w,h,d,c,b)=>lkRb(w,h,d,c===undefined?.02:c,b===undefined?.012:b);
+ {const ST=0xa7b0ba,ST2=0x8e99a6,DK=0x3b424b,HI=0xd3d9df,p=[];
+  /* 톱니바퀴(조금 기울여 눕힘) */
+  const gear=[pt(cyl(.17,.17,.06,20),ST,[0,0,0]),pt(cyl(.115,.115,.065,18),HI,[0,0,0]),pt(cyl(.05,.05,.07,10),DK,[0,0,0])];for(let k=0;k<12;k++){const a=k/12*Math.PI*2;gear.push(pt(R(.07,.06,.06,.015,.01),ST,[Math.cos(a)*.19,0,Math.sin(a)*.19],[0,-a,0]))}
+  for(let k=0;k<4;k++){const a=k/4*Math.PI*2+.4;gear.push(pt(cyl(.022,.022,.067,8),DK,[Math.cos(a)*.085,0,Math.sin(a)*.085]))}
+  p.push(pt(mg(gear),null,[-.1,.07,-.02],[.18,.3,.08]));
+  /* 육각 볼트(누움) + 나사산 */
+  {const b=[pt(cyl(.065,.065,.055,6),ST2,[0,0,0]),pt(cyl(.028,.028,.26,10),HI,[0,.155,0])];for(let k=0;k<7;k++)b.push(pt(new THREE.TorusGeometry(.029,.006,4,10),ST,[0,.07+k*.032,0],[Math.PI/2,0,0]));p.push(pt(mg(b),null,[.2,.06,.12],[0,.5,Math.PI/2]))}
+  /* 너트 둘 */
+  for(const [x,z,r] of [[.24,-.12,.3],[.06,.2,1.1]])p.push(pt(cyl(.055,.055,.04,6),ST2,[x,.02,z],[0,r,0]),pt(cyl(.025,.025,.042,10),DK,[x,.021,z]));
+  /* 스프링(나선 관) */
+  {const pts=[];for(let i=0;i<=90;i++){const t=i/90,a=t*Math.PI*2*5;pts.push(new THREE.Vector3(Math.cos(a)*.045,t*.2,Math.sin(a)*.045))}p.push(pt(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),180,.009,5,false),0xc9ced4,[-.24,.05,.17],[0,0,Math.PI/2-.2]))}
+  /* ㄱ자 쇠붙이 + 구멍 */
+  p.push(pt(R(.2,.025,.08),0x6b7480,[-.02,.0125,.24],[0,.6,0]),pt(R(.025,.12,.08),0x6b7480,[.06,.06,.18],[0,.6,0]),pt(cyl(.016,.016,.03,8),DK,[-.06,.026,.27]));
+  GEO.lk_mparts=mg(p);lkSmooth(GEO.lk_mparts,35)}
+ {const CU=0xc8713e,CU2=0xe08c55,CU3=0xa85a2e,PT=0x5fb3a1,p=[];
+  /* 위가 좁은 구리 괴 */
+  const ingot=(x,y,z,ry)=>{const sh=new THREE.Shape();sh.moveTo(-.17,0);sh.lineTo(.17,0);sh.lineTo(.135,.1);sh.lineTo(-.135,.1);sh.lineTo(-.17,0);const g=new THREE.ExtrudeGeometry(sh,{depth:.13,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1,curveSegments:2});g.translate(0,0,-.065);
+   p.push(pt(g,CU,[x,y,z],[0,ry,0]),pt(R(.22,.012,.08,.01,.004),CU2,[x,y+.112,z],[0,ry,0]),pt(R(.05,.006,.03,.01,.003),CU3,[x+Math.cos(ry)*.05,y+.12,z-Math.sin(ry)*.05],[0,ry,0]))};
+  ingot(-.1,.012,-.05,.05);ingot(.12,.012,.02,-.08);ingot(.0,.135,-.01,1.45);
+  /* 구리선 타래 + 작은 덩이 + 녹 자국 */
+  for(let k=0;k<3;k++)p.push(pt(new THREE.TorusGeometry(.085,.018,6,16),[CU,CU2,CU][k],[.27,.02+k*.03,.2],[Math.PI/2,0,k*.4]));
+  p.push(pt(new THREE.IcosahedronGeometry(.055,0),CU3,[-.27,.04,.17],[.3,.5,0],[1.2,.8,1]),pt(new THREE.IcosahedronGeometry(.04,0),CU,[-.18,.03,.24],[.7,.2,0]),pt(new THREE.SphereGeometry(.022,6,4),PT,[-.27,.085,.18]));
+  GEO.lk_copper=mg(p);lkSmooth(GEO.lk_copper,35)}}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkItems37()}catch(e){console.error('look: 37차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
+if(typeof ITEMS!=='undefined'&&ITEMS.rod)ITEMS.rod.ic='lk_rod1_i';
+if(typeof buildWaterGeo==='function'){const _bw=buildWaterGeo;buildWaterGeo=function(){_bw();if(GEO.lk_rod1){GEO.rod=GEO.lk_rod1}}}
