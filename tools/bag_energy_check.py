@@ -36,7 +36,7 @@ async def steps(pg):
     print('plantFull',await ev("()=>{const p=PL.list.find(q=>!plGone(q)&&!(S.inv[q.id]>0));P.x=p.x;P.z=p.z+1.1;P.cd=0;plantPick({pl:p});return JSON.stringify({gone:plGone(p),got:invN(p.id)})}"))
     # 버리기 → 발 앞 자루(hold) → 그 자리에선 안 주움 → 멀어졌다 오면 주움. 그동안 칸이 비어서 21번째 자루도 주움
     await ev("()=>{P.x=VIL.x+20;P.z=VIL.z+20;unstuck();openPanel('bag')}");await pg.wait_for_timeout(300)
-    print('drop',await ev("""()=>{const k=bagList().find(q=>ITEMS[q].ty==='res'||ITEMS[q].ty==='food')||bagList()[0];window.TQdk=k;selItem=k;renderPanel();const b=document.querySelector('[data-a=drop]');const n0=drops.length;b.click();
+    print('drop',await ev("""()=>{const k=bagList().find(q=>ITEMS[q].ty==='res'||ITEMS[q].ty==='food')||bagList()[0];window.TQdk=k;selItem=k;renderPanel();const b=typeof bagDrop==='function';const n0=drops.length;bagDrop(k);   /* 30차: [버리기] 버튼 대신 끌어서 버리기(bagDrop) */
       const d=drops[drops.length-1];return JSON.stringify({k,btn:!!b,inBag:!!S.inv[k],sack:drops.length-n0,hold:d&&d.hold,kinds:bagList().length})}"""))
     await ev("()=>closePanel()");await pg.wait_for_timeout(1500)
     print('dropStay',await ev("()=>JSON.stringify({back:!!S.inv[TQdk],kinds:bagList().length})"))

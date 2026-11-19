@@ -7,7 +7,7 @@ async def steps(pg):
     await ev("()=>{give('axe',1);give('rod',1);S.quick[S.sel]=null;openPanel('bag')}");await pg.wait_for_timeout(400)
     print('side',await ev("()=>{const el=document.getElementById('panel'),r=el.getBoundingClientRect();return JSON.stringify({side:el.classList.contains('side'),left:Math.round(r.left),right:Math.round(r.right),w:innerWidth,shade:!document.getElementById('shade').classList.contains('hide')})}"))
     await ev("()=>{const b=document.querySelector('#pbody [data-a=sel][data-k=axe]');b.click()}");await pg.wait_for_timeout(150)
-    await ev("()=>{document.querySelector('#pbody [data-a=equip][data-k=axe]').click()}");await pg.wait_for_timeout(200)
+    await ev("()=>{bagTap('axe')}");await pg.wait_for_timeout(200)
     print('equipped',await ev("()=>curId()"))
     await pg.wait_for_timeout(600);await pg.screenshot(path=os.path.join(OUT,'bag_open.jpg'),type='jpeg',quality=85)
     print('view',await ev("()=>{const r=document.getElementById('panel').getBoundingClientRect(),p=scr(P.x,groundY(P.x,P.z)+1,P.z);return JSON.stringify({on:!!(cam.view&&cam.view.enabled),charX:Math.round(p[0]),freeMid:Math.round(r.left/2)})}"))
@@ -21,7 +21,7 @@ async def steps(pg):
     print('fish blocked',await ev("""()=>{S.quick[S.sel]='rod';const s=FSP.find(q=>q.lb==='해안23');let best=null,bd=1e9;for(let dx=-9;dx<=9;dx+=.5)for(let dz=-9;dz<=9;dz+=.5){const x=s.x+dx,z=s.z+dz,d=Math.hypot(dx,dz);if(d<bd&&waterDepth(x,z)<=SHALLOW&&walk(x,z,.42,P)===null){bd=d;best=[x,z]}}P.x=best[0];P.z=best[1];P.rot=Math.atan2(s.x-P.x,s.z-P.z);inp.fire=true;return 'ok'}"""))
     await pg.wait_for_timeout(800);print('fishing while bag',await ev("()=>{inp.fire=false;return !!fishing}"))
     # 내려놓기
-    await ev("()=>{renderPanel();const b=document.querySelector('#pbody [data-a=uneq]');if(b)b.click()}");await pg.wait_for_timeout(200);print('after unequip',await ev("()=>curId()"))
+    await ev("()=>{renderPanel();if(curId()!=='fist')bagTap(curId())}");await pg.wait_for_timeout(200);print('after unequip',await ev("()=>curId()"))
     await pg.screenshot(path=os.path.join(OUT,'bag_open2.jpg'),type='jpeg',quality=85)
     await ev("()=>closePanel()");await pg.wait_for_timeout(3000)
     print('view after close',await ev("()=>JSON.stringify({on:!!(cam.view&&cam.view.enabled)})"))

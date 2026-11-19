@@ -211,7 +211,7 @@ function drawFx(dt){const c=fctx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0
  c.font=`900 ${15*k}px ${UIF}`;c.lineWidth=3.5;for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.t+=dt;if(f.t>1.1){floats.splice(i,1);continue}const s=scr(f.x,f.y+f.t*1.2,f.z);c.globalAlpha=1-f.t/1.1;c.strokeStyle=UIC.ink;c.strokeText(f.s,s[0],s[1]);c.fillStyle=f.col;c.fillText(f.s,s[0],s[1])}c.globalAlpha=1;
  if(raid.on){let b=null,bd=1e9;for(const e of enemies)if(e.raid&&!e.dead){const d=dist(e.x,e.z,P.x,P.z);if(d<bd){bd=d;b=e}}if(b&&bd>16){const a=Math.atan2(b.z-P.z,b.x-P.x),r=Math.min(innerWidth,innerHeight)*.36,x=innerWidth/2+Math.cos(a)*r,y=innerHeight*.46+Math.sin(a)*r;c.fillStyle='#FF6B5E';c.beginPath();c.moveTo(x+Math.cos(a)*18*k,y+Math.sin(a)*18*k);c.lineTo(x+Math.cos(a+2.5)*12*k,y+Math.sin(a+2.5)*12*k);c.lineTo(x+Math.cos(a-2.5)*12*k,y+Math.sin(a-2.5)*12*k);c.fill()}}}
 /* ---- save / flow ---- */
-function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
+function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,at:s.at||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE));if(d&&d.S&&d.S.seed){S=d.S;if(!S.cx){S.coins=Math.round((S.coins||0)*10);S.cx=1}   /* 동전 10배 단위(6차) */if(d.opt)opt=d.opt;return true}}catch(e){}return false}
 function startPlay(){windInit();mode='play';if(titleT!==null){S.time=titleT;titleT=null}$('title').classList.add('hide');$('ui').classList.remove('hide');updCamera(0,P.x,groundY(P.x,P.z),P.z,true);hudDirty=true;hud();buildUI();sfx(600,.1);if(innerHeight>innerWidth)toast('폰을 가로로 돌리면 훨씬 편해요')}
 let titleT=null;function toTitle(){mode='title';fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fx.width,fx.height);   /* no stale world labels behind the title */
@@ -267,7 +267,11 @@ const NRGUI={c:null};
 function nrgInit(){if(NRGUI.c)return;const st=$('st');if(!st)return;for(const id of['bHp','bHu','bWa']){const r=$(id)&&$(id).closest('.br');if(r)r.style.display='none'}
  const w=document.createElement('div');w.id='nrg';w.className='br';w.innerHTML='<span style="background:var(--amb)">⚡</span><div style="flex:1;display:flex;gap:3px">'+Array.from({length:10},()=>'<i class="nc"><b></b></i>').join('')+'</div>';
  const box=$('bHp').closest('.br').parentNode;box.appendChild(w);st.style.height='62px';
- const css=document.createElement('style');css.textContent='#nrg .nc{flex:1;height:17px;border-radius:5px;background:var(--pn3);overflow:hidden;position:relative;box-shadow:inset 0 2px 0 rgba(120,86,52,.18)}#nrg .nc b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--amb);border-radius:5px;box-shadow:inset 0 3px 0 rgba(255,255,255,.4);transition:width .25s}#nrg.low .nc b{background:var(--red)}#nrg.low{animation:nrgBlink 1s infinite}@keyframes nrgBlink{50%{opacity:.5}}';
+ const css=document.createElement('style');css.textContent='#nrg .nc{flex:1;height:17px;border-radius:5px;background:var(--pn3);overflow:hidden;position:relative;box-shadow:inset 0 2px 0 rgba(120,86,52,.18)}#nrg .nc b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--amb);border-radius:5px;box-shadow:inset 0 3px 0 rgba(255,255,255,.4);transition:width .25s}#nrg.low .nc b{background:var(--red)}#nrg.low{animation:nrgBlink 1s infinite}@keyframes nrgBlink{50%{opacity:.5}}'
+  /* 30차(기획자: '에너지 한 칸당 전부 반투명한 에너지로, 이상한 테두리 없애고 깔끔하고 단순하게'): 크림색 판·테두리·이름 줄 없이 ⚡ + 반투명 10칸만 */
+  +'#st.nrg1{background:none;border:0;box-shadow:none;height:auto!important;width:250px}#st.nrg1 #nrg{margin-top:0;gap:6px}#st.nrg1 #nrg>span{background:none!important;width:auto;height:auto;font-size:19px;filter:drop-shadow(0 1px 1.5px rgba(40,24,12,.45))}'
+  +'#st.nrg1 #nrg>div{gap:4px!important}#st.nrg1 .nc{height:15px;border-radius:5px;background:rgba(70,48,28,.26);box-shadow:none}#st.nrg1 .nc b{background:rgba(255,190,40,.72);border-radius:5px;box-shadow:none}#st.nrg1 #nrg.low .nc b{background:rgba(236,78,58,.75)}';
+ st.classList.add('nrg1');if(box.firstElementChild&&box.firstElementChild!==w)box.firstElementChild.style.display='none';
  document.head.appendChild(css);NRGUI.c=[...w.querySelectorAll('.nc b')];NRGUI.w=w}
 {const _h=hud;hud=function(){_h();nrgInit();if(!NRGUI.c)return;const v=P.dead?0:clamp(S.hp,0,100)/10;NRGUI.c.forEach((b,i)=>{const f=Math.round(clamp(v-i,0,1)*100)+'%';if(b.style.width!==f)b.style.width=f});NRGUI.w.classList.toggle('low',v<=2.001&&v>0)}}
 /* ===== 28차(기획자: '제작칸 총 6칸, 마크 제작법처럼 3×2'): 작업대 창의 제작 =====
@@ -311,5 +315,64 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 {const _c=closePanel;closePanel=function(){if(panel==='bench'||panel==='craft')cgReturn();CG.sel=null;_c()}}
 {const _o=openPanel;openPanel=function(k){if((panel==='bench'||panel==='craft')&&k!==panel)cgReturn();if(k!==panel)CG.sel=null;_o(k)}}
 {const _h=hud;hud=function(){if(!CG.boot&&mode==='play'&&S){CG.boot=1;if(Array.isArray(S.cg)&&S.cg.some(Boolean))cgReturn()}_h()}}
+/* ===== 30차(기획자, 11-19) =====
+   ① 재화(동전)는 가방을 열었을 때만(가방 창 위 #pcoin). 오른쪽 위 동전 알약은 없앴어요.
+   ② 탄알 수: 평소에는 없고, 탄을 쓰는 무기(총·석궁)를 들면 지도 아래에 숫자만(그림 없이).
+   ③ 🔍 버튼 없음 → 두 손가락으로 벌리고 오므려 확대·축소(예전 버튼 범위 .74~1.3 안에서 부드럽게). PC는 마우스 휠.
+   ④ 텐트는 친 뒤 12시간(실제 시간, s.at)이 지나면 사라져요. 텐트 위에 남은 시간. 집(업그레이드)은 안 사라져요.
+   ⑤ 가방: 칸을 누르면 바로 장착·해제·먹기·설치(버튼 없이). 칸을 끌어서 가방 창 밖에 놓으면 버려요. */
+{const _h=hud;hud=function(){_h();const pl=$('pills');if(!pl||!S)return;const f=pl.firstElementChild,fi=f&&f.querySelector('img');if(fi&&fi.getAttribute('src')===ICON.coin)f.remove();
+ const w=WEAP[curId()]||{};if(w.ammo){const a=pl.firstElementChild;if(a&&a.querySelector('img')){a.textContent=String(invN(w.ammo));a.classList.add('ammoN')}}}}
+{const css=document.createElement('style');css.textContent='#pills .pill.ammoN{font-size:17px;padding:3px 13px;min-width:20px;justify-content:center}'
+  +'#pbody .slot[data-a=sel]{touch-action:none;-webkit-user-select:none;user-select:none}#bagDrag{position:fixed;z-index:60;pointer-events:none;width:64px;height:64px;transform:translate(-50%,-50%);transition:opacity .1s}#bagDrag img{width:100%;height:100%;filter:drop-shadow(0 4px 6px rgba(40,24,12,.35))}'
+  +'#bagDrag b{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;background:var(--red);color:#fff;font:800 12px var(--f);padding:3px 9px;border-radius:11px;display:none}#bagDrag.out b{display:block}#bagDrag.out img{opacity:.75}';
+ document.head.appendChild(css)}
+/* ③ 두 손가락 확대·축소 */
+const ZOOM={t:null,min:.74,max:1.3,pts:{},on:0,d0:1,z0:1};
+$('bZoom').style.display='none';
+{const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{joyEnd();aimP.id=null;inp.fire=false;inp.aiming=false;for(const id in taps)delete taps[id]};   /* 손가락 기록을 지워서 걷기·조준·톡 누르기가 안 돼요 */
+ cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;if(sidePanel()&&e.clientX>=innerWidth*.48)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
+  if(p.length>=2){ZOOM.on=1;ZOOM.d0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.z0=ZOOM.t==null?zoomK:ZOOM.t;stopOthers()}});
+ cv.addEventListener('pointermove',e=>{const q=ZOOM.pts[e.pointerId];if(!q)return;q.x=e.clientX;q.y=e.clientY;if(!ZOOM.on)return;const p=two();if(p.length<2)return;
+  const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max);inp.mx=inp.mz=0});
+ const up=e=>{delete ZOOM.pts[e.pointerId];if(!two().length)ZOOM.on=0;else if(ZOOM.on)stopOthers()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ cv.addEventListener('wheel',e=>{if(mode!=='play')return;e.preventDefault();const z=ZOOM.t==null?zoomK:ZOOM.t;ZOOM.t=clamp(z*(1+Math.sign(e.deltaY)*Math.min(.25,Math.abs(e.deltaY)*.0015)),ZOOM.min,ZOOM.max)},{passive:false});
+ const _uc=updCamera;updCamera=function(dt,px,py,pz,snap){if(ZOOM.t!=null&&!INT.on){const d=ZOOM.t-zoomK;zoomK=Math.abs(d)<.002?ZOOM.t:zoomK+d*Math.min(1,dt*12)}return _uc(dt,px,py,pz,snap)}}
+/* ④ 텐트 12시간 */
+const TENT_LIFE=12*3600e3;
+{const _as=addStruct;addStruct=function(s){const r=_as(s);if(r&&r.t==='ptent'&&r.own&&!r.at)r.at=Date.now();
+  if(r&&r.t==='phouse'&&r.m&&typeof PLAMPS!=='undefined'){const k=sdef(r).s;for(const ch of r.m.children)if(PLAMPS.includes(ch))ch.position.multiplyScalar(k)}return r}}   /* 집 문 옆 등불 자리도 집 크기(s)에 맞춰요 */   /* 예전 저장의 텐트는 불러온 때부터 12시간 */
+const tentLeft=s=>s.at+TENT_LIFE-Date.now();
+function tentLeftTx(ms){const m=Math.max(0,Math.ceil(ms/60e3)),h=(m/60)|0;return ms<60e3?Math.max(0,Math.ceil(ms/1e3))+'초':h?`${h}시간 ${m%60}분`:`${m}분`}
+function tentGone(s){if(INT.on&&INT.s===s)intOut();const hx=s.x,hz=s.z+sdef(s).bz+1.1;removeStruct(s);
+ if(S.home&&dist(S.home.x,S.home.z,hx,hz)<1.5){const o=structs.find(q=>q.own&&sdef(q).home);S.home=o?{x:o.x,z:o.z+sdef(o).bz+1.1}:{x:VIL.x,z:VIL.z}}
+ if(typeof puff==='function')puff(s.x,groundY(s.x,s.z)+.6,s.z,0xffffff,10);sfx(260,.12,'sine',.04);toast('⛺ 텐트가 12시간이 지나 사라졌어요');hudDirty=true;save()}
+{const _h=hud;let t=0;hud=function(){_h();if(mode!=='play'||!S||busy||P.dead)return;const now=performance.now();if(now-t<1000)return;t=now;for(const s of structs.slice())if(s.t==='ptent'&&s.own&&s.at&&tentLeft(s)<=0)tentGone(s)}}
+{const _d=drawFx;drawFx=function(dt){_d(dt);if(mode!=='play'||INT.on||!S)return;const c=fctx,k=Math.max(.8,UIS*1.25);
+ for(const s of structs){if(s.t!=='ptent'||!s.own||!s.at||dist(P.x,P.z,s.x,s.z)>40)continue;const q=scr(s.x,groundY(s.x,s.z)+3.25,s.z);if(!q[2])continue;const ms=tentLeft(s);
+  uiPill(c,'⏳ '+tentLeftTx(ms),q[0],q[1],10.5*k,ms<3600e3?'rgba(229,83,75,.92)':'rgba(91,61,43,.86)','#fff','rgba(255,255,255,.35)')}}}
+/* ⑤ 가방: 누르면 바로, 끌어서 밖에 놓으면 버리기 */
+const BAGD={k:null,x:0,y:0,id:null,on:0,el:null,end:0};
+function bagTap(k){const it=ITEMS[k];if(!it||!invN(k))return;selItem=k;const ty=it.ty;
+ if(ty==='kit'||ty==='food'||ty==='heal'||ty==='fish'||ty==='throw'){primary(k);hudDirty=true;return}
+ if(ty==='gun'||ty==='tool'){if(curId()===k){S.quick[S.sel]=null;sfx(500,.05);toast('맨손이 됐어요')}else primary(k);hudDirty=true;return}
+ sfx(700,.03);hudDirty=true}
+function bagDrop(k){const n=invN(k);if(!n)return;if(INT.on){toast('밖에서 버려요');return}delete S.inv[k];for(let i=0;i<S.quick.length;i++)if(S.quick[i]===k)S.quick[i]=null;if(selItem===k)selItem=null;
+ bagSack({[k]:n},1,1);sfx(300,.06,'square',.03);toast(`${ITEMS[k].n}${n>1?' ×'+n:''} 버렸어요`);hudDirty=true}
+$('pbody').addEventListener('click',e=>{if(panel!=='bag')return;const b=e.target.closest('[data-a="sel"]');if(!b)return;e.stopPropagation();if(performance.now()-BAGD.end<350)return;bagTap(b.dataset.k)},true);
+$('pbody').addEventListener('pointerdown',e=>{if(panel!=='bag')return;const b=e.target.closest('[data-a="sel"]');if(!b)return;BAGD.k=b.dataset.k;BAGD.x=e.clientX;BAGD.y=e.clientY;BAGD.id=e.pointerId;BAGD.on=0});
+{const outside=(x,y)=>{const r=$('panel').getBoundingClientRect();return x<r.left||x>r.right||y<r.top||y>r.bottom};
+ addEventListener('pointermove',e=>{if(BAGD.k==null||e.pointerId!==BAGD.id)return;if(!BAGD.on){if(Math.hypot(e.clientX-BAGD.x,e.clientY-BAGD.y)<12)return;BAGD.on=1;const d=document.createElement('div');d.id='bagDrag';d.innerHTML=`<img src="${ICON[BAGD.k]}"><b>놓으면 버려요</b>`;document.body.appendChild(d);BAGD.el=d}
+  e.preventDefault();BAGD.el.style.left=e.clientX+'px';BAGD.el.style.top=e.clientY+'px';BAGD.el.classList.toggle('out',outside(e.clientX,e.clientY))},{passive:false});
+ const fin=e=>{if(BAGD.k==null||e.pointerId!==BAGD.id)return;const k=BAGD.k,was=BAGD.on;BAGD.k=null;BAGD.id=null;BAGD.on=0;if(BAGD.el){BAGD.el.remove();BAGD.el=null}
+  if(!was)return;BAGD.end=performance.now();if(e.type==='pointerup'&&panel==='bag'&&outside(e.clientX,e.clientY))bagDrop(k)};
+ addEventListener('pointerup',fin);addEventListener('pointercancel',fin)}
+{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='bag')return;const B=$('pbody'),g=B.querySelector('.grid');if(!g)return;let n=g.nextElementSibling;const keep=n&&n.textContent.includes('넘쳤어요')?n:null;
+ for(const x of [...B.children])if(x!==g&&x!==keep)x.remove();const k=selItem&&invN(selItem)?selItem:null,eq=curId()==='fist'?null:curId();let h='';
+ if(k){const it=ITEMS[k],w=WEAP[k],st=k===eq?'<span style="background:var(--grn);color:#fff;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-left:6px">손에 듦</span>':'';
+  h=`<div style="display:flex;gap:10px;align-items:center;margin-top:10px"><img src="${ICON[k]}" style="width:50px;height:50px"><div class="tx"><div style="font-size:16px">${it.n} ${it.one?'':`<span style="color:var(--mut);font-size:13px">×${S.inv[k]}</span>`}${st}</div><small>${it.d||''}</small>`
+   +(w&&!w.rod?`<div style="font-size:12px;color:var(--mut);font-weight:700;margin-top:2px">피해 ${w.dmg}${w.pel?'×'+w.pel:''} · ${w.melee?'근접':'사거리 '+w.range+'m'}${w.ammo?' · '+ITEMS[w.ammo].n+' '+invN(w.ammo)+'발':''}</div>`:'')+'</div></div>'}
+ h+=`<div style="color:var(--mut);font-weight:600;font-size:12px;line-height:1.55;margin:8px 2px 2px">누르면 바로 장착·먹기·설치해요. 든 것을 다시 누르면 내려놓아요. 끌어서 가방 밖에 놓으면 버려요.</div>`;
+ B.insertAdjacentHTML('beforeend',h)}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

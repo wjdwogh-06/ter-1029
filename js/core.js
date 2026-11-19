@@ -111,7 +111,7 @@ const ITEMS={
  cloth:{n:'천',ic:'cloth',ty:'res',p:50,d:'붕대에 써요'},
  berry:{n:'산딸기',ic:'berries',ty:'food',food:9,p:30,d:'덤불에서 따요. 배고픔 +9'},can:{n:'통조림',ic:'can',ty:'food',food:38,p:140,d:'든든한 전투식량. 배고픔 +38'},
  bandage:{n:'붕대',ic:'bandage',ty:'heal',heal:40,p:160,d:'체력 +40'},
- ammoS:{n:'권총탄',ic:'ammoS',ty:'ammo',p:15,d:'권총과 기관단총용'},ammoL:{n:'소총탄',ic:'ammoL',ty:'ammo',p:25,d:'소총, 산탄총, 기관총 진지용'},
+ ammoS:{n:'탄알',ic:'ammoS',ty:'ammo',p:15,d:'모든 총·포탑·기관총 진지에 써요. 보급상에서 12발씩 사요'},
  grenade:{n:'수류탄',ic:'grenade',ty:'throw',p:280,d:'던지면 주변에 큰 피해'},
  axe:{n:'손도끼',ic:'axe_m',ty:'tool',p:200,d:'나무와 바위를 빨리 캐요. 근접 14',one:1},
  kit_tent:{n:'텐트',ic:'mtent',ty:'kit',b:'ptent',p:600,d:'어디든 펴면 내 기지가 돼요. 안에 들어갈 수 있어요'},kit_stash:{n:'보관 상자',ic:'mstash',ty:'kit',b:'stash',p:400,d:'튼튼한 보관함. 모든 상자가 이어져 있어요'},kit_bench:{n:'작업대',ic:'bench',ty:'kit',b:'bench',p:500,d:'텐트 안에 놓아요. 무기·탄약을 만들고, 텐트를 집으로 업그레이드해요'},
@@ -160,19 +160,19 @@ const PLANT_SITES=[
  {p:'flower_black',x:772,z:572,r:22,c:11},{p:'mush',x:364,z:724,r:22,c:11},{p:'mush_poison',x:636,z:588,r:22,c:11},{p:'mush_censer',x:484,z:212,r:22,c:11}];
 ITEMS.rod={n:'낚싯대',ic:'rod',ty:'tool',p:300,d:'물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만',one:1};
 const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:2},axe:{melee:1,dmg:14,cd:.5,range:2.3},
- pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoL',spread:.008},
- smg:{dmg:10,cd:.095,range:15,ammo:'ammoS',spread:.07},shotgun:{dmg:9,pel:6,cd:.9,range:11,ammo:'ammoL',spread:.17}};
-const RECIPES=[{id:'axe',n:1,c:{wood:3,stone:2}},{id:'rod',n:1,c:{wood:4,cloth:1}},{id:'bandage',n:1,c:{cloth:2}},
- {id:'ammoS',n:12,c:{scrap:1,powder:1},bench:1},{id:'ammoL',n:8,c:{scrap:2,powder:1},bench:1},{id:'grenade',n:1,c:{scrap:3,powder:3},bench:1},
+ pistol:{dmg:16,cd:.32,range:16,ammo:'ammoS',spread:.03,h1:1},rifle:{dmg:48,cd:1.0,range:27,ammo:'ammoS',spread:.008},
+ smg:{dmg:10,cd:.095,range:15,ammo:'ammoS',spread:.07},shotgun:{dmg:9,pel:6,cd:.9,range:11,ammo:'ammoS',spread:.17}};
+const RECIPES=[{id:'bandage',n:1,c:{cloth:2}},   /* 30차(기획자): 탄알·낚싯대·손도끼는 만들 수 없어요 → 보급상에서 사요 */
+ {id:'grenade',n:1,c:{scrap:3,powder:3},bench:1},
  {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},bench:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},bench:1},{id:'smg',n:1,c:{scrap:24,wood:3},bench:1}];
 /* 28차(기획자: '제작칸 총 6칸, 마크 제작법처럼 3×2'): 작업대의 제작 칸 3칸×2줄에 재료를 모양대로 놓으면 만들어져요(칸마다 1개씩 써요, 좌우를 뒤집어 놓아도 돼요, 빈 줄·칸은 어디로 밀어도 됨).
    글자: W 나무 · S 돌 · X 고철 · C 천 · P 화약 · '.' 빈칸. 모양과 재료는 임시 — 기획자가 정하면 CRAFT_PAT만 고치면 돼요. 재료 수(r.c)는 모양에서 세어요 */
 const CRAFT_KEY={W:'wood',S:'stone',X:'scrap',C:'cloth',P:'powder'};
-const CRAFT_PAT={axe:['SS','.W'],rod:['WWW','..C'],bandage:['CC'],ammoS:['XP'],ammoL:['XP','X.'],grenade:['XPX','PXP'],pistol:['XXX','W..'],rifle:['XXX','WWW'],shotgun:['XXX','XWW'],smg:['XXX','XXW']};
+const CRAFT_PAT={bandage:['CC'],grenade:['XPX','PXP'],pistol:['XXX','W..'],rifle:['XXX','WWW'],shotgun:['XXX','XWW'],smg:['XXX','XXW']};
 for(const r of RECIPES){const p=CRAFT_PAT[r.id];if(!p)continue;r.pat=p;const c={};for(const row of p)for(const ch of row)if(CRAFT_KEY[ch])c[CRAFT_KEY[ch]]=(c[CRAFT_KEY[ch]]||0)+1;r.c=c}
 /* builds: g=geometry, s=scale, bx/bz=half extents, hp */
 const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'밤을 밝히고 생선을 구워요. 옆에 있으면 에너지가 조금 빨리 차요'},
- bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},kit:'kit_bench',d:'총과 탄약을 만들고, 텐트를 집으로 업그레이드해요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */
+ bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},kit:'kit_bench',d:'총·수류탄·붕대를 만들고, 텐트를 집으로 업그레이드해요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */
 
  torch:{n:'횃불',g:'torch_lit',s:1.7,bx:.3,bz:.3,hp:30,c:{wood:2},d:'밤에 주변을 밝혀요'},
  fence:{n:'나무 울타리',g:'fence',s:1,bx:1,bz:.25,hp:70,c:{wood:2},d:'값싼 방어선',grid:1},
@@ -180,9 +180,9 @@ const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,st
  gate:{n:'성문',g:'gateB',s:1,bx:1,bz:.4,hp:380,c:{stone:8,wood:6},d:'나는 지나가고 적은 막아요',grid:1,gate:1},
  mine:{n:'지뢰',g:'mine',s:1,bx:.4,bz:.4,hp:20,c:{scrap:4,powder:4},d:'적이 밟으면 크게 터져요. 한 번 쓰면 사라져요',pass:1,trap:2},
  gen:{n:'발전기',g:'gen',s:1,bx:.8,bz:.6,hp:160,c:{scrap:15,wood:5},d:'연료(기름통)를 넣으면 전기를 만들어요. 1통에 5분, 3통까지'},
- turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 권총탄을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
+ turret:{n:'자동 포탑',g:'tbase',s:1,bx:.6,bz:.6,hp:240,c:{scrap:24,wood:5},d:'사거리 안의 적을 스스로 찾아 쏴요. 탄알을 넣어요',tur:{head:'thead',brl:'tbrl',range:14,cd:.2,dmg:10,ammo:'ammoS',cap:240,load:60,snd:'smg',bz:.4,fl:.92}},
  ptent:{n:'텐트',g:'mtent',s:1.45,bx:1.8,bz:1.9,hp:220,c:{cloth:10,wood:6},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,upg:{to:'phouse',c:{wood:120}},d:'내 기지가 돼요. 안에 들어갈 수 있어요'},
- phouse:{n:'집',g:'phouse',s:1,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
+ phouse:{n:'집',g:'phouse',s:.85,bx:1.85,bz:1.9,hp:600,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.05,2.1],tilt:.1,room:'house',hide:1,d:'텐트를 업그레이드한 통나무 집. 안이 더 넓어요'},   /* 30차(기획자: '집 크기는 텐트와 같게'): s 1 → .85(폭 4.0m, 텐트 4.3m) */   /* 15차: 작업대에서 나무 120개를 넣고 [업그레이드]로만 생겨요(hide: 건설 목록에 없음). room: 안쪽 방 모양 */
  stash:{n:'보관 상자',g:'mstash',s:1,kit:'kit_stash',fixR:1,bx:.75,bz:.6,hp:160,c:{wood:8,scrap:2},d:'물건을 맡겨요. 쓰러져도 안전하고, 모든 상자가 이어져 있어요'},
  home:{n:'오두막',g:'home_A',s:4.1,bx:1.5,bz:1.6,hp:600,c:{wood:40,stone:20},d:'기지의 중심. 근처에 있으면 따뜻하고 체력이 빨리 회복돼요'}};
 /* ===== 25차(기획자: '넣어봐라'): 새 아이템 15종. 모양·아이콘은 디자인 20·21·23차(look.js 'lk_'+id).
@@ -213,7 +213,7 @@ for(const T of [ITEMS,BUILDS])for(const k in T){const it=T[k];if(it.d)it.d=it.d.
 const GEN_PER=300,GEN_CAP=900;   /* 27차(기획자: '연료는 발전기 연료 넣을 때'): 연료 1통 = 5분, 최대 3통(임시) */
 Object.assign(WEAP,{chainsaw:{melee:1,dmg:18,cd:.4,range:2.4},crossbow:{dmg:30,cd:1.1,range:22,ammo:'arrow',spread:.01}});
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
- gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoL',5,.7],['scrap',2,.6],['coin',90,1]]},
+ gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoS',5,.7],['scrap',2,.6],['coin',90,1]]},
  rgolem:{n:'바위 골렘',hp:240,sp:2.1,dmg:26,reach:3.0,proc:'rg',big:1,blood:0x9aa1a8,loot:[['stone',8,1],['scrap',4,.7],['coin',300,1]]},
  wgolem:{n:'나무 골렘',hp:105,sp:3.0,dmg:14,reach:2.3,proc:'wg',blood:0x8a5a32,loot:[['wood',8,1],['berry',3,.6],['coin',140,1]]},
  wraith:{n:'악령',hp:52,sp:3.3,dmg:12,range:12,proc:'wr',blood:0x9fe8ff,loot:[['powder',3,.8],['cloth',2,.7],['coin',180,1]]},
@@ -224,16 +224,17 @@ const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[
 const ECON={sell:.2};
 function sellPrice(id){return Math.max(1,Math.floor(ITEMS[id].p*ECON.sell))}
 /* 랜덤 자판기: 항구마다 하나. 실제 시간으로 1시간마다(정각 기준) 모든 아이템 중 무작위 5개로 바뀌어요. 시간·항구 번호로만 정해서 누구에게나 같아요 */
-const VEND={n:5,per:3600e3,free:0,pack:{ammoS:12,ammoL:8}};
+const VEND={n:5,per:3600e3,free:0,pack:{ammoS:12}};
 const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p||it.nov)return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
 function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=vendPool(),out=[];let k=0;
  while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
 const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);
 const SHOP={sell:['kit_tent','kit_bench','axe','rod','kit_stash'],mult:1,free:1};   /* 초승달 항구마을 상인 품목. free:1 = 아직 재화 없이 무료 */
-SHOP.sell.push('chainsaw','crossbow','arrow','fuel');VEND.pack.arrow=10;   /* 25차: 새 아이템(임시). 상점은 지금 무료(SHOP.free), 화살은 10발 묶음 */
-const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'가방 › 제작에서 손도끼 만들기',c:s=>(s.inv.axe||0)>0,r:100},
- {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대를 만들어 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
- {t:'텐트 안에 작업대를 짓고 탄약 만들기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},
+SHOP.sell.push('chainsaw','crossbow','arrow','fuel');VEND.pack.arrow=10;
+SHOP.sell.splice(SHOP.sell.indexOf('rod')+1,0,'ammoS');   /* 30차(기획자: '권총탄·소총탄 없애고 탄알 한 가지로, 탄알은 못 만들고 전부 살 수 있게'): 탄알 12발 묶음(VEND.pack) */   /* 25차: 새 아이템(임시). 상점은 지금 무료(SHOP.free), 화살은 10발 묶음 */
+const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.stone>=2,r:100},{t:'보급상에서 손도끼 사기',c:s=>(s.inv.axe||0)>0,r:100},
+ {t:'건설에서 모닥불 피워 몸 녹이기',c:s=>s.st.b_fire>0,r:150},{t:'텐트를 쳐서 내 기지 정하기 (상인에게 받아요)',c:s=>s.st.b_ptent>0,r:200},{t:'낚싯대로 물고기 낚기',c:s=>s.st.fish>0,r:200},{t:'모닥불에서 생선 굽기',c:s=>s.st.cook>0,r:150},{t:'고철 모으기 (잔해, 상자, 약탈자)',c:s=>s.st.scrap>=6,r:200},
+ {t:'보급상에서 탄알 사 두기',c:s=>s.st.c_ammoS+s.st.c_ammoL>0||(s.inv.ammoS||0)>36,r:250},{t:'약탈자 5명 물리치기',c:s=>s.st.kills>=5,r:400},
  {t:'첫 밤 습격 막아내기',c:s=>s.st.raids>=1,r:600},{t:'볼트액션 소총 구하기',c:s=>(s.inv.rifle||0)>0,r:500},
  {t:'자동 터렛을 세우고 탄약 넣기',c:s=>s.st.b_tur>0,r:800},{t:'바다 위 등대에 불 켜기 (헤엄쳐서 가요)',c:s=>Object.keys(s.lh||{}).length>=1,r:600},{t:'바다 등대 8곳 모두 밝히기',c:s=>Object.keys(s.lh||{}).length>=8,r:3000}];
 /* ===== 24차(기획자 결정): 없앤 아이템·설치물 = 물고기 북극곤들매기·무지개송어(+구운 것), 설치형 모래주머니·가시 함정·탐조등.
@@ -241,8 +242,10 @@ const QUESTS=[{t:'나무 3개와 돌 2개 모으기',c:s=>s.st.wood>=3&&s.st.sto
    목표 목록에서 '모래주머니'·'탐조등' 목표 둘도 뺐어요 → 예전 저장의 목표 번호를 한 번 맞춰요(S.qv). 보급지 장식 모래주머니(모델)는 그대로 ===== */
 const REMOVED={n:{f_char:'북극곤들매기',cf_char:'구운 북극곤들매기',f_rainbow:'무지개송어',cf_rainbow:'구운 무지개송어',sandbag:'모래주머니',spike:'가시 함정',slight:'탐조등'},
  c:{sandbag:{cloth:1,stone:3},spike:{wood:6,scrap:2},slight:{scrap:10,wood:4}}};
+const MERGED={ammoL:'ammoS'};   /* 30차: 없앤 아이템 → 합쳐 들어갈 아이템 */
 function dropRemoved(){const got=[],add=k=>{const n=REMOVED.n[k];if(n&&!got.includes(n))got.push(n)};
  const purge=o=>{if(!o)return;for(const k in o)if(!ITEMS[k]){if(o[k]>0)add(k);delete o[k]}};
+ const merge=o=>{if(!o)return;for(const a in MERGED){if(o[a]>0)o[MERGED[a]]=(o[MERGED[a]]||0)+o[a];delete o[a]}};merge(S.inv);merge(S.stash);if(S.bag)merge(S.bag.inv);   /* 30차: 합친 아이템(소총탄 → 탄알)은 개수 그대로 옮겨요 */
  purge(S.inv);purge(S.stash);if(S.bag){purge(S.bag.inv);if(!Object.keys(S.bag.inv).some(k=>S.bag.inv[k]>0))S.bag=null}
  S.quick=(S.quick||[]).map(k=>k&&!ITEMS[k]?null:k);
  for(const k of['f_char','f_rainbow']){if(S.caught)delete S.caught[k];if(S.best)delete S.best[k]}
