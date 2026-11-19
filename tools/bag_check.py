@@ -10,7 +10,7 @@ async def steps(pg):
     await ev("()=>{bagTap('axe')}");await pg.wait_for_timeout(200)
     print('equipped',await ev("()=>curId()"))
     await pg.wait_for_timeout(600);await pg.screenshot(path=os.path.join(OUT,'bag_open.jpg'),type='jpeg',quality=85)
-    print('view',await ev("()=>{const r=document.getElementById('panel').getBoundingClientRect(),p=scr(P.x,groundY(P.x,P.z)+1,P.z);return JSON.stringify({on:!!(cam.view&&cam.view.enabled),charX:Math.round(p[0]),freeMid:Math.round(r.left/2)})}"))
+    print('view(38차: 카메라 안 옮김 → on false)',await ev("()=>{const r=document.getElementById('panel').getBoundingClientRect(),p=scr(P.x,groundY(P.x,P.z)+1,P.z);return JSON.stringify({on:!!(cam.view&&cam.view.enabled),charX:Math.round(p[0]),freeMid:Math.round(r.left/2)})}"))
     # 가방 열린 채 움직이기
     x0=await ev("()=>[P.x,P.z]");await ev("()=>{keys.KeyS=1}");await pg.wait_for_timeout(900);await ev("()=>{keys.KeyS=0}")
     x1=await ev("()=>[P.x,P.z]");print('moved with bag open',round(((x1[0]-x0[0])**2+(x1[1]-x0[1])**2)**.5,2))

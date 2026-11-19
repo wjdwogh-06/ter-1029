@@ -76,7 +76,7 @@ const plTarget=p=>({k:'pl',pl:p,x:p.x,z:p.z,lab:PLD[p.id].n+' '+PLD[p.id].v,rr:.
 function plantPick(t){const p=t.pl,q=PLD[p.id];if(!p||plGone(p)||P.cd>0)return;if(typeof bagHas==='function'&&!bagHas(q.id)){bagFullMsg();P.auto=null;return}   /* 27차: 가방이 꽉 차면 못 따요(식물은 그대로) */P.cd=.45;P.rot=Math.atan2(p.x-P.x,p.z-P.z);P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6});
  const first=!(S.pdex&&S.pdex[q.id]);give(q.id,q.n1);S.pdex=S.pdex||{};S.pdex[q.id]=(S.pdex[q.id]||0)+q.n1;S.pgone=S.pgone||{};S.pgone[p.i]=q.re;plnCol(p);PL.tU=0;
  const y=groundY(p.x,p.z);puff(p.x,y+.4,p.z,q.cat==='flower'?0xe9a3c4:q.cat==='mush'?0xc9a27a:0x8fc46a,4,.5);ftext(p.x,y+1.6,p.z,`+${q.n1} ${q.n}`,'#b8f0c0');sfx(620,.06,'sine',.04);
- if(first){toast(`🌱 새 식물: ${q.n}! 메뉴의 식물 도감에 올렸어요`);jingle([523,659,784])}P.auto=null;target=null;hudDirty=true}
+ if(first){toast(`🌱 새 식물: ${q.n}! 가방의 식물 도감에 올렸어요`);jingle([523,659,784])}P.auto=null;target=null;hudDirty=true}
 {const _it=interact;interact=function(){if(target&&target.k==='pl'){plantPick(target);return}_it()}}
 /* 식물 위에는 건물을 못 놓아요 */
 {const _gp=ghostPos;ghostPos=function(){const g=_gp();if(!g||!g.ok||g.in||!PL.list.length||!bmode||bmode==='demo')return g;const b=BUILDS[bmode],c=Math.cos(g.r||0),s=Math.sin(g.r||0),fx=(b.foot?b.foot[0]:b.bx)+.3,fz=(b.foot?b.foot[1]:b.bz)+.3;
@@ -88,7 +88,7 @@ function plantPick(t){const p=t.pl,q=PLD[p.id];if(!p||plGone(p)||P.cd>0)return;i
  if((PL.tU-=dt)<=0){PL.tU=.25;for(const p of PL.list)if(p.sb)plnCol(p);if(PL.im)plUpdate()}
  if(INT.on)return;const c=fctx,k=Math.max(.8,UIS*1.25),tp=target&&target.k==='pl'?target.pl:null;
  for(const p of PL.list){if(p===tp||plGone(p)||PL.im&&PL.im[p.id]||Math.abs(p.x-P.x)>PL.R||Math.abs(p.z-P.z)>PL.R)continue;const s=scr(p.x,groundY(p.x,p.z)+.35,p.z);if(!s[2])continue;const C=PCAT[PLD[p.id].cat];uiPill(c,PLD[p.id].n,s[0],s[1],10.5*k,UIC.pn,C[1],C[1])}}}
-/* 메뉴의 식물 도감 (ui.js 메뉴 창에서 불러요) */
+/* 식물 도감 (ui.js 메뉴 창과 38차 가방 도감에서 불러요) */
 function plantDexHtml(){const got=PLANTS.filter(q=>S.pdex&&S.pdex[q.id]).length;
  return `<div class="sec">식물 도감 ${got} / ${PLANTS.length}</div>`+Object.keys(PCAT).map(cat=>`<div style="font-weight:800;font-size:12.5px;margin:6px 2px 4px;color:${PCAT[cat][1]}">${PCAT[cat][0]}</div>`+PLANTS.filter(q=>q.cat===cat).map(q=>{const n=S.pdex&&S.pdex[q.id]||0,w=PL.where[q.id];
   return `<div class="row" style="${n?'':'opacity:.72'}"><img src="${ICON[q.id]||''}" style="${n?'':'filter:grayscale(1)'}"><div class="tx">${q.n}${q.col?` <span style="font-size:12px;color:var(--mut)">${q.col}</span>`:''}<small>자라는 곳: ${w&&w.length?w.join(', '):'아직 정해지지 않았어요'}</small><small>${n?`모은 수 ${n}개`:'아직 못 찾았어요'}</small></div></div>`}).join('')).join('')}
