@@ -18,12 +18,14 @@ async def steps(pg):
     # (CDP 터치: touchEnd에 적은 손가락이 떼져요)
     # 2. 조이스틱을 누른 채(손가락 1) 다른 손가락으로 칸 누르기 → 먹고 계속 걸음
     W,H=880,400
-    await touch('touchStart',[(1,W*.18,H*.62)]);await pg.wait_for_timeout(60)
+    jr=await ev("()=>{const r=document.getElementById('joy').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}")   # 32차: 조이스틱은 고정 → 그 가운데를 눌러요
+    JX,JY=jr
+    await touch('touchStart',[(1,JX,JY)]);await pg.wait_for_timeout(60)
     for k in range(1,6):
-        await touch('touchMove',[(1,W*.18,H*.62-k*8)]);await pg.wait_for_timeout(30)
+        await touch('touchMove',[(1,JX,JY-k*8)]);await pg.wait_for_timeout(30)
     await pg.wait_for_timeout(300);p0=await ev("()=>[P.x,P.z,P.moving,joy.id!==null]")
     s=await rect('#pbody [data-a=sel][data-k=can]');c1=await ev("()=>invN('can')")
-    await touch('touchStart',[(1,W*.18,H*.62-40),(2,s[0],s[1])]);await pg.wait_for_timeout(80)
+    await touch('touchStart',[(1,JX,JY-40),(2,s[0],s[1])]);await pg.wait_for_timeout(80)
     await touch('touchEnd',[(2,s[0],s[1])]);await pg.wait_for_timeout(400)
     r3=await ev(f"()=>JSON.stringify({{ate:{c1}-invN('can'),moving:P.moving,joy:joy.id!==null,moved:+Math.hypot(P.x-{p0[0]},P.z-{p0[1]}).toFixed(2),panel}})");print('eat while moving',r3,'before',p0)
     # 가방 연 채 큰 버튼이 가방에 안 가려짐
@@ -31,11 +33,11 @@ async def steps(pg):
     print('atk beside bag',r4)
     await pg.screenshot(path=O('p31_bag_move.jpg'),type='jpeg',quality=85)
     # 3. 걸으면서 ✕로 닫고, 다시 🎒로 열기
-    x=await rect('#pclose');await touch('touchStart',[(1,W*.18,H*.62-40),(2,x[0],x[1])]);await pg.wait_for_timeout(60);await touch('touchEnd',[(2,x[0],x[1])]);await pg.wait_for_timeout(300)
+    x=await rect('#pclose');await touch('touchStart',[(1,JX,JY-40),(2,x[0],x[1])]);await pg.wait_for_timeout(60);await touch('touchEnd',[(2,x[0],x[1])]);await pg.wait_for_timeout(300)
     r5a=await ev("()=>panel");b=await rect('#bBag')
-    await touch('touchStart',[(1,W*.18,H*.62-40),(2,b[0],b[1])]);await pg.wait_for_timeout(60);await touch('touchEnd',[(2,b[0],b[1])]);await pg.wait_for_timeout(300)
+    await touch('touchStart',[(1,JX,JY-40),(2,b[0],b[1])]);await pg.wait_for_timeout(60);await touch('touchEnd',[(2,b[0],b[1])]);await pg.wait_for_timeout(300)
     r5b=await ev("()=>JSON.stringify({panel,moving:P.moving})");print('close/open while moving',r5a,r5b)
-    await touch('touchEnd',[(1,W*.18,H*.62-40)]);await pg.wait_for_timeout(300)
+    await touch('touchEnd',[(1,JX,JY-40)]);await pg.wait_for_timeout(300)
     # 4. 가방 연 채 쏘기: 탄알이 줄어요 / 쏘는 중에 가방을 열어도 계속 쏨
     r6=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));S.quick[S.sel]='pistol';give('ammoS',30);openPanel('bag');await sl(100);const a0=invN('ammoS'),b=document.getElementById('bAtk'),r=b.getBoundingClientRect();
       b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:41,bubbles:true,pointerType:'touch',clientX:r.x+20,clientY:r.y+20}));await sl(900);const used=a0-invN('ammoS');b.dispatchEvent(new PointerEvent('pointerup',{pointerId:41,bubbles:true,pointerType:'touch'}));closePanel();

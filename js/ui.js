@@ -140,7 +140,7 @@ function renderPanel(){const B=$('pbody');$('pcoin').innerHTML=mode==='play'?`<s
  else if(panel==='menu'){h=`<div style="max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px"><button class="btn" data-a="save">저장하기</button><button class="btn g" data-a="dev" style="border:2px solid #4fc3ff">🛠 관리자 모드: ${DEV.on?'켜짐 (무적 · 빠른 이동 · 위치 표시)':'꺼짐'}</button><button class="btn g" data-a="snd">소리: ${opt.snd?'켜짐':'꺼짐'}</button><button class="btn g" data-a="gfx">그래픽: ${opt.gfx?'높음 (그림자·화면 효과)':'낮음 (빠름)'}</button><button class="btn g" data-a="stuck">끼었을 때: 기지로 순간이동</button><button class="btn g" data-a="help">조작법</button><button class="btn r" data-a="title">저장하고 타이틀로</button>
   <div class="sec">${S.day}일째 · 처치 ${S.st.kills} · 막아낸 습격 ${S.st.raids}</div>
   <div class="sec">물고기 도감 ${FISH_LIST.filter(f=>S.caught[f.id]).length} / ${FISH_LIST.length}</div>${['B','A'].map(zk=>`<div style="font-weight:800;font-size:12.5px;margin:6px 2px 4px">${zk==='A'?'🗼':'🏝'} ${FISH_ZONES[zk].n}</div><div class="grid" style="grid-template-columns:repeat(auto-fill,96px)">${FISH_LIST.filter(f=>FISH_ZONES[zk].t.some(q=>q[0]===f.id)).map(f=>{const c=S.caught[f.id],G=FGRADE[f.g];return`<div style="text-align:center;font-size:12px;line-height:1.3"><div class="slot" style="width:70px;height:70px;margin:0 auto 4px;border-color:${G[1]}"><img src="${ICON[f.id]}" style="${c?'':'filter:brightness(0) opacity(.35)'}"></div><span style="display:inline-block;background:${G[1]};color:#fff;border-radius:9px;padding:0 7px;font-size:10.5px;font-weight:800;margin-bottom:2px">${G[0]}</span><br>${c?f.n:'???'}<br><span style="color:var(--mut);font-weight:500">${c?`최대 ${S.best[f.id]||0}cm`:''}</span></div>`}).join('')}</div>`).join('')}${typeof plantDexHtml==='function'?plantDexHtml():''}</div>`}
- else if(panel==='help'){h=['왼쪽 화면을 드래그하면 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요 (PC: WASD)','나무·바위·상자·보급상·땅을 톡 누르면 알아서 걸어가서 베고, 열고, 말을 걸어요. 적을 톡 누르면 그 적을 쏴요','나무는 손도끼를 손에 들어야 벨 수 있어요(가방에서 장착). 낚싯대를 들고 있을 땐 던지기만 돼요','항구마다 랜덤 자판기와 재활용 쓰레기통이 있어요. 자판기는 1시간마다 물건 5개가 바뀌고, 쓰레기통에서는 무엇이든 원래 가격의 20%로 팔 수 있어요','쓰러지면 가방을 그 자리에 떨어뜨리고, 잠시 뒤 무작위 항구 앞에서 깨어나요','오른쪽 큰 버튼 하나로 다 해요. 가까이에 대상이 있으면 베기·캐기·열기·거래·들어가기, 없으면 손에 든 것을 써요(공격·낚싯대 던지기). 적이 가까우면 공격이 먼저예요. 누른 채 끌면 그쪽으로 조준해요 (PC: E 상호작용, 스페이스 공격)','짓기는 🎒 가방의 [건설] 탭에서 골라요. 고른 뒤 놓을 곳을 바라보고 큰 버튼(설치)을 눌러요 (PC: B)','물에 들어갈 수 있어요. 얕은 물에선 느려지고, 깊은 물에선 헤엄쳐요. 오래 헤엄치면 몸이 식어요','낚시는 물고기 그림자가 맴도는 곳에서만 돼요. 낚싯대를 들고 8m 안에서 큰 버튼(또는 그 물을 톡)으로 던져요. 물 안에서는 못 해요. ! 가 뜨면 바로 누르고, 꾹 눌러 감다가 물고기가 요동치면 손을 떼요. 등대 앞바다에서는 영웅·전설 물고기가 나와요','잡은 생선은 모닥불에서 구우면 훨씬 든든해요','🎒 가방에서 도구·무기를 골라 장착하고, 음식·붕대·수류탄을 써요. 가방이 열려 있어도 왼쪽 화면으로 움직일 수 있지만, 낚시·채집·공격은 가방을 닫아야 해요 (PC: Tab)','밤마다 약탈자가 내 기지(텐트)로 쳐들어와요. 모래주머니, 벽, 자동 포탑으로 막아요','섬에는 신비한 것들이 살아요. 바위 골렘은 느리지만 아프고, 나무 골렘은 숲에, 식인 덩굴은 제자리에서 물고, 악령은 밤에만 나타나 빛 구슬을 쏴요','강은 산에서 시작해 바다로 갈수록 넓어져요. 위쪽 좁은 곳은 걸어서 건널 수 있어요','자동 포탑은 권총탄을 넣어야 움직여요. 사거리 안의 적을 스스로 찾아 쏴요','발전기에 나무를 넣으면 주변 탐조등이 밤에 켜져요. 빛에 비친 적은 피해를 더 받고 악령은 타요','바다 위 바위섬에 등대 8개가 있어요. 헤엄쳐 가서 불을 켜면 등대끼리 빠르게 오갈 수 있어요','성문은 나만 지나가요. 가시 함정과 지뢰를 길목에 깔면 습격이 훨씬 쉬워져요','권총·소총·산탄총·기관단총·수류탄과 탄약은 작업대 근처의 제작 창에서 만들어요','가끔 비바람이 와요. 앞이 잘 안 보이고 몸이 식으니 불 곁에서 기다려요','쓰러지면 무작위 항구 앞에서 다시 태어나요. 가방은 쓰러진 자리에 떨어져요. 지도의 보라색 점으로 가서 되찾아요','⚡ 에너지는 10칸이에요. 헤엄치거나 맞으면 줄고, 먹으면 차요. 텐트·집 안에서 쉬면 빨리 차요','자동 저장돼요 (이 기기의 브라우저에만)'].map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')}
+ else if(panel==='help'){h=['왼쪽 아래 조이스틱을 밀면 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요 (PC: WASD)','조이스틱 말고 화면 아무 데나 누르면 돼요: 가까이에 대상이 있으면 베기·캐기·열기·거래·들어가기, 없으면 손에 든 것을 누른 곳 쪽으로 써요(쏘기·던지기·낚싯대). 누르고 있으면 계속 쏴요','나무는 손도끼를 손에 들어야 벨 수 있어요(가방에서 장착). 낚싯대를 들고 있을 땐 던지기만 돼요','항구마다 랜덤 자판기와 재활용 쓰레기통이 있어요. 자판기는 1시간마다 물건 5개가 바뀌고, 쓰레기통에서는 무엇이든 원래 가격의 20%로 팔 수 있어요','쓰러지면 가방을 그 자리에 떨어뜨리고, 잠시 뒤 무작위 항구 앞에서 깨어나요','멀리 있는 나무·상자·보급상·물고기 떼를 톡 누르면 걸어가서 해요(총·수류탄을 들었을 땐 그쪽으로 쏘거나 던져요). 적이 가까우면 공격이 먼저예요 (PC: E 상호작용, 스페이스 공격)','짓기는 🎒 가방의 [건설] 탭에서 골라요. 고른 뒤 놓을 곳을 바라보고 큰 버튼(설치)을 눌러요 (PC: B)','물에 들어갈 수 있어요. 얕은 물에선 느려지고, 깊은 물에선 헤엄쳐요. 오래 헤엄치면 몸이 식어요','낚시는 물고기 그림자가 맴도는 곳에서만 돼요. 낚싯대를 들고 8m 안에서 큰 버튼(또는 그 물을 톡)으로 던져요. 물 안에서는 못 해요. ! 가 뜨면 바로 누르고, 꾹 눌러 감다가 물고기가 요동치면 손을 떼요. 등대 앞바다에서는 영웅·전설 물고기가 나와요','잡은 생선은 모닥불에서 구우면 훨씬 든든해요','🎒 가방에서 도구·무기를 골라 장착하고, 음식·붕대·수류탄을 써요. 가방이 열려 있어도 왼쪽 화면으로 움직일 수 있지만, 낚시·채집·공격은 가방을 닫아야 해요 (PC: Tab)','밤마다 약탈자가 내 기지(텐트)로 쳐들어와요. 모래주머니, 벽, 자동 포탑으로 막아요','섬에는 신비한 것들이 살아요. 바위 골렘은 느리지만 아프고, 나무 골렘은 숲에, 식인 덩굴은 제자리에서 물고, 악령은 밤에만 나타나 빛 구슬을 쏴요','강은 산에서 시작해 바다로 갈수록 넓어져요. 위쪽 좁은 곳은 걸어서 건널 수 있어요','자동 포탑은 권총탄을 넣어야 움직여요. 사거리 안의 적을 스스로 찾아 쏴요','발전기에 나무를 넣으면 주변 탐조등이 밤에 켜져요. 빛에 비친 적은 피해를 더 받고 악령은 타요','바다 위 바위섬에 등대 8개가 있어요. 헤엄쳐 가서 불을 켜면 등대끼리 빠르게 오갈 수 있어요','성문은 나만 지나가요. 가시 함정과 지뢰를 길목에 깔면 습격이 훨씬 쉬워져요','권총·소총·산탄총·기관단총·수류탄과 탄약은 작업대 근처의 제작 창에서 만들어요','가끔 비바람이 와요. 앞이 잘 안 보이고 몸이 식으니 불 곁에서 기다려요','쓰러지면 무작위 항구 앞에서 다시 태어나요. 가방은 쓰러진 자리에 떨어져요. 지도의 보라색 점으로 가서 되찾아요','⚡ 에너지는 10칸이에요. 헤엄치거나 맞으면 줄고, 먹으면 차요. 텐트·집 안에서 쉬면 빨리 차요','자동 저장돼요 (이 기기의 브라우저에만)'].map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')}
  B.innerHTML=h;if(panel==='map')drawMap($('bigmap').getContext('2d'),WS,640)}
 const devGrid=()=>{const q=DEV.q.trim().toLowerCase(),ks=Object.keys(ITEMS).filter(k=>!q||ITEMS[k].n.toLowerCase().includes(q)||k.toLowerCase().includes(q));return ks.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,86px)">${ks.map(k=>`<div data-a="dgive" data-k="${k}" style="text-align:center;font-size:11.5px;line-height:1.25;font-weight:700"><div class="slot" style="width:66px;height:66px;margin:0 auto 3px">${invIcon(k)}${invN(k)?`<b>${invN(k)}</b>`:''}</div>${ITEMS[k].n}</div>`).join('')}</div>`:'<div class="row"><div class="tx">그런 이름의 아이템이 없어요</div></div>'};
 let devArm=false;$('pbody').addEventListener('input',e=>{if(e.target.id==='devQ'){DEV.q=e.target.value;$('devGrid').innerHTML=devGrid()}});$('pbody').addEventListener('input',e=>{const i=e.target.dataset.memo;if(i!==undefined&&DEV.marks[+i]){DEV.marks[+i].memo=e.target.value.slice(0,80);devSave();const o=$('devOut');if(o)o.value=markText()}});$('pbody').addEventListener('click',e=>{if(e.target.id==='bigmap'&&DEV.on&&mode==='play'){const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*WS,z=(e.clientY-r.top)/r.height*WS;if(DEV.mapMark){addMark(x,z);renderPanel()}else devTp(x,z)}});
@@ -173,15 +173,33 @@ function useItem(id){const it=ITEMS[id];if(it.ty==='food'||it.ty==='fish'){if(S.
 function useQuick(i){const id=S.quick[i];if(id&&invN(id)){const ty=ITEMS[id].ty;if(ty==='food'||ty==='heal')useItem(id);else if(ty==='throw')throwNade();else if(ty==='kit')primary(id);else S.sel=i}else S.sel=i;hudDirty=true}
 /* ---- input ---- */
 const joy={id:null,ox:0,oy:0},aimP={id:null};
-function joyEnd(e){if(e&&e.pointerId!==undefined&&e.pointerId!==joy.id)return;joy.id=null;inp.mx=inp.mz=0;$('joy').classList.add('hide')}
+function joyEnd(e){if(e&&e.pointerId!==undefined&&e.pointerId!==joy.id)return;joy.id=null;inp.mx=inp.mz=0;const j=$('joy');if(j&&j.firstChild)j.firstChild.style.transform=''}   /* 32차: 조이스틱은 늘 보여요(고정) */
 const taps={};
-cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}taps[e.pointerId]={x:e.clientX,y:e.clientY,t:performance.now(),mv:0,right:e.clientX>=innerWidth*.48};
- if(e.clientX<innerWidth*.48&&joy.id===null){joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;const j=$('joy');j.style.left=(e.clientX/UIS-75)+'px';j.style.top=(e.clientY/UIS-75)+'px';j.classList.add('hide');j.firstChild.style.transform=''}});
+/* 32차(기획자: '낚시·주먹질 같은 걸 조이스틱 같은 칸으로 만들지 말고, 조이스틱 칸 말고 다른 쪽을 누르면 상호작용하게. 조이스틱은 고정'):
+   조이스틱은 왼쪽 아래에 늘 보이게 고정(joyFix). 그 둘레(반지름 1.5배)에서 시작한 손가락만 움직이기.
+   그 밖의 화면 = 예전 큰 버튼: 설치 모드면 설치, 가까운 대상이 있으면 상호작용, 아니면 손에 든 것 쓰기(누른 곳 쪽으로 조준, 누르고 있으면 계속).
+   두 손가락 확대와 헷갈리지 않게 누른 뒤 90ms에 시작해요(ACT.pend). 총·수류탄이 아닌 것을 들고 멀리 있는 물건·물고기 떼·배를 톡 누르면 예전처럼 걸어가서 해요(ACT.go). */
+const ACT={id:null,md:'fire',x:0,y:0,t:0,mv:0,g:null,go:0,pend:0,rel:0,e:null};
+function joyC(){const r=$('joy').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2,r.width/2]}
+function joyMove(e){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),M=44*UIS;if(l>M){dx*=M/l;dy*=M/l}inp.mx=l<8?0:dx/M;inp.mz=l<8?0:dy/M;$('joy').firstChild.style.transform=`translate(${dx/UIS}px,${dy/UIS}px)`}
+function actGoTap(g){if(!g||fishing||bmode||target&&target.lab)return 0;const id=curId(),w=WEAP[id]||{};if(w.ammo||w.nade||nearestEnemy(P.x,P.z,w.melee||id==='fist'?3.4:12))return 0;const[x,z]=g;   /* 가까운 대상·적이 있으면 그게 먼저 */
+ for(const o of enemies)if(!o.dead&&dist(x,z,o.x,o.z)<2.6)return 0;
+ if(w.rod){if(ferryTarget(x,z,3))return 1;return waterDepth(x,z)>.05&&spotAt(x,z)?1:0}
+ const t=findNear(x,z,x,z,2.8);return t&&dist(P.x,P.z,t.x,t.z)>(t.rr||1)+1.6?1:0}   /* 가까운 건 그냥 상호작용 */
+function actApply(){const e=ACT.e;if(!e)return;const w=WEAP[curId()]||{};let md=actMode();
+ if(md==='act'&&(w.ammo||w.nade)){const g=ACT.g,t=target;if(!(g&&t&&dist(g[0],g[1],t.x,t.z)<=2.8))md='fire'}   /* 총·수류탄을 들었으면 대상을 직접 누를 때만 상호작용, 아니면 누른 곳으로 쏘기·던지기 */
+ ACT.md=md;if(md==='fire'){inp.fire=true;if(!w.rod)aimAt(e);else inp.aiming=false}else{inp.act=true;inp.actEdge=true}}
+function actCancel(){ACT.id=null;ACT.go=0;ACT.pend=0;ACT.rel=0;inp.fire=inp.act=inp.actEdge=inp.aiming=false}
+cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}
+ const[jx,jy,jr]=joyC();if(joy.id===null&&Math.hypot(e.clientX-jx,e.clientY-jy)<=jr*1.5){joy.id=e.pointerId;joy.ox=jx;joy.oy=jy;joyMove(e);return}
+ if(ACT.id!==null)return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=actGoTap(ACT.g);ACT.pend=ACT.go?0:ACT.t+90});
 function aimAt(e){_v.set(P.x,groundY(P.x,P.z)+1.2,P.z).project(cam);const dx=e.clientX-(_v.x*.5+.5)*innerWidth,dy=e.clientY-(-_v.y*.5+.5)*innerHeight,l=Math.hypot(dx,dy)||1;inp.ax=dx/l;inp.az=dy/l;inp.aiming=true;inp.fire=true}
-cv.addEventListener('pointermove',e=>{const tp=taps[e.pointerId];if(!tp)return;tp.mv=Math.max(tp.mv,Math.hypot(e.clientX-tp.x,e.clientY-tp.y));tp.lx=e.clientX;tp.ly=e.clientY;
- if(e.pointerId===joy.id){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),M=44*UIS;if(l>M){dx*=M/l;dy*=M/l}if(l>8)$('joy').classList.remove('hide');inp.mx=l<8?0:dx/M;inp.mz=l<8?0:dy/M;$('joy').firstChild.style.transform=`translate(${dx/UIS}px,${dy/UIS}px)`}
- else if(tp.right&&!bmode&&(!panel||sidePanel())&&(aimP.id===e.pointerId||(aimP.id===null&&tp.mv>12))){aimP.id=e.pointerId;aimAt(e)}});
-const cvUp=e=>{const tp=taps[e.pointerId];delete taps[e.pointerId];joyEnd(e);if(e.pointerId===aimP.id){aimP.id=null;inp.fire=false;inp.aiming=false}else if(tp&&(!panel||sidePanel())&&e.type==='pointerup'&&tp.mv<12&&performance.now()-tp.t<320){const g=groundAt(e.clientX,e.clientY);if(g)worldTap(g[0],g[1])}};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
+cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
+ if(ACT.go){if(ACT.mv>14){ACT.go=0;ACT.pend=performance.now()}return}   /* 누른 채 끌면 걸어가기 대신 쓰기·조준 */
+ if(inp.fire&&!(WEAP[curId()]||{}).rod){aimAt(e);ACT.g=groundAt(e.clientX,e.clientY)}});
+const cvUp=e=>{joyEnd(e);if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup',go=ACT.go,g=ACT.g,quick=ACT.mv<14&&performance.now()-ACT.t<450;
+ if(ACT.pend&&up){ACT.pend=0;actApply();ACT.id=null;ACT.go=0;ACT.rel=1;return}   /* 90ms 안에 뗀 톡: 한 번만 쓰고 다음 장면에서 놓아요 */
+ actCancel();if(go&&up&&quick&&g)worldTap(g[0],g[1])};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
 const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z)))return[x,z]}return null}
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
@@ -322,7 +340,7 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
    ④ 텐트는 친 뒤 12시간(실제 시간, s.at)이 지나면 사라져요. 텐트 위에 남은 시간. 집(업그레이드)은 안 사라져요.
    ⑤ 가방: 칸을 누르면 바로 장착·해제·먹기·설치(버튼 없이). 칸을 끌어서 가방 창 밖에 놓으면 버려요. */
 {const _h=hud;hud=function(){_h();const pl=$('pills');if(!pl||!S)return;const f=pl.firstElementChild,fi=f&&f.querySelector('img');if(fi&&fi.getAttribute('src')===ICON.coin)f.remove();
- const w=WEAP[curId()]||{};if(w.ammo){const a=pl.firstElementChild;if(a&&a.querySelector('img')){a.textContent=String(invN(w.ammo));a.classList.add('ammoN')}}}}
+ const w=WEAP[curId()]||{};if(w.ammo){const a=pl.firstElementChild;if(a&&a.querySelector('img')){a.textContent=String(invN(w.ammo));a.classList.add('ammoN')}}else if(w.nade)pl.insertAdjacentHTML('afterbegin',`<div class="pn pill ammoN">${invN(curId())}</div>`)}}
 {const css=document.createElement('style');css.textContent='#pills .pill.ammoN{font-size:17px;padding:3px 13px;min-width:20px;justify-content:center}'
   +'#pbody .slot[data-a=sel]{touch-action:none;-webkit-user-select:none;user-select:none}#bagDrag{position:fixed;z-index:60;pointer-events:none;width:64px;height:64px;transform:translate(-50%,-50%);transition:opacity .1s}#bagDrag img{width:100%;height:100%;filter:drop-shadow(0 4px 6px rgba(40,24,12,.35))}'
   +'#bagDrag b{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;background:var(--red);color:#fff;font:800 12px var(--f);padding:3px 9px;border-radius:11px;display:none}#bagDrag.out b{display:block}#bagDrag.out img{opacity:.75}';
@@ -330,11 +348,11 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 /* ③ 두 손가락 확대·축소 */
 const ZOOM={t:null,min:.74,max:1.3,pts:{},on:0,d0:1,z0:1};
 $('bZoom').style.display='none';
-{const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{joyEnd();aimP.id=null;inp.fire=false;inp.aiming=false;for(const id in taps)delete taps[id]};   /* 손가락 기록을 지워서 걷기·조준·톡 누르기가 안 돼요 */
- cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
+{const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{aimP.id=null;actCancel();for(const id in taps)delete taps[id]};   /* 쓰기·조준·톡 누르기를 끊어요(32차: 조이스틱 손가락은 그대로) */
+ cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel()||e.pointerId===joy.id)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
   if(p.length>=2){ZOOM.on=1;ZOOM.d0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.z0=ZOOM.t==null?zoomK:ZOOM.t;stopOthers()}});
  cv.addEventListener('pointermove',e=>{const q=ZOOM.pts[e.pointerId];if(!q)return;q.x=e.clientX;q.y=e.clientY;if(!ZOOM.on)return;const p=two();if(p.length<2)return;
-  const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max);inp.mx=inp.mz=0});
+  const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max)});   /* 32차: 조이스틱 손가락은 따로라 걷기는 그대로 */
  const up=e=>{delete ZOOM.pts[e.pointerId];if(!two().length)ZOOM.on=0;else if(ZOOM.on)stopOthers()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
  cv.addEventListener('wheel',e=>{if(mode!=='play')return;e.preventDefault();const z=ZOOM.t==null?zoomK:ZOOM.t;ZOOM.t=clamp(z*(1+Math.sign(e.deltaY)*Math.min(.25,Math.abs(e.deltaY)*.0015)),ZOOM.min,ZOOM.max)},{passive:false});
  const _uc=updCamera;updCamera=function(dt,px,py,pz,snap){if(ZOOM.t!=null&&!INT.on){const d=ZOOM.t-zoomK;zoomK=Math.abs(d)<.002?ZOOM.t:zoomK+d*Math.min(1,dt*12)}return _uc(dt,px,py,pz,snap)}}
@@ -354,8 +372,8 @@ function tentGone(s){if(INT.on&&INT.s===s)intOut();const hx=s.x,hz=s.z+sdef(s).b
 /* ⑤ 가방: 누르면 바로, 끌어서 밖에 놓으면 버리기 */
 const BAGD={k:null,x:0,y:0,id:null,on:0,el:null,end:0};
 function bagTap(k){const it=ITEMS[k];if(!it||!invN(k))return;selItem=k;const ty=it.ty;
- if(ty==='kit'||ty==='food'||ty==='heal'||ty==='fish'||ty==='throw'){primary(k);hudDirty=true;return}
- if(ty==='gun'||ty==='tool'){if(curId()===k){S.quick[S.sel]=null;sfx(500,.05);toast('맨손이 됐어요')}else primary(k);hudDirty=true;return}
+ if(ty==='kit'||ty==='food'||ty==='heal'||ty==='fish'){primary(k);hudDirty=true;return}
+ if(ty==='gun'||ty==='tool'||ty==='throw'){if(curId()===k){S.quick[S.sel]=null;sfx(500,.05);toast('맨손이 됐어요')}else if(ty==='throw'){const j=S.quick.indexOf(k);if(j>=0&&j!==S.sel)S.quick[j]=null;S.quick[S.sel]=k;sfx(600,.05);toast(ITEMS[k].n+' 장착! 화면을 누르면 던져요')}else primary(k);hudDirty=true;return}   /* 32차: 수류탄도 손에 들기만(던지기는 화면을 눌러서) */
  sfx(700,.03);hudDirty=true}
 function bagDrop(k){const n=invN(k);if(!n)return;if(INT.on){toast('밖에서 버려요');return}delete S.inv[k];for(let i=0;i<S.quick.length;i++)if(S.quick[i]===k)S.quick[i]=null;if(selItem===k)selItem=null;
  bagSack({[k]:n},1,1);sfx(300,.06,'square',.03);toast(`${ITEMS[k].n}${n>1?' ×'+n:''} 버렸어요`);hudDirty=true}
@@ -399,5 +417,20 @@ function atkDodge(){const b=$('bAtk'),el=$('panel');if(!b)return;if(sidePanel()&
 /* ③ 걸으면서 가까운 것 톡 */
 {const _w=worldTap;worldTap=function(x,z){const mv=P.moving;_w(x,z);const t=P.auto;if(!mv||!t||t.k==='move'||t.k==='cast')return;const d=dist(P.x,P.z,t.x,t.z);
   if(d<=(t.rr||1)+1.6){P.rot=Math.atan2(t.x-P.x,t.z-P.z);target=t;if(t.k==='o'){if(!(t.o&&t.o.re>0))interact()}else{inp.actEdge=true;interact();inp.actEdge=false}P.auto=null}}}
+/* ===== 32차(기획자 11-19 20:56) =====
+   ① 큰 버튼 없음 → 조이스틱 말고 화면 아무 데나 누르면 상호작용·쓰기(위 cv 손가락 처리, ACT). ② 조이스틱은 왼쪽 아래에 고정·늘 보임(joyFix).
+   ③ 수류탄은 가방에서 누르면 손에 들기만, 화면을 누를 때마다 누른 곳으로 하나씩 던져요(throwNadeAt, 3~14m). */
+function joyFix(){const j=$('joy');if(!j)return;j.classList.remove('hide');const port=VW<=VH;let b=port?58:30;if(sidePanel()&&mode==='play'&&port)b=Math.round(clamp(VH*.5,300,560))+24;   /* 세로 화면에서 가방이 열리면 가방 위로 */
+ Object.assign(j.style,{left:(port?22:34)+'px',top:'',bottom:b+'px',transition:'bottom .18s'})}
+$('bAtk').style.display='none';
+{const _l=layoutPanel;layoutPanel=function(){_l();joyFix()}}
+{const _c=closePanel;closePanel=function(){_c();joyFix()}}
+{const _r=resize;resize=function(){_r();joyFix()}}
+joyFix();
+{const _u=updPlayer;updPlayer=function(dt){if(ACT.pend&&performance.now()>=ACT.pend){ACT.pend=0;actApply()}_u(dt);if(ACT.rel){ACT.rel=0;if(ACT.id===null){inp.fire=false;inp.aiming=false;inp.act=false}}if(!inp.fire)NADE.held=false}}
+const NADE={held:false};
+function throwNadeAt(g){if(!g||!inp.aiming){throwNade();return}if(!take('grenade',1))return;let dx=g[0]-P.x,dz=g[1]-P.z,d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;d=clamp(d,3,14);P.rot=Math.atan2(dx,dz);
+ P.a.play('Throw',{once:1,lock:.5,force:1,speed:1.4});const m=mesh(GEO.grenade);m.scale.setScalar(.8);scene.add(m);nades.push({m,x:P.x,z:P.z,dx,dz,d,t:0,T:.75,y0:groundY(P.x,P.z)+1.6});hudDirty=true}
+{const _a=attack;attack=function(){if(curId()!=='grenade')return _a();if(P.cd>0||NADE.held)return;NADE.held=true;P.cd=WEAP.grenade.cd;throwNadeAt(ACT.g)}}   /* 누를 때마다 하나(누르고 있어도 하나) */
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

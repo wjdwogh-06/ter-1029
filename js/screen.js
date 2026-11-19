@@ -17,7 +17,7 @@ function visSize(){const vv=window.visualViewport;let w=innerWidth,h=innerHeight
   u.style.transform=(l||t?`translate(${l}px,${t}px) `:'')+`scale(${UIS})`;u.style.width=VW+'px';u.style.height=VH+'px';
   const sh=$('shade');sh.style.left=(-l/UIS)+'px';sh.style.top=(-t/UIS)+'px';sh.style.width=innerWidth/UIS+'px';sh.style.height=innerHeight/UIS+'px';layoutPanel();hudDirty=true}}
 /* 조이스틱 자리: UI가 안전 여백만큼 밀려 있으면 손가락 자리에 맞게 되돌려요(ui.js 처리 뒤에 돌아요) */
-cv.addEventListener('pointerdown',e=>{if(joy.id!==e.pointerId||!(SAFE.l||SAFE.t))return;const j=$('joy');j.style.left=((e.clientX-SAFE.l)/UIS-75)+'px';j.style.top=((e.clientY-SAFE.t)/UIS-75)+'px'});
+cv.addEventListener('pointerdown',e=>{if(typeof ACT!=='undefined'||joy.id!==e.pointerId||!(SAFE.l||SAFE.t))return;   /* 32차: 조이스틱이 고정이라 옮기지 않아요 */const j=$('joy');j.style.left=((e.clientX-SAFE.l)/UIS-75)+'px';j.style.top=((e.clientY-SAFE.t)/UIS-75)+'px'});
 let _sk='';function checkSize(force){const [w,h]=visSize(),k=w+'x'+h+'/'+innerWidth+'x'+innerHeight;if(!force&&k===_sk)return;_sk=k;if(typeof R!=='undefined'&&R)resize();if(panel==='fmap'&&typeof drawFmap==='function')drawFmap()}
 const settle=()=>[60,250,600,1200].forEach(t=>setTimeout(()=>checkSize(true),t));
 setInterval(()=>checkSize(false),400);addEventListener('orientationchange',settle);addEventListener('load',settle);addEventListener('pageshow',settle);
