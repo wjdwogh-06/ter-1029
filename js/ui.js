@@ -86,7 +86,7 @@ function layoutPanel(){const el=$('panel'),side=sidePanel(),port=VW<=VH;$('toast
  if(side){if(port){const h=Math.round(clamp(VH*.5,300,560));Object.assign(el.style,{width:(VW-20)+'px',height:h+'px',left:'10px',top:(VH-h-10)+'px',transform:'none'})}
   else{const w=Math.round(clamp(VW*.48,360,540));Object.assign(el.style,{width:w+'px',height:(VH-24)+'px',left:(VW-w-12)+'px',top:'12px',transform:'none'})}}
  else Object.assign(el.style,{width:Math.min(1060,VW-20)+'px',height:Math.min(640,VH-24)+'px',left:'',top:'',transform:''})}
-function openPanel(k){panel=k;inp.fire=inp.act=false;inp.aiming=false;if(k!=='bag')joyEnd();else if(typeof fishing!=='undefined'&&fishing)endFish();$('panel').classList.remove('hide');layoutPanel();renderPanel()}
+function openPanel(k){panel=k;if(k!=='bag'){inp.fire=inp.act=false;inp.aiming=false;joyEnd()}   /* 31차: 가방은 쏘기·낚시·걷기를 끊지 않아요 */$('panel').classList.remove('hide');layoutPanel();renderPanel()}
 function closePanel(){if(fmap)fmap.style.display='none';panel=null;selItem=null;$('shade').classList.add('hide');$('panel').classList.add('hide');$('panel').classList.remove('side');$('toast').style.left='';$('title').style.zIndex=20;hudDirty=true}
 const nearBench=()=>structs.some(s=>s.t==='bench'&&dist(s.x,s.z,P.x,P.z)<7);
 const craftRows=(nb,nf)=>RECIPES.map((r,i)=>{const it=ITEMS[r.id],has=it.one&&invN(r.id),ok=canPay(r.c)&&(!r.bench||nb||nf)&&(!r.forge||nf)&&!has;return`<div class="row">${invIcon(r.id)}<div class="tx">${it.n}${r.n>1?' ×'+r.n:''}${r.bench?' <span style="font-size:14px;color:var(--blu)">작업대</span>':r.forge?' <span style="font-size:14px;color:var(--amb)">대장간</span>':''}<small>${it.d}</small><div>${costHtml(r.c)}</div></div><button class="btn" data-a="craft" data-i="${i}" ${ok?'':'disabled'}>${has?'보유 중':'만들기'}</button></div>`}).join('');   /* 제작 목록: 가방의 제작 탭과 작업대 창(15차: 왼쪽 제작 + 오른쪽 업그레이드)이 같이 써요 */
@@ -169,25 +169,25 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 $('ptabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t){panel=t.dataset.tab;selItem=null;if(panel!=='bag')joyEnd();layoutPanel();renderPanel()}});
 $('pclose').onclick=closePanel;$('shade').onclick=closePanel;
 let selT=0;function primary(k){const ty=ITEMS[k].ty;if(ty==='kit'){closePanel();const bk=BUILDS[ITEMS[k].b];if(INT.on&&!bk.indoor){toast('밖에 나가서 설치해요');return}if(!INT.on&&bk.indoor){toast(jo(bk.n,'은','는')+' 텐트 안에서 설치해요. 텐트에 들어가서 가방에서 눌러요');return}setBuild(ITEMS[k].b);toast('놓을 곳을 바라보고 [설치] — 초록색이면 놓을 수 있어요');return}if(ty==='food'||ty==='heal'||ty==='fish')useItem(k);else if(ty==='throw'){closePanel();throwNade()}else if(ty==='gun'||ty==='tool'){const j=S.quick.indexOf(k);if(j>=0&&j!==S.sel)S.quick[j]=null;S.quick[S.sel]=k;sfx(600,.05);toast(ITEMS[k].n+' 장착!')}}   /* 손(S.quick[S.sel])에 쥐어요. 화면 아래 칸은 없어요 */
-function useItem(id){const it=ITEMS[id];if(it.ty==='food'||it.ty==='fish'){if(S.hp>=99.5){toast('⚡ 에너지가 가득해요');return}take(id,1);S.hp=Math.min(100,S.hp+it.food)}else if(it.ty==='heal'){if(S.hp>=99.5){toast('⚡ 에너지가 가득해요');return}take(id,1);S.hp=Math.min(100,S.hp+it.heal)}else return;P.a.play('Use_Item',{once:1,lock:.45,force:1,speed:1.7});sfx(520,.1);hudDirty=true}
+function useItem(id){const it=ITEMS[id];if(it.ty==='food'||it.ty==='fish'){if(S.hp>=99.5){toast('⚡ 에너지가 가득해요');return}take(id,1);S.hp=Math.min(100,S.hp+it.food)}else if(it.ty==='heal'){if(S.hp>=99.5){toast('⚡ 에너지가 가득해요');return}take(id,1);S.hp=Math.min(100,S.hp+it.heal)}else return;if(!P.moving)P.a.play('Use_Item',{once:1,lock:.45,force:1,speed:1.7});sfx(520,.1);hudDirty=true}   /* 31차: 걸으면서 먹으면 걷는 모습 그대로 */
 function useQuick(i){const id=S.quick[i];if(id&&invN(id)){const ty=ITEMS[id].ty;if(ty==='food'||ty==='heal')useItem(id);else if(ty==='throw')throwNade();else if(ty==='kit')primary(id);else S.sel=i}else S.sel=i;hudDirty=true}
 /* ---- input ---- */
 const joy={id:null,ox:0,oy:0},aimP={id:null};
 function joyEnd(e){if(e&&e.pointerId!==undefined&&e.pointerId!==joy.id)return;joy.id=null;inp.mx=inp.mz=0;$('joy').classList.add('hide')}
 const taps={};
-cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;if(sidePanel()&&e.clientX>=innerWidth*.48)return;try{cv.setPointerCapture(e.pointerId)}catch(_){}taps[e.pointerId]={x:e.clientX,y:e.clientY,t:performance.now(),mv:0,right:e.clientX>=innerWidth*.48};
+cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}taps[e.pointerId]={x:e.clientX,y:e.clientY,t:performance.now(),mv:0,right:e.clientX>=innerWidth*.48};
  if(e.clientX<innerWidth*.48&&joy.id===null){joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;const j=$('joy');j.style.left=(e.clientX/UIS-75)+'px';j.style.top=(e.clientY/UIS-75)+'px';j.classList.add('hide');j.firstChild.style.transform=''}});
 function aimAt(e){_v.set(P.x,groundY(P.x,P.z)+1.2,P.z).project(cam);const dx=e.clientX-(_v.x*.5+.5)*innerWidth,dy=e.clientY-(-_v.y*.5+.5)*innerHeight,l=Math.hypot(dx,dy)||1;inp.ax=dx/l;inp.az=dy/l;inp.aiming=true;inp.fire=true}
 cv.addEventListener('pointermove',e=>{const tp=taps[e.pointerId];if(!tp)return;tp.mv=Math.max(tp.mv,Math.hypot(e.clientX-tp.x,e.clientY-tp.y));tp.lx=e.clientX;tp.ly=e.clientY;
  if(e.pointerId===joy.id){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),M=44*UIS;if(l>M){dx*=M/l;dy*=M/l}if(l>8)$('joy').classList.remove('hide');inp.mx=l<8?0:dx/M;inp.mz=l<8?0:dy/M;$('joy').firstChild.style.transform=`translate(${dx/UIS}px,${dy/UIS}px)`}
- else if(tp.right&&!bmode&&!panel&&(aimP.id===e.pointerId||(aimP.id===null&&tp.mv>12))){aimP.id=e.pointerId;aimAt(e)}});
-const cvUp=e=>{const tp=taps[e.pointerId];delete taps[e.pointerId];joyEnd(e);if(e.pointerId===aimP.id){aimP.id=null;inp.fire=false;inp.aiming=false}else if(tp&&!panel&&e.type==='pointerup'&&tp.mv<12&&performance.now()-tp.t<320){const g=groundAt(e.clientX,e.clientY);if(g)worldTap(g[0],g[1])}};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
+ else if(tp.right&&!bmode&&(!panel||sidePanel())&&(aimP.id===e.pointerId||(aimP.id===null&&tp.mv>12))){aimP.id=e.pointerId;aimAt(e)}});
+const cvUp=e=>{const tp=taps[e.pointerId];delete taps[e.pointerId];joyEnd(e);if(e.pointerId===aimP.id){aimP.id=null;inp.fire=false;inp.aiming=false}else if(tp&&(!panel||sidePanel())&&e.type==='pointerup'&&tp.mv<12&&performance.now()-tp.t<320){const g=groundAt(e.clientX,e.clientY);if(g)worldTap(g[0],g[1])}};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
 const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z)))return[x,z]}return null}
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
    아니면(또는 적이 가까우면) 손에 든 것 쓰기(공격·던지기·감기). 누른 채 끌면 그쪽으로 조준 */
 function actMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(fishing)return'fire';if(!w.rod&&nearestEnemy(P.x,P.z,w.melee||id==='fist'?3.4:Math.min(w.range||3.4,12)))return'fire';return target&&target.lab?'act':'fire'}
-{const b=$('bAtk');let id=null,ox=0,oy=0,md='fire';b.addEventListener('pointerdown',e=>{e.preventDefault();if(panel)return;id=e.pointerId;ox=e.clientX;oy=e.clientY;md=actMode();if(md==='fire'){inp.fire=true;inp.aiming=false}else{inp.act=true;inp.actEdge=true}try{b.setPointerCapture(id)}catch(_){}});
+{const b=$('bAtk');let id=null,ox=0,oy=0,md='fire';b.addEventListener('pointerdown',e=>{e.preventDefault();if(panel&&!sidePanel())return;id=e.pointerId;ox=e.clientX;oy=e.clientY;md=actMode();if(md==='fire'){inp.fire=true;inp.aiming=false}else{inp.act=true;inp.actEdge=true}try{b.setPointerCapture(id)}catch(_){}});
  b.addEventListener('pointermove',e=>{if(e.pointerId!==id||md!=='fire')return;const dx=e.clientX-ox,dy=e.clientY-oy,l=Math.hypot(dx,dy);if(l>14*UIS+6){inp.aiming=true;inp.ax=dx/l;inp.az=dy/l}});const up=e=>{if(e.pointerId!==id)return;id=null;inp.fire=false;inp.aiming=false;inp.act=false};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)}
 {const b=$('bAct');b.addEventListener('pointerdown',e=>{e.preventDefault();inp.act=true;inp.actEdge=true});['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,()=>inp.act=false))}
 $('bBag').onclick=()=>openPanel('bag');$('bBuild').onclick=()=>openPanel('build');$('bMenu').onclick=()=>openPanel('menu');$('bZoom').onclick=()=>{zoomK=zoomK===1?.74:zoomK<1?1.3:1};
@@ -225,8 +225,8 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});ad
 function tick(dt){if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').classList.remove('on')}if(hurtT>0){hurtT-=dt;if(hurtT<=0)$('hurt').style.opacity=0}
  if(mode==='title'){S.time=.9;const a=gt*.05-1.2;camT.set(VIL.px,1.3,VIL.pz);updEnv(dt,VIL.px,VIL.pz);cam.position.set(VIL.px+Math.cos(a)*36*CAMK,19*CAMK,VIL.pz+8+Math.sin(a)*36*CAMK);cam.lookAt(VIL.px,2,VIL.pz);cullRegions(VIL.px,VIL.pz);P.a.mixer.update(dt);merchant.a.mixer.update(dt);for(const e of enemies)e.a.root.visible=false;R.render(scene,cam);return}
  if(mode!=='play')return;
- const live=!panel||sidePanel();if(live&&panel){inp.fire=inp.act=inp.actEdge=inp.aiming=false;P.tapT=0;if(P.auto&&P.auto.k!=='move')P.auto=null;if(fishing)endFish()}   /* 가방이 열려 있으면 움직이기만 */
- if(live){readKeys();if(!panel)holdAim();if(!busy){updStats(dt);for(const e of enemies.slice())updEnemy(e,dt);updWorld(dt);updRaid(dt);updSpawns(dt)}updPlayer(dt);intUpd();target=panel?null:findTarget();const q=QUESTS[S.q];if(q&&q.c(S)){S.coins+=q.r;S.q++;toast(`✅ 목표 달성! +${q.r} 동전`);jingle([659,784,1047]);hudDirty=true}}
+ const live=!panel||sidePanel();   /* 31차(기획자: '뭔가 하면서 다른 것도 가능하게'): 가방이 열려 있어도 쏘기·상호작용·낚시·톡 누르기 모두 돼요 */
+ if(live){readKeys();if(!panel||sidePanel())holdAim();if(!busy){updStats(dt);for(const e of enemies.slice())updEnemy(e,dt);updWorld(dt);updRaid(dt);updSpawns(dt)}updPlayer(dt);intUpd();target=panel&&!sidePanel()?null:findTarget();const q=QUESTS[S.q];if(q&&q.c(S)){S.coins+=q.r;S.q++;toast(`✅ 목표 달성! +${q.r} 동전`);jingle([659,784,1047]);hudDirty=true}}
  merchant.a.mixer.update(dt);if(typeof NET!=='undefined')NET.upd(dt);updFx(dt);updFishFx(dt);if(live&&!busy)updWeather(dt);updEnv(dt,P.x,P.z);updPorts(P.x,P.z);updDress(dt,P.x,P.z);updCamera(dt,P.x,P.yv===undefined||INT.on||P.dead?groundY(P.x,P.z):WTR.st==='swim'?groundY(P.x,P.z)+Math.max(0,P.yv+.45):P.yv,P.z);bagView(dt);cullRegions(camT.x,camT.z);
  updNoBuild();if(ghost){const g=ghostPos();ghost.userData.g=g;ghost.position.set(g.x,BUILDS[bmode]&&BUILDS[bmode].flat?0:groundY(g.x,g.z),g.z);ghost.rotation.y=g.r;ghost.material.color.set(g.ok?0x66dd77:0xe05a4f)}
  if(P.auto&&P.auto.k==='move'){ring.visible=true;ring.position.set(P.auto.x,groundY(P.auto.x,P.auto.z)+.12,P.auto.z);ring.scale.setScalar(.5)}else{ring.visible=!!target&&!bmode}if(ring.visible&&!(P.auto&&P.auto.k==='move')){ring.position.set(target.x,groundY(target.x,target.z)+.12,target.z);ring.scale.setScalar(target.rr*(1+Math.sin(gt*6)*.05))}
@@ -331,7 +331,7 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 const ZOOM={t:null,min:.74,max:1.3,pts:{},on:0,d0:1,z0:1};
 $('bZoom').style.display='none';
 {const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{joyEnd();aimP.id=null;inp.fire=false;inp.aiming=false;for(const id in taps)delete taps[id]};   /* 손가락 기록을 지워서 걷기·조준·톡 누르기가 안 돼요 */
- cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;if(sidePanel()&&e.clientX>=innerWidth*.48)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
+ cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
   if(p.length>=2){ZOOM.on=1;ZOOM.d0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.z0=ZOOM.t==null?zoomK:ZOOM.t;stopOthers()}});
  cv.addEventListener('pointermove',e=>{const q=ZOOM.pts[e.pointerId];if(!q)return;q.x=e.clientX;q.y=e.clientY;if(!ZOOM.on)return;const p=two();if(p.length<2)return;
   const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max);inp.mx=inp.mz=0});
@@ -374,5 +374,30 @@ $('pbody').addEventListener('pointerdown',e=>{if(panel!=='bag')return;const b=e.
    +(w&&!w.rod?`<div style="font-size:12px;color:var(--mut);font-weight:700;margin-top:2px">피해 ${w.dmg}${w.pel?'×'+w.pel:''} · ${w.melee?'근접':'사거리 '+w.range+'m'}${w.ammo?' · '+ITEMS[w.ammo].n+' '+invN(w.ammo)+'발':''}</div>`:'')+'</div></div>'}
  h+=`<div style="color:var(--mut);font-weight:600;font-size:12px;line-height:1.55;margin:8px 2px 2px">누르면 바로 장착·먹기·설치해요. 든 것을 다시 누르면 내려놓아요. 끌어서 가방 밖에 놓으면 버려요.</div>`;
  B.insertAdjacentHTML('beforeend',h)}}
+/* ===== 31차(기획자 11-19 20:14: '뭔가 하면서 다른 것도 가능하게 — 가방 연 채로 움직이기, 걸으면서 먹기, 걷다가 멈추지 않고 상호작용') =====
+   ① 여러 손가락: 조이스틱(또는 쏘기)을 누른 채 다른 손가락으로 누른 버튼·가방 칸·✕도 바로 돼요.
+      휴대폰 브라우저는 손가락이 둘 이상 닿아 있으면 톡(click)을 안 만들어 줘서, 손가락을 뗄 때 직접 눌러 줘요(원래 오는 click은 한 번만 되게 막음).
+   ② 가방을 연 채로도 쏘기·상호작용·낚시·화면 톡 누르기가 돼요(위 줄들). 큰 버튼은 가방에 가리지 않게 가방 옆(가로)·위(세로)로 비켜요.
+   ③ 걸으면서 가까운 것을 톡 누르면 멈추지 않고 바로 상호작용(멀면 예전처럼 조이스틱이 먼저).
+   ④ 걸으면서 먹으면 걷는 모습 그대로(useItem), 가방을 열어도 쏘던 것·낚시를 끊지 않아요(openPanel). */
+{const CL='button,[data-a],[data-tab],[data-q],#pclose,.rb',MT={},SUP={x:0,y:0,until:0};
+ const pick=el=>{if(!el||!el.closest||el.closest('#bAtk,#bChat,#chatSend,input,textarea,select,label,canvas'))return null;return el.closest(CL)};
+ const key=t=>t.id||['a','k','i','n','tab','q','c'].map(q=>t.dataset&&t.dataset[q]||'').join('|');
+ document.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;const t=pick(e.target);if(t)MT[e.pointerId]={t,x:e.clientX,y:e.clientY,k:key(t)}},true);
+ document.addEventListener('pointercancel',e=>{delete MT[e.pointerId]},true);
+ document.addEventListener('pointerup',e=>{const r=MT[e.pointerId];delete MT[e.pointerId];if(!r||Math.hypot(e.clientX-r.x,e.clientY-r.y)>14)return;let t=r.t;
+  if(!t.isConnected){const n=pick(document.elementFromPoint(e.clientX,e.clientY));if(!n||key(n)!==r.k)return;t=n}   /* 그 사이 창이 다시 그려졌으면 같은 칸을 다시 찾아요 */
+  const b=t.getBoundingClientRect();if(t.disabled||e.clientX<b.left-6||e.clientX>b.right+6||e.clientY<b.top-6||e.clientY>b.bottom+6)return;
+  SUP.x=e.clientX;SUP.y=e.clientY;SUP.until=performance.now()+650;t.click()},true);
+ document.addEventListener('click',e=>{if(!e.isTrusted||performance.now()>SUP.until||Math.hypot(e.clientX-SUP.x,e.clientY-SUP.y)>40)return;e.stopPropagation();e.preventDefault()},true)}   /* 이미 눌러 준 톡 자리에 뒤늦게 오는 진짜 click은 버려요(그 사이 창이 열려 다른 칸이 눌리는 일 없게) */
+/* ② 큰 버튼 비키기 */
+function atkDodge(){const b=$('bAtk'),el=$('panel');if(!b)return;if(sidePanel()&&mode==='play'){const port=VW<=VH;if(port){const h=Math.round(clamp(VH*.5,300,560));b.style.bottom=(h+24)+'px';b.style.right=''}else{const w=Math.round(clamp(VW*.48,360,540));b.style.right=(w+28)+'px';b.style.bottom=''}b.classList.add('dodge')}
+ else if(b.classList.contains('dodge')){b.style.bottom=b.style.right='';b.classList.remove('dodge')}}
+{const css=document.createElement('style');css.textContent='#bAtk{transition:right .18s,bottom .18s}#bAtk.dodge{transform:scale(.86)}';document.head.appendChild(css)}
+{const _l=layoutPanel;layoutPanel=function(){_l();atkDodge()}}
+{const _c=closePanel;closePanel=function(){_c();atkDodge()}}
+/* ③ 걸으면서 가까운 것 톡 */
+{const _w=worldTap;worldTap=function(x,z){const mv=P.moving;_w(x,z);const t=P.auto;if(!mv||!t||t.k==='move'||t.k==='cast')return;const d=dist(P.x,P.z,t.x,t.z);
+  if(d<=(t.rr||1)+1.6){P.rot=Math.atan2(t.x-P.x,t.z-P.z);target=t;if(t.k==='o'){if(!(t.o&&t.o.re>0))interact()}else{inp.actEdge=true;interact();inp.actEdge=false}P.auto=null}}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
