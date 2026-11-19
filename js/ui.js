@@ -270,5 +270,46 @@ function nrgInit(){if(NRGUI.c)return;const st=$('st');if(!st)return;for(const id
  const css=document.createElement('style');css.textContent='#nrg .nc{flex:1;height:17px;border-radius:5px;background:var(--pn3);overflow:hidden;position:relative;box-shadow:inset 0 2px 0 rgba(120,86,52,.18)}#nrg .nc b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--amb);border-radius:5px;box-shadow:inset 0 3px 0 rgba(255,255,255,.4);transition:width .25s}#nrg.low .nc b{background:var(--red)}#nrg.low{animation:nrgBlink 1s infinite}@keyframes nrgBlink{50%{opacity:.5}}';
  document.head.appendChild(css);NRGUI.c=[...w.querySelectorAll('.nc b')];NRGUI.w=w}
 {const _h=hud;hud=function(){_h();nrgInit();if(!NRGUI.c)return;const v=P.dead?0:clamp(S.hp,0,100)/10;NRGUI.c.forEach((b,i)=>{const f=Math.round(clamp(v-i,0,1)*100)+'%';if(b.style.width!==f)b.style.width=f});NRGUI.w.classList.toggle('low',v<=2.001&&v>0)}}
+/* ===== 28차(기획자: '제작칸 총 6칸, 마크 제작법처럼 3×2'): 작업대 창의 제작 =====
+   가방에서 재료를 눌러 고르고 제작 칸을 누르면 1개씩 놓여요(같은 칸을 또 누르면 더 쌓여요, 아무것도 안 고르고 누르면 그 칸은 가방으로).
+   칸의 모양이 제작법(RECIPES[].pat, core.js CRAFT_PAT)과 맞으면 결과 칸에 떠요 → [만들기](칸마다 1개씩 씀)·[전부].
+   제작법 목록의 [놓기]는 가방 재료로 칸을 모양대로 채워요. 창을 닫으면 칸에 남은 재료는 가방으로 돌아가요(S.cg — 저장된 채 꺼져도 다시 켤 때 돌려줘요). */
+const CG={sel:null,boot:0};
+const cgGrid=()=>{if(!Array.isArray(S.cg)||S.cg.length!==6)S.cg=[null,null,null,null,null,null];return S.cg};
+const cgPatCells=p=>p.map(row=>[...row].map(ch=>CRAFT_KEY[ch]||null));
+function cgNorm(ids){let r0=9,r1=-1,c0=9,c1=-1;for(let r=0;r<2;r++)for(let c=0;c<3;c++)if(ids[r*3+c]){r0=Math.min(r0,r);r1=Math.max(r1,r);c0=Math.min(c0,c);c1=Math.max(c1,c)}
+ if(r1<0)return null;const o=[];for(let r=r0;r<=r1;r++){const row=[];for(let c=c0;c<=c1;c++)row.push(ids[r*3+c]||null);o.push(row)}return o}
+function cgMatch(){const n=cgNorm(cgGrid().map(s=>s&&s.id));if(!n)return null;for(const r of RECIPES){if(!r.pat)continue;const q=cgPatCells(r.pat);if(q.length!==n.length||q[0].length!==n[0].length)continue;
+  const eq=m=>q.every((row,i)=>row.every((v,j)=>v===n[i][m?row.length-1-j:j]));if(eq(0)||eq(1))return r}return null}
+function cgReturn(){const g=cgGrid();for(let i=0;i<6;i++){const c=g[i];if(c&&c.n>0)S.inv[c.id]=(S.inv[c.id]||0)+c.n;g[i]=null}hudDirty=true}
+function cgPut(i){const g=cgGrid(),c=g[i],k=CG.sel;
+ if(k&&invN(k)>0){if(c&&c.id!==k){S.inv[c.id]=(S.inv[c.id]||0)+c.n;g[i]=null}take(k,1);g[i]=g[i]&&g[i].id===k?{id:k,n:g[i].n+1}:{id:k,n:1};if(!invN(k))CG.sel=null;sfx(620,.04)}
+ else if(c){S.inv[c.id]=(S.inv[c.id]||0)+c.n;g[i]=null;sfx(480,.04)}hudDirty=true}
+const cgBenchOK=()=>panel==='bench'||nearBench();
+function cgMake(times){const r=cgMatch();if(!r)return;const it=ITEMS[r.id];if(r.bench&&!cgBenchOK()){toast('작업대에서 만들 수 있어요');return}let k=0;
+ while(k<times){if(it.one&&invN(r.id)){if(!k)toast(`${jo(it.n,'은','는')} 이미 가지고 있어요`);break}if(!bagHas(r.id)){bagFullMsg();break}if(cgMatch()!==r)break;
+  const g=cgGrid();for(let i=0;i<6;i++)if(g[i]){g[i].n--;if(g[i].n<=0)g[i]=null}give(r.id,r.n);const sk='c_'+r.id;if(S.st[sk]!==undefined)S.st[sk]++;k++}
+ if(k){jingle([523,784]);toast(`${it.n}${r.n*k>1?' ×'+r.n*k:''} 완성!`)}hudDirty=true}
+function cgFill(ri){const r=RECIPES[ri];if(!r||!r.pat)return;cgReturn();if(!canPay(r.c)){toast('재료가 모자라요');return}const q=cgPatCells(r.pat),g=cgGrid();
+ q.forEach((row,rr)=>row.forEach((id,cc)=>{if(id){take(id,1);g[rr*3+cc]={id,n:1}}}));CG.sel=null;sfx(660,.05)}
+function cgHtml(benchOK){const g=cgGrid(),r=cgMatch(),it=r&&ITEMS[r.id],lock=!!(r&&r.bench&&!benchOK),own=!!(r&&it.one&&invN(r.id)),can=!!r&&!lock&&!own,
+  max=can?(it.one?1:Math.min(...g.filter(Boolean).map(c=>c.n))):0,bs='min-height:36px;padding:6px 12px;font-size:13px';
+ const cell=(c,i)=>`<div class="slot" data-a="cgs" data-i="${i}" style="width:58px;height:58px;${CG.sel&&!c?'border-color:var(--grn);':''}">${c?invIcon(c.id)+(c.n>1?`<b>${c.n}</b>`:''):''}</div>`;
+ let h=`<div class="sec" style="margin-top:0">🔨 제작 칸 3×2 — 재료를 모양대로 놓아요</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <div class="grid" style="grid-template-columns:repeat(3,58px);gap:6px">${g.map(cell).join('')}</div><div style="font-size:24px;color:var(--mut);font-weight:900">➜</div>
+  <div class="slot" style="width:66px;height:66px;${can?'border-color:var(--grn);background:#F2FFE9':''}">${r?invIcon(r.id)+(r.n>1?`<b>${r.n}</b>`:''):''}</div>
+  <div style="display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1"><div style="font-weight:900;font-size:14px">${r?it.n+(r.n>1?' ×'+r.n:''):'모양이 맞으면 여기에 떠요'}</div>${r?`<small style="color:var(--mut);font-weight:700;font-size:12px">${lock?'작업대에서 만들 수 있어요':own?'이미 가지고 있어요':`칸마다 1개씩 써요 · ${max}번 만들 수 있어요`}</small>`:''}
+  <div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn" data-a="cgmake" data-n="1" ${can?'':'disabled'} style="${bs}">만들기</button><button class="btn g" data-a="cgmake" data-n="999" ${can&&max>1?'':'disabled'} style="${bs}">전부</button><button class="btn g" data-a="cgclr" ${g.some(Boolean)?'':'disabled'} style="${bs}">비우기</button></div></div></div>`;
+ const ks=bagList();h+=`<div class="sec">가방 — ${CG.sel?`${ITEMS[CG.sel].n} 골랐어요 · 칸을 누르면 1개씩 놓여요`:'재료를 눌러 골라요'}</div><div class="grid" style="grid-template-columns:repeat(auto-fill,50px);gap:5px">${ks.map(k=>`<div class="slot ${CG.sel===k?'sel':''}" data-a="cgpick" data-k="${k}" style="width:50px;height:50px">${invIcon(k)}<b style="font-size:11px">${S.inv[k]}</b></div>`).join('')}</div>`;
+ h+=`<div class="sec">제작법 — [놓기]를 누르면 가방 재료로 칸을 채워요</div>`+RECIPES.map((rc,i)=>{if(!rc.pat)return'';const q=cgPatCells(rc.pat),ri=ITEMS[rc.id],lk=rc.bench&&!benchOK,ok=!lk&&canPay(rc.c)&&!(ri.one&&invN(rc.id));
+  const mini=`<div style="display:grid;grid-template-columns:repeat(3,24px);gap:2px;flex:none">${[0,1].map(a=>[0,1,2].map(b=>{const m=q[a]&&q[a][b];return`<div style="width:24px;height:24px;border-radius:6px;background:var(--pn2);border:1.5px solid var(--pn3);display:flex;align-items:center;justify-content:center">${m?`<img src="${ICON[m]}" style="width:21px;height:21px">`:''}</div>`}).join('')).join('')}</div>`;
+  return`<div class="row" style="gap:8px">${mini}<div style="font-size:16px;color:var(--mut);flex:none">➜</div>${invIcon(rc.id)}<div class="tx">${ri.n}${rc.n>1?' ×'+rc.n:''}${lk?' <span style="font-size:12px;color:var(--blu)">작업대</span>':''}<small>${costHtml(rc.c)}</small></div><button class="btn g" data-a="cgfill" data-i="${i}" ${ok?'':'disabled'} style="min-height:34px;padding:6px 10px;font-size:13px;flex:none">놓기</button></div>`}).join('');
+ return h}
+{const _rp=renderPanel;renderPanel=function(){_rp();if(panel==='bench')$('pbody').innerHTML=`<div class="cols bench"><div class="grow">${cgHtml(true)}</div><div class="upw">${upCard()}</div></div>`;else if(panel==='craft')$('pbody').innerHTML=cgHtml(nearBench())}}
+$('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a;if(!/^cg/.test(a))return;
+ if(a==='cgpick'){const k=b.dataset.k;CG.sel=CG.sel===k?null:k;sfx(700,.03)}else if(a==='cgs')cgPut(+b.dataset.i);else if(a==='cgmake')cgMake(+b.dataset.n);else if(a==='cgclr'){cgReturn();sfx(480,.05)}else if(a==='cgfill')cgFill(+b.dataset.i);renderPanel()});
+{const _c=closePanel;closePanel=function(){if(panel==='bench'||panel==='craft')cgReturn();CG.sel=null;_c()}}
+{const _o=openPanel;openPanel=function(k){if((panel==='bench'||panel==='craft')&&k!==panel)cgReturn();if(k!==panel)CG.sel=null;_o(k)}}
+{const _h=hud;hud=function(){if(!CG.boot&&mode==='play'&&S){CG.boot=1;if(Array.isArray(S.cg)&&S.cg.some(Boolean))cgReturn()}_h()}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

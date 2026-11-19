@@ -165,6 +165,11 @@ const WEAP={rod:{rod:1,dmg:0,cd:1,range:0,h1:1},fist:{melee:1,dmg:6,cd:.5,range:
 const RECIPES=[{id:'axe',n:1,c:{wood:3,stone:2}},{id:'rod',n:1,c:{wood:4,cloth:1}},{id:'bandage',n:1,c:{cloth:2}},
  {id:'ammoS',n:12,c:{scrap:1,powder:1},bench:1},{id:'ammoL',n:8,c:{scrap:2,powder:1},bench:1},{id:'grenade',n:1,c:{scrap:3,powder:3},bench:1},
  {id:'pistol',n:1,c:{scrap:8,wood:2},bench:1},{id:'rifle',n:1,c:{scrap:14,wood:6},bench:1},{id:'shotgun',n:1,c:{scrap:16,wood:5},bench:1},{id:'smg',n:1,c:{scrap:24,wood:3},bench:1}];
+/* 28차(기획자: '제작칸 총 6칸, 마크 제작법처럼 3×2'): 작업대의 제작 칸 3칸×2줄에 재료를 모양대로 놓으면 만들어져요(칸마다 1개씩 써요, 좌우를 뒤집어 놓아도 돼요, 빈 줄·칸은 어디로 밀어도 됨).
+   글자: W 나무 · S 돌 · X 고철 · C 천 · P 화약 · '.' 빈칸. 모양과 재료는 임시 — 기획자가 정하면 CRAFT_PAT만 고치면 돼요. 재료 수(r.c)는 모양에서 세어요 */
+const CRAFT_KEY={W:'wood',S:'stone',X:'scrap',C:'cloth',P:'powder'};
+const CRAFT_PAT={axe:['SS','.W'],rod:['WWW','..C'],bandage:['CC'],ammoS:['XP'],ammoL:['XP','X.'],grenade:['XPX','PXP'],pistol:['XXX','W..'],rifle:['XXX','WWW'],shotgun:['XXX','XWW'],smg:['XXX','XXW']};
+for(const r of RECIPES){const p=CRAFT_PAT[r.id];if(!p)continue;r.pat=p;const c={};for(const row of p)for(const ch of row)if(CRAFT_KEY[ch])c[CRAFT_KEY[ch]]=(c[CRAFT_KEY[ch]]||0)+1;r.c=c}
 /* builds: g=geometry, s=scale, bx/bz=half extents, hp */
 const BUILDS={fire:{n:'모닥불',g:'firepit',s:1,bx:.8,bz:.8,hp:60,c:{wood:5,stone:3},d:'밤을 밝히고 생선을 구워요. 옆에 있으면 에너지가 조금 빨리 차요'},
  bench:{n:'작업대',g:'bench',s:1,bx:1.3,bz:.8,hp:120,c:{wood:10,stone:4},kit:'kit_bench',d:'총과 탄약을 만들고, 텐트를 집으로 업그레이드해요',indoor:1,fixR:1},   /* indoor: 텐트 안(나중에 집 안)에만 놓아요(14차, 기획자) */

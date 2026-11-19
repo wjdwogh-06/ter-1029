@@ -147,7 +147,14 @@ const isTree=T=>T.drop&&T.drop[0]==='wood';
 /* 배편 자리 찾기(12차, 기획자: 낚싯대 등 무엇을 들고 있어도 배 가까이서 누르면 [배 타기]) */
 function ferryTarget(x,z,r){let b=null,bd=r;for(const s of structs){if(s.t!=='ferry')continue;const d=dist(x,z,s.x,s.z);if(d<bd){bd=d;b={k:'s',s,x:s.x,z:s.z,lab:'배 타기',rr:3.4}}}return b}
 /* 배에서 내릴 자리: 그 항구 통통배 바로 앞(부두·땅에서 걸을 수 있는 가장 가까운 곳), 배를 등지고 서요 */
-function ferrySpot(i){const s=structs.find(q=>q.t==='ferry'&&q.pi===i);if(!s)return null;let best=null,bs=1e9;for(let r=1.7;r<5.2;r+=.15)for(let a=0;a<36;a++){const an=a/36*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r,dk=onDock(x,z);if(!dk&&hAt(x,z)<.9)continue;if(walk(x,z,.42,P)!==null)continue;const sc=r-(dk?.35:0);if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),p:PORTS[i]}}}return best}
+/* 28차(기획자: '배에서 내릴 때 판자와 배 사이에 걸쳐서 낄 수 있으니 판자 가운데쯤에'): 배 옆 부두가 있으면 그 판자의 가운데 줄(폭 4.4m까지는 정가운데,
+   넓은 부두는 가장자리에서 1.4m 안쪽)에서 배와 가장 가까운 곳, 판자 끝에서도 0.9m 안쪽에 내려요. 걸을 수 없으면 가운데 줄을 따라 조금씩 비켜요. 없으면 예전 방식 */
+function ferryDockSpot(s){let best=null,bs=1e9;for(const d of DOCKS){if(dist(d.x,d.z,s.x,s.z)>Math.hypot(d.hw,d.hl)+7)continue;const ex=s.x-d.x,ez=s.z-d.z,blx=ex*d.c-ez*d.s,blz=ex*d.s+ez*d.c;
+  const gx=Math.max(0,Math.abs(blx)-d.hw),gz=Math.max(0,Math.abs(blz)-d.hl);if(Math.hypot(gx,gz)>5)continue;   /* 배에서 5m 안에 있는 판자만 */
+  const ins=d.hw<=2.2?d.hw:Math.min(1.4,d.hw*.5),lx=d.hw<=2.2?0:clamp(blx,-d.hw+ins,d.hw-ins),m=Math.min(.9,d.hl*.4),lz0=clamp(blz,-d.hl+m,d.hl-m);
+  for(let k=0;k<=20;k++){const lz=lz0+(k%2?1:-1)*Math.ceil(k/2)*.3;if(lz<-d.hl+m||lz>d.hl-m)continue;const x=d.x+lx*d.c+lz*d.s,z=d.z-lx*d.s+lz*d.c,db=dist(x,z,s.x,s.z);
+   if(db<1.6||walk(x,z,.42,P)!==null||onDock(x,z)!==d)continue;const sc=db+Math.abs(lz-lz0)*.5;if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),dock:1}}break}}return best}
+function ferrySpot(i){const s=structs.find(q=>q.t==='ferry'&&q.pi===i);if(!s)return null;{const q=ferryDockSpot(s);if(q){q.p=PORTS[i];return q}}let best=null,bs=1e9;for(let r=1.7;r<5.2;r+=.15)for(let a=0;a<36;a++){const an=a/36*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r,dk=onDock(x,z);if(!dk&&hAt(x,z)<.9)continue;if(walk(x,z,.42,P)!==null)continue;const sc=r-(dk?.35:0);if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),p:PORTS[i]}}}return best}
 function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(curId()==='rod'&&!INT.on){if(P.auto&&(P.auto.k==='cast'||P.auto.s&&P.auto.s.t==='ferry'))return P.auto;return ferryTarget(P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,5.2)}if(P.auto&&P.auto.k!=='move')return P.auto;return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,2.5)}
 function worldTap(x,z){if(bmode||P.dead||busy)return;let e=null,bd=2.6;for(const o of enemies){if(o.dead)continue;const d=dist(x,z,o.x,o.z);if(d<bd){bd=d;e=o}}
  if(e&&curId()!=='rod'){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;P.auto=null;return}
