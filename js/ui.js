@@ -447,7 +447,7 @@ function touchHook(type,e){
  return true}
 function thCancel(){if(TCH.kind==='cre'&&CRV.stroke){const st=CRV.stroke;CRV.stroke=null;creRevert(st)}TCH.id=null;TCH.kind=null;TCH.pend=0;BPIN.on=0}
 function bldPin(e){const g=groundAt(e.clientX,e.clientY);if(g){BPIN.on=1;BPIN.x=g[0];BPIN.z=g[1]}}
-function demoAt(x,z){let b=null,bd=2.8;for(const s of structs){if(!s.own||!!s.in!==!!INT.on)continue;const q=sdef(s),d=dist(x,z,s.x,s.z)-Math.max(q.bx,q.bz)*.6;if(d<bd){bd=d;b=s}}
+function demoAt(x,z){let b=null,bd=2.8;for(const s of structs){if(!canDemo(s)||!!s.in!==!!INT.on)continue;const q=sdef(s),d=dist(x,z,s.x,s.z)-Math.max(q.bx,q.bz)*.6;if(d<bd){bd=d;b=s}}
  if(!b){toast('누른 곳에 철거할 내 건물이 없어요');return}if(dist(P.x,P.z,b.x,b.z)>16){toast('너무 멀어요. 조금 더 가까이 가요');return}
  const px=P.x,pz=P.z;P.x=b.x;P.z=b.z;try{placeBuild()}finally{P.x=px;P.z=pz}}   /* 철거 자체는 placeBuild(철거 모드)가 그대로(멀티 포함) */
 {const _u=updPlayer;updPlayer=function(dt){if(TCH.pend&&performance.now()>=TCH.pend){TCH.pend=0;if(TCH.kind==='cre')creDown(TCH.e)}_u(dt)}}
@@ -596,5 +596,37 @@ $('pbody').addEventListener('click',e=>{const t=e.target.closest('[data-a="dext"
 {let c0=0;$('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a="cook"]');if(b)c0=S.st.cook},true);
  $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a="cook"]');if(!b)return;const d=S.st.cook-c0;if(d>0){if(!S.cdex)S.cdex={};const id='c'+b.dataset.k;const first=!S.cdex[id];S.cdex[id]=(S.cdex[id]||0)+d;if(first)toast(`🍳 새 요리: ${ITEMS[id].n}! 가방의 요리 도감에 올렸어요`)}})}
 {const _k=killEnemy;killEnemy=function(e){const was=e.dead;_k(e);if(!was&&e.dead&&e.kind){if(!S.hdex)S.hdex={};S.hdex[e.kind]=(S.hdex[e.kind]||0)+1}}}
+/* ===== 39차(기획자 11-19 22:57): 텐트 '내 구역' 표시 =====
+   규칙·크기는 core.js ZONE·zoneRect·zoneIn·zoneOverlap, 설치·철거 막기는 actors.js zoneWhy·canDemo, 서버도 같은 규칙(server.js b·rb).
+   ① 텐트·집마다 구역 네 모서리에 '못 박은 말뚝' + 모서리 꺾쇠(바닥 줄 두 개)가 늘 보여요(내 것 초록, 남의 텐트 주황, 남의 집 빨강).
+   ② 설치 모드에선 구역 테두리 전체가 보여요: 텐트를 들고 있으면 놓을 자리의 구역(놓을 수 있으면 초록, 아니면 빨강)과 둘레 구역들. */
+const ZMK={mats:{},geo:{},pre:null,edges:[]};
+const ZCOL={me:0x1f9a3a,tent:0xe07a00,house:0xd23a28,bad:0xd23a28};const zoneCol=s=>s.own?ZCOL.me:s.t==='phouse'?ZCOL.house:ZCOL.tent;
+function zmMat(c){return ZMK.mats[c]||(ZMK.mats[c]=(()=>{const m=new THREE.MeshBasicMaterial({fog:false});m.color.setHex(c).convertSRGBToLinear();return m})())}   /* 빛·안개를 안 받아서 낮에도 색이 또렷 */
+function zoneCornerGeo(c){if(ZMK.geo[c])return ZMK.geo[c];const L=2.2,W=.17;   /* 나무 말뚝 + 쇠못 머리 + 색 띠, 그리고 안쪽으로 뻗은 꺾쇠 두 줄(+x, +z) */
+ const parts=[pt(box(.16,.75,.16),0x9a6a3c,[0,.28,0]),pt(box(.18,.12,.18),c,[0,.46,0]),pt(cyl(.15,.15,.06,12),0xc3c9d0,[0,.69,0]),pt(cyl(.04,.04,.1,6),0x8a9099,[0,.62,0]),
+  pt(box(L,.03,W),c,[L/2,.05,0]),pt(box(W,.03,L),c,[0,.05,L/2])];
+ return ZMK.geo[c]=mg(parts)}
+const ZC_ROT=[0,-Math.PI/2,Math.PI,Math.PI/2];   /* 뒤 왼쪽·뒤 오른쪽·앞 오른쪽·앞 왼쪽 모서리: 꺾쇠가 안쪽을 보게 */
+function zoneMark(s){zoneUnmark(s);if(!isZoneT(s.t)||s.in)return;const q=zoneRect(s.x,s.z,s.r),g=new THREE.Group(),cs=zoneCorners(q),geo=zoneCornerGeo(zoneCol(s));
+ cs.forEach(([x,z],i)=>{const m=new THREE.Mesh(geo,MATT);m.position.set(x,Math.max(groundY(x,z),-.05),z);m.rotation.y=q.r+ZC_ROT[i];m.castShadow=false;g.add(m)});scene.add(g);s.zg=g}
+function zoneUnmark(s){if(s.zg){scene.remove(s.zg);s.zg=null}}
+{const _a=addStruct;addStruct=function(o){const s=_a(o);if(s&&isZoneT(s.t)&&!s.in)zoneMark(s);return s}}
+{const _r=removeStruct;removeStruct=function(s){zoneUnmark(s);_r(s)}}
+/* 설치 모드의 테두리: 변 네 개(얇은 띠)를 한 묶음으로 */
+function zoneEdgeGroup(){const g=new THREE.Group(),q=zoneRect(0,0,0),w=.16,h=.05;
+ const E=[[0,-q.b,q.hw*2,w],[0,q.f,q.hw*2,w],[-q.hw,(q.f-q.b)/2,w,q.f+q.b],[q.hw,(q.f-q.b)/2,w,q.f+q.b]];
+ for(const[x,z,sx,sz]of E){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,h,sz),zmMat(0xffffff));m.position.set(x,.1,z);g.add(m)}g.userData.col=-1;scene.add(g);return g}
+function zoneEdgeSet(g,x,z,r,c){g.visible=true;g.position.set(x,Math.max(groundY(x,z),0),z);g.rotation.y=r||0;if(g.userData.col!==c){g.userData.col=c;g.children.forEach(m=>m.material=zmMat(c))}}
+function zoneEdgesUpd(){const on=!!bmode&&bmode!=='demo'&&!INT.on&&mode==='play';let n=0;
+ if(on){for(const s of structs){if(!isZoneT(s.t)||s.in||dist(s.x,s.z,P.x,P.z)>60)continue;const g=ZMK.edges[n]||(ZMK.edges[n]=zoneEdgeGroup());zoneEdgeSet(g,s.x,s.z,s.r,zoneCol(s));n++}}
+ for(let i=n;i<ZMK.edges.length;i++)ZMK.edges[i].visible=false;
+ const pre=on&&isZoneT(bmode)&&ghost&&ghost.userData.g;if(pre){const gg=ghost.userData.g;if(!ZMK.pre){ZMK.pre=zoneEdgeGroup();const geo=zoneCornerGeo(ZCOL.me),geoR=zoneCornerGeo(ZCOL.bad),q=zoneRect(0,0,0);
+   ZMK.pre.userData.pegs=[[-q.hw,-q.b],[q.hw,-q.b],[q.hw,q.f],[-q.hw,q.f]].map(([x,z],i)=>{const m=new THREE.Mesh(geo,MATT);m.position.set(x,0,z);m.rotation.y=ZC_ROT[i];m.userData.geo=[geo,geoR];ZMK.pre.add(m);return m})}
+  const c=gg.ok?ZCOL.me:ZCOL.bad;zoneEdgeSet(ZMK.pre,gg.x,gg.z,gg.r,c);for(const m of ZMK.pre.userData.pegs){m.geometry=m.userData.geo[gg.ok?0:1]}}
+ else if(ZMK.pre)ZMK.pre.visible=false}
+{const _u=updNoBuild;updNoBuild=function(){_u();zoneEdgesUpd()}}
+/* 텐트를 치면 구역 안내 */
+{const _p=placeBuild;placeBuild=function(){const t=bmode,n=structs.length;_p();if(isZoneT(t)&&structs.length>n){const s=structs[structs.length-1];if(s&&s.t===t&&s.own)toast(`🏕 텐트를 쳤어요! 둘레 ${ZONE.hw*2}×${ZONE.back+ZONE.front}m가 내 구역이에요 (네 모서리 말뚝)`)}}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

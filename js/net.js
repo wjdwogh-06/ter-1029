@@ -44,7 +44,7 @@ const NAMEC=['#F0A23A','#45B864','#E8609E','#7C6FE0','#4A9BE0','#E5534B','#2FB3A
 /* ---- hooks into the single-player code ---- */
 {const _attack=attack;attack=function(){const was=P.cd;_attack();if(NET.on&&was<=0&&P.cd>0){const w=WEAP[curId()];if(w&&!w.rod&&!w.nade)NET.send(w.melee?{t:'f',dx:Math.sin(P.rot),dz:Math.cos(P.rot)}:{t:'f',dx:P.adx,dz:P.adz})}};
  const _place=placeBuild;placeBuild=function(){const n=structs.length;_place();if(NET.on&&structs.length>n){const s=structs[structs.length-1];s.ref=Math.random().toString(36).slice(2);NET.send({t:'b',k:s.t,x:s.x,z:s.z,r:s.r||0,ref:s.ref})}};
- const _rm=removeStruct;removeStruct=function(s){_rm(s);if(NET.on&&!NET.applying&&s.nid&&s.own)NET.send({t:'rb',id:s.nid})};
+ const _rm=removeStruct;removeStruct=function(s){_rm(s);if(NET.on&&!NET.applying&&s.nid&&(s.own||s.zdemo))NET.send({t:'rb',id:s.nid})};
  const _die=die;die=function(){const was=P.dead;_die();if(NET.on&&!was&&P.dead){NET.send({t:'dead'});const iv=setInterval(()=>{if(!P.dead){clearInterval(iv);NET.send({t:'up'})}},250)}};
  const _fx=drawFx;drawFx=function(dt){_fx(dt);if(mode==='play')NET.draw(fctx,Math.max(.8,UIS*1.25))};
  const _start=startPlay;startPlay=function(){const ni=$('nameIn');if(ni&&ni.value.trim()&&ni.value.trim()!==NET.name){NET.name=ni.value.trim();try{localStorage.setItem('fi_name',NET.name)}catch(e){}if(NET.ws)NET.ws.close()}_start()};

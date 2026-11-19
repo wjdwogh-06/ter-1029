@@ -254,12 +254,18 @@ function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=BPIN.o
   if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.tilt||(b.grid?.4:.16+R0*.07)))why='땅이 기울어서 놓을 수 없어요'}
  if(!why)for(const s of structs){if(dist(s.x,s.z,x,z)<.9||(!b.grid||!sdef(s).grid)&&inStruct(s,x,z,R0+.12)){why='다른 구조물과 겹쳐요';break}}
  if(!why){const n=Math.ceil((R0+2.2)/CELL),cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-n;j<=n&&!why;j++)for(let i=-n;i<=n;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const cl=o.t<3?(R0<.9?.75:1.35)+(o.t===2?.7:0):o.t===3?OBJT[3].r*o.sc/5.6+.3:.6;if(dist(o.x,o.z,x,z)<cl+R0){why=o.t<3?'나무와 겹쳐요':o.t===3?'바위와 겹쳐요':'덤불과 겹쳐요';break}}}
+ if(!why)why=zoneWhy(bmode,x,z,r,R0);   /* 39차: 텐트 구역 */
  pr.why=why;pr.ok=!why;return pr}
 /* 물 위 설치(25차, 보트 2인승): 배 밑 9점이 모두 물(깊이 0.25 넘게, 배 바닥이 0.22)·부두 아님, 7m 안에 땅이 있어야 해요(바닷가 가까운 물) */
 function waterSpotWhy(x,z,r,b){const c=Math.cos(r),sn=Math.sin(r);for(let ax=-1;ax<=1;ax++)for(let az=-1;az<=1;az++){const lx=ax*(b.bx+.15),lz=az*(b.bz+.15),px=x+lx*c+lz*sn,pz=z-lx*sn+lz*c;
   if(onDock(px,pz))return'부두와 겹쳐요';if(hAt(px,pz)>-.25)return'물이 얕거나 땅에 걸려요. 조금 더 물 쪽에 놓아요'}
  for(const rr of[3,5,7])for(let k=0;k<16;k++){const a=k/16*Math.PI*2;if(hAt(x+Math.cos(a)*rr,z+Math.sin(a)*rr)>.3)return''}return'바닷가 가까운 물에만 띄울 수 있어요'}
-function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of structs)if(s.own){const d=dist(P.x,P.z,s.x,s.z);if(d<bd){bd=d;b=s}}if(!b){toast('가까이에 철거할 내 건물이 없어요');return}const c=BUILDS[b.t].c;if(b.kit)give(BUILDS[b.t].kit,1);if(!b.kit||BUILDS[b.t].hide)for(const k in c)give(k,Math.ceil(c[k]*.5));if(b.upc)for(const k in b.upc)give(k,b.upc[k]);removeStruct(b);sfx(200,.1,'square',.05);toast(b.kit?'걷어서 가방에 넣었어요':'철거했어요 (재료 절반 반환)');hudDirty=true;return}
+/* 39차: 구역 규칙 — 텐트·집의 구역끼리는 겹칠 수 없고(내 것끼리도), 남의 '집' 구역 안에는 아무것도 못 놓아요. 남의 '텐트' 구역에는 놓아도 돼요 */
+function zoneWhy(t,x,z,r,R0){if(isZoneT(t)){const q=zoneRect(x,z,r);for(const s of structs){if(!isZoneT(s.t)||s.in)continue;if(zoneOverlap(q,zoneRect(s.x,s.z,s.r)))return s.own?'내 구역과 겹쳐요. 텐트 구역끼리는 겹칠 수 없어요':'다른 사람 구역과 겹쳐요'}return''}
+ if(INT.on)return'';for(const s of structs){if(s.t!=='phouse'||s.own||s.in)continue;if(zoneIn(zoneRect(s.x,s.z,s.r),x,z,R0))return'다른 사람 집 구역이에요. 집 주인만 설치할 수 있어요'}return''}
+/* 철거: 내 것은 어디서든. 남이 지은 것(멀티, s.by)은 누군가의 '텐트' 구역 안에 있을 때만 — '집' 구역 안이면 못 해요. 텐트·집 자체는 남이 못 없애요 */
+function canDemo(s){if(s.own)return true;if(!BUILDS[s.t]||isZoneT(s.t)||!s.by||s.in)return false;let inT=false;for(const h of structs){if(!isZoneT(h.t)||h.in)continue;if(zoneIn(zoneRect(h.x,h.z,h.r),s.x,s.z,0)){if(h.t==='phouse')return false;inT=true}}return inT}
+function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of structs)if(canDemo(s)){const d=dist(P.x,P.z,s.x,s.z);if(d<bd){bd=d;b=s}}if(!b){toast('가까이에 철거할 수 있는 건물이 없어요');return}const c=BUILDS[b.t].c;if(!b.own)b.zdemo=1;if(b.kit&&b.own)give(BUILDS[b.t].kit,1);if(!b.kit||BUILDS[b.t].hide||!b.own)for(const k in c)give(k,Math.ceil(c[k]*.5));if(b.upc)for(const k in b.upc)give(k,b.upc[k]);removeStruct(b);sfx(200,.1,'square',.05);toast(b.kit?'걷어서 가방에 넣었어요':'철거했어요 (재료 절반 반환)');hudDirty=true;return}
  const g=ghostPos(),b=BUILDS[bmode];if(!g.ok){toast(g.why||'여기엔 놓을 수 없어요');sfx(160,.1,'square',.04);return}const kit=payBuild(bmode);const s=addStruct({t:bmode,x:g.x,z:g.z,r:g.r,own:1,fresh:1,kit,in:g.in,yo:g.yo});const k='b_'+bmode;if(S.st[k]!==undefined)S.st[k]++;if(b.tur){S.st.b_tur++;sfx(180,.25,'sawtooth',.04,2.2);if(DEV.on)s.ammo=b.tur.cap}
  if(b.home){S.home={x:g.x,z:g.z+b.bz+1.1};toast('텐트를 쳤어요. 여기가 내 기지예요')}puff(g.x,groundY(g.x,g.z)+.6,g.z,0xffffff,8);sfx(300,.08,'square',.05);P.a.play('Interact',{once:1,lock:.3,force:1,speed:1.5});hudDirty=true;if(!canBuild(bmode)){toast(kit?'키트를 다 썼어요':'재료를 다 썼어요');setBuild(null)}}
 /* ---- enemies ---- */

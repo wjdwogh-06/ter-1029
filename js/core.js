@@ -208,6 +208,17 @@ Object.assign(BUILDS,{
  vase:{n:'꽃병',g:'lk_vase',s:1,bx:.15,bz:.15,hp:20,c:{stone:1},inok:1,d:'꽃을 꽂은 병. 텐트·집 안에도 놓아요 (임시)'},
  boat2:{n:'보트 2인승',g:'lk_boat2',s:1,bx:.68,bz:1.45,hp:200,c:{wood:14,scrap:4},water:1,flat:1,d:'바닷가 물 위에 띄워 둬요. 타기는 아직 없어요 (임시)'}});
 /* 27차: 배고픔·체온 대신 에너지 10칸 → 설명 글의 '배고픔 +N'·'체력 +N'·'구우면 +N'을 '에너지 +N칸'(10 = 1칸, 반 칸 단위)으로 */
+/* 39차(기획자 11-19 22:57: '텐트 설치할 때 텐트 중앙 기준으로 텐트보다 더 넓게 내 구역, 텐트보다 한 12배 크게, 텐트 뒤보다 앞쪽 땅이 더 길게,
+   설치할 때 내 구역이 표시되게, 내 구역에는 다른 텐트가 설치되면 안 되고, 직사각형 모서리 끝에 못으로 꼭짓점 박은 것처럼 표시,
+   집으로 업그레이드해도 구역 크기는 그대로. 텐트일 때는 남도 내 구역에 물건을 설치하거나 없앨 수 있고, 집이면 남이 설치·철거 못 해')
+   구역 = 텐트·집(ptent·phouse) 가운데 기준 직사각형. 텐트를 돌리면 같이 돌아요(지금 텐트는 fixR이라 늘 정면 +z). 숫자만 고치면 크기가 바뀌어요(임시). */
+const ZONE={hw:7.5,back:5,front:11};   /* 폭 15m(가운데에서 옆으로 7.5m씩), 뒤로 5m, 앞(+z)으로 11m → 15×16m = 텐트 깔개(4.1×4.2m)의 약 14배 */
+const isZoneT=t=>t==='ptent'||t==='phouse';
+const zoneRect=(x,z,r)=>({x,z,r:r||0,hw:ZONE.hw,b:ZONE.back,f:ZONE.front});
+function zoneIn(q,x,z,m){m=m||0;const dx=x-q.x,dz=z-q.z,c=Math.cos(q.r),sn=Math.sin(q.r),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<=q.hw+m&&lz>=-q.b-m&&lz<=q.f+m}
+function zoneCorners(q){const c=Math.cos(q.r),sn=Math.sin(q.r);return [[-q.hw,-q.b],[q.hw,-q.b],[q.hw,q.f],[-q.hw,q.f]].map(([lx,lz])=>[q.x+lx*c+lz*sn,q.z-lx*sn+lz*c])}
+function zoneOverlap(a,b){const A=zoneCorners(a),B=zoneCorners(b);for(const P of[A,B])for(let i=0;i<4;i++){const p=P[i],q=P[(i+1)%4],nx=q[1]-p[1],nz=p[0]-q[0];let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;
+  for(const v of A){const d=v[0]*nx+v[1]*nz;if(d<a0)a0=d;if(d>a1)a1=d}for(const v of B){const d=v[0]*nx+v[1]*nz;if(d<b0)b0=d;if(d>b1)b1=d}if(a1<=b0||b1<=a0)return false}return true}   /* 두 직사각형이 겹치나(분리축) */
 const nrgTx=v=>'에너지 +'+(Math.round(v/5)/2)+'칸';
 for(const T of [ITEMS,BUILDS])for(const k in T){const it=T[k];if(it.d)it.d=it.d.replace(/배고픔 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/구우면 \+(\d+)/g,(m,v)=>'구우면 '+nrgTx(+v)).replace(/체력 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/체력/g,'에너지')}
 const GEN_PER=300,GEN_CAP=900;   /* 27차(기획자: '연료는 발전기 연료 넣을 때'): 연료 1통 = 5분, 최대 3통(임시) */

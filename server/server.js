@@ -8,7 +8,7 @@ const ROOT=path.join(__dirname,'..'),PORT=+process.env.PORT||8080,DATA=process.e
 const TICK=10,VIEW=95,SAFE=40;            // 초당 스냅샷, 보이는 거리, 마을 안전지대 반경
 /* 게임 규칙(맵·무기·건물 표)은 클라이언트와 같은 core.js 를 그대로 읽어서 쓴다 */
 const sb={document:{getElementById:()=>null},window:{},navigator:{},localStorage:{getItem:()=>null,setItem(){}},console};vm.createContext(sb);
-vm.runInContext(fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8')+';this.G={WS,WORLD_SEED,buildHeights,hAt,WEAP,BUILDS,VIL,DAYLEN}',sb);
+vm.runInContext(fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8')+';this.G={WS,WORLD_SEED,buildHeights,hAt,WEAP,BUILDS,VIL,DAYLEN,isZoneT,zoneRect,zoneIn,zoneOverlap}',sb);
 const G=sb.G;console.log('맵 만드는 중…');G.buildHeights(G.WORLD_SEED);const {WS,hAt,WEAP,BUILDS,VIL,DAYLEN}=G;
 const dist=(ax,az,bx,bz)=>Math.hypot(ax-bx,az-bz),clamp=(v,a,b)=>v<a?a:v>b?b:v,now=()=>Date.now()/1000;
 /* ---- world state ---- */
@@ -44,9 +44,13 @@ const H={
  c(p,m){const t=now();if(t<p.chatT)return;p.chatT=t+.8;const s=String(m.s||'').replace(/[<>&]/g,'').trim().slice(0,100);if(s)cast({t:'c',id:p.id,n:p.name,s})},
  /* 건물: 목록은 서버가 갖고 모두에게 알린다. TODO: 재료 차감·겹침 검사를 서버에서 */
  b(p,m){const d=BUILDS[m.k],x=+m.x,z=+m.z;if(!d||!isFinite(x)||!isFinite(z)||dist(x,z,p.x,p.z)>9||hAt(x,z)<.35||W.structs.length>4000)return;
+  const G_=sb.G,rr=+(+m.r||0);   /* 39차: 텐트 구역 — 구역끼리 겹치면 안 되고, 남의 집 구역 안에는 못 지어요 */
+  if(G_.isZoneT(m.k)){const q=G_.zoneRect(x,z,rr);if(W.structs.some(o=>G_.isZoneT(o.t)&&G_.zoneOverlap(q,G_.zoneRect(o.x,o.z,o.r))))return}
+  else if(W.structs.some(o=>o.t==='phouse'&&o.o!==p.tok&&G_.zoneIn(G_.zoneRect(o.x,o.z,o.r),x,z,Math.max(d.bx,d.bz))))return;
   const s={id:W.nextId++,t:m.k,x:+x.toFixed(2),z:+z.toFixed(2),r:+(+m.r||0).toFixed(2),hp:d.hp,o:p.tok,n:p.name};W.structs.push(s);
   players.forEach(o=>send(o,{t:'b',s:Object.assign({mine:o===p},s,{o:undefined}),ref:o===p?m.ref:undefined}))},
- rb(p,m){const i=W.structs.findIndex(s=>s.id===m.id);if(i<0||W.structs[i].o!==p.tok)return;W.structs.splice(i,1);cast({t:'rb',id:m.id})},
+ rb(p,m){const i=W.structs.findIndex(s=>s.id===m.id);if(i<0)return;const t=W.structs[i],G_=sb.G;
+  if(t.o!==p.tok){if(G_.isZoneT(t.t))return;let inT=false;for(const h of W.structs){if(!G_.isZoneT(h.t)||!G_.zoneIn(G_.zoneRect(h.x,h.z,h.r),t.x,t.z,0))continue;if(h.t==='phouse')return;inT=true}if(!inT)return}   /* 39차: 남의 것은 텐트 구역 안에서만 철거 */W.structs.splice(i,1);cast({t:'rb',id:m.id})},
  ping(p,m){send(p,{t:'pong',k:m.k})}};
 function hurt(v,d,by){v.hp-=d;cast({t:'h',a:by.id,v:v.id,d,hp:Math.max(0,Math.round(v.hp))},v.x,v.z);if(v.hp<=0)die(v,by)}
 function die(v,by){v.alive=false;v.hp=0;v.deaths++;if(by)by.kills++;cast({t:'k',a:by?by.id:0,an:by?by.name:'',v:v.id,vn:v.name,x:+v.x.toFixed(1),z:+v.z.toFixed(1)})}
