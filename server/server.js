@@ -8,8 +8,8 @@ const ROOT=path.join(__dirname,'..'),PORT=+process.env.PORT||8080,DATA=process.e
 const TICK=10,VIEW=95,SAFE=40;            // 초당 스냅샷, 보이는 거리, 마을 안전지대 반경
 /* 게임 규칙(맵·무기·건물 표)은 클라이언트와 같은 core.js 를 그대로 읽어서 쓴다 */
 const sb={document:{getElementById:()=>null},window:{},navigator:{},localStorage:{getItem:()=>null,setItem(){}},console};vm.createContext(sb);
-vm.runInContext(fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8')+';this.G={WS,WORLD_SEED,buildHeights,hAt,WEAP,BUILDS,VIL,DAYLEN,isZoneT,zoneRect,zoneIn,zoneOverlap}',sb);
-const G=sb.G;console.log('맵 만드는 중…');G.buildHeights(G.WORLD_SEED);const {WS,hAt,WEAP,BUILDS,VIL,DAYLEN}=G;
+vm.runInContext(fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8')+';this.G={WS,WORLD_SEED,buildHeights,hAt,WEAP,BUILDS,VIL,DAYLEN,isZoneT,zoneRect,zoneIn,zoneOverlap,PORT_SAFE,SAFE_PCT,inSafe}',sb);
+const G=sb.G;console.log('맵 만드는 중…');G.buildHeights(G.WORLD_SEED);const {WS,hAt,WEAP,BUILDS,VIL,DAYLEN,inSafe,SAFE_PCT}=G;
 const dist=(ax,az,bx,bz)=>Math.hypot(ax-bx,az-bz),clamp=(v,a,b)=>v<a?a:v>b?b:v,now=()=>Date.now()/1000;
 /* ---- world state ---- */
 let W={time:.3,day:1,nextId:1,structs:[],saved:{}};
@@ -32,13 +32,16 @@ const H={
  m(p,m){const t=now(),dt=clamp(t-p.last,.02,1),x=+m.x,z=+m.z;if(!isFinite(x)||!isFinite(z))return;p.last=t;
   const d=dist(x,z,p.x,p.z);if(d>15*dt+2.5&&!p.free&&!m.tp){send(p,{t:'pos',x:p.x,z:p.z});return}    // TODO: tp(등대 이동·부활)도 서버가 직접 처리
   p.free=false;p.x=clamp(x,4,WS-4);p.z=clamp(z,4,WS-4);p.r=+m.r||0;p.a=String(m.a||'Idle').slice(0,32);p.w=WEAP[m.w]?m.w:'fist';
-  if(p.alive&&isFinite(+m.hp))p.hp=clamp(Math.min(+m.hp,p.hp+50*dt+1),0,100)},        // TODO: 체력(음식·붕대·몹 피해)도 서버 계산으로
+  if(p.alive&&isFinite(+m.hp))p.hp=t<(p.hpLock||0)?Math.min(p.hp,clamp(+m.hp,0,100)):clamp(Math.min(+m.hp,p.hp+50*dt+1),0,100)},   /* 44차: 서버가 깎은 직후 0.8초는 클라이언트의 옛 체력으로 되돌아가지 않게 */        // TODO: 체력(음식·붕대·몹 피해)도 서버 계산으로
  /* 사격·근접: 서버가 가진 위치로 맞았는지 계산한다 */
  f(p,m){if(!p.alive)return;const w=WEAP[p.w];if(!w||w.rod)return;const t=now();if(t<p.cd)return;p.cd=t+w.cd*.8;let dx=+m.dx,dz=+m.dz;const l=Math.hypot(dx,dz);if(!(l>0))return;dx/=l;dz/=l;
-  cast({t:'f',id:p.id,dx:+dx.toFixed(2),dz:+dz.toFixed(2)},p.x,p.z,VIEW,p);if(dist(p.x,p.z,VIL.px,VIL.pz)<SAFE)return;
+  cast({t:'f',id:p.id,dx:+dx.toFixed(2),dz:+dz.toFixed(2)},p.x,p.z,VIEW,p);
+  /* 44차: 항구 안전 구역(core.js PORT_SAFE) — 쏜 사람이나 맞을 사람이 그 안에 있으면 피해 없음, 대신 쏜 사람이 '투명 포탑'에게 최대 에너지의 20%(한 번 쏠 때마다, 쌓여요) */
+  const pS=inSafe(p.x,p.z);let bad=false;
   for(let i=0;i<(w.pel||1);i++){const a=Math.atan2(dx,dz)+(w.melee?0:(Math.random()-.5)*2*w.spread),sx=Math.sin(a),sz=Math.cos(a);let best=null,bt=w.range+(w.melee?.4:0);
-   players.forEach(o=>{if(o===p||!o.alive||dist(o.x,o.z,VIL.px,VIL.pz)<SAFE)return;const rx=o.x-p.x,rz=o.z-p.z,k=rx*sx+rz*sz;if(k<0||k>bt)return;if(Math.abs(rx*sz-rz*sx)<(w.melee?1.1:.8)){bt=k;best=o}});
-   if(best)hurt(best,w.dmg,p)}},
+   players.forEach(o=>{if(o===p||!o.alive)return;const rx=o.x-p.x,rz=o.z-p.z,k=rx*sx+rz*sz;if(k<0||k>bt)return;if(Math.abs(rx*sz-rz*sx)<(w.melee?1.1:.8)){bt=k;best=o}});
+   if(best){if(pS||inSafe(best.x,best.z))bad=true;else hurt(best,w.dmg,p)}}
+  if(bad)zap(p)},
  dead(p){if(p.alive)die(p,null)},                                                       // 몹·추위로 쓰러졌을 때 (TODO: 서버 판정)
  up(p){p.alive=true;p.hp=70;p.free=true},
  c(p,m){const t=now();if(t<p.chatT)return;p.chatT=t+.8;const s=String(m.s||'').replace(/[<>&]/g,'').trim().slice(0,100);if(s)cast({t:'c',id:p.id,n:p.name,s})},
@@ -52,8 +55,10 @@ const H={
  rb(p,m){const i=W.structs.findIndex(s=>s.id===m.id);if(i<0)return;const t=W.structs[i],G_=sb.G;
   if(t.o!==p.tok){if(G_.isZoneT(t.t))return;let inT=false;for(const h of W.structs){if(!G_.isZoneT(h.t)||!G_.zoneIn(G_.zoneRect(h.x,h.z,h.r),t.x,t.z,0))continue;if(h.t==='phouse')return;inT=true}if(!inT)return}   /* 39차: 남의 것은 텐트 구역 안에서만 철거 */W.structs.splice(i,1);cast({t:'rb',id:m.id})},
  ping(p,m){send(p,{t:'pong',k:m.k})}};
-function hurt(v,d,by){v.hp-=d;cast({t:'h',a:by.id,v:v.id,d,hp:Math.max(0,Math.round(v.hp))},v.x,v.z);if(v.hp<=0)die(v,by)}
-function die(v,by){v.alive=false;v.hp=0;v.deaths++;if(by)by.kills++;cast({t:'k',a:by?by.id:0,an:by?by.name:'',v:v.id,vn:v.name,x:+v.x.toFixed(1),z:+v.z.toFixed(1)})}
+function hurt(v,d,by){v.hp-=d;v.hpLock=now()+.8;cast({t:'h',a:by.id,v:v.id,d,hp:Math.max(0,Math.round(v.hp))},v.x,v.z);if(v.hp<=0)die(v,by)}
+const TURRET={id:0,name:'🛡 안전 구역',kills:0,zone:1};
+function zap(p){const d=Math.round(100*SAFE_PCT);p.hp-=d;p.hpLock=now()+.8;p.zaps=(p.zaps||0)+1;cast({t:'h',a:0,v:p.id,d,hp:Math.max(0,Math.round(p.hp)),zap:1},p.x,p.z);if(p.hp<=0)die(p,TURRET)}   /* 44차: 투명 포탑 */
+function die(v,by){v.alive=false;v.hp=0;v.deaths++;if(by)by.kills++;cast({t:'k',a:by?by.id:0,an:by?by.name:'',v:v.id,vn:v.name,x:+v.x.toFixed(1),z:+v.z.toFixed(1),zone:by&&by.zone?1:undefined})}
 /* ---- tick ---- */
 setInterval(()=>{W.time+=1/TICK/DAYLEN;if(W.time>=1){W.time-=1;W.day++}
  const L=[...players.values()];for(const p of L){const near=[];for(const o of L)if(o!==p&&dist(o.x,o.z,p.x,p.z)<VIEW)near.push([o.id,Math.round(o.x*10),Math.round(o.z*10),Math.round(o.r*100),o.a,o.w,o.alive?Math.round(o.hp):0]);

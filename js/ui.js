@@ -88,7 +88,7 @@ function layoutPanel(){const el=$('panel'),side=sidePanel(),port=VW<=VH;$('toast
  else Object.assign(el.style,{width:Math.min(1060,VW-20)+'px',height:Math.min(640,VH-24)+'px',left:'',top:'',transform:''})}
 function openPanel(k){panel=k;if(k!=='bag'){inp.fire=inp.act=false;inp.aiming=false;joyEnd()}   /* 31차: 가방은 쏘기·낚시·걷기를 끊지 않아요 */$('panel').classList.remove('hide');layoutPanel();renderPanel()}
 function closePanel(){if(fmap)fmap.style.display='none';panel=null;selItem=null;$('shade').classList.add('hide');$('panel').classList.add('hide');$('panel').classList.remove('side');$('toast').style.left='';$('title').style.zIndex=20;hudDirty=true}
-const nearBench=()=>structs.some(s=>s.t==='bench'&&dist(s.x,s.z,P.x,P.z)<7);
+const nearBench=()=>structs.some(s=>s.t==='bench'&&(!s.in||s.hk===curHK())&&dist(s.x,s.z,P.x,P.z)<7);   /* 44차: 들어와 있는 텐트의 작업대만 */
 const craftRows=(nb,nf)=>RECIPES.map((r,i)=>{const it=ITEMS[r.id],has=it.one&&invN(r.id),ok=canPay(r.c)&&(!r.bench||nb||nf)&&(!r.forge||nf)&&!has;return`<div class="row">${invIcon(r.id)}<div class="tx">${it.n}${r.n>1?' ×'+r.n:''}${r.bench?' <span style="font-size:14px;color:var(--blu)">작업대</span>':r.forge?' <span style="font-size:14px;color:var(--amb)">대장간</span>':''}<small>${it.d}</small><div>${costHtml(r.c)}</div></div><button class="btn" data-a="craft" data-i="${i}" ${ok?'':'disabled'}>${has?'보유 중':'만들기'}</button></div>`}).join('');   /* 제작 목록: 가방의 제작 탭과 작업대 창(15차: 왼쪽 제작 + 오른쪽 업그레이드)이 같이 써요 */
 const buyP=id=>SHOP.free?0:Math.ceil(ITEMS[id].p*1.7*((VEND.pack[id]||1))),sellP=id=>sellPrice(id);   /* 팔기는 어디서든 원래 가격의 20% (core.js ECON) */
 let VENDAT=0;   /* 지금 열어 둔 랜덤 자판기의 항구 번호 */
@@ -228,7 +228,7 @@ function drawFx(dt){const c=fctx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0
  c.font=`900 ${15*k}px ${UIF}`;c.lineWidth=3.5;for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.t+=dt;if(f.t>1.1){floats.splice(i,1);continue}const s=scr(f.x,f.y+f.t*1.2,f.z);c.globalAlpha=1-f.t/1.1;c.strokeStyle=UIC.ink;c.strokeText(f.s,s[0],s[1]);c.fillStyle=f.col;c.fillText(f.s,s[0],s[1])}c.globalAlpha=1;
  if(raid.on){let b=null,bd=1e9;for(const e of enemies)if(e.raid&&!e.dead){const d=dist(e.x,e.z,P.x,P.z);if(d<bd){bd=d;b=e}}if(b&&bd>16){const a=Math.atan2(b.z-P.z,b.x-P.x),r=Math.min(innerWidth,innerHeight)*.36,x=innerWidth/2+Math.cos(a)*r,y=innerHeight*.46+Math.sin(a)*r;c.fillStyle='#FF6B5E';c.beginPath();c.moveTo(x+Math.cos(a)*18*k,y+Math.sin(a)*18*k);c.lineTo(x+Math.cos(a+2.5)*12*k,y+Math.sin(a+2.5)*12*k);c.lineTo(x+Math.cos(a-2.5)*12*k,y+Math.sin(a-2.5)*12*k);c.fill()}}}
 /* ---- save / flow ---- */
-function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,at:s.at||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
+function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,hk:s.in?s.hk:undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,at:s.at||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE));if(d&&d.S&&d.S.seed){S=d.S;if(!S.cx){S.coins=Math.round((S.coins||0)*10);S.cx=1}   /* 동전 10배 단위(6차) */if(d.opt)opt=d.opt;return true}}catch(e){}return false}
 function startPlay(){windInit();mode='play';if(titleT!==null){S.time=titleT;titleT=null}$('title').classList.add('hide');$('ui').classList.remove('hide');updCamera(0,P.x,groundY(P.x,P.z),P.z,true);hudDirty=true;hud();buildUI();sfx(600,.1);if(innerHeight>innerWidth)toast('폰을 가로로 돌리면 훨씬 편해요')}
 let titleT=null;function toTitle(){mode='title';fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fx.width,fx.height);   /* no stale world labels behind the title */
@@ -721,5 +721,26 @@ function bagRect(){const port=VW<=VH;
 {const _c=closePanel;closePanel=function(){_c();$('panel').classList.remove('nrw')}}
 {const css=document.createElement('style');css.textContent='#panel.nrw #ptop{padding:6px 6px;gap:4px}#panel.nrw #ptabs{gap:4px!important}#panel.nrw #ptabs .tab{font-size:12.5px;padding:7px 8px}#panel.nrw #pcoin{font-size:13px}#panel.nrw #pcoin>span{gap:3px!important;margin-right:4px!important}#panel.nrw #pcoin img{width:22px!important;height:22px!important}#panel.nrw #pclose{width:30px;height:30px;flex:none}';document.head.appendChild(css)}   /* 좁은 가방 창(가로 화면): 위 줄을 작게 해서 ✕까지 창 안에 */
 $('bBag').onclick=()=>panel==='bag'?closePanel():openPanel('bag');   /* 가방 버튼을 다시 누르면 닫기 */
+/* ===== 44차 ① 텐트·집 안 물건은 그 텐트 것(기획자 11-20 22:25: '텐트 설치하고 안에 제작대는 없는 거고 내가 직접 구하거나 사야 하는 거야, 있으면 안 돼') =====
+   예전엔 모든 텐트가 방 하나를 같이 써서, 한 번 놓은 작업대가 새로 친 텐트에도 그대로 보였어요. 이제 안에 놓은 것(s.in)은 놓을 때 들어가 있던 텐트·집에 붙어요(s.hk = 그 집 자리 열쇠):
+   그 집에 들어갔을 때만 보이고·부딪히고·쓸 수 있어요. 집이 없어지면(걷기·12시간) 안의 것은 가방으로(키트가 있는 건 키트, 없는 건 재료). 텐트 → 집 업그레이드는 같은 자리라 그대로.
+   예전 저장의 '주인 없는' 방 안 물건은 게임을 켤 때 한 번 가방으로 돌려드려요. */
+const homeKey=s=>s?(s.hk||(s.hk=Math.round(s.x*10)+':'+Math.round(s.z*10))):null;
+function curHK(){return INT.on&&INT.s?homeKey(INT.s):null}
+const HKM={s:null};
+{const _a=addStruct;addStruct=function(o){const s=_a(o);if(s&&s.in&&!s.hk&&INT.on&&INT.s)s.hk=homeKey(INT.s);return s}}
+{const _i=inStruct;inStruct=function(s,x,z,r){if(s.in&&s.hk!==curHK())return false;return _i(s,x,z,r)}}   /* 다른 집 안의 것은 안 부딪혀요 */
+{const _l=sLabel;sLabel=function(s){if(s.in&&s.hk!==curHK())return null;return _l(s)}}
+intShow=function(on){const k=curHK();for(const s of structs)if(s.in&&s.m)s.m.visible=on&&s.hk===k};
+function inRefund(q){const d=BUILDS[q.t];if(!d)return;if(d.kit&&ITEMS[d.kit])give(d.kit,1);else for(const k in d.c||{})give(k,d.c[k])}
+{const _r=removeStruct;removeStruct=function(s){_r(s);if(!s||!isZoneT(s.t)||!s.own||(typeof HUP!=='undefined'&&HUP.on)||(typeof NET!=='undefined'&&NET.applying))return;const k=homeKey(s),its=structs.filter(q=>q.in&&q.own&&q.hk===k);if(!its.length)return;
+  for(const q of its){inRefund(q);_r(q)}const nm=[...new Set(its.map(q=>BUILDS[q.t]?BUILDS[q.t].n:q.t))].join('·');setTimeout(()=>toast(`🎒 ${s.t==='phouse'?'집':'텐트'} 안에 있던 ${jo(nm,'을','를')} 가방에 넣었어요`),900);hudDirty=true}}
+function hkMigrate(){const homes=new Set(structs.filter(s=>isZoneT(s.t)&&s.own&&!s.in).map(homeKey)),its=structs.filter(q=>q.in&&q.own&&(!q.hk||!homes.has(q.hk)));if(!its.length)return;
+ for(const q of its){inRefund(q);removeStruct(q)}const nm=[...new Set(its.map(q=>BUILDS[q.t]?BUILDS[q.t].n:q.t))].join('·');setTimeout(()=>toast(`🎒 텐트 안에 남아 있던 ${jo(nm,'을','를')} 가방에 넣었어요 — 이제 텐트마다 안이 따로예요`),1600);hudDirty=true;save()}
+/* ===== 44차 ② 항구 안전 구역 표시(규칙은 core.js PORT_SAFE·server.js) — 안에 있으면 에너지 칸 아래에 '🛡 안전 구역' ===== */
+{const css=document.createElement('style');css.textContent='#safeP{position:absolute;left:14px;top:40px;padding:3px 11px;border-radius:13px;background:#3f9d5a;color:#fff;font-size:13px;font-weight:900;pointer-events:none;opacity:0;transition:opacity .35s;box-shadow:0 2px 0 rgba(0,0,0,.18);white-space:nowrap}#safeP.on{opacity:.95}';document.head.appendChild(css)}
+{const e=document.createElement('div');e.id='safeP';e.textContent='🛡 안전 구역 · 사람끼리 다치지 않아요';$('ui').appendChild(e)}
+{const _u=updPlayer;updPlayer=function(dt){_u(dt);if(HKM.s!==S&&mode==='play'){HKM.s=S;try{hkMigrate()}catch(e){console.warn(e)}}
+  const on=mode==='play'&&!INT.on&&!P.dead&&!!inSafe(P.x,P.z),e=$('safeP');if(e&&e.classList.contains('on')!==on)e.classList.toggle('on',on)}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

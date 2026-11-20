@@ -214,6 +214,13 @@ Object.assign(BUILDS,{
    구역 = 텐트·집(ptent·phouse) 가운데 기준 직사각형. 텐트를 돌리면 같이 돌아요(지금 텐트는 fixR이라 늘 정면 +z). 숫자만 고치면 크기가 바뀌어요(임시). */
 const ZONE={hw:6.3,back:4.2,front:8.4};   /* 40차(기획자 11-20: '텐트보다 아홉 배 큰 정도, 딱 정사각형'): 12.6×12.6m 정사각형 = 텐트 한 변(4.2m)의 3배 → 깔개(4.1×4.2m)의 약 9배. 텐트는 뒤에서 4.2m, 앞은 8.4m(앞이 더 길게). 39차엔 15×16m */
 const isZoneT=t=>t==='ptent'||t==='phouse';
+/* 44차(기획자 11-20 22:25: '항구마다 표시해 둔 동그란 빨간 지역은 안전 구역. 안에 들어가면 서로 때려도 데미지를 안 입고, 거기서 누가 총을 쏘거나 근접 무기로 사람을 때리면
+   투명 포탑이 데미지를 입혀. 퍼뎀 — 실수로 한 번이면 20% 한 번, 계속 때리면 계속 쌓이게'): 항구 8곳의 설치 금지 원(actors.js NOB의 항구 원과 같은 자리·반지름, 새 게임 때 계산되는 값을 적어 둠 —
+   항구 소품을 옮겨 원이 바뀌면 tools/p44_check.py가 알려 줘요)이 곧 안전 구역. 서버(server.js)도 이 표로 판정해요. [x, z, 반지름] */
+const PORT_SAFE=[[438.57,524.62,33.34],[146.72,781.13,20.88],[694.99,280.52,25.7],[588.36,596.79,19.69],[294.59,696.6,22],[306.9,221.22,24.9],[832.44,734.44,22.61],[216.5,172.28,21.77]];
+const SAFE_PCT=.2;   /* 안전 구역에서 사람을 공격하면 공격한 사람이 최대 에너지의 20%씩(한 번마다, 쌓임) */
+function inSafe(x,z){for(const q of PORT_SAFE)if((x-q[0])*(x-q[0])+(z-q[1])*(z-q[1])<q[2]*q[2])return q;return null}
+
 const zoneRect=(x,z,r)=>({x,z,r:r||0,hw:ZONE.hw,b:ZONE.back,f:ZONE.front});
 function zoneIn(q,x,z,m){m=m||0;const dx=x-q.x,dz=z-q.z,c=Math.cos(q.r),sn=Math.sin(q.r),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<=q.hw+m&&lz>=-q.b-m&&lz<=q.f+m}
 function zoneCorners(q){const c=Math.cos(q.r),sn=Math.sin(q.r);return [[-q.hw,-q.b],[q.hw,-q.b],[q.hw,q.f],[-q.hw,q.f]].map(([lx,lz])=>[q.x+lx*c+lz*sn,q.z-lx*sn+lz*c])}

@@ -27,9 +27,9 @@ const NET={on:false,ws:null,id:0,name:'',players:new Map(),names:{},n:1,sendT:0,
    p.buf.push({t:now,x:q[1]/10,z:q[2]/10,r:q[3]/100});if(p.buf.length>6)p.buf.shift();p.hp=q[6];p.na=q[4];if(p.w!==q[5]){p.w=q[5];p.a.weapon(q[5])}}
   this.players.forEach((p,id)=>{if(!seen.has(id)){p.a.dispose();this.players.delete(id)}})},
  _f(m){const p=this.players.get(m.id);if(!p)return;const w=WEAP[p.w];if(!w||w.melee)return;const y=groundY(p.x,p.z);tracer(p.x+m.dx*1.3,y+1.45,p.z+m.dz*1.3,p.x+m.dx*w.range,y+1.3,p.z+m.dz*w.range);if(dist(p.x,p.z,P.x,P.z)<45)shotSfx(p.w)},
- _h(m){if(m.v===this.id){S.hp=m.hp;P.lastHurt=0;hurtFx();ftext(P.x,groundY(P.x,P.z)+3,P.z,'-'+Math.round(m.d),'#ff7a6e');sfx(120,.18,'sawtooth',.07);buzz(50);if(S.hp<=0)die()}
+ _h(m){if(m.zap)zapFx(m.v===this.id?P:this.players.get(m.v),m.v===this.id);if(m.v===this.id){S.hp=m.hp;P.lastHurt=0;hurtFx();ftext(P.x,groundY(P.x,P.z)+3,P.z,'-'+Math.round(m.d),'#ff7a6e');sfx(120,.18,'sawtooth',.07);buzz(50);if(S.hp<=0)die()}
   else{const p=this.players.get(m.v);if(p){const y=groundY(p.x,p.z);ftext(p.x,y+2.9,p.z,String(Math.round(m.d)),m.a===this.id?'#ffe08a':'#fff');puff(p.x,y+1.4,p.z,0xb3352b,3,.7)}}},
- _k(m){this.say(m.a?`⚔ ${m.an} ▶ ${m.vn}`:`☠ ${m.vn} 님이 쓰러졌어요`,m.a===this.id?'#ffe08a':m.v===this.id?'#ff7a6e':'#dfe8f2');if(m.a===this.id){S.st.kills++;jingle([659,880])}},
+ _k(m){if(m.zone){this.say(`🛡 ${m.vn} 님이 안전 구역에서 사람을 공격하다 쓰러졌어요`,m.v===this.id?'#ff7a6e':'#dfe8f2');return}this.say(m.a?`⚔ ${m.an} ▶ ${m.vn}`:`☠ ${m.vn} 님이 쓰러졌어요`,m.a===this.id?'#ffe08a':m.v===this.id?'#ff7a6e':'#dfe8f2');if(m.a===this.id){S.st.kills++;jingle([659,880])}},
  _c(m){this.say(`<b style="color:#8fd3ff">${m.n}</b> ${m.s}`);CHAT.say(m.id===this.id?'me':m.id,m.s);if(m.id!==this.id)sfx(900,.04,'sine',.02)},
  _b(m){if(m.ref){const s=structs.find(q=>q.ref===m.ref);if(s){s.nid=m.s.id;return}}if(structs.some(q=>q.nid===m.s.id))return;this.applying=true;this.addS(m.s);this.applying=false},
  _rb(m){const s=structs.find(q=>q.nid===m.id);if(s){this.applying=true;removeStruct(s);this.applying=false}},
@@ -40,6 +40,9 @@ const NET={on:false,ws:null,id:0,name:'',players:new Map(),names:{},n:1,sendT:0,
   let ch=false;for(const l of this.log){l.t-=dt;if(l.t<2)ch=true}if(this.log.length&&this.log[0].t<=0){this.log.shift();ch=true}if(ch)this.drawLog()},
  draw(c,k){if(!this.on)return;c.textAlign='center';this.players.forEach(p=>{const s=scr(p.x,groundY(p.x,p.z)+3.25,p.z);if(!s[2]||p.hp<=0)return;const n=this.names[p.id]||'?';uiPill(c,n,s[0],s[1]-4*k,11.5*k,NAMEC[p.id%NAMEC.length],'#fff');   /* name tag: a coloured pill per player, like Longvinter */
    const w=32*k;c.fillStyle='rgba(59,42,32,.75)';c.fillRect(s[0]-w/2-1,s[1]+8*k-1,w+2,4*k+2);c.fillStyle='#45B864';c.fillRect(s[0]-w/2,s[1]+8*k,w*clamp(p.hp/100,0,1),4*k)})}};
+/* 44차: 안전 구역 투명 포탑 — 위에서 번쩍 내리꽂히는 선 + 소리, 내가 맞았으면 안내 */
+function zapFx(p,me){if(!p)return;const y=groundY(p.x,p.z);for(let i=0;i<2;i++)tracer(p.x+(i?-3:3.5),y+13,p.z-2.5,p.x,y+1.2,p.z);puff(p.x,y+1.3,p.z,0x9fe8ff,6,.8);if(dist(p.x,p.z,P.x,P.z)<45)sfx(1400,.08,'square',.04,.3);
+ if(me){toast(`🛡 안전 구역에서는 사람을 공격할 수 없어요 — 포탑이 쐈어요 (-${Math.round(SAFE_PCT*100)}%)`);buzz(120)}}
 const NAMEC=['#F0A23A','#45B864','#E8609E','#7C6FE0','#4A9BE0','#E5534B','#2FB3A6'];
 /* ---- hooks into the single-player code ---- */
 {const _attack=attack;attack=function(){const was=P.cd;_attack();if(NET.on&&was<=0&&P.cd>0){const w=WEAP[curId()];if(w&&!w.rod&&!w.nade)NET.send(w.melee?{t:'f',dx:Math.sin(P.rot),dz:Math.cos(P.rot)}:{t:'f',dx:P.adx,dz:P.adz})}};
