@@ -637,7 +637,7 @@ const RJ={id:null,ox:0,oy:0,md:null,mv:0,k:0,aim:0,full:0,mf:0,ax:0,az:1,q:null,
 const RJ_DZ=.28,RJ_FULL=.9;
 function rjEl(){let j=$('rjoy');if(!j){j=document.createElement('div');j.id='rjoy';j.innerHTML='<i><b></b></i>';$('joy').parentNode.appendChild(j)}return j}
 {const css=document.createElement('style');css.textContent=
- '#rjoy{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(251,244,230,.12),rgba(251,244,230,.32));border:3px solid rgba(251,244,230,.85);pointer-events:none;transition:right .18s,bottom .18s,border-color .15s}'+
+ '#rjoy{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(251,244,230,.12),rgba(251,244,230,.32));border:3px solid rgba(251,244,230,.85);pointer-events:none;transition:border-color .15s}'+
  '#rjoy i{position:absolute;left:43px;top:43px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#FFFDF8,#EAD8B6);box-shadow:0 4px 0 #CDB085,0 8px 14px rgba(40,24,12,.3);display:flex;align-items:center;justify-content:center}'+
  '#rjoy b{font-size:29px;line-height:1;font-style:normal}#rjoy.dim b{opacity:.38}#rjoy.w{border-color:rgba(224,83,63,.9)}#rjoy.full i{background:radial-gradient(circle at 38% 30%,#FFE9C9,#F2A65A)}#rjoy.on i{filter:brightness(.94)}'+
  '#ui #bBag{right:74px;bottom:196px}#ui.port #bBag{right:62px;bottom:224px}';   /* 가방 버튼은 오른쪽 조이스틱 위로 */
@@ -645,7 +645,7 @@ function rjEl(){let j=$('rjoy');if(!j){j=document.createElement('div');j.id='rjo
 function rjC(){const r=rjEl().getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2,r.width/2]}
 function rjMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(w.rod)return fishing||!(target&&target.lab)?'rod':'act';if(w.ammo||w.nade)return'aim';if(w.melee&&id!=='fist')return'melee';return'tap'}
 function rjKnob(dx,dy){const i=rjEl().firstChild;i.style.transform=dx||dy?`translate(${dx/UIS}px,${dy/UIS}px)`:''}
-function rjDown(e){if(RJ.id!==null||P.dead)return false;const[cx,cy,r]=rjC();if(Math.hypot(e.clientX-cx,e.clientY-cy)>r*1.3)return false;
+function rjDown(e){if(RJ.id!==null||P.dead||rjEl().style.visibility==='hidden')return false;const[cx,cy,r]=rjC();if(Math.hypot(e.clientX-cx,e.clientY-cy)>r*1.3)return false;
  Object.assign(RJ,{id:e.pointerId,ox:e.clientX,oy:e.clientY,md:rjMode(),mv:0,k:0,aim:0,full:0});   /* 누른 자리에서부터 끌어요(가장자리를 눌러도 바로 조준되지 않게) */
  if(RJ.md==='rod'){inp.fire=true;inp.aiming=false}rjEl().classList.add('on');return true}
 function rjMove(e){if(e.pointerId!==RJ.id)return;let dx=e.clientX-RJ.ox,dy=e.clientY-RJ.oy;const l=Math.hypot(dx,dy),M=44*UIS;RJ.mv=Math.max(RJ.mv,l);
@@ -664,9 +664,8 @@ function rjUp(e){if(e.pointerId!==RJ.id)return;const up=e.type==='pointerup',md=
  if(md==='aim')rjHint(w.nade?'끌어서 던질 곳을 정하고 떼면 던져요':'끌어서 조준하고 떼면 쏴요');else if(md==='melee')rjHint('끝까지 당기고 있으면 계속 휘둘러요')}
 function rjCancel(){if(RJ.id!==null&&(RJ.md==='rod'||RJ.mf)){inp.fire=false;inp.aiming=false}RJ.id=null;RJ.aim=RJ.full=RJ.mf=0;RJ.q=null;rjKnob(0,0);rjEl().classList.remove('on','full')}
 {const _o=openPanel;openPanel=function(k){if(k!=='bag')rjCancel();return _o(k)}}
-/* 놓는 자리: 왼쪽 조이스틱과 마주 보게. 가방을 옆에 열면 가방 옆(가로)·위(세로)로 비켜요 */
-function rjFix(){const j=rjEl(),port=VW<=VH,side=sidePanel()&&mode==='play';let r=port?22:34,b=port?58:30;
- if(side){if(port)b=Math.round(clamp(VH*.5,300,560))+24;else r=Math.round(clamp(VW*.48,360,540))+12+22}Object.assign(j.style,{right:r+'px',bottom:b+'px'})}
+/* 놓는 자리: 왼쪽 조이스틱과 마주 보게. 42차(기획자: '가방 누를 때마다 오른쪽 조이스틱이 이상한 데 가'): 가방을 열어도 옮기지 않고, 가방에 가려지는 동안은 숨겨요 */
+function rjFix(){const j=rjEl(),port=VW<=VH,side=sidePanel()&&mode==='play';Object.assign(j.style,{right:(port?22:34)+'px',bottom:(port?58:30)+'px',visibility:side?'hidden':''});if(side&&RJ.id!==null)rjCancel()}
 {const _l=layoutPanel;layoutPanel=function(){_l();rjFix()}}
 {const _c=closePanel;closePanel=function(){_c();rjFix()}}
 {const _r=resize;resize=function(){_r();rjFix()}}
@@ -682,29 +681,28 @@ function rjObj(ax,az){const cx=(P.x/CELL)|0,cz=(P.z/CELL)|0;let best=null,bd=1e9
  if(RJ.mf&&w.melee&&id!=='fist'&&P.cd<=0){const ax=P.adx,az=P.adz;let en=0;for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<w.range+(e.big?.5:0)+.4&&(dx*ax+dz*az)/(d||1)>.3){en=1;break}}
   if(!en){const o=rjObj(ax,az);if(o){const t0=target;target=o;try{interact()}finally{target=t0}return}}}
  return _a()}}
-/* 땅 위 조준 표시: 총 = 사거리만큼 띠(산탄총은 퍼지는 부채), 수류탄 = 떨어질 자리 원, 근접 = 앞 부채 */
-const RJV={m:null,ring:null,N:24,col:-1};
-function rjVisInit(){if(RJV.m)return;const N=RJV.N,g=new THREE.BufferGeometry(),idx=[];for(let i=0;i<N;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}
- g.setAttribute('position',new THREE.BufferAttribute(new Float32Array((N+1)*6),3));g.setIndex(idx);
- const mat=new THREE.MeshBasicMaterial({transparent:true,opacity:.5,depthWrite:false,fog:false,side:THREE.DoubleSide});RJV.mat=mat;
- RJV.m=new THREE.Mesh(g,mat);RJV.m.frustumCulled=false;RJV.m.renderOrder=6;scene.add(RJV.m);
- const rg=new THREE.RingGeometry(.84,1,40);rg.rotateX(-Math.PI/2);RJV.ring=new THREE.Mesh(rg,mat);RJV.ring.frustumCulled=false;RJV.ring.renderOrder=6;scene.add(RJV.ring)}
-function rjVis(){const on=RJ.id!==null&&RJ.aim&&(RJ.md==='aim'||RJ.md==='melee')&&!bmode&&mode==='play'&&!P.dead;
- if(!on){if(RJV.m)RJV.m.visible=RJV.ring.visible=false;return}rjVisInit();const id=curId(),w=WEAP[id]||{},ax=RJ.ax,az=RJ.az;let len,w0,w1,s0=.35,ring=0;
- if(w.nade){len=3+11*clamp((RJ.k-RJ_DZ)/(1-RJ_DZ),0,1);w0=w1=.08;ring=5.5}
- else if(w.melee){s0=.3;len=(w.range||2.3)+.5;w0=.3;w1=1.3}
- else{len=w.range||12;w0=.18;w1=w.pel?Math.tan(w.spread||.15)*len+.25:.18+len*(w.spread||0)*.6}
- const c=RJ.full?0xff9a3c:w.ammo&&invN(w.ammo)<=0?0xe0533f:0xfff1d6;if(c!==RJV.col){RJV.col=c;RJV.mat.color.setHex(c).convertSRGBToLinear()}
- const pos=RJV.m.geometry.attributes.position,a=pos.array,N=RJV.N,px=-az,pz=ax;
- for(let i=0;i<=N;i++){const t=i/N,cx=P.x+ax*(s0+(len-s0)*t),cz=P.z+az*(s0+(len-s0)*t),hw=w0+(w1-w0)*t;
-  for(let k=0;k<2;k++){const sg=k?-1:1,x=cx+px*hw*sg,z=cz+pz*hw*sg,o=(i*2+k)*3;a[o]=x;a[o+1]=Math.max(groundY(x,z),0)+.07;a[o+2]=z}}
- pos.needsUpdate=true;RJV.m.visible=true;
- if(ring){const gx=P.x+ax*len,gz=P.z+az*len;RJV.ring.position.set(gx,Math.max(groundY(gx,gz),0)+.08,gz);RJV.ring.scale.setScalar(ring);RJV.ring.visible=true}else RJV.ring.visible=false}
+/* 땅 위 조준 표시 — 42차(기획자: '조준할 때 사거리 표시 없애 버려'): 사거리 띠·근접 부채는 없앴어요. 수류탄만 떨어질 자리에 작은 고리(끈 길이로 거리를 정하니까).
+   대신 조준하는 동안 캐릭터가 그쪽을 보고(아래 updPlayer 감싸기), 화면이 그쪽으로 부드럽게 밀려요(RJCAM). */
+const RJV={ring:null};
+function rjVisInit(){if(RJV.ring)return;const mat=new THREE.MeshBasicMaterial({transparent:true,opacity:.55,depthWrite:false,fog:false,side:THREE.DoubleSide});mat.color.setHex(0xfff1d6).convertSRGBToLinear();
+ const rg=new THREE.RingGeometry(.74,1,32);rg.rotateX(-Math.PI/2);RJV.ring=new THREE.Mesh(rg,mat);RJV.ring.frustumCulled=false;RJV.ring.renderOrder=6;scene.add(RJV.ring)}
+const rjNadeD=()=>3+11*clamp((RJ.k-RJ_DZ)/(1-RJ_DZ),0,1);
+function rjVis(){const w=WEAP[curId()]||{},on=RJ.id!==null&&RJ.aim&&RJ.md==='aim'&&w.nade&&!bmode&&mode==='play'&&!P.dead;
+ if(!on){if(RJV.ring)RJV.ring.visible=false;return}rjVisInit();const d=rjNadeD(),gx=P.x+RJ.ax*d,gz=P.z+RJ.az*d;
+ RJV.ring.position.set(gx,Math.max(groundY(gx,gz),0)+.08,gz);RJV.ring.scale.setScalar(1.1);RJV.ring.visible=true}
+/* 조준하는 동안 화면을 조준한 쪽으로(롱빈터처럼): 총은 사거리의 30%(3~7m) × 당긴 정도, 수류탄은 떨어질 자리의 55%. 떼면 천천히 돌아와요 */
+const RJCAM={x:0,z:0};
+{const _uc=updCamera;updCamera=function(dt,px,py,pz,snap){let tx=0,tz=0;
+ if(RJ.id!==null&&RJ.aim&&RJ.md==='aim'&&!INT.on&&!bmode&&mode==='play'&&!P.dead){const w=WEAP[curId()]||{},k=clamp((RJ.k-RJ_DZ)/(1-RJ_DZ),0,1),L=w.nade?rjNadeD()*.55:clamp((w.range||12)*.3,3,7)*(.45+.55*k);tx=RJ.ax*L;tz=RJ.az*L}
+ if(snap||INT.on){RJCAM.x=RJCAM.z=0}else{const a=1-Math.exp(-(dt||0)*(tx||tz?3:2.2));RJCAM.x+=(tx-RJCAM.x)*a;RJCAM.z+=(tz-RJCAM.z)*a}
+ return _uc(dt,px+RJCAM.x,py,pz+RJCAM.z,snap)}}
 /* 매 장면: 낚싯대 누르는 중·계속 휘두르기·떼서 쏘기 대기열 */
-{const _u=updPlayer;updPlayer=function(dt){let shot=0;const now=performance.now();if(RJ.q&&now>RJ.q.t)RJ.q=null;
+{const _u=updPlayer;updPlayer=function(dt){let shot=0;const now=performance.now(),r0=P.rot;if(RJ.q&&now>RJ.q.t)RJ.q=null;
  if(RJ.id!==null&&RJ.md==='rod')inp.fire=true;
  const hold=RJ.id!==null&&RJ.md==='melee'&&RJ.full;if(hold){inp.fire=true;inp.aiming=true;inp.ax=RJ.ax;inp.az=RJ.az;RJ.mf=1}else if(RJ.mf){RJ.mf=0;inp.fire=false;inp.aiming=false}
  if(RJ.q&&P.cd<=0&&!bmode&&!hold){const q=RJ.q;RJ.q=null;shot=1;inp.fire=true;if(q.hit)inp.aiming=false;else{inp.aiming=true;inp.ax=q.ax;inp.az=q.az;if(q.nade)ACT.g=[P.x+q.ax*q.d,P.z+q.az*q.d]}}
- _u(dt);if(shot){inp.fire=false;inp.aiming=false}if(RJ.rel){RJ.rel=0;inp.act=false}rjVis();rjIcon()}}
+ _u(dt);if(shot){inp.fire=false;inp.aiming=false}if(RJ.rel){RJ.rel=0;inp.act=false}
+ if(RJ.id!==null&&RJ.aim&&!RJ.mf&&!shot&&(RJ.md==='aim'||RJ.md==='melee')&&!P.dead&&P.a){P.rot=turn(r0,Math.atan2(RJ.ax,RJ.az),dt*16);P.a.root.rotation.y=P.rot}   /* 42차: 조준하는 동안 캐릭터가 조준한 쪽을 봐요(걸어도) */
+ rjVis();rjIcon()}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

@@ -1,4 +1,4 @@
-# 41차 검사: 쌍 조이스틱(왼쪽 걷기 · 오른쪽 조준·쓰기 · 가운데 톡 = 상호작용) · 조이스틱 말고 누르면 아무 일 없음 · 구역은 모서리 표시만
+# 41·42차 검사(42차: 사거리 표시 없음·조준하면 화면이 그쪽으로·캐릭터가 조준 쪽을 봄·가방 열어도 오른쪽 조이스틱 제자리): 쌍 조이스틱(왼쪽 걷기 · 오른쪽 조준·쓰기 · 가운데 톡 = 상호작용) · 조이스틱 말고 누르면 아무 일 없음 · 구역은 모서리 표시만
 # 진짜 터치(CDP). touchEnd에 적은 손가락이 떼져요. 기대: 각 줄 ok true, ALL True, errs []
 import os, json
 async def steps(pg):
@@ -14,7 +14,7 @@ async def steps(pg):
         c=await rect('#rjoy');await T('touchStart',[(i,c[0],c[1])]);await pg.wait_for_timeout(40)
         for k in range(1,steps+1): await T('touchMove',[(i,c[0]+dx*k/steps,c[1]+dy*k/steps)]);await pg.wait_for_timeout(20)
         await pg.wait_for_timeout(hold)
-        mid=await ev("()=>JSON.stringify({aim:RJ.aim,full:RJ.full,k:+RJ.k.toFixed(2),vis:!!(RJV.m&&RJV.m.visible),ring:!!(RJV.ring&&RJV.ring.visible),fire:inp.fire,md:RJ.md,knob:document.querySelector('#rjoy i').style.transform})")
+        mid=await ev("()=>JSON.stringify({aim:RJ.aim,full:RJ.full,k:+RJ.k.toFixed(2),vis:!!(RJV.m&&RJV.m.visible),ring:!!(RJV.ring&&RJV.ring.visible),fire:inp.fire,md:RJ.md,knob:document.querySelector('#rjoy i').style.transform,cam:+Math.hypot(RJCAM.x,RJCAM.z).toFixed(2),face:+Math.cos(P.rot-Math.atan2(RJ.ax,RJ.az)).toFixed(2)})")
         ex,ey=(c[0],c[1]) if back else (c[0]+dx,c[1]+dy)
         if back: await T('touchMove',[(i,ex,ey)]);await pg.wait_for_timeout(60)
         await T('touchEnd',[(i,ex,ey)]);await pg.wait_for_timeout(450)
@@ -47,13 +47,13 @@ async def steps(pg):
     a0=await ev("()=>invN('ammoS')");await rtap();a1=await ev("()=>invN('ammoS')")
     c=await rect('#rjoy');await T('touchStart',[(9,c[0],c[1])]);await pg.wait_for_timeout(40)
     for k in range(1,7): await T('touchMove',[(9,c[0]+60*k/6,c[1]-10*k/6)]);await pg.wait_for_timeout(20)
-    await pg.wait_for_timeout(700);mid=await ev("()=>JSON.stringify({aim:RJ.aim,vis:!!(RJV.m&&RJV.m.visible),n:invN('ammoS'),fire:inp.fire})")
+    await pg.wait_for_timeout(700);mid=await ev("()=>JSON.stringify({aim:RJ.aim,vis:!!(RJV.m&&RJV.m.visible)||!!(RJV.ring&&RJV.ring.visible),n:invN('ammoS'),fire:inp.fire,cam:[+RJCAM.x.toFixed(2),+RJCAM.z.toFixed(2)],face:+Math.cos(P.rot-Math.atan2(RJ.ax,RJ.az)).toFixed(2)})")
     await pg.screenshot(path=O('p41_aim.jpg'),type='jpeg',quality=85)
     await T('touchEnd',[(9,c[0]+60,c[1]-10)]);await pg.wait_for_timeout(500)
     r=await ev("()=>JSON.stringify({n:invN('ammoS'),adx:+P.adx.toFixed(2),adz:+P.adz.toFixed(2),vis:!!(RJV.m&&RJV.m.visible),fire:inp.fire})")
-    a2=json.loads(r)['n'];m2=await rdrag(60,-10,300,back=True);a3=await ev("()=>invN('ammoS')")
-    R={'tapShot':a0-a1,'mid':json.loads(mid),'release':json.loads(r),'shot':a1-a2,'cancelMid':m2,'cancelShot':a2-a3}
-    R['ok']=R['tapShot']==0 and R['mid']['aim'] and R['mid']['vis'] and R['mid']['n']==a1 and R['shot']==1 and R['release']['adx']>.95 and R['release']['adz']<-.1 and not R['release']['vis'] and not R['release']['fire'] and m2['aim'] and R['cancelShot']==0;res['pistol']=R
+    a2=json.loads(r)['n'];await pg.wait_for_timeout(3500);camBack=await ev("()=>+Math.hypot(RJCAM.x,RJCAM.z).toFixed(2)");m2=await rdrag(60,-10,300,back=True);a3=await ev("()=>invN('ammoS')")
+    R={'tapShot':a0-a1,'mid':json.loads(mid),'release':json.loads(r),'shot':a1-a2,'camBack':camBack,'cancelMid':m2,'cancelShot':a2-a3}
+    R['ok']=R['tapShot']==0 and R['mid']['aim'] and not R['mid']['vis'] and R['mid']['cam'][0]>2.5 and R['mid']['face']>.95 and R['camBack']<R['mid']['cam'][0]*.3 and R['mid']['n']==a1 and R['shot']==1 and R['release']['adx']>.95 and R['release']['adz']<-.1 and not R['release']['vis'] and not R['release']['fire'] and m2['aim'] and R['cancelShot']==0;res['pistol']=R
     # 5. 왼쪽으로 걸으면서 오른쪽으로 조준해 쏘기(두 손가락 같이) + 두 조이스틱을 같이 눌러도 확대 안 됨
     await ev("()=>{ZOOM.t=1;zoomK=1}");z0=await ev("()=>zoomK");p0=await ev("()=>[P.x,P.z]");a0=await ev("()=>invN('ammoS')")
     await T('touchStart',[(1,jc[0],jc[1])]);await T('touchMove',[(1,jc[0],jc[1]-40)]);await pg.wait_for_timeout(250)
@@ -72,7 +72,7 @@ async def steps(pg):
     m2=await rdrag(0,-80,300);d2=await ev("()=>{const n=nades[nades.length-1];return n?[+n.d.toFixed(1),+n.dz.toFixed(2)]:null}")
     n1=await ev("()=>nades.length")
     R={'short':m1,'d1':d1,'long':m2,'d2':d2,'left':await ev("()=>invN('grenade')")}
-    R['ok']=m1['ring'] and m2['ring'] and d1 and d2 and d1[0]<6 and d1[1]>.9 and d2[0]>12 and d2[1]<-.9 and R['left']==2;res['grenade']=R
+    R['ok']=m1['ring'] and m2['ring'] and not m1['vis'] and m2['cam']>4 and m2['cam']>m1['cam'] and d1 and d2 and d1[0]<6 and d1[1]>.9 and d2[0]>12 and d2[1]<-.9 and R['left']==2;res['grenade']=R
     await pg.wait_for_timeout(1200)
     # 7. 손도끼: 끝까지 당기고 있으면 앞의 나무를 계속 벰, 반만 끌면 안 휘두름, 떼면 멈춤
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));give('axe',1);S.quick[S.sel]='axe';let best=null;for(const o of objs.values()){if(o.re>0||!isTree(OBJT[o.t]))continue;const d=dist(VIL.x,VIL.z,o.x,o.z);if(d>40&&d<160&&(!best||d<best.d))best={o,d}}const o=best.o,T=OBJT[o.t];
@@ -83,7 +83,7 @@ async def steps(pg):
     await pg.wait_for_timeout(900);h3=await ev("()=>JSON.stringify({hp:_TR.hp,fire:inp.fire,mf:RJ.mf})")
     R={'start':T0,'half':half,'afterHalf':h1,'full':full,'afterFull':json.loads(h2),'later':json.loads(h3)}
     hits=(T0['hp']-R['afterFull']['hp']) if R['afterFull']['re']<=0 else 99
-    R['hits']=hits;R['ok']=not half['full'] and h1==T0['hp'] and full['full'] and full['vis'] and hits>=4 and not R['later']['fire'] and not R['later']['mf'] and (R['later']['hp']==R['afterFull']['hp'] or R['afterFull']['re']>0);res['axeHold']=R
+    R['hits']=hits;R['ok']=not half['full'] and h1==T0['hp'] and full['full'] and not full['vis'] and not half['vis'] and half['face']>.9 and hits>=4 and not R['later']['fire'] and not R['later']['mf'] and (R['later']['hp']==R['afterFull']['hp'] or R['afterFull']['re']>0);res['axeHold']=R
     # 8. 낚싯대: 톡 = 던지기(조준 없음), 누르고 있으면 inp.fire
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));give('rod',1);S.quick[S.sel]='rod';const s=FSP.find(q=>q.lb==='해안23');let best=null,bd=1e9;for(let dx=-10;dx<=10;dx+=.5)for(let dz=-10;dz<=10;dz+=.5){const x=s.x+dx,z=s.z+dz,d=Math.hypot(dx,dz);if(d<bd&&waterDepth(x,z)<=SHALLOW&&walk(x,z,.42,P)===null&&dz>0){bd=d;best=[x,z]}}
       P.x=best[0];P.z=best[1];P.rot=Math.atan2(s.x-P.x,s.z-P.z);P.yv=undefined;updWaterState(0);endFish();updCamera(0,P.x,groundY(P.x,P.z),P.z,true);await sl(500);return JSON.stringify({tgt:target&&target.lab,fishing:!!fishing})}""")
@@ -111,16 +111,17 @@ async def steps(pg):
     await pg.screenshot(path=O('p41_zone.jpg'),type='jpeg',quality=88)
     R=json.loads(r);R['ok']=R['n']==4 and R['h']<.05 and R['len']<1 and R['op']<=.7 and R['transparent'] and R['edges']=='undefined' and R['zg']=='undefined';res['zoneCorners']=R
     await ev("()=>{removeStruct(_Z)}")
-    # 12. 세로 화면 + 가방 열면 오른쪽 조이스틱이 가방 위로, 가로는 가방 옆으로(가려지지 않음)
+    # 12. 42차: 가방을 열어도 오른쪽 조이스틱은 제자리(가려지는 동안 숨김), 닫으면 다시 보임
     out={}
     for nm,(w,h) in [('land',(844,390)),('port',(390,844))]:
-        await pg.set_viewport_size({'width':w,'height':h});await pg.wait_for_timeout(700);await ev("()=>openPanel('bag')");await pg.wait_for_timeout(500)
-        r=await rect('#rjoy');pn=await rect('#panel')
-        ov=not (r[4]+r[2]<=pn[4]+1 or r[5]+r[3]<=pn[5]+1 or r[4]>=pn[4]+pn[2]-1 or r[5]>=pn[5]+pn[3]-1)
+        await pg.set_viewport_size({'width':w,'height':h});await pg.wait_for_timeout(700);r0=await rect('#rjoy')
+        await ev("()=>openPanel('bag')");await pg.wait_for_timeout(500)
+        r=await rect('#rjoy');vis=await ev("()=>document.getElementById('rjoy').style.visibility")
+        c=await rect('#rjoy');await T('touchStart',[(9,c[0],c[1])]);await pg.wait_for_timeout(60);held=await ev("()=>RJ.id!==null");await T('touchEnd',[(9,c[0],c[1])]);await pg.wait_for_timeout(200)
         await pg.screenshot(path=O(f'p41_bag_{nm}.jpg'),type='jpeg',quality=85)
-        await ev("()=>closePanel()");await pg.wait_for_timeout(400);r2=await rect('#rjoy')
-        out[nm]={'overlap':ov,'inScreen':r[4]>=0 and r[5]>=0,'back':abs(r2[4]+r2[2]-(w-(22 if nm=='port' else 34)*(r2[2]/150)))<3}
-    R=out;R['ok']=all(not v['overlap'] and v['inScreen'] and v['back'] for v in out.values());res['bagDodge']=R
+        await ev("()=>closePanel()");await pg.wait_for_timeout(400);r2=await rect('#rjoy');vis2=await ev("()=>document.getElementById('rjoy').style.visibility")
+        out[nm]={'same':abs(r[4]-r0[4])<1 and abs(r[5]-r0[5])<1 and abs(r2[4]-r0[4])<1,'hidden':vis=='hidden','held':held,'back':vis2==''}
+    R=out;R['ok']=all(v['same'] and v['hidden'] and not v['held'] and v['back'] for v in out.values());res['bagStay']=R
     await pg.set_viewport_size({'width':844,'height':390})
     for k,v in res.items(): print(k,json.dumps(v,ensure_ascii=False))
     print('ALL',all(v['ok'] for v in res.values()))
