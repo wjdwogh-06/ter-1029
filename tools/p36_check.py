@@ -16,7 +16,7 @@ async def steps(pg):
       P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI;P.yv=undefined;updCamera(0,P.x,groundY(P.x,P.z),P.z,true);await sl(300);const lab=target&&target.lab,i0=JSON.stringify(S.inv),c0=S.coins;
       await sl(50);return JSON.stringify({lab,i0,c0})}""")
     R=json.loads(r)
-    await pg.touchscreen.tap(560,140);await pg.wait_for_timeout(600)
+    await tapSel('#rjoy');await pg.wait_for_timeout(600)
     r=await ev("""()=>{const b=S.box[_bx36.li],g=document.querySelectorAll('#pbody .bxg');return JSON.stringify({panel,inv:JSON.stringify(S.inv),coins:S.coins,n:b?b.c.length:0,items:b?b.c.filter(Boolean):[],boxCells:g[0]?g[0].children.length:0,bagCells:g[1]?g[1].children.length:0,all:!!document.querySelector('[data-a=boxall]'),title:document.getElementById('ptabs').textContent})}""")
     Q=json.loads(r);res['open']={'lab':R['lab'],'panel':Q['panel'],'same':Q['inv']==R['i0'] and Q['coins']==R['c0'],'n':Q['n'],'items':Q['items'],'cells':[Q['boxCells'],Q['bagCells']],'all':Q['all'],'title':Q['title'],
       'ok':R['lab']=='열기' and Q['panel']=='box' and Q['inv']==R['i0'] and Q['n']==20 and 1<=len(Q['items'])<=6 and Q['boxCells']==20 and Q['bagCells']==20 and Q['all']}
@@ -53,7 +53,7 @@ async def steps(pg):
     A=json.loads(r)
     await ev("()=>closePanel()");await pg.wait_for_timeout(300)
     lab=await ev("()=>{target=findTarget();return target&&target.lab}")
-    await pg.touchscreen.tap(560,140);await pg.wait_for_timeout(500)
+    await tapSel('#rjoy');await pg.wait_for_timeout(500)
     re=await ev("()=>JSON.stringify({panel,left:S.box[_bx36.li].c.filter(Boolean).map(e=>e[0])})")
     B=json.loads(re)
     res['allFull']={'after':A,'lab':lab,'reopen':B,'ok':A['left']==['powder'] and '남았어요' in A['msg'] and lab=='열기' and B['panel']=='box' and B['left']==['powder']}

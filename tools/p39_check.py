@@ -30,12 +30,12 @@ async def steps(pg):
     Q=json.loads(r);Q['ok']=Q['goneA'] and not Q['goneH'] and Q['wood']>0;res['demo']=Q
     # 5. 설치 모드 테두리: 텐트 들면 놓을 자리 구역(초록/빨강) + 둘레 구역들, 끄면 숨김
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const t=_zt;P.x=t.x+3;P.z=t.z+9;P.rot=0;setBuild('ptent');await sl(400);const pre=ZMK.pre,g1=ghost.userData.g;
-      const o={pre:!!(pre&&pre.visible),preCol:pre&&pre.userData.col.toString(16),ok1:g1.ok,why1:g1.why,edges:ZMK.edges.filter(e=>e.visible).length};
-      setBuild('fence');await sl(300);o.fencePre=!!(ZMK.pre&&ZMK.pre.visible);o.fenceEdges=ZMK.edges.filter(e=>e.visible).length;setBuild(null);await sl(300);o.offPre=!!(ZMK.pre&&ZMK.pre.visible);o.offEdges=ZMK.edges.filter(e=>e.visible).length;return JSON.stringify(o)}""")
-    Q=json.loads(r);Q['ok']=Q['pre'] and Q['preCol']=='d23a28' and not Q['ok1'] and bool(Q['why1']) and Q['edges']>=1 and not Q['fencePre'] and Q['fenceEdges']>=1 and not Q['offPre'] and Q['offEdges']==0;res['buildView']=Q
+      const pc=m=>m===zmMat(ZCOL.bad,.9)?'d23a28':m===zmMat(ZCOL.me,.9)?'1f9a3a':'?';const o={pre:!!(pre&&pre.visible),preCol:pre&&pc(pre.children[0].material),corners:pre?pre.children.length:0,ok1:g1.ok,why1:g1.why,edges:typeof ZMK.edges==='undefined'?0:-1};   /* 41차: 테두리 선 없음, 모서리 넷만 */
+      setBuild('fence');await sl(300);o.fencePre=!!(ZMK.pre&&ZMK.pre.visible);setBuild(null);await sl(300);o.offPre=!!(ZMK.pre&&ZMK.pre.visible);return JSON.stringify(o)}""")
+    Q=json.loads(r);Q['ok']=Q['pre'] and Q['preCol']=='d23a28' and Q['corners']==4 and not Q['ok1'] and bool(Q['why1']) and Q['edges']==0 and not Q['fencePre'] and not Q['offPre'];res['buildView']=Q
     await ev("()=>{const t=_zt;P.x=t.x+3;P.z=t.z+9;P.rot=0;setBuild('ptent');updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(900);await pg.screenshot(path=O('p39_build_red.jpg'),type='jpeg',quality=88)
     await ev("()=>{const t=_zt;P.x=t.x;P.z=t.z+24;P.rot=0;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(900)
-    r=await ev("()=>{const g=ghost.userData.g;return JSON.stringify({ok:g.ok,why:g.why,col:ZMK.pre.userData.col.toString(16)})}")
+    r=await ev("()=>{const g=ghost.userData.g;return JSON.stringify({ok:g.ok,why:g.why,col:ZMK.pre.children[0].material===zmMat(ZCOL.me,.9)?'1f9a3a':'d23a28'})}")
     await pg.screenshot(path=O('p39_build_ok.jpg'),type='jpeg',quality=88);await ev("()=>setBuild(null)")
     Q=json.loads(r);Q['ok']=(Q['ok'] and Q['col']=='1f9a3a') or (not Q['ok'] and Q['col']=='d23a28');res['buildPreview']=Q
     # 6. 집으로 올려도 구역 그대로(말뚝 자리 같음), 텐트 말뚝은 사라짐

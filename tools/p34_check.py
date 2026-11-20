@@ -16,26 +16,29 @@ async def steps(pg):
         await pg.touchscreen.tap(xy[0],xy[1]);await pg.wait_for_timeout(wait)
         r=await ev(f"()=>({{moved:+Math.hypot(P.x-{p0[0]},P.z-{p0[1]}).toFixed(3),auto:!!P.auto,panel:panel,hint:floats.some(f=>f.s==='더 가까이 가요'&&f.t<3)}})")
         r['xy']=[round(xy[0]),round(xy[1])];return r
-    # 1. 가방 버튼: 오른쪽 아래 구석(가로·세로), 조이스틱·지도와 안 겹침
+        # 41차: 오른쪽 조이스틱 가운데 톡 = 상호작용(화면의 다른 곳은 아무 일 없음)
+    async def rtap():
+        c=await ev("()=>{const r=document.getElementById('rjoy').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}");await pg.touchscreen.tap(c[0],c[1])
+    # 1. 가방 버튼: 41차부터 오른쪽 조이스틱 바로 위(가로·세로), 조이스틱·지도와 안 겹침
     async def bagPos():
-        return await ev("""()=>{const R=i=>document.getElementById(i).getBoundingClientRect(),b=R('bBag'),j=R('joy'),m=R('mmw');const ov=(a,c)=>!(a.right<=c.left||c.right<=a.left||a.bottom<=c.top||c.bottom<=a.top);
-          return {r:Math.round(innerWidth-b.right),b:Math.round(innerHeight-b.bottom),w:Math.round(b.width),ovJ:ov(b,j),ovM:ov(b,m),jb:Math.round(innerHeight-j.bottom)}}""")
+        return await ev("""()=>{const R=i=>document.getElementById(i).getBoundingClientRect(),b=R('bBag'),j=R('joy'),m=R('mmw'),q=R('rjoy');const ov=(a,c)=>!(a.right<=c.left||c.right<=a.left||a.bottom<=c.top||c.bottom<=a.top);
+          return {r:Math.round(innerWidth-b.right),b:Math.round(innerHeight-b.bottom),w:Math.round(b.width),ovJ:ov(b,j)||ov(b,q),ovM:ov(b,m),above:b.bottom<=q.top,cx:Math.round(Math.abs((b.left+b.right)/2-(q.left+q.right)/2)),qb:Math.round(innerHeight-q.bottom),jb:Math.round(innerHeight-j.bottom)}}""")
     L=await bagPos();await pg.screenshot(path=O('p34_hud.jpg'),type='jpeg',quality=85)
     await pg.set_viewport_size({'width':400,'height':860});await pg.wait_for_timeout(1200)
     Pt=await bagPos();await pg.screenshot(path=O('p34_port.jpg'),type='jpeg',quality=85)
     await pg.set_viewport_size({'width':880,'height':400});await pg.wait_for_timeout(1200)
-    res['bagBtn']={'land':L,'port':Pt,'ok':all(q['r']<=45 and q['b']<=80 and not q['ovJ'] and not q['ovM'] and abs(q['b']-q['jb'])<=3 for q in (L,Pt))}
+    res['bagBtn']={'land':L,'port':Pt,'ok':all(q['above'] and q['cx']<=3 and not q['ovJ'] and not q['ovM'] and abs(q['qb']-q['jb'])<=3 for q in (L,Pt))}
     # 2. 자판기: 멀면 글자 없음, 바짝 붙으면 '자판기'
     await put("const v=structs.find(s=>s.t==='vend'&&dist(s.x,s.z,VIL.x,VIL.z)<60);window._v0=v;P.x=v.x;P.z=v.z+sdef(v).bz+1.6;P.rot=Math.PI")
     far=await ev("()=>({lab:target&&target.lab,gap:+sGap(P.x,P.z,_v0).toFixed(2)})")
     await put("P.x=_v0.x;P.z=_v0.z+sdef(_v0).bz+.75;P.rot=Math.PI")
     near=await ev("()=>({lab:target&&target.lab,gap:+sGap(P.x,P.z,_v0).toFixed(2)})")
-    await pg.touchscreen.tap(560,140);await pg.wait_for_timeout(500);pn=await ev("()=>{const p=panel;closePanel();return p}")
+    await rtap();await pg.wait_for_timeout(500);pn=await ev("()=>{const p=panel;closePanel();return p}")
     res['vendReach']={'far':far,'near':near,'panel':pn,'ok':far['lab'] is None and near['lab']=='자판기' and pn=='vend'}
-    # 3. 멀리 있는 자판기를 눌러도 따라가지 않음 + '더 가까이 가요'
+    # 3. 멀리 있는 자판기를 눌러도 따라가지 않음(41차: 화면을 누르면 아무 일도 없어요 — 안내도 없음)
     await put("P.x=_v0.x+1;P.z=_v0.z+5;P.rot=Math.PI")
     r=await ev("()=>[_v0.x,groundY(_v0.x,_v0.z)+.9,_v0.z]");R=await tapAt(*r)
-    R['ok']=R['moved']<.05 and not R['auto'] and R['panel'] is None and R['hint'];res['farVend']=R
+    R['ok']=R['moved']<.05 and not R['auto'] and R['panel'] is None and not R['hint'];res['farVend']=R
     # 4. 아무것도 없는 땅을 눌러도(맨손·손도끼) 안 걸어감
     await put("P.x=VIL.x+18;P.z=VIL.z+14;unstuck();P.rot=0")
     R1=await tapAt(*(await ev("()=>[P.x+4,groundY(P.x+4,P.z-5),P.z-5]")))
@@ -64,7 +67,7 @@ async def steps(pg):
         g1=await ev("()=>plGone(_p0)")
         await put("P.x=_p0.x;P.z=_p0.z+.9;P.rot=Math.PI")
         lab=await ev("()=>target&&target.lab")
-        await pg.touchscreen.tap(560,140);await pg.wait_for_timeout(600)
+        await rtap();await pg.wait_for_timeout(600)
         g2=await ev("()=>plGone(_p0)")
         res['plant']={'farTap':Rf,'goneFar':g1,'nearLab':lab,'picked':g2,'ok':Rf['moved']<.05 and not g1 and bool(lab) and g2}
     else: res['plant']={'ok':False,'why':'no plant'}

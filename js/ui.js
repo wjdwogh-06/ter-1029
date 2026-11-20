@@ -140,7 +140,7 @@ function renderPanel(){const B=$('pbody');$('pcoin').innerHTML=mode==='play'?`<s
  else if(panel==='menu'){h=`<div style="max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px"><button class="btn" data-a="save">저장하기</button><button class="btn g" data-a="dev" style="border:2px solid #4fc3ff">🛠 관리자 모드: ${DEV.on?'켜짐 (무적 · 빠른 이동 · 위치 표시)':'꺼짐'}</button><button class="btn g" data-a="snd">소리: ${opt.snd?'켜짐':'꺼짐'}</button><button class="btn g" data-a="gfx">그래픽: ${opt.gfx?'높음 (그림자·화면 효과)':'낮음 (빠름)'}</button><button class="btn g" data-a="stuck">끼었을 때: 기지로 순간이동</button><button class="btn g" data-a="help">조작법</button><button class="btn r" data-a="title">저장하고 타이틀로</button>
   <div class="sec">${S.day}일째 · 처치 ${S.st.kills} · 막아낸 습격 ${S.st.raids}</div>
   <div class="sec">물고기 도감 ${FISH_LIST.filter(f=>S.caught[f.id]).length} / ${FISH_LIST.length}</div>${['B','A'].map(zk=>`<div style="font-weight:800;font-size:12.5px;margin:6px 2px 4px">${zk==='A'?'🗼':'🏝'} ${FISH_ZONES[zk].n}</div><div class="grid" style="grid-template-columns:repeat(auto-fill,96px)">${FISH_LIST.filter(f=>FISH_ZONES[zk].t.some(q=>q[0]===f.id)).map(f=>{const c=S.caught[f.id],G=FGRADE[f.g];return`<div style="text-align:center;font-size:12px;line-height:1.3"><div class="slot" style="width:70px;height:70px;margin:0 auto 4px;border-color:${G[1]}"><img src="${ICON[f.id]}" style="${c?'':'filter:brightness(0) opacity(.35)'}"></div><span style="display:inline-block;background:${G[1]};color:#fff;border-radius:9px;padding:0 7px;font-size:10.5px;font-weight:800;margin-bottom:2px">${G[0]}</span><br>${c?f.n:'???'}<br><span style="color:var(--mut);font-weight:500">${c?`최대 ${S.best[f.id]||0}cm`:''}</span></div>`}).join('')}</div>`).join('')}${typeof plantDexHtml==='function'?plantDexHtml():''}</div>`}
- else if(panel==='help'){h=['왼쪽 아래 조이스틱을 밀면 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요 (PC: WASD)','조이스틱 말고 화면 아무 데나 누르면 돼요: 가까이에 대상이 있으면 베기·캐기·열기·거래·들어가기, 없으면 손에 든 것을 누른 곳 쪽으로 써요(쏘기·던지기·낚싯대). 누르고 있으면 계속 쏴요','나무는 손도끼를 손에 들어야 벨 수 있어요(가방에서 장착). 낚싯대를 들고 있을 땐 던지기만 돼요','항구마다 랜덤 자판기와 재활용 쓰레기통이 있어요. 자판기는 1시간마다 물건 5개가 바뀌고, 쓰레기통에서는 무엇이든 원래 가격의 20%로 팔 수 있어요','쓰러지면 가방을 그 자리에 떨어뜨리고, 잠시 뒤 무작위 항구 앞에서 깨어나요','상호작용은 대상에 바짝 붙어야 돼요. 멀리 있는 걸 누르면 걸어가지 않고 \'더 가까이 가요\'만 떠요(움직임은 조이스틱으로만). 적이 가까우면 공격이 먼저예요 (PC: E 상호작용, 스페이스 공격)','짓기는 🎒 가방의 [건설] 탭에서 골라요. 고른 뒤 놓을 곳을 바라보고 큰 버튼(설치)을 눌러요 (PC: B)','물에 들어갈 수 있어요. 얕은 물에선 느려지고, 깊은 물에선 헤엄쳐요. 오래 헤엄치면 몸이 식어요','낚시는 물고기 그림자가 맴도는 곳에서만 돼요. 낚싯대를 들고 8m 안에서 큰 버튼(또는 그 물을 톡)으로 던져요. 물 안에서는 못 해요. ! 가 뜨면 바로 누르고, 꾹 눌러 감다가 물고기가 요동치면 손을 떼요. 등대 앞바다에서는 영웅·전설 물고기가 나와요','잡은 생선은 모닥불에서 구우면 훨씬 든든해요','🎒 가방에서 도구·무기를 골라 장착하고, 음식·붕대·수류탄을 써요. 가방이 열려 있어도 왼쪽 화면으로 움직일 수 있지만, 낚시·채집·공격은 가방을 닫아야 해요 (PC: Tab)','밤마다 약탈자가 내 기지(텐트)로 쳐들어와요. 모래주머니, 벽, 자동 포탑으로 막아요','섬에는 신비한 것들이 살아요. 바위 골렘은 느리지만 아프고, 나무 골렘은 숲에, 식인 덩굴은 제자리에서 물고, 악령은 밤에만 나타나 빛 구슬을 쏴요','강은 산에서 시작해 바다로 갈수록 넓어져요. 위쪽 좁은 곳은 걸어서 건널 수 있어요','자동 포탑은 권총탄을 넣어야 움직여요. 사거리 안의 적을 스스로 찾아 쏴요','발전기에 나무를 넣으면 주변 탐조등이 밤에 켜져요. 빛에 비친 적은 피해를 더 받고 악령은 타요','바다 위 바위섬에 등대 8개가 있어요. 헤엄쳐 가서 불을 켜면 등대끼리 빠르게 오갈 수 있어요','성문은 나만 지나가요. 가시 함정과 지뢰를 길목에 깔면 습격이 훨씬 쉬워져요','권총·소총·산탄총·기관단총·수류탄과 탄약은 작업대 근처의 제작 창에서 만들어요','가끔 비바람이 와요. 앞이 잘 안 보이고 몸이 식으니 불 곁에서 기다려요','쓰러지면 무작위 항구 앞에서 다시 태어나요. 가방은 쓰러진 자리에 떨어져요. 지도의 보라색 점으로 가서 되찾아요','⚡ 에너지는 10칸이에요. 헤엄치거나 맞으면 줄고, 먹으면 차요. 텐트·집 안에서 쉬면 빨리 차요','자동 저장돼요 (이 기기의 브라우저에만)'].map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')}
+ else if(panel==='help'){h=['왼쪽 아래 조이스틱을 밀면 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요 (PC: WASD)','오른쪽 아래 조이스틱은 쓰기예요. 가운데를 톡 누르면 가까운 대상과 상호작용(베기·캐기·열기·거래·들어가기). 총·석궁·수류탄은 끌어서 조준하고 떼면 쏴요(가운데로 돌아와 떼면 취소). 손도끼·전기톱은 끝까지 당기고 있으면 계속 휘둘러요. 낚싯대는 톡(꾹 누르면 감기). 조이스틱 둘 말고 화면을 눌러도 아무 일도 없어요','나무는 손도끼를 손에 들어야 벨 수 있어요(가방에서 장착). 낚싯대를 들고 있을 땐 던지기만 돼요','항구마다 랜덤 자판기와 재활용 쓰레기통이 있어요. 자판기는 1시간마다 물건 5개가 바뀌고, 쓰레기통에서는 무엇이든 원래 가격의 20%로 팔 수 있어요','쓰러지면 가방을 그 자리에 떨어뜨리고, 잠시 뒤 무작위 항구 앞에서 깨어나요','상호작용은 대상에 바짝 붙어야 돼요. 맨손일 땐 조준이 없고, 톡 = 상호작용(가까이 적이 있으면 주먹) (PC: E 상호작용, 스페이스 공격)','짓기는 🎒 가방의 [건설] 탭에서 골라요. 고른 뒤 놓을 곳을 누르거나, 앞에 들고 오른쪽 조이스틱을 톡 눌러요 (PC: B)','물에 들어갈 수 있어요. 얕은 물에선 느려지고, 깊은 물에선 헤엄쳐요. 오래 헤엄치면 몸이 식어요','낚시는 물고기 그림자가 맴도는 곳에서만 돼요. 낚싯대를 들고 8m 안에서 오른쪽 조이스틱을 톡 눌러 던져요. 물 안에서는 못 해요. ! 가 뜨면 바로 누르고, 꾹 눌러 감다가 물고기가 요동치면 손을 떼요. 등대 앞바다에서는 영웅·전설 물고기가 나와요','잡은 생선은 모닥불에서 구우면 훨씬 든든해요','🎒 가방에서 도구·무기를 골라 장착하고, 음식·붕대·수류탄을 써요. 가방이 열려 있어도 왼쪽 화면으로 움직일 수 있지만, 낚시·채집·공격은 가방을 닫아야 해요 (PC: Tab)','밤마다 약탈자가 내 기지(텐트)로 쳐들어와요. 모래주머니, 벽, 자동 포탑으로 막아요','섬에는 신비한 것들이 살아요. 바위 골렘은 느리지만 아프고, 나무 골렘은 숲에, 식인 덩굴은 제자리에서 물고, 악령은 밤에만 나타나 빛 구슬을 쏴요','강은 산에서 시작해 바다로 갈수록 넓어져요. 위쪽 좁은 곳은 걸어서 건널 수 있어요','자동 포탑은 권총탄을 넣어야 움직여요. 사거리 안의 적을 스스로 찾아 쏴요','발전기에 나무를 넣으면 주변 탐조등이 밤에 켜져요. 빛에 비친 적은 피해를 더 받고 악령은 타요','바다 위 바위섬에 등대 8개가 있어요. 헤엄쳐 가서 불을 켜면 등대끼리 빠르게 오갈 수 있어요','성문은 나만 지나가요. 가시 함정과 지뢰를 길목에 깔면 습격이 훨씬 쉬워져요','권총·소총·산탄총·기관단총·수류탄과 탄약은 작업대 근처의 제작 창에서 만들어요','가끔 비바람이 와요. 앞이 잘 안 보이고 몸이 식으니 불 곁에서 기다려요','쓰러지면 무작위 항구 앞에서 다시 태어나요. 가방은 쓰러진 자리에 떨어져요. 지도의 보라색 점으로 가서 되찾아요','⚡ 에너지는 10칸이에요. 헤엄치거나 맞으면 줄고, 먹으면 차요. 텐트·집 안에서 쉬면 빨리 차요','자동 저장돼요 (이 기기의 브라우저에만)'].map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')}
  B.innerHTML=h;if(panel==='map')drawMap($('bigmap').getContext('2d'),WS,640)}
 const devGrid=()=>{const q=DEV.q.trim().toLowerCase(),ks=Object.keys(ITEMS).filter(k=>!q||ITEMS[k].n.toLowerCase().includes(q)||k.toLowerCase().includes(q));return ks.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,86px)">${ks.map(k=>`<div data-a="dgive" data-k="${k}" style="text-align:center;font-size:11.5px;line-height:1.25;font-weight:700"><div class="slot" style="width:66px;height:66px;margin:0 auto 3px">${invIcon(k)}${invN(k)?`<b>${invN(k)}</b>`:''}</div>${ITEMS[k].n}</div>`).join('')}</div>`:'<div class="row"><div class="tx">그런 이름의 아이템이 없어요</div></div>'};
 let devArm=false;$('pbody').addEventListener('input',e=>{if(e.target.id==='devQ'){DEV.q=e.target.value;$('devGrid').innerHTML=devGrid()}});$('pbody').addEventListener('input',e=>{const i=e.target.dataset.memo;if(i!==undefined&&DEV.marks[+i]){DEV.marks[+i].memo=e.target.value.slice(0,80);devSave();const o=$('devOut');if(o)o.value=markText()}});$('pbody').addEventListener('click',e=>{if(e.target.id==='bigmap'&&DEV.on&&mode==='play'){const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*WS,z=(e.clientY-r.top)/r.height*WS;if(DEV.mapMark){addMark(x,z);renderPanel()}else devTp(x,z)}});
@@ -191,11 +191,12 @@ function actApply(){const e=ACT.e;if(!e)return;const w=WEAP[curId()]||{};let md=
 function actCancel(){ACT.id=null;ACT.go=0;ACT.pend=0;ACT.rel=0;inp.fire=inp.act=inp.actEdge=inp.aiming=false}
 cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel())return;try{cv.setPointerCapture(e.pointerId)}catch(_){}
  const[jx,jy,jr]=joyC();if(joy.id===null&&Math.hypot(e.clientX-jx,e.clientY-jy)<=jr*1.5){joy.id=e.pointerId;joy.ox=jx;joy.oy=jy;joyMove(e);return}
- if(ACT.id!==null)return;if(touchHook('down',e))return;ACT.id=e.pointerId;ACT.x=e.clientX;ACT.y=e.clientY;ACT.t=performance.now();ACT.mv=0;ACT.e={clientX:e.clientX,clientY:e.clientY};ACT.g=groundAt(e.clientX,e.clientY);ACT.go=0;ACT.pend=ACT.t+90});
+ if(rjDown(e))return;   /* 41차: 오른쪽 조이스틱(조준·쓰기·가운데 톡 = 상호작용) */
+ if(ACT.id!==null)return;touchHook('down',e)});   /* 41차(기획자: '조이스틱 양쪽 말고 다른 데를 아무리 눌러도 상호작용이 되면 안 돼'): 그 밖의 화면은 아무 일도 없어요 — 설치 모드 누른 곳 설치·크리에이티브만(touchHook) */
 function aimAt(e){_v.set(P.x,groundY(P.x,P.z)+1.2,P.z).project(cam);const dx=e.clientX-(_v.x*.5+.5)*innerWidth,dy=e.clientY-(-_v.y*.5+.5)*innerHeight,l=Math.hypot(dx,dy)||1;inp.ax=dx/l;inp.az=dy/l;inp.aiming=true;inp.fire=true}
-cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(touchHook('move',e))return;if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
+cv.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){joyMove(e);return}if(e.pointerId===RJ.id){rjMove(e);return}if(touchHook('move',e))return;if(e.pointerId!==ACT.id)return;ACT.mv=Math.max(ACT.mv,Math.hypot(e.clientX-ACT.x,e.clientY-ACT.y));ACT.e={clientX:e.clientX,clientY:e.clientY};
  if(inp.fire&&!(WEAP[curId()]||{}).rod){aimAt(e);ACT.g=groundAt(e.clientX,e.clientY)}});
-const cvUp=e=>{joyEnd(e);if(touchHook(e.type==='pointerup'?'up':'cancel',e))return;if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup';
+const cvUp=e=>{joyEnd(e);if(e.pointerId===RJ.id){rjUp(e);return}if(touchHook(e.type==='pointerup'?'up':'cancel',e))return;if(e.pointerId!==ACT.id)return;const up=e.type==='pointerup';
  if(ACT.pend&&up){ACT.pend=0;actApply();ACT.id=null;ACT.go=0;ACT.rel=1;return}   /* 90ms 안에 뗀 톡: 한 번만 쓰고 다음 장면에서 놓아요 */
  actCancel()};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
@@ -347,7 +348,7 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
 const ZOOM={t:null,min:.74,max:1.3,pts:{},on:0,d0:1,z0:1};
 $('bZoom').style.display='none';
 {const two=()=>Object.values(ZOOM.pts),stopOthers=()=>{aimP.id=null;actCancel();thCancel();for(const id in taps)delete taps[id]};   /* 쓰기·조준·톡 누르기를 끊어요(32차: 조이스틱 손가락은 그대로) */
- cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel()||e.pointerId===joy.id)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
+ cv.addEventListener('pointerdown',e=>{if(mode!=='play'||panel&&!sidePanel()||e.pointerId===joy.id||e.pointerId===RJ.id)return;ZOOM.pts[e.pointerId]={x:e.clientX,y:e.clientY};const p=two();
   if(p.length>=2){ZOOM.on=1;ZOOM.d0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.z0=ZOOM.t==null?zoomK:ZOOM.t;stopOthers()}});
  cv.addEventListener('pointermove',e=>{const q=ZOOM.pts[e.pointerId];if(!q)return;q.x=e.clientX;q.y=e.clientY;if(!ZOOM.on)return;const p=two();if(p.length<2)return;
   const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max)});   /* 32차: 조이스틱 손가락은 따로라 걷기는 그대로 */
@@ -600,33 +601,110 @@ $('pbody').addEventListener('click',e=>{const t=e.target.closest('[data-a="dext"
    규칙·크기는 core.js ZONE·zoneRect·zoneIn·zoneOverlap, 설치·철거 막기는 actors.js zoneWhy·canDemo, 서버도 같은 규칙(server.js b·rb).
    ① 텐트·집마다 구역 네 모서리에 '못 박은 말뚝' + 모서리 꺾쇠(바닥 줄 두 개)가 늘 보여요(내 것 초록, 남의 텐트 주황, 남의 집 빨강).
    ② 설치 모드에선 구역 테두리 전체가 보여요: 텐트를 들고 있으면 놓을 자리의 구역(놓을 수 있으면 초록, 아니면 빨강)과 둘레 구역들. */
-const ZMK={mats:{},geo:{},pre:null,edges:[]};
+const ZMK={mats:{},geo:{},pre:null};
 const ZCOL={me:0x1f9a3a,tent:0xe07a00,house:0xd23a28,bad:0xd23a28};const zoneCol=s=>s.own?ZCOL.me:s.t==='phouse'?ZCOL.house:ZCOL.tent;
-function zmMat(c){return ZMK.mats[c]||(ZMK.mats[c]=(()=>{const m=new THREE.MeshBasicMaterial({fog:false});m.color.setHex(c).convertSRGBToLinear();return m})())}   /* 빛·안개를 안 받아서 낮에도 색이 또렷 */
-function zoneCornerGeo(c){if(ZMK.geo[c])return ZMK.geo[c];const L=2.2,W=.17;   /* 나무 말뚝 + 쇠못 머리 + 색 띠, 그리고 안쪽으로 뻗은 꺾쇠 두 줄(+x, +z) */
- const parts=[pt(box(.16,.75,.16),0x9a6a3c,[0,.28,0]),pt(box(.18,.12,.18),c,[0,.46,0]),pt(cyl(.15,.15,.06,12),0xc3c9d0,[0,.69,0]),pt(cyl(.04,.04,.1,6),0x8a9099,[0,.62,0]),
-  pt(box(L,.03,W),c,[L/2,.05,0]),pt(box(W,.03,L),c,[0,.05,L/2])];
- return ZMK.geo[c]=mg(parts)}
-const ZC_ROT=[0,-Math.PI/2,Math.PI,Math.PI/2];   /* 뒤 왼쪽·뒤 오른쪽·앞 오른쪽·앞 왼쪽 모서리: 꺾쇠가 안쪽을 보게 */
-function zoneMark(s){zoneUnmark(s);if(!isZoneT(s.t)||s.in)return;const q=zoneRect(s.x,s.z,s.r),g=new THREE.Group(),cs=zoneCorners(q),geo=zoneCornerGeo(zoneCol(s));
- cs.forEach(([x,z],i)=>{const m=new THREE.Mesh(geo,MATT);m.position.set(x,Math.max(groundY(x,z),-.05),z);m.rotation.y=q.r+ZC_ROT[i];m.castShadow=false;g.add(m)});scene.add(g);s.zg=g}
+/* 41차(기획자 11-20 20:10: '그 선 표시는 지워 버려, 설치되었으면 그냥 꼭짓점만, 꼭짓점 못 같은 거나 입체 같은 거 너무 티 나게 하지 말고'):
+   말뚝·꺾쇠 줄·설치 모드 테두리를 없애고, 네 모서리에 땅에 붙은 얇은 ㄱ자 표시만(반투명). 텐트를 들고 있을 땐 놓을 자리의 네 모서리만 조금 또렷하게(초록/빨강). */
+function zmMat(c,o){const k=c+'/'+o;return ZMK.mats[k]||(ZMK.mats[k]=(()=>{const m=new THREE.MeshBasicMaterial({fog:false,transparent:true,opacity:o,depthWrite:false});m.color.setHex(c).convertSRGBToLinear();return m})())}   /* 빛·안개를 안 받아서 색이 그대로 */
+function zoneCornerGeo(big){const k=big?'b':'s';if(ZMK.geo[k])return ZMK.geo[k];const L=big?1.15:.8,W=big?.15:.11,H=.02,y=.04;   /* 모서리에서 안쪽(+x, +z)으로 짧은 두 팔, 겹치지 않게 */
+ return ZMK.geo[k]=mg([pt(box(L+W/2,H,W),0xffffff,[(L-W/2)/2,y,0]),pt(box(W,H,L-W/2),0xffffff,[0,y,(L+W/2)/2])])}
+const ZCOL_SOFT={[ZCOL.me]:0xeefbe6,[ZCOL.tent]:0xffc27a,[ZCOL.house]:0xff8a72};   /* 놓인 구역 표시는 옅은 색(내 것은 거의 흰색 — 잔디 위에서 은은하게 보이게) */
+const ZC_ROT=[0,-Math.PI/2,Math.PI,Math.PI/2];   /* 뒤 왼쪽·뒤 오른쪽·앞 오른쪽·앞 왼쪽 모서리: 팔이 안쪽을 보게 */
+const zcY=(x,z,r,i)=>{const a=r+ZC_ROT[i],c=Math.cos(a),n=Math.sin(a);let y=groundY(x,z);for(const[u,v]of[[.8,0],[0,.8]]){const px=x+u*c+v*n,pz=z-u*n+v*c;y=Math.max(y,groundY(px,pz))}return Math.max(y,-.05)};   /* 팔 끝까지 땅에 묻히지 않게 */
+function zoneMark(s){zoneUnmark(s);if(!isZoneT(s.t)||s.in)return;const q=zoneRect(s.x,s.z,s.r),g=new THREE.Group(),cs=zoneCorners(q),geo=zoneCornerGeo(0),mat=zmMat(ZCOL_SOFT[zoneCol(s)]||0xffffff,.62);
+ cs.forEach(([x,z],i)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,zcY(x,z,q.r,i),z);m.rotation.y=q.r+ZC_ROT[i];m.renderOrder=3;g.add(m)});scene.add(g);s.zg=g}
 function zoneUnmark(s){if(s.zg){scene.remove(s.zg);s.zg=null}}
 {const _a=addStruct;addStruct=function(o){const s=_a(o);if(s&&isZoneT(s.t)&&!s.in)zoneMark(s);return s}}
 {const _r=removeStruct;removeStruct=function(s){zoneUnmark(s);_r(s)}}
-/* 설치 모드의 테두리: 변 네 개(얇은 띠)를 한 묶음으로 */
-function zoneEdgeGroup(){const g=new THREE.Group(),q=zoneRect(0,0,0),w=.16,h=.05;
- const E=[[0,-q.b,q.hw*2,w],[0,q.f,q.hw*2,w],[-q.hw,(q.f-q.b)/2,w,q.f+q.b],[q.hw,(q.f-q.b)/2,w,q.f+q.b]];
- for(const[x,z,sx,sz]of E){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,h,sz),zmMat(0xffffff));m.position.set(x,.1,z);g.add(m)}g.userData.col=-1;scene.add(g);return g}
-function zoneEdgeSet(g,x,z,r,c){g.visible=true;g.position.set(x,Math.max(groundY(x,z),0),z);g.rotation.y=r||0;if(g.userData.col!==c){g.userData.col=c;g.children.forEach(m=>m.material=zmMat(c))}}
-function zoneEdgesUpd(){const on=!!bmode&&bmode!=='demo'&&!INT.on&&mode==='play';let n=0;
- if(on){for(const s of structs){if(!isZoneT(s.t)||s.in||dist(s.x,s.z,P.x,P.z)>60)continue;const g=ZMK.edges[n]||(ZMK.edges[n]=zoneEdgeGroup());zoneEdgeSet(g,s.x,s.z,s.r,zoneCol(s));n++}}
- for(let i=n;i<ZMK.edges.length;i++)ZMK.edges[i].visible=false;
- const pre=on&&isZoneT(bmode)&&ghost&&ghost.userData.g;if(pre){const gg=ghost.userData.g;if(!ZMK.pre){ZMK.pre=zoneEdgeGroup();const geo=zoneCornerGeo(ZCOL.me),geoR=zoneCornerGeo(ZCOL.bad),q=zoneRect(0,0,0);
-   ZMK.pre.userData.pegs=[[-q.hw,-q.b],[q.hw,-q.b],[q.hw,q.f],[-q.hw,q.f]].map(([x,z],i)=>{const m=new THREE.Mesh(geo,MATT);m.position.set(x,0,z);m.rotation.y=ZC_ROT[i];m.userData.geo=[geo,geoR];ZMK.pre.add(m);return m})}
-  const c=gg.ok?ZCOL.me:ZCOL.bad;zoneEdgeSet(ZMK.pre,gg.x,gg.z,gg.r,c);for(const m of ZMK.pre.userData.pegs){m.geometry=m.userData.geo[gg.ok?0:1]}}
+/* 텐트를 들고 있을 때: 놓을 자리 구역의 네 모서리만 */
+function zoneEdgesUpd(){const on=!!bmode&&bmode!=='demo'&&!INT.on&&mode==='play';
+ const pre=on&&isZoneT(bmode)&&ghost&&ghost.userData.g;if(pre){const gg=ghost.userData.g;if(!ZMK.pre){ZMK.pre=new THREE.Group();const geo=zoneCornerGeo(1);
+   ZMK.pre.userData.pegs=[0,1,2,3].map(i=>{const m=new THREE.Mesh(geo,zmMat(ZCOL.me,.9));m.renderOrder=3;ZMK.pre.add(m);return m});scene.add(ZMK.pre)}
+  const q=zoneRect(gg.x,gg.z,gg.r),mat=zmMat(gg.ok?ZCOL.me:ZCOL.bad,.9);ZMK.pre.visible=true;
+  zoneCorners(q).forEach(([x,z],i)=>{const m=ZMK.pre.userData.pegs[i];m.material=mat;m.position.set(x,zcY(x,z,q.r,i),z);m.rotation.y=q.r+ZC_ROT[i]})}
  else if(ZMK.pre)ZMK.pre.visible=false}
 {const _u=updNoBuild;updNoBuild=function(){_u();zoneEdgesUpd()}}
 /* 텐트를 치면 구역 안내 */
-{const _p=placeBuild;placeBuild=function(){const t=bmode,n=structs.length;_p();if(isZoneT(t)&&structs.length>n){const s=structs[structs.length-1];if(s&&s.t===t&&s.own)toast(`🏕 텐트를 쳤어요! 둘레 ${+(ZONE.hw*2).toFixed(1)}×${+(ZONE.back+ZONE.front).toFixed(1)}m가 내 구역이에요 (네 모서리 말뚝)`)}}}
+{const _p=placeBuild;placeBuild=function(){const t=bmode,n=structs.length;_p();if(isZoneT(t)&&structs.length>n){const s=structs[structs.length-1];if(s&&s.t===t&&s.own)toast(`🏕 텐트를 쳤어요! 둘레 ${+(ZONE.hw*2).toFixed(1)}×${+(ZONE.back+ZONE.front).toFixed(1)}m가 내 구역이에요 (네 모서리 표시)`)}}}
+/* ===== 41차(기획자 11-20 20:10: '브롤스타즈처럼 조이스틱 두 개, 오른쪽은 에임 조절한 상태에서 쏠 수 있게. 도끼·전기톱 같은 근접 무기는 조이스틱을 끝까지 땡기면 계속 작동,
+   원거리 무기는 전부 조준한 상태에서 떼야 나가게, 낚싯대는 그냥 클릭, 다른 데를 아무리 눌러도 상호작용이 되면 안 돼, 평소에는 조준 못 하게, 상호작용은 오른쪽 조이스틱 가운데 클릭 한 번') =====
+   ① 왼쪽 조이스틱 = 걷기(그대로). 오른쪽 아래 = 쓰기 조이스틱(#rjoy, 고정). 그 둘 말고 화면을 눌러도 아무 일도 없어요(설치 모드의 누른 곳 설치·크리에이티브·두 손가락 확대만 그대로).
+   ② 오른쪽 가운데를 톡 = 가까운 대상과 상호작용(설치 모드면 설치). 맨손·도구·음식 등을 들었을 땐 조준이 없어요(끌어도 손잡이가 안 움직여요). 맨손 톡에 대상이 없고 적이 가까우면 주먹 한 번.
+   ③ 총·석궁·수류탄: 끌면 땅에 조준 표시 → 떼면 그쪽으로 한 번(수류탄은 끈 길이만큼 3~14m). 가운데(28% 안)로 돌아와서 떼면 취소. 톡만 하면 상호작용만(쏘지 않아요).
+   ④ 손도끼·전기톱: 끌면 휘두를 쪽 표시, 끝까지(90%) 당기고 있는 동안 계속 휘둘러요(앞에 적이 없으면 앞의 나무·바위를 베요). 톡 = 상호작용(적이 가까우면 한 번 휘두름).
+   ⑤ 낚싯대: 누르기 = 던지기·챔질, 누르고 있으면 감기(예전 큰 버튼과 같음), 조준 없음. 배 앞이면 톡 = 배 타기. */
+const RJ={id:null,ox:0,oy:0,md:null,mv:0,k:0,aim:0,full:0,mf:0,ax:0,az:1,q:null,rel:0,ic:'',hintT:0};
+const RJ_DZ=.28,RJ_FULL=.9;
+function rjEl(){let j=$('rjoy');if(!j){j=document.createElement('div');j.id='rjoy';j.innerHTML='<i><b></b></i>';$('joy').parentNode.appendChild(j)}return j}
+{const css=document.createElement('style');css.textContent=
+ '#rjoy{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(251,244,230,.12),rgba(251,244,230,.32));border:3px solid rgba(251,244,230,.85);pointer-events:none;transition:right .18s,bottom .18s,border-color .15s}'+
+ '#rjoy i{position:absolute;left:43px;top:43px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#FFFDF8,#EAD8B6);box-shadow:0 4px 0 #CDB085,0 8px 14px rgba(40,24,12,.3);display:flex;align-items:center;justify-content:center}'+
+ '#rjoy b{font-size:29px;line-height:1;font-style:normal}#rjoy.dim b{opacity:.38}#rjoy.w{border-color:rgba(224,83,63,.9)}#rjoy.full i{background:radial-gradient(circle at 38% 30%,#FFE9C9,#F2A65A)}#rjoy.on i{filter:brightness(.94)}'+
+ '#ui #bBag{right:74px;bottom:196px}#ui.port #bBag{right:62px;bottom:224px}';   /* 가방 버튼은 오른쪽 조이스틱 위로 */
+ document.head.appendChild(css)}
+function rjC(){const r=rjEl().getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2,r.width/2]}
+function rjMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(w.rod)return fishing||!(target&&target.lab)?'rod':'act';if(w.ammo||w.nade)return'aim';if(w.melee&&id!=='fist')return'melee';return'tap'}
+function rjKnob(dx,dy){const i=rjEl().firstChild;i.style.transform=dx||dy?`translate(${dx/UIS}px,${dy/UIS}px)`:''}
+function rjDown(e){if(RJ.id!==null||P.dead)return false;const[cx,cy,r]=rjC();if(Math.hypot(e.clientX-cx,e.clientY-cy)>r*1.3)return false;
+ Object.assign(RJ,{id:e.pointerId,ox:e.clientX,oy:e.clientY,md:rjMode(),mv:0,k:0,aim:0,full:0});   /* 누른 자리에서부터 끌어요(가장자리를 눌러도 바로 조준되지 않게) */
+ if(RJ.md==='rod'){inp.fire=true;inp.aiming=false}rjEl().classList.add('on');return true}
+function rjMove(e){if(e.pointerId!==RJ.id)return;let dx=e.clientX-RJ.ox,dy=e.clientY-RJ.oy;const l=Math.hypot(dx,dy),M=44*UIS;RJ.mv=Math.max(RJ.mv,l);
+ if(RJ.md!=='aim'&&RJ.md!=='melee')return;   /* 평소(맨손·도구·낚싯대·설치)에는 조준이 없어요 */
+ RJ.k=Math.min(1,l/M);if(RJ.k>=RJ_DZ){RJ.aim=1;RJ.ax=dx/(l||1);RJ.az=dy/(l||1)}else RJ.aim=0;if(l>M){dx*=M/l;dy*=M/l}RJ.full=RJ.md==='melee'&&RJ.k>=RJ_FULL;rjEl().classList.toggle('full',!!RJ.full);rjKnob(dx,dy)}
+function rjHint(t){const n=performance.now();if(n<RJ.hintT)return;RJ.hintT=n+6000;toast(t)}
+function rjUp(e){if(e.pointerId!==RJ.id)return;const up=e.type==='pointerup',md=RJ.md,tap=up&&RJ.mv<=14*UIS+6,aimed=RJ.aim,full=RJ.full,w=WEAP[curId()]||{};
+ RJ.id=null;RJ.aim=0;RJ.full=0;rjKnob(0,0);rjEl().classList.remove('on','full');
+ if(md==='rod'){inp.fire=false;return}
+ if(full)return;   /* 계속 휘두르기는 손을 떼면 멈춰요(아래 updPlayer 감싸기) */
+ if(md==='aim'&&aimed){if(up)RJ.q={ax:RJ.ax,az:RJ.az,nade:!!w.nade,d:3+11*clamp((RJ.k-RJ_DZ)/(1-RJ_DZ),0,1),t:performance.now()+800};return}   /* 조준한 채로 떼면 한 번(쏠 준비가 덜 됐으면 0.8초까지 기다렸다 쏴요) */
+ if(!tap)return;   /* 끌다가 가운데로 돌아와 뗐으면 취소 */
+ if(md==='build'){if(bmode)placeBuild();return}
+ if(target&&target.lab){inp.act=true;inp.actEdge=true;RJ.rel=1;return}   /* 가운데 톡 = 상호작용 */
+ if((md==='tap'&&curId()==='fist'||md==='melee')&&nearestEnemy(P.x,P.z,4)){RJ.q={hit:1,t:performance.now()+500};return}   /* 대상이 없고 적이 가까우면 한 번 치기 */
+ if(md==='aim')rjHint(w.nade?'끌어서 던질 곳을 정하고 떼면 던져요':'끌어서 조준하고 떼면 쏴요');else if(md==='melee')rjHint('끝까지 당기고 있으면 계속 휘둘러요')}
+function rjCancel(){if(RJ.id!==null&&(RJ.md==='rod'||RJ.mf)){inp.fire=false;inp.aiming=false}RJ.id=null;RJ.aim=RJ.full=RJ.mf=0;RJ.q=null;rjKnob(0,0);rjEl().classList.remove('on','full')}
+{const _o=openPanel;openPanel=function(k){if(k!=='bag')rjCancel();return _o(k)}}
+/* 놓는 자리: 왼쪽 조이스틱과 마주 보게. 가방을 옆에 열면 가방 옆(가로)·위(세로)로 비켜요 */
+function rjFix(){const j=rjEl(),port=VW<=VH,side=sidePanel()&&mode==='play';let r=port?22:34,b=port?58:30;
+ if(side){if(port)b=Math.round(clamp(VH*.5,300,560))+24;else r=Math.round(clamp(VW*.48,360,540))+12+22}Object.assign(j.style,{right:r+'px',bottom:b+'px'})}
+{const _l=layoutPanel;layoutPanel=function(){_l();rjFix()}}
+{const _c=closePanel;closePanel=function(){_c();rjFix()}}
+{const _r=resize;resize=function(){_r();rjFix()}}
+rjFix();
+/* 손잡이 그림: 지금 누르면 무엇을 하는지 */
+function rjIcon(){const j=rjEl(),md=RJ.id!==null?RJ.md:rjMode(),id=curId(),w=WEAP[id]||{};let ic='✋',dim=0;
+ if(md==='build')ic='🔨';else if(md==='act')ic='✋';else if(md==='rod')ic='🎣';else if(RJ.id===null&&target&&target.lab)ic='✋';else if(md==='aim')ic=w.nade?'💣':'🎯';else if(md==='melee')ic=id==='chainsaw'?'🪚':'🪓';else dim=1;
+ const k=ic+dim+(md==='aim'||md==='melee');if(k===RJ.ic)return;RJ.ic=k;j.firstChild.firstChild.textContent=ic;j.classList.toggle('dim',!!dim);j.classList.toggle('w',md==='aim'||md==='melee')}
+/* 계속 휘두를 때 앞의 나무·바위(덤불 열매 따기는 톡으로) */
+function rjObj(ax,az){const cx=(P.x/CELL)|0,cz=(P.z/CELL)|0;let best=null,bd=1e9;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const key=(cz+j)*CN+cx+i,o=objs.get(key);if(!o||o.re>0)continue;const T=OBJT[o.t];if(T.berry)continue;
+ const dx=o.x-P.x,dz=o.z-P.z,d=Math.hypot(dx,dz),gap=d-T.r;if(gap>TREACH+.5||(dx*ax+dz*az)/(d||1)<.35)continue;if(gap<bd){bd=gap;best={k:'o',o,key,x:o.x,z:o.z,lab:T.lab,rr:T.r+.7}}}return best}
+{const _a=attack;attack=function(){const id=curId(),w=WEAP[id]||{};
+ if(RJ.mf&&w.melee&&id!=='fist'&&P.cd<=0){const ax=P.adx,az=P.adz;let en=0;for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<w.range+(e.big?.5:0)+.4&&(dx*ax+dz*az)/(d||1)>.3){en=1;break}}
+  if(!en){const o=rjObj(ax,az);if(o){const t0=target;target=o;try{interact()}finally{target=t0}return}}}
+ return _a()}}
+/* 땅 위 조준 표시: 총 = 사거리만큼 띠(산탄총은 퍼지는 부채), 수류탄 = 떨어질 자리 원, 근접 = 앞 부채 */
+const RJV={m:null,ring:null,N:24,col:-1};
+function rjVisInit(){if(RJV.m)return;const N=RJV.N,g=new THREE.BufferGeometry(),idx=[];for(let i=0;i<N;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}
+ g.setAttribute('position',new THREE.BufferAttribute(new Float32Array((N+1)*6),3));g.setIndex(idx);
+ const mat=new THREE.MeshBasicMaterial({transparent:true,opacity:.5,depthWrite:false,fog:false,side:THREE.DoubleSide});RJV.mat=mat;
+ RJV.m=new THREE.Mesh(g,mat);RJV.m.frustumCulled=false;RJV.m.renderOrder=6;scene.add(RJV.m);
+ const rg=new THREE.RingGeometry(.84,1,40);rg.rotateX(-Math.PI/2);RJV.ring=new THREE.Mesh(rg,mat);RJV.ring.frustumCulled=false;RJV.ring.renderOrder=6;scene.add(RJV.ring)}
+function rjVis(){const on=RJ.id!==null&&RJ.aim&&(RJ.md==='aim'||RJ.md==='melee')&&!bmode&&mode==='play'&&!P.dead;
+ if(!on){if(RJV.m)RJV.m.visible=RJV.ring.visible=false;return}rjVisInit();const id=curId(),w=WEAP[id]||{},ax=RJ.ax,az=RJ.az;let len,w0,w1,s0=.35,ring=0;
+ if(w.nade){len=3+11*clamp((RJ.k-RJ_DZ)/(1-RJ_DZ),0,1);w0=w1=.08;ring=5.5}
+ else if(w.melee){s0=.3;len=(w.range||2.3)+.5;w0=.3;w1=1.3}
+ else{len=w.range||12;w0=.18;w1=w.pel?Math.tan(w.spread||.15)*len+.25:.18+len*(w.spread||0)*.6}
+ const c=RJ.full?0xff9a3c:w.ammo&&invN(w.ammo)<=0?0xe0533f:0xfff1d6;if(c!==RJV.col){RJV.col=c;RJV.mat.color.setHex(c).convertSRGBToLinear()}
+ const pos=RJV.m.geometry.attributes.position,a=pos.array,N=RJV.N,px=-az,pz=ax;
+ for(let i=0;i<=N;i++){const t=i/N,cx=P.x+ax*(s0+(len-s0)*t),cz=P.z+az*(s0+(len-s0)*t),hw=w0+(w1-w0)*t;
+  for(let k=0;k<2;k++){const sg=k?-1:1,x=cx+px*hw*sg,z=cz+pz*hw*sg,o=(i*2+k)*3;a[o]=x;a[o+1]=Math.max(groundY(x,z),0)+.07;a[o+2]=z}}
+ pos.needsUpdate=true;RJV.m.visible=true;
+ if(ring){const gx=P.x+ax*len,gz=P.z+az*len;RJV.ring.position.set(gx,Math.max(groundY(gx,gz),0)+.08,gz);RJV.ring.scale.setScalar(ring);RJV.ring.visible=true}else RJV.ring.visible=false}
+/* 매 장면: 낚싯대 누르는 중·계속 휘두르기·떼서 쏘기 대기열 */
+{const _u=updPlayer;updPlayer=function(dt){let shot=0;const now=performance.now();if(RJ.q&&now>RJ.q.t)RJ.q=null;
+ if(RJ.id!==null&&RJ.md==='rod')inp.fire=true;
+ const hold=RJ.id!==null&&RJ.md==='melee'&&RJ.full;if(hold){inp.fire=true;inp.aiming=true;inp.ax=RJ.ax;inp.az=RJ.az;RJ.mf=1}else if(RJ.mf){RJ.mf=0;inp.fire=false;inp.aiming=false}
+ if(RJ.q&&P.cd<=0&&!bmode&&!hold){const q=RJ.q;RJ.q=null;shot=1;inp.fire=true;if(q.hit)inp.aiming=false;else{inp.aiming=true;inp.ax=q.ax;inp.az=q.az;if(q.nade)ACT.g=[P.x+q.ax*q.d,P.z+q.az*q.d]}}
+ _u(dt);if(shot){inp.fire=false;inp.aiming=false}if(RJ.rel){RJ.rel=0;inp.act=false}rjVis();rjIcon()}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
