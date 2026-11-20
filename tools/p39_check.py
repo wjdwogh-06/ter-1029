@@ -1,4 +1,4 @@
-# 39차 검사: 텐트 내 구역 — 15×16m(앞이 더 김) · 네 모서리 말뚝 · 설치 모드 테두리 · 구역끼리 겹침 금지 · 남의 집 구역 설치·철거 금지 · 남의 텐트 구역은 설치·철거 가능 · 집으로 올려도 그대로
+# 39·40차 검사: 텐트 내 구역 — 40차부터 12.6m 정사각형(텐트의 약 9배, 앞이 더 김) · 네 모서리 말뚝 · 설치 모드 테두리 · 구역끼리 겹침 금지 · 남의 집 구역 설치·철거 금지 · 남의 텐트 구역은 설치·철거 가능 · 집으로 올려도 그대로
 # 기대: 각 줄 ok true, ALL True, errs []
 import os, json
 async def steps(pg):
@@ -10,12 +10,12 @@ async def steps(pg):
       for(let k=0;k<2400&&!(g&&g.ok&&clear(g.x,g.z));k++){P.x=VIL.x-70+(k%40)*3.1;P.z=VIL.z+20+((k/40)|0)*3.3;P.rot=0;g=ghostPos()}placeBuild();const toast=document.getElementById('toast').textContent;setBuild(null);
       const t=structs.find(s=>s.t==='ptent'&&s.own);window._zt=t;const q=zoneRect(t.x,t.z,t.r),cs=zoneCorners(q),pegs=t.zg?t.zg.children.map(m=>[+(m.position.x-t.x).toFixed(2),+(m.position.z-t.z).toFixed(2)]):[];
       return JSON.stringify({tent:!!t,toast,pegs,w:+(cs[1][0]-cs[0][0]).toFixed(2),back:+(t.z-cs[0][1]).toFixed(2),front:+(cs[2][1]-t.z).toFixed(2),inScene:!!(t.zg&&t.zg.parent)})}""")
-    Q=json.loads(r);Q['ok']=Q['tent'] and len(Q['pegs'])==4 and Q['w']==15 and Q['back']==5 and Q['front']==11 and Q['front']>Q['back'] and Q['inScene'] and '구역' in Q['toast'];res['place']=Q
+    Q=json.loads(r);Q['ok']=Q['tent'] and len(Q['pegs'])==4 and Q['w']==12.6 and Q['back']==4.2 and Q['front']==8.4 and Q['w']==round(Q['back']+Q['front'],2) and Q['front']>Q['back'] and Q['inScene'] and '구역' in Q['toast'];res['place']=Q
     await ev("()=>{P.x=_zt.x+3;P.z=_zt.z+14;P.rot=Math.PI;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await pg.wait_for_timeout(900);await pg.screenshot(path=O('p39_pegs.jpg'),type='jpeg',quality=88)
     # 2. 구역끼리 겹침: 내 구역 / 옆으로 15.5m·앞으로 16.5m면 됨
     r=await ev("""()=>{const t=_zt,R0=Math.max(BUILDS.ptent.bx,BUILDS.ptent.bz),w=(dx,dz)=>zoneWhy('ptent',t.x+dx,t.z+dz,0,R0);
-      return JSON.stringify({side14:w(14,0),side155:w(15.5,0),front15:w(0,15),front165:w(0,16.5),back15:w(0,-15),back165:w(0,-16.5),fenceIn:zoneWhy('fence',t.x+2,t.z+5,0,1)})}""")
-    Q=json.loads(r);Q['ok']=Q['side14'].startswith('내 구역과') and Q['side155']=='' and Q['front15'].startswith('내 구역과') and Q['front165']=='' and Q['back15'].startswith('내 구역과') and Q['back165']=='' and Q['fenceIn']=='';res['overlap']=Q
+      const W=ZONE.hw*2,D=ZONE.back+ZONE.front;return JSON.stringify({sideIn:w(W-.5,0),sideOut:w(W+.3,0),frontIn:w(0,D-.5),frontOut:w(0,D+.3),backIn:w(0,-(D-.5)),backOut:w(0,-(D+.3)),fenceIn:zoneWhy('fence',t.x+2,t.z+4,0,1)})}""")
+    Q=json.loads(r);Q['ok']=Q['sideIn'].startswith('내 구역과') and Q['sideOut']=='' and Q['frontIn'].startswith('내 구역과') and Q['frontOut']=='' and Q['backIn'].startswith('내 구역과') and Q['backOut']=='' and Q['fenceIn']=='';res['overlap']=Q
     # 3. 남의 텐트·집(멀티 흉내: own 0, by 이름): 텐트 구역엔 설치 가능·텐트 겹침 금지, 집 구역엔 설치 금지 / 철거 규칙
     r=await ev("""()=>{const t=_zt,A=addStruct({t:'ptent',x:t.x+40,z:t.z,r:0,own:0,by:'남A'}),H=addStruct({t:'phouse',x:t.x+80,z:t.z,r:0,own:0,by:'남B'});
       const fA=addStruct({t:'fence',x:A.x+3,z:A.z+6,r:0,own:0,by:'남A'}),fH=addStruct({t:'fence',x:H.x+3,z:H.z+6,r:0,own:0,by:'남B'}),fO=addStruct({t:'fence',x:t.x+60,z:t.z+30,r:0,own:0,by:'남C'}),mine=addStruct({t:'fence',x:H.x-3,z:H.z+6,r:0,own:1});

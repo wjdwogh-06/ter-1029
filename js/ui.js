@@ -627,6 +627,6 @@ function zoneEdgesUpd(){const on=!!bmode&&bmode!=='demo'&&!INT.on&&mode==='play'
  else if(ZMK.pre)ZMK.pre.visible=false}
 {const _u=updNoBuild;updNoBuild=function(){_u();zoneEdgesUpd()}}
 /* 텐트를 치면 구역 안내 */
-{const _p=placeBuild;placeBuild=function(){const t=bmode,n=structs.length;_p();if(isZoneT(t)&&structs.length>n){const s=structs[structs.length-1];if(s&&s.t===t&&s.own)toast(`🏕 텐트를 쳤어요! 둘레 ${ZONE.hw*2}×${ZONE.back+ZONE.front}m가 내 구역이에요 (네 모서리 말뚝)`)}}}
+{const _p=placeBuild;placeBuild=function(){const t=bmode,n=structs.length;_p();if(isZoneT(t)&&structs.length>n){const s=structs[structs.length-1];if(s&&s.t===t&&s.own)toast(`🏕 텐트를 쳤어요! 둘레 ${+(ZONE.hw*2).toFixed(1)}×${+(ZONE.back+ZONE.front).toFixed(1)}m가 내 구역이에요 (네 모서리 말뚝)`)}}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};

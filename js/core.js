@@ -212,7 +212,7 @@ Object.assign(BUILDS,{
    설치할 때 내 구역이 표시되게, 내 구역에는 다른 텐트가 설치되면 안 되고, 직사각형 모서리 끝에 못으로 꼭짓점 박은 것처럼 표시,
    집으로 업그레이드해도 구역 크기는 그대로. 텐트일 때는 남도 내 구역에 물건을 설치하거나 없앨 수 있고, 집이면 남이 설치·철거 못 해')
    구역 = 텐트·집(ptent·phouse) 가운데 기준 직사각형. 텐트를 돌리면 같이 돌아요(지금 텐트는 fixR이라 늘 정면 +z). 숫자만 고치면 크기가 바뀌어요(임시). */
-const ZONE={hw:7.5,back:5,front:11};   /* 폭 15m(가운데에서 옆으로 7.5m씩), 뒤로 5m, 앞(+z)으로 11m → 15×16m = 텐트 깔개(4.1×4.2m)의 약 14배 */
+const ZONE={hw:6.3,back:4.2,front:8.4};   /* 40차(기획자 11-20: '텐트보다 아홉 배 큰 정도, 딱 정사각형'): 12.6×12.6m 정사각형 = 텐트 한 변(4.2m)의 3배 → 깔개(4.1×4.2m)의 약 9배. 텐트는 뒤에서 4.2m, 앞은 8.4m(앞이 더 길게). 39차엔 15×16m */
 const isZoneT=t=>t==='ptent'||t==='phouse';
 const zoneRect=(x,z,r)=>({x,z,r:r||0,hw:ZONE.hw,b:ZONE.back,f:ZONE.front});
 function zoneIn(q,x,z,m){m=m||0;const dx=x-q.x,dz=z-q.z,c=Math.cos(q.r),sn=Math.sin(q.r),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<=q.hw+m&&lz>=-q.b-m&&lz<=q.f+m}
