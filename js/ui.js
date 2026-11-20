@@ -583,7 +583,7 @@ function dexHtml(){const d=BAGT.d;return `<div style="display:flex;gap:5px;flex-
 function bagFit(){const B=$('pbody'),g=B.querySelector('.grid');if(!g)return;const cs=getComputedStyle(B),pv=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),ph=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight),n=g.children.length,rows=Math.ceil(n/5),gap=7;
  let extra=0;for(const x of B.children)if(x!==g)extra+=x.offsetHeight;const sz=Math.max(34,Math.floor(Math.min((B.clientWidth-ph-4*gap)/5,(B.clientHeight-pv-extra-(rows-1)*gap-2)/rows,90)));
  g.style.gridTemplateColumns=`repeat(5,${sz}px)`;g.style.justifyContent='center';for(const c of g.children){c.style.width=sz+'px';c.style.height=sz+'px';c.style.aspectRatio=''}}
-{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='bag')return;const B=$('pbody');
+{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='bag'){$('pbody').style.overflowY='';return}const B=$('pbody');
   $('ptabs').innerHTML=`<div class="tab ${BAGT.t==='inv'?'on':''}" data-a="btab" data-k="inv">🎒 인벤토리 ${bagList().length}/${BAG_N}</div><div class="tab ${BAGT.t==='dex'?'on':''}" data-a="btab" data-k="dex">📖 도감</div>`;
   if(BAGT.t==='dex'){B.innerHTML=dexHtml();B.style.overflowY='auto';return}
   const g=B.querySelector('.grid');for(const x of [...B.children])if(x!==g&&!(x.textContent||'').includes('넘쳤어요'))x.remove();B.style.overflowY='hidden';bagFit()}}
@@ -705,21 +705,19 @@ const RJCAM={x:0,z:0};
  if(RJ.id!==null&&RJ.aim&&!RJ.mf&&!shot&&(RJ.md==='aim'||RJ.md==='melee')&&!P.dead&&P.a){P.rot=turn(r0,Math.atan2(RJ.ax,RJ.az),dt*16);P.a.root.rotation.y=P.rot}   /* 42차: 조준하는 동안 캐릭터가 조준한 쪽을 봐요(걸어도) */
  rjVis();rjIcon()}}
 /* ===== 43차(기획자 11-20 22:02: '무기나 장착류 할 때마다 조이스틱이 없어지는데') =====
+   ※ 45차: 아래 좁은 가방 창은 없앴어요(기획자: 원래 크기·자리로). 조이스틱은 제자리·보이지만 창 뒤에 그려져요.
    가방을 열어도 조이스틱 둘은 제자리에 늘 보이고 쓸 수 있어요(숨기지도 옮기지도 않아요). 대신 가방 창이 조이스틱을 비켜서 놓여요:
    가로 화면 = 화면 가운데(캐릭터) 오른쪽 ~ 오른쪽 조이스틱 왼쪽 사이(위아래는 꽉), 세로 화면 = 예전 윗선 ~ 조이스틱 위 사이.
    그래서 가방을 연 채로 장착하자마자 오른쪽 조이스틱으로 바로 쏘고·휘두르고·낚시할 수 있어요. 🎒를 다시 누르면 닫혀요. */
-const STK={w:150,l:[34,30],p:[22,58],gap:14};
-joyFix=function(){const j=$('joy');if(!j)return;j.classList.remove('hide');const port=VW<=VH,q=port?STK.p:STK.l;Object.assign(j.style,{left:q[0]+'px',top:'',bottom:q[1]+'px',transition:'bottom .18s'})};
-rjFix=function(){const j=rjEl(),q=VW<=VH?STK.p:STK.l;Object.assign(j.style,{right:q[0]+'px',bottom:q[1]+'px',visibility:''})};   /* 함수 선언이 아니라 바꿔 끼우기(위에서 먼저 불리는 옛 것은 그대로) */
+/* ===== 45차(기획자 11-20 23:17: '인벤 크기가 작아졌고 위치도 변경됐다', '오른쪽 조이스틱이 상자 [모두 가져가기]랑 겹친다, 차라리 조이스틱을 상자보다 뒤로') =====
+   43차의 좁은 가방 창(bagRect·.nrw)을 없애고 가방 창을 원래 크기·자리로 되돌렸어요(가로 = 오른쪽에 붙은 넓은 창, 세로 = 아래 절반).
+   조이스틱 둘은 숨기지도 옮기지도 않고 제자리에 두되, 모든 창(가방·상자·상점…) 뒤에 그려져요 → 창이 덮은 곳에서는 창이 눌려요.
+   세로 화면 왼쪽 조이스틱은 원래(32차)처럼 가방 위로 올라가요(가방을 연 채 걷기 — joyFix는 원래 것 그대로). */
+rjFix=function(){const j=rjEl(),port=VW<=VH;Object.assign(j.style,{right:(port?22:34)+'px',bottom:(port?58:30)+'px',visibility:''})};   /* 함수 선언이 아니라 바꿔 끼우기 */
+{const j=rjEl(),sh=$('shade');if(sh&&j.nextSibling!==sh)sh.parentNode.insertBefore(j,sh)}   /* 오른쪽 조이스틱을 창 뒤로(왼쪽 #joy처럼 #shade·#panel보다 앞 순서) */
 joyFix();rjFix();
-function bagRect(){const port=VW<=VH;
- if(port){const bot=VH-STK.p[1]-STK.w-STK.gap;let top=VH-10-Math.round(clamp(VH*.5,300,560));if(bot-top<270)top=bot-270;return {left:10,top,width:VW-20,height:bot-top}}
- const right=VW-STK.l[0]-STK.w-STK.gap;let left=Math.round(VW*.5+12);if(right-left<320)left=right-320;if(right-left>540)left=right-540;return {left,top:12,width:right-left,height:VH-24}}
-{const _l=layoutPanel;layoutPanel=function(){_l();if(!(sidePanel()&&mode==='play'))return;const el=$('panel'),r=bagRect();
- Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',transform:'none'});
- el.classList.toggle('nrw',r.width<420);if(VW>VH)$('toast').style.left=Math.round(r.left/2)+'px';if(panel==='bag')bagFit()}}
-{const _c=closePanel;closePanel=function(){_c();$('panel').classList.remove('nrw')}}
-{const css=document.createElement('style');css.textContent='#panel.nrw #ptop{padding:6px 6px;gap:4px}#panel.nrw #ptabs{gap:4px!important}#panel.nrw #ptabs .tab{font-size:12.5px;padding:7px 8px}#panel.nrw #pcoin{font-size:13px}#panel.nrw #pcoin>span{gap:3px!important;margin-right:4px!important}#panel.nrw #pcoin img{width:22px!important;height:22px!important}#panel.nrw #pclose{width:30px;height:30px;flex:none}';document.head.appendChild(css)}   /* 좁은 가방 창(가로 화면): 위 줄을 작게 해서 ✕까지 창 안에 */
+{const _l=layoutPanel;layoutPanel=function(){_l();if(panel==='bag')bagFit()}}   /* 화면 크기가 바뀌면 가방 칸 크기도 다시 */
+$('pclose').onclick=()=>closePanel();$('shade').onclick=()=>closePanel();   /* ✕·바깥 누르기도 감싼 closePanel을 거치게(예전엔 맨 처음 것만 불려서 ✕로 닫으면 스크롤 막힘·조이스틱 자리·제작 칸 돌려주기가 안 됐어요) */
 $('bBag').onclick=()=>panel==='bag'?closePanel():openPanel('bag');   /* 가방 버튼을 다시 누르면 닫기 */
 /* ===== 44차 ① 텐트·집 안 물건은 그 텐트 것(기획자 11-20 22:25: '텐트 설치하고 안에 제작대는 없는 거고 내가 직접 구하거나 사야 하는 거야, 있으면 안 돼') =====
    예전엔 모든 텐트가 방 하나를 같이 써서, 한 번 놓은 작업대가 새로 친 텐트에도 그대로 보였어요. 이제 안에 놓은 것(s.in)은 놓을 때 들어가 있던 텐트·집에 붙어요(s.hk = 그 집 자리 열쇠):

@@ -1,4 +1,4 @@
-# 41·42·43차 검사(43차: 가방을 열어도 조이스틱 둘 다 제자리·보임, 연 채로 장착하고 바로 쏘기; 42차: 사거리 표시 없음·조준하면 화면이 그쪽으로·캐릭터가 조준 쪽을 봄·가방 열어도 오른쪽 조이스틱 제자리): 쌍 조이스틱(왼쪽 걷기 · 오른쪽 조준·쓰기 · 가운데 톡 = 상호작용) · 조이스틱 말고 누르면 아무 일 없음 · 구역은 모서리 표시만
+# 41·42차 검사(가방 열었을 때 자리는 45차 p45_check; 42차: 사거리 표시 없음·조준하면 화면이 그쪽으로·캐릭터가 조준 쪽을 봄·가방 열어도 오른쪽 조이스틱 제자리): 쌍 조이스틱(왼쪽 걷기 · 오른쪽 조준·쓰기 · 가운데 톡 = 상호작용) · 조이스틱 말고 누르면 아무 일 없음 · 구역은 모서리 표시만
 # 진짜 터치(CDP). touchEnd에 적은 손가락이 떼져요. 기대: 각 줄 ok true, ALL True, errs []
 import os, json
 async def steps(pg):
@@ -111,28 +111,7 @@ async def steps(pg):
     await pg.screenshot(path=O('p41_zone.jpg'),type='jpeg',quality=88)
     R=json.loads(r);R['ok']=R['n']==4 and R['h']<.05 and R['len']<1 and R['op']<=.7 and R['transparent'] and R['edges']=='undefined' and R['zg']=='undefined';res['zoneCorners']=R
     await ev("()=>{removeStruct(_Z)}")
-    # 12. 43차: 가방을 열어도 조이스틱 둘은 제자리에 늘 보이고(가방 창이 비켜 놓임), 연 채로 장착 → 바로 쏘기, 🎒 다시 누르면 닫힘
-    out={}
-    ov=lambda a,b: not (a[4]+a[2]<=b[4]+1 or b[4]+b[2]<=a[4]+1 or a[5]+a[3]<=b[5]+1 or b[5]+b[3]<=a[5]+1)
-    for nm,(w,h) in [('land',(844,390)),('port',(390,844))]:
-        await pg.set_viewport_size({'width':w,'height':h});await pg.wait_for_timeout(700)
-        await ev("()=>{P.x=VIL.x+18;P.z=VIL.z+14;unstuck();give('pistol',1);give('ammoS',20);S.quick=S.quick.map(q=>q==='pistol'?null:q);S.quick[S.sel]=null;P.cd=0}")
-        r0=await rect('#rjoy');j0=await rect('#joy')
-        b0=await rect('#bBag');await pg.touchscreen.tap(b0[0],b0[1]);await pg.wait_for_timeout(600)
-        pn=await rect('#panel');r=await rect('#rjoy');j=await rect('#joy')
-        vis=await ev("()=>getComputedStyle(document.getElementById('rjoy')).visibility+'/'+getComputedStyle(document.getElementById('joy')).display")
-        cell=await rect('#pbody [data-a=sel][data-k=pistol]')
-        await pg.touchscreen.tap(cell[0],cell[1]);await pg.wait_for_timeout(500)   # 가방에서 권총 장착(가방은 열린 채)
-        held=await ev("()=>JSON.stringify({cur:curId(),panel})")
-        a0=await ev("()=>invN('ammoS')");m=await rdrag(50,-20,300);a1=await ev("()=>invN('ammoS')")
-        await pg.screenshot(path=O(f'p41_bag_{nm}.jpg'),type='jpeg',quality=85)
-        b1=await rect('#bBag');bagCovered=ov(b1,pn)
-        if not bagCovered: await pg.touchscreen.tap(b1[0],b1[1])
-        else: await ev("()=>closePanel()")
-        await pg.wait_for_timeout(400);after=await ev("()=>panel");r2=await rect('#rjoy');j2=await rect('#joy')
-        same=lambda a,b: abs(a[4]-b[4])<1 and abs(a[5]-b[5])<1
-        out[nm]={'same':same(r,r0) and same(j,j0) and same(r2,r0) and same(j2,j0),'vis':vis,'overR':ov(r,pn),'overJ':ov(j,pn),'cell':round(cell[2]),'held':json.loads(held),'shot':a0-a1,'aim':m['aim'],'toggle':after,'bagCovered':bagCovered}
-    R=out;R['ok']=all(v['same'] and v['vis']=='visible/block' and not v['overR'] and not v['overJ'] and v['cell']>=40 and v['held']['cur']=='pistol' and v['held']['panel']=='bag' and v['shot']==1 and v['aim'] and v['toggle'] is None for v in out.values());res['bagStay']=R
+    # 12. (43차 '가방이 조이스틱을 비켜 놓임'은 45차에 기획자 요청으로 되돌렸어요 → tools/p45_check.py)
     await pg.set_viewport_size({'width':844,'height':390})
     for k,v in res.items(): print(k,json.dumps(v,ensure_ascii=False))
     print('ALL',all(v['ok'] for v in res.values()))
