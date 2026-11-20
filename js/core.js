@@ -223,7 +223,7 @@ const nrgTx=v=>'에너지 +'+(Math.round(v/5)/2)+'칸';
 for(const T of [ITEMS,BUILDS])for(const k in T){const it=T[k];if(it.d)it.d=it.d.replace(/배고픔 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/구우면 \+(\d+)/g,(m,v)=>'구우면 '+nrgTx(+v)).replace(/체력 \+(\d+)/g,(m,v)=>nrgTx(+v)).replace(/체력/g,'에너지')}
 const GEN_PER=300,GEN_CAP=900;   /* 27차(기획자: '연료는 발전기 연료 넣을 때'): 연료 1통 = 5분, 최대 3통(임시) */
 Object.assign(WEAP,{chainsaw:{melee:1,dmg:18,cd:.4,range:2.4},crossbow:{dmg:30,cd:1.1,range:22,ammo:'arrow',spread:.01}});
-WEAP.grenade={nade:1,dmg:90,cd:.9,range:14,h1:1};ITEMS.grenade.d='손에 들고 화면을 누르면 누른 곳으로 던져요. 주변에 큰 피해';   /* 32차(기획자: '수류탄은 왜 장착하자마자 발사되냐'): 수류탄도 손에 드는 것 → 누를 때마다 하나씩 던져요(ui.js throwNadeAt) */
+WEAP.grenade={nade:1,dmg:90,cd:.9,range:14,h1:1};ITEMS.grenade.d='손에 들고 오른쪽 조이스틱을 끌었다 떼면 그쪽으로 던져요(끈 만큼 멀리). 주변에 큰 피해';   /* 32차(기획자: '수류탄은 왜 장착하자마자 발사되냐'): 수류탄도 손에 드는 것 → 누를 때마다 하나씩 던져요(ui.js throwNadeAt) */
 const ENEMY={bandit:{n:'약탈자',hp:42,sp:3.7,dmg:9,reach:1.9,w:'dagger',col:[.62,.2,.18],loot:[['cloth',1,.6],['berry',2,.3],['coin',60,1]]},
  gunner:{n:'소총수',hp:36,sp:3.2,dmg:10,range:14,w:'rifle',col:[.3,.34,.42],helmet:1,loot:[['ammoS',5,.7],['scrap',2,.6],['coin',90,1]]},
  rgolem:{n:'바위 골렘',hp:240,sp:2.1,dmg:26,reach:3.0,proc:'rg',big:1,blood:0x9aa1a8,loot:[['stone',8,1],['scrap',4,.7],['coin',300,1]]},

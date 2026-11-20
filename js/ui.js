@@ -372,7 +372,7 @@ function tentGone(s){if(INT.on&&INT.s===s)intOut();const hx=s.x,hz=s.z+sdef(s).b
 const BAGD={k:null,x:0,y:0,id:null,on:0,el:null,end:0};
 function bagTap(k){const it=ITEMS[k];if(!it||!invN(k))return;selItem=k;const ty=it.ty;
  if(ty==='kit'||ty==='food'||ty==='heal'||ty==='fish'){primary(k);hudDirty=true;return}
- if(ty==='gun'||ty==='tool'||ty==='throw'){if(curId()===k){S.quick[S.sel]=null;sfx(500,.05);toast('맨손이 됐어요')}else if(ty==='throw'){const j=S.quick.indexOf(k);if(j>=0&&j!==S.sel)S.quick[j]=null;S.quick[S.sel]=k;sfx(600,.05);toast(ITEMS[k].n+' 장착! 화면을 누르면 던져요')}else primary(k);hudDirty=true;return}   /* 32차: 수류탄도 손에 들기만(던지기는 화면을 눌러서) */
+ if(ty==='gun'||ty==='tool'||ty==='throw'){if(curId()===k){S.quick[S.sel]=null;sfx(500,.05);toast('맨손이 됐어요')}else if(ty==='throw'){const j=S.quick.indexOf(k);if(j>=0&&j!==S.sel)S.quick[j]=null;S.quick[S.sel]=k;sfx(600,.05);toast(ITEMS[k].n+' 장착! 오른쪽 조이스틱을 끌었다 떼면 던져요')}else primary(k);hudDirty=true;return}   /* 32차: 수류탄도 손에 들기만(던지기는 화면을 눌러서) */
  sfx(700,.03);hudDirty=true}
 function bagDrop(k){const n=invN(k);if(!n)return;if(INT.on){toast('밖에서 버려요');return}delete S.inv[k];for(let i=0;i<S.quick.length;i++)if(S.quick[i]===k)S.quick[i]=null;if(selItem===k)selItem=null;
  bagSack({[k]:n},1,1);sfx(300,.06,'square',.03);toast(`${ITEMS[k].n}${n>1?' ×'+n:''} 버렸어요`);hudDirty=true}
@@ -704,5 +704,22 @@ const RJCAM={x:0,z:0};
  _u(dt);if(shot){inp.fire=false;inp.aiming=false}if(RJ.rel){RJ.rel=0;inp.act=false}
  if(RJ.id!==null&&RJ.aim&&!RJ.mf&&!shot&&(RJ.md==='aim'||RJ.md==='melee')&&!P.dead&&P.a){P.rot=turn(r0,Math.atan2(RJ.ax,RJ.az),dt*16);P.a.root.rotation.y=P.rot}   /* 42차: 조준하는 동안 캐릭터가 조준한 쪽을 봐요(걸어도) */
  rjVis();rjIcon()}}
+/* ===== 43차(기획자 11-20 22:02: '무기나 장착류 할 때마다 조이스틱이 없어지는데') =====
+   가방을 열어도 조이스틱 둘은 제자리에 늘 보이고 쓸 수 있어요(숨기지도 옮기지도 않아요). 대신 가방 창이 조이스틱을 비켜서 놓여요:
+   가로 화면 = 화면 가운데(캐릭터) 오른쪽 ~ 오른쪽 조이스틱 왼쪽 사이(위아래는 꽉), 세로 화면 = 예전 윗선 ~ 조이스틱 위 사이.
+   그래서 가방을 연 채로 장착하자마자 오른쪽 조이스틱으로 바로 쏘고·휘두르고·낚시할 수 있어요. 🎒를 다시 누르면 닫혀요. */
+const STK={w:150,l:[34,30],p:[22,58],gap:14};
+joyFix=function(){const j=$('joy');if(!j)return;j.classList.remove('hide');const port=VW<=VH,q=port?STK.p:STK.l;Object.assign(j.style,{left:q[0]+'px',top:'',bottom:q[1]+'px',transition:'bottom .18s'})};
+rjFix=function(){const j=rjEl(),q=VW<=VH?STK.p:STK.l;Object.assign(j.style,{right:q[0]+'px',bottom:q[1]+'px',visibility:''})};   /* 함수 선언이 아니라 바꿔 끼우기(위에서 먼저 불리는 옛 것은 그대로) */
+joyFix();rjFix();
+function bagRect(){const port=VW<=VH;
+ if(port){const bot=VH-STK.p[1]-STK.w-STK.gap;let top=VH-10-Math.round(clamp(VH*.5,300,560));if(bot-top<270)top=bot-270;return {left:10,top,width:VW-20,height:bot-top}}
+ const right=VW-STK.l[0]-STK.w-STK.gap;let left=Math.round(VW*.5+12);if(right-left<320)left=right-320;if(right-left>540)left=right-540;return {left,top:12,width:right-left,height:VH-24}}
+{const _l=layoutPanel;layoutPanel=function(){_l();if(!(sidePanel()&&mode==='play'))return;const el=$('panel'),r=bagRect();
+ Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',transform:'none'});
+ el.classList.toggle('nrw',r.width<420);if(VW>VH)$('toast').style.left=Math.round(r.left/2)+'px';if(panel==='bag')bagFit()}}
+{const _c=closePanel;closePanel=function(){_c();$('panel').classList.remove('nrw')}}
+{const css=document.createElement('style');css.textContent='#panel.nrw #ptop{padding:6px 6px;gap:4px}#panel.nrw #ptabs{gap:4px!important}#panel.nrw #ptabs .tab{font-size:12.5px;padding:7px 8px}#panel.nrw #pcoin{font-size:13px}#panel.nrw #pcoin>span{gap:3px!important;margin-right:4px!important}#panel.nrw #pcoin img{width:22px!important;height:22px!important}#panel.nrw #pclose{width:30px;height:30px;flex:none}';document.head.appendChild(css)}   /* 좁은 가방 창(가로 화면): 위 줄을 작게 해서 ✕까지 창 안에 */
+$('bBag').onclick=()=>panel==='bag'?closePanel():openPanel('bag');   /* 가방 버튼을 다시 누르면 닫기 */
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
