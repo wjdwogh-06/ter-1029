@@ -12,6 +12,21 @@ devInit=async function(){
   panel.hidden=true;
   const angle=panel.querySelector('input'),status=panel.lastElementChild;
   const [apply,cancel,whole]=panel.querySelectorAll('button');
+  const history=[];
+  const undo=document.createElement('button');
+  undo.textContent='↶ 되돌리기';undo.disabled=true;
+  function options(label,values,initial,suffix){
+    const wrap=document.createElement('label'), select=document.createElement('select');
+    wrap.append(label,select);panel.append(wrap);
+    for(const n of values)select.add(new Option(n?n+suffix:'자유',String(n)));
+    let stored;try{stored=localStorage.getItem('layout-setting-'+label)}catch{}
+    select.value=String(stored!==null && stored!==undefined && values.includes(+stored)?+stored:initial);
+    select.addEventListener('change',()=>{try{localStorage.setItem('layout-setting-'+label,select.value)}catch{}});
+    return select;
+  }
+  const spacing=options('이동 간격',[0,.1,.25,.5,1,2.5,5],.5,'m');
+  const turnStep=options('회전 간격',[1,5,15,45,90],15,'°');
+  panel.append(undo);
   function record(m,name,opts={}){
     if(!m)return;
     const {x,y,z}=m.position,r=m.rotation.y;
@@ -103,30 +118,67 @@ devInit=async function(){
   };
   let gesture=null,frame=0;
   const rotation=angle.parentElement;
-  angle.oninput=()=>rotation.querySelector("output").textContent=angle.value+"°";
+  const turnButtons=[];
+  for(const [label,sign] of [['↶ 왼쪽',-1],['오른쪽 ↷',1]]){
+    const b=document.createElement('button');b.textContent=label;
+    rotation.after(b);turnButtons.push(b);
+    b.onclick=()=>{angle.value=(+angle.value+sign*(+turnStep.value)+360)%360;angle.oninput()};
+  }
+  function pivot(){return group.find(q=>q.e===selected)}
+  function resetModels(){
+    for(const q of group){q.e.m.position.x=q.x;q.e.m.position.z=q.z;q.e.m.rotation.y=q.r}
+  }
+  function showAngle(){rotation.querySelector('output').textContent=angle.value+'°'}
+  angle.step=turnStep.value;
+  turnStep.onchange=()=>{angle.step=turnStep.value;if(selected)angle.oninput()};
+  angle.oninput=()=>{
+    if(!selected)return;
+    const step=+turnStep.value;angle.value=Math.round(+angle.value/step)*step;showAngle();
+    const p=pivot(),dr=(+angle.value)*Math.PI/180-p.r,c=Math.cos(dr),sn=Math.sin(dr);
+    for(const q of group){
+      const dx=q.x-p.x,dz=q.z-p.z;
+      q.e.m.position.x=p.x+dx*c+dz*sn;q.e.m.position.z=p.z-dx*sn+dz*c;q.e.m.rotation.y=q.r+dr;
+    }
+  };
   function select(e,all=false){
-    selected=e;
+    resetModels();selected=e;
     group=(all?entries.filter(q=>q.p===e.p):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
     angle.value=Math.round((e.m.rotation.y*180/Math.PI%360+360)%360);
-    angle.oninput();rotation.hidden=apply.hidden=cancel.hidden=false;
+    showAngle();turnButtons.forEach(b=>b.hidden=false);rotation.hidden=apply.hidden=cancel.hidden=false;
     status.textContent=e.name+' 선택';whole.disabled=!e.p;
   }
   let dest;
-  function clear(){rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
-  function close(){abortDrag();clear();active=false;panel.hidden=true;button.textContent='구조물 배치'}
+  function clear(){turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
+  function close(){abortDrag();resetModels();clear();active=false;panel.hidden=true;button.textContent='구조물 배치'}
   button.onclick=()=>{if(active)return close();if(!DEV.on)return;structs.forEach(registerStruct);clear();active=true;panel.hidden=false;button.textContent='배치 종료'};
-  cancel.onclick=clear;
+  cancel.onclick=()=>{resetModels();clear()};
   whole.onclick=()=>{if(selected?.p){dest=null;select(entries.find(q=>q.anchor===selected.p),true);status.textContent="항구 시설을 꾹 눌러 함께 이동"}};
   apply.onclick=()=>commit(+angle.value*Math.PI/180);
   function commit(radians){
     if(!active||!DEV.on||!selected||!Number.isFinite(radians))return;
+    resetModels();
+    const before=group.map(q=>({...q,override:saved[q.e.id]}));
     const pos=selected.m.position,[x,z]=dest||[pos.x,pos.z],rot=radians-selected.m.rotation.y;
     const ox=pos.x,oz=pos.z,c=Math.cos(rot),sn=Math.sin(rot);
     for(const q of group){
       const a=q.x-ox,b=q.z-oz,v=[x+a*c+b*sn,z-a*sn+b*c,q.r+rot];
       move(q.e,...v);if(!q.e.s?.own)saved[q.e.id]=v;
     }
-    try{localStorage.setItem(key,JSON.stringify(saved));save();clear();toast('배치를 저장했어요')}catch{toast('이 기기에 배치를 저장하지 못했어요')}
+    history.push(before);if(history.length>100)history.shift();undo.disabled=false;
+    persist();
+  }
+  undo.onclick=()=>{
+    if(!active||!DEV.on||gesture||!history.length)return;
+    resetModels();clear();
+    for(const q of history.pop()){
+      if(q.e.s&&!structs.includes(q.e.s))continue;
+      move(q.e,q.x,q.z,q.r);
+      if(q.override===undefined)delete saved[q.e.id];else saved[q.e.id]=q.override;
+    }
+    undo.disabled=!history.length;persist('이전 배치로 되돌렸어요');
+  };
+  function persist(message='배치를 저장했어요'){
+    try{localStorage.setItem(key,JSON.stringify(saved));save();clear();toast(message)}catch{toast('이 기기에 배치를 저장하지 못했어요')}
   };
   function restore(){
     if(!gesture?.drag)return;
@@ -140,7 +192,8 @@ devInit=async function(){
     frame=0;
     const g=gesture;if(!g?.drag)return;
     const at=groundAt(g.mx,g.my);if(!at)return;
-    const dx=at[0]-g.origin[0],dz=at[1]-g.origin[1];
+    const step=+spacing.value,snap=v=>step?Math.round(v/step)*step:v;
+    const dx=snap(g.baseX+at[0]-g.origin[0])-g.baseX,dz=snap(g.baseZ+at[1]-g.origin[1])-g.baseZ;
     for(const q of group){q.e.m.position.x=q.x+dx;q.e.m.position.z=q.z+dz}
     dest=[g.baseX+dx,g.baseZ+dz];
   }
@@ -158,6 +211,7 @@ devInit=async function(){
       if(gesture!==g||!DEV.on||!active)return;
       g.origin=groundAt(g.x,g.y);if(!g.origin)return;
       if(!(selected?.anchor&&selected.p===hit.p))select(hit);
+      resetModels();turnButtons.forEach(b=>b.hidden=true);
       g.baseX=selected.m.position.x;g.baseZ=selected.m.position.z;
       g.drag=true;rotation.hidden=apply.hidden=cancel.hidden=true;
       status.textContent=selected.name+' 이동 중';
