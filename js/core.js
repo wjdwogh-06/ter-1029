@@ -318,3 +318,29 @@ ITEMS.rod.d='물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거�
 WEAP.rod.bite=[8,15];Object.assign(WEAP,{rod2:{rod:1,dmg:0,cd:1,range:0,h1:1,bite:[6,12]},rod3:{rod:1,dmg:0,cd:1,range:0,h1:1,bite:[4,8]}});
 const isRod=id=>!!(WEAP[id]&&WEAP[id].rod);
 const LH_GONE=[0,4],LH_CAVE=4;
+/* ===== 47차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-21 13:50: '전구·나무판·물병·빈병·건전지·철판·회로기판·레이저 부착물·손잡이 부착물·소음기는 이미지만,
+   버섯 뺀 모든 작물 씨앗 + 자라는 모양 3단계(씨앗·중간·다 자람), 자라는 데 전부 10분 고정, 인게임: 고급 곡괭이·전기 곡괭이·가로등(새로 하나 더)·고급 작업대·
+   그물망(물에 놓는 고기잡이 그물)·흰 울타리·철거 망치') =====
+   모양·아이콘은 look.js 47차, 움직임(심기·자라기·수확, 곡괭이, 철거 망치, 고급 작업대 창)은 새 파일 js/farm.js. 가격·피해·재료·설명은 모두 임시(기획자가 정하면 숫자만).
+   p가 있어서 모두 랜덤 자판기 목록에 저절로 들어가요. 설치물은 키트(가방에서 눌러 설치)로 놓아요. */
+Object.assign(ITEMS,{bulb:{n:'전구',ic:'lk_bulb',ty:'res',p:60,d:'불을 밝히는 전구. 제작 재료 (임시)'},plank:{n:'나무판',ic:'lk_plank',ty:'res',p:40,d:'반듯하게 다듬은 나무판. 제작 재료 (임시)'},
+ wbottle:{n:'물병',ic:'lk_wbottle',ty:'res',p:50,d:'깨끗한 물이 든 병. 마시기는 아직 (임시)'},ebottle:{n:'빈병',ic:'lk_ebottle',ty:'res',p:10,d:'비어 있는 유리병. 제작 재료 (임시)'},
+ aabatt:{n:'건전지',ic:'lk_aabatt',ty:'res',p:80,d:'작은 전기를 담은 건전지. 제작 재료 (임시)'},splate:{n:'철판',ic:'lk_splate',ty:'res',p:150,d:'두꺼운 쇠판. 제작 재료 (임시)'},
+ pcb:{n:'회로기판',ic:'lk_pcb',ty:'res',p:300,d:'칩이 붙은 초록 기판. 제작 재료 (임시)'},att_laser:{n:'레이저 부착물',ic:'lk_att_laser',ty:'res',p:800,d:'총에 다는 레이저. 다는 기능은 아직 (임시)'},
+ att_grip:{n:'손잡이 부착물',ic:'lk_att_grip',ty:'res',p:600,d:'총 아래에 다는 손잡이(그립). 다는 기능은 아직 (임시)'},att_supp:{n:'소음기',ic:'lk_att_supp',ty:'res',p:1000,d:'총소리를 줄여 줘요. 다는 기능은 아직 (임시)'},
+ pick_adv:{n:'고급 곡괭이',ic:'lk_pick_adv',hg:'lk_pick_adv',ty:'tool',p:1200,d:'바위를 맨손보다 3배 빨리 캐요. 근접 16 (임시)',one:1},
+ pick_elec:{n:'전기 곡괭이',ic:'lk_pick_elec',hg:'lk_pick_elec',ty:'tool',p:3000,d:'바위를 맨손보다 5배 빨리 캐요. 근접 20 (임시)',one:1},
+ dhammer:{n:'철거 망치',ic:'lk_dhammer',hg:'lk_dhammer',ty:'tool',p:500,d:'손에 들고 내 설치물에 바짝 붙어 누르면 철거해요(키트로 놓은 건 키트로, 아니면 재료 절반). 근접 12',one:1},
+ kit_lamp2:{n:'랜턴 가로등',ic:'lk_lamp2',ty:'kit',b:'lamp2',p:400,d:'걸이 화분이 달린 랜턴 가로등. 밤이 되면 저절로 켜져요'},
+ kit_bench2:{n:'고급 작업대',ic:'lk_bench2',ty:'kit',b:'bench2',p:2000,d:'텐트·집 안에 놓아요. 작업대처럼 제작·업그레이드를 해요(고급 제작법은 아직, 임시)'},
+ kit_fnet:{n:'고기잡이 그물',ic:'lk_fnet',ty:'kit',b:'fnet',p:700,d:'바닷가·강가 물 위에 쳐 둬요. 물고기 잡기는 아직 (임시)'},
+ kit_fwhite:{n:'흰 울타리',ic:'lk_fence_white',ty:'kit',b:'fence_white',p:60,d:'끝이 뾰족한 흰 말뚝 울타리(한 칸 2m)'}});
+Object.assign(WEAP,{pick_adv:{melee:1,dmg:16,cd:.55,range:2.3},pick_elec:{melee:1,dmg:20,cd:.42,range:2.4},dhammer:{melee:1,dmg:12,cd:.6,range:2.2}});
+Object.assign(BUILDS,{lamp2:{n:'랜턴 가로등',g:'lk_lamp2',s:1,bx:.3,bz:.3,hp:120,c:{scrap:6,wood:2},kit:'kit_lamp2',lamp:2.42,d:'밤이 되면 저절로 켜져요 (임시)'},
+ bench2:{n:'고급 작업대',g:'lk_bench2',s:1,bx:1.42,bz:.68,hp:200,c:{scrap:10,wood:12},kit:'kit_bench2',indoor:1,fixR:1,d:'작업대처럼 제작·업그레이드 (고급 제작법은 아직, 임시)'},
+ fnet:{n:'고기잡이 그물',g:'lk_fnet',s:1,bx:1.3,bz:.9,hp:80,c:{cloth:4,wood:4},kit:'kit_fnet',water:1,flat:1,d:'물 위에 쳐 두는 그물. 잡기는 아직 (임시)'},
+ fence_white:{n:'흰 울타리',g:'lk_fence_white',s:1,bx:1,bz:.2,hp:60,c:{wood:3},kit:'kit_fwhite',grid:1,d:'끝이 뾰족한 흰 말뚝 울타리 (임시)'}});
+const FARM={T:600,bat:w=>{const c=w.charCodeAt(w.length-1)-0xac00;return c>=0&&c<11172&&c%28>0},ids:['potato','wheat','strawberry','grape','avocado','poppy','flower_blue','flower_yellow','flower_black']};   /* 씨앗 → 다 자람 10분(실제 시간). 5분까지 씨앗, 그다음 중간, 10분에 다 자람 */
+for(const id of FARM.ids){const q=PLANTS.find(o=>o.id===id);if(!q)continue;
+ ITEMS['seed_'+id]={n:q.n+' 씨앗',ic:'lk_seed_'+id,ty:'kit',b:'crop_'+id,p:Math.max(10,Math.round(q.p*.5)),d:`땅에 심으면 ${FARM.T/60}분 뒤 ${q.n}${q.cat==='flower'?(FARM.bat(q.n)?'이':'가')+' 피어요':(FARM.bat(q.n)?'을':'를')+' 거둬요'}. 가방에서 눌러 심어요 (임시)`};
+ BUILDS['crop_'+id]={n:q.n+' 밭',g:'pc_'+id+'_0',s:1,bx:.45,bz:.45,pass:1,hp:30,c:{['seed_'+id]:1},kit:'seed_'+id,crop:id,d:`${q.n} 씨앗을 심어요. ${FARM.T/60}분 뒤 거둬요 (임시)`}}

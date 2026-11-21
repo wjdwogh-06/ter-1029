@@ -471,8 +471,8 @@ function lkBuildGeo(){const _before=Object.assign({},GEO);
    분류: build 설치형(산호) / tool 도구(하늘) / food 음식·회복(연두) / gun 무기·탄약(회청) / res 재료(베이지) / rare 고급(보라)
    ICON[아이템 id] 에 들어가요. 설치형 카탈로그(LKB)도 ICON['fence_iron'] 처럼 같은 id로 미리 만들어 둬요. */
 const LK_CAT={build:['#f9a08a','#ec735a'],tool:['#b6dbef','#86b9d8'],food:['#b7e6c4','#82cc9c'],gun:['#d3d8e0','#a9b3c0'],res:['#f8ebcd','#e6cf9f'],rare:['#cdb4f0','#a386dc']};
-const lkCatOf=id=>{const it=ITEMS[id];if(!it)return'build';const t=it.ty;if(/^gkit_/.test(id))return'gun';return t==='kit'?'build':(t==='tool')?'tool':(t==='food'||t==='heal'||t==='fish')?'food':(t==='gun'||t==='throw'||t==='ammo')?'gun':'res'};
-const lkRotOf=id=>{const it=ITEMS[id];return /^gkit_/.test(id)?[.42,-.5,0]:it.ty==='gun'?[.3,-1.0,.25]:/^c?f_hammer/.test(id)?[.85,-Math.PI/2+.5,0]:/^c?f_/.test(id)?[.32,-Math.PI/2+.32,0]:/^rod[23]?$/.test(id)?[0,-1.57,-.25]:(it.ty==='tool'||id==='grenade')?[.2,.3,-.6]:[.5,-.7,0]};
+const lkCatOf=id=>{const it=ITEMS[id];if(!it)return'build';const t=it.ty;if(/^gkit_|^att_/.test(id))return'gun';if(/^seed_/.test(id))return'food';return t==='kit'?'build':(t==='tool')?'tool':(t==='food'||t==='heal'||t==='fish')?'food':(t==='gun'||t==='throw'||t==='ammo')?'gun':'res'};
+const lkRotOf=id=>{const it=ITEMS[id];return /^gkit_/.test(id)?[.42,-.5,0]:/^seed_/.test(id)?[.28,-.42,0]:/^(pick_|dhammer)/.test(id)?[.15,.5,-.7]:it.ty==='gun'?[.3,-1.0,.25]:/^c?f_hammer/.test(id)?[.85,-Math.PI/2+.5,0]:/^c?f_/.test(id)?[.32,-Math.PI/2+.32,0]:/^rod[23]?$/.test(id)?[0,-1.57,-.25]:(it.ty==='tool'||id==='grenade')?[.2,.3,-.6]:[.5,-.7,0]};
 let LKR=null;
 function lkIconKit(){if(LKR)return LKR;const r=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});r.outputEncoding=THREE.sRGBEncoding;r.setPixelRatio(1);r.setSize(128,128);
  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0xb4bccb,1.0));const d=new THREE.DirectionalLight(0xfff6e6,1.0);d.position.set(2,4,3);sc.add(d);
@@ -1001,3 +1001,163 @@ function lkItems37(){const R=(w,h,d,c,b)=>lkRb(w,h,d,c===undefined?.02:c,b===und
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkItems37()}catch(e){console.error('look: 37차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
 if(typeof ITEMS!=='undefined'&&ITEMS.rod)ITEMS.rod.ic='lk_rod1_i';
 if(typeof buildWaterGeo==='function'){const _bw=buildWaterGeo;buildWaterGeo=function(){_bw();if(GEO.lk_rod1){GEO.rod=GEO.lk_rod1}}}
+
+/* ===== 47차(디자인): 새 아이템 그림 10종 · 씨앗 9종(봉투) + 심은 모양 3단계 · 곡괭이 2 · 철거 망치 · 랜턴 가로등 · 고급 작업대 · 고기잡이 그물 · 흰 울타리 =====
+   기획자 11-21 13:50. 모양 기준은 21차 ③(매끈하고 둥근 장난감 디오라마, 색 2~3가지 + 크림 테두리).
+   - 그림만(쓰는 곳은 아직): lk_bulb 전구, lk_plank 나무판, lk_wbottle 물병, lk_ebottle 빈병, lk_aabatt 건전지, lk_splate 철판, lk_pcb 회로기판,
+     lk_att_laser 레이저 부착물, lk_att_grip 손잡이(그립) 부착물, lk_att_supp 소음기
+   - 씨앗 봉투 lk_seed_<식물 id>(버섯 빼고 9종: 앞면에 그 식물 그림 pi_<id>를 작게 붙임) + 심은 모양 pc_<id>_0(씨앗)·_1(중간)·_2(다 자람 = pw_<id>를 흙 둔덕 위에)
+   - 손에 드는 것: lk_pick_adv 고급 곡괭이, lk_pick_elec 전기 곡괭이, lk_dhammer 철거 망치(손도끼 lkAxe와 같은 배치: 자루 y축, 머리는 x축)
+   - 설치: lk_lamp2 랜턴 가로등(등불이 앞 z .48, 높이 2.42), lk_bench2 고급 작업대, lk_fnet 고기잡이 그물(물 높이 y=0), lk_fence_white 흰 울타리(길이 2) */
+const LK47={W:0xd6965a,W2:0xc08550,W3:0xa9743f,CR:0xf7f0e3,RD:0xe0533f,TL:0x3aa6b0,ST:0xa7b0ba,ST2:0x8e99a6,SH:0xd3d9df,DK:0x3b424b,DK2:0x2b2f36,GO:0xe0b84a,
+ PC:{potato:0xc9a06a,wheat:0xe6c25a,strawberry:0xe0533f,grape:0x8b5cc9,avocado:0x5f9a3c,poppy:0xe8453c,flower_blue:0x4f7fe0,flower_yellow:0xffcf3a,flower_black:0x4a3352},
+ SEEDS:['potato','wheat','strawberry','grape','avocado','poppy','flower_blue','flower_yellow','flower_black']};
+function lkItems47(){const K=LK47,R=(w,h,d,c,b)=>lkRb(w,h,d,c===undefined?.03:c,b===undefined?.015:b),S=(r,a=12,b=8)=>new THREE.SphereGeometry(r,a,b),IC=(r,d=1)=>new THREE.IcosahedronGeometry(r,d),
+  TO=(r,t,a=6,b=14,arc)=>new THREE.TorusGeometry(r,t,a,b,arc),put=(k,p,sm=40)=>{const g=mg(p);lkSmooth(g,sm);GEO[k]=g;return g},
+  lathe=(pts,n=16)=>new THREE.LatheGeometry(pts.map(q=>new THREE.Vector2(q[0],q[1])),n);
+ /* ---------------- 그림만 10종 ---------------- */
+ /* 전구: 서양배 모양 유리 + 은빛 나사 꼭지 + 검은 절연 + 놋쇠 끝, 안에 주황 필라멘트가 비쳐 보이게(유리를 크림빛으로) */
+ {const p=[pt(lathe([[0,.2],[.06,.205],[.12,.235],[.165,.29],[.18,.36],[.165,.43],[.12,.48],[.06,.505],[0,.51]],18),0xfff3c4),pt(lathe([[0,.04],[.085,.06],[.09,.2],[.06,.205],[0,.205]],16),0xfff3c4)];
+  for(let k=0;k<4;k++)p.push(pt(TO(.088,.014,5,16),0xc9ced4,[0,.075+k*.03,0],[Math.PI/2,0,0]));p.push(pt(cyl(.088,.08,.12,16),0xb9c0c8,[0,.12,0]),pt(cyl(.06,.045,.04,12),K.DK2,[0,.03,0]),pt(cyl(.03,.03,.03,10),0xd9a441,[0,.0,0]));
+  p.push(pt(cyl(.006,.006,.12,4),0x9fa8b0,[-.03,.27,0]),pt(cyl(.006,.006,.12,4),0x9fa8b0,[.03,.27,0]),pt(TO(.03,.008,4,10,Math.PI),0xffa040,[0,.33,0],[0,0,0]));
+  put('lk_bulb',p)}
+ /* 나무판: 세 장을 엇갈려 쌓음(널마다 색 조금씩) + 끝 나뭇결 */
+ {const p=[];[[0,.035,0,0,K.W],[.03,.1,.02,.18,K.W2],[-.02,.165,-.01,-.12,0xdba068]].forEach(([x,y,z,r,c],i)=>{p.push(pt(R(1.0,.065,.24,.02,.012),c,[x,y,z],[0,r,0]));
+   for(const s of[-1,1])p.push(pt(R(.01,.05,.2,.004,.003),0xe8b37a,[x+Math.cos(r)*s*.5,y,z-Math.sin(r)*s*.5],[0,r,0]));for(let q=0;q<2;q++)p.push(pt(R(.7,.004,.012,.002,.001),0x9c6a3d,[x,y+.034,z+(q-.5)*.08],[0,r,0]))});
+  put('lk_plank',p)}
+ /* 물병: 투명 파랑 병(물 든 아래가 진하게) + 잡는 홈 + 파란 띠 라벨 + 파란 뚜껑 */
+ {const p=[pt(lathe([[0,0],[.085,.005],[.095,.03],[.095,.29],[.085,.33],[.05,.38],[.04,.41],[0,.41]],18),0x9fd8ea),pt(cyl(.097,.097,.2,18),0x5fb3dc,[0,.13,0]),pt(cyl(.1,.1,.09,18),0x3d8be0,[0,.2,0]),pt(cyl(.101,.101,.02,18),0xf7f0e3,[0,.2,0])];
+  for(let k=0;k<2;k++)p.push(pt(TO(.097,.006,4,18),0x8ccbe2,[0,.06+k*.24,0],[Math.PI/2,0,0]));p.push(pt(cyl(.045,.045,.05,14),0x2f6fd0,[0,.435,0]),pt(cyl(.05,.05,.012,14),0x2f6fd0,[0,.412,0]));
+  for(let k=0;k<10;k++){const a=k/10*Math.PI*2;p.push(pt(R(.006,.04,.008,.002,.001),0x2a5fb8,[Math.cos(a)*.046,.435,Math.sin(a)*.046],[0,-a,0]))}put('lk_wbottle',p)}
+ /* 빈병: 초록 유리병(긴 목·입구 테) + 흰 반짝 줄, 뚜껑 없음 */
+ {const p=[pt(lathe([[0,0],[.08,.004],[.09,.02],[.09,.25],[.07,.3],[.035,.35],[.03,.45],[.036,.47],[.036,.49],[.024,.49],[.022,.47],[0,.46]],18),0x6fb98f),pt(cyl(.018,.016,.02,10),0x1f3a2a,[0,.485,0])];
+  p.push(pt(R(.012,.2,.01,.004,.003),0xe6f5ec,[.07,.14,.05],[0,-.6,0]),pt(R(.008,.08,.008,.003,.002),0xe6f5ec,[.032,.36,.03],[0,-.6,-.25]));put('lk_ebottle',p)}
+ /* 건전지 셋: 검은 몸통 + 주황 머리띠 + 은빛 +극·−극(둘은 눕히고 하나는 세움) */
+ {const cell=(x,y,z,rx,rz)=>{const q=[pt(cyl(.055,.055,.2,16),K.DK2,[0,0,0]),pt(cyl(.056,.056,.07,16),0xf2a33c,[0,.07,0]),pt(cyl(.057,.057,.008,16),0xf7f0e3,[0,.034,0]),pt(cyl(.05,.05,.01,14),0xc9ced4,[0,-.103,0]),pt(cyl(.02,.02,.02,10),0xd3d9df,[0,.11,0]),pt(cyl(.054,.054,.006,14),0xc9ced4,[0,.1,0])];return pt(mg(q),null,[x,y,z],[rx,0,rz])};
+  put('lk_aabatt',[cell(-.08,.056,.02,0,Math.PI/2),cell(.06,.056,.1,Math.PI/2,0),cell(.14,.11,-.08,0,.15)])}
+ /* 철판 두 장: 모서리 볼트 + 미끄럼 막는 마름모 돌기 */
+ {const p=[pt(R(.72,.04,.5,.02,.012),K.ST2,[0,.02,0]),pt(R(.7,.04,.48,.02,.012),K.ST,[.03,.062,-.02],[0,.12,0])];const c=Math.cos(.12),s=Math.sin(.12),at=(lx,lz)=>[.03+lx*c+lz*s,.0,-.02-lx*s+lz*c];
+  for(let i=0;i<6;i++)for(let j=0;j<4;j++){const P=at(-.26+i*.105+(j%2)*.05,-.15+j*.1);p.push(pt(R(.05,.012,.016,.006,.004),0xc3cbd3,[P[0],.088,P[2]],[0,.12+(j%2?.7:-.7),0]))}
+  for(const [lx,lz] of [[-.31,-.2],[.31,-.2],[-.31,.2],[.31,.2]]){const P=at(lx,lz);p.push(pt(cyl(.022,.022,.016,6),0x6b7480,[P[0],.09,P[2]]))}put('lk_splate',p)}
+ /* 회로기판: 초록 판 + 금빛 길 + 검은 칩(은빛 다리) + 축전기 + 빨간 불 + 핀 줄 */
+ {const p=[pt(R(.6,.03,.42,.02,.01),0x2f8f4e,[0,.015,0])];const tr=(x,z,w,d)=>p.push(pt(R(w,.006,d,.002,.001),K.GO,[x,.033,z]));
+  tr(-.05,-.06,.36,.012);tr(.05,.08,.3,.012);tr(-.2,.02,.012,.2);tr(.18,-.05,.012,.14);tr(.08,-.14,.2,.012);tr(-.12,.13,.14,.012);
+  for(const [x,z,w,d] of [[-.08,.02,.14,.14],[.16,.1,.1,.07],[.14,-.12,.08,.06]]){p.push(pt(R(w,.03,d,.01,.006),0x22262c,[x,.045,z]));const n=Math.round(w/.03);for(let k=0;k<n;k++)for(const s of[-1,1])p.push(pt(box(.012,.01,.02),0xc9ced4,[x-w/2+.02+k*(w-.04)/Math.max(1,n-1),.034,z+s*(d/2+.008)]))}
+  for(const [x,z,c] of [[-.22,-.12,0x3d6fd0],[-.16,-.15,K.DK2],[.24,.15,0x3d6fd0]]){p.push(pt(cyl(.025,.025,.07,12),c,[x,.065,z]),pt(cyl(.024,.024,.006,12),0xc9ced4,[x,.103,z]))}
+  p.push(pt(S(.016,8,6),0xff4040,[.24,.045,-.16]),pt(cyl(.016,.016,.01,8),0xd3d9df,[.24,.032,-.16]));for(let k=0;k<8;k++)p.push(pt(box(.012,.05,.012),K.GO,[-.25+k*.035,.06,-.18]));p.push(pt(R(.3,.03,.03,.008,.005),K.DK2,[-.13,.045,-.18]));
+  put('lk_pcb',p)}
+ /* 레이저 부착물: 둥근 짙은 쇠 상자 + 빨간 렌즈(빛) + 레일 죔쇠 + 주황 단추 + 짧은 빨간 빛줄 */
+ {const p=[pt(R(.3,.12,.15,.04,.025),K.DK,[0,.1,0]),pt(R(.22,.03,.1,.01,.008),0x2b2f36,[-.01,.03,0]),pt(R(.05,.05,.17,.01,.008),0x2b2f36,[.04,.035,0])];
+  for(const s of[-1,1])p.push(pt(cyl(.012,.012,.03,6),0x9fa8b0,[.04,.04,s*.09],[Math.PI/2,0,0]));
+  p.push(pt(cyl(.045,.045,.035,16),0x22262c,[.16,.1,0],[0,0,Math.PI/2]),pt(cyl(.034,.034,.01,16),0xff3030,[.18,.1,0],[0,0,Math.PI/2]),pt(cyl(.012,.012,.012,10),0xffb0b0,[.186,.1,0],[0,0,Math.PI/2]));
+  p.push(pt(R(.04,.02,.04,.008,.006),0xf2a33c,[-.05,.165,.0]),pt(R(.03,.02,.03,.008,.006),0xf2a33c,[.03,.165,0]),pt(cyl(.006,.006,.26,6),0xff5050,[.32,.1,0],[0,0,Math.PI/2]));put('lk_att_laser',p)}
+ /* 손잡이(그립) 부착물: 손가락 홈 둥근 손잡이 + 레일 받침 + 모래빛 띠 + 끝 마개 */
+ {const p=[pt(R(.2,.05,.12,.015,.01),K.DK2,[0,.38,0]),pt(R(.24,.025,.08,.01,.008),0x22262c,[0,.415,0]),pt(cyl(.055,.06,.3,16),0x4a4f57,[0,.2,0]),pt(cyl(.064,.064,.03,16),K.DK2,[0,.04,0]),pt(cyl(.05,.05,.02,16),0x6b7480,[0,.025,0])];
+  for(let k=0;k<4;k++)p.push(pt(TO(.058,.012,5,16),0x3b424b,[0,.09+k*.065,0],[Math.PI/2,0,0]));p.push(pt(cyl(.061,.061,.03,16),0xc8a46a,[0,.32,0]));for(const s of[-1,1])p.push(pt(cyl(.01,.01,.13,6),0x9fa8b0,[s*.07,.38,0],[Math.PI/2,0,0]));
+  put('lk_att_grip',p)}
+ /* 소음기: 긴 검은 원통(홈 줄) + 두 끝 마개 + 은빛 나사산 + 총구 구멍 */
+ {const p=[pt(cyl(.072,.072,.5,18),K.DK2,[0,0,0]),pt(cyl(.078,.078,.05,18),0x22262c,[0,.25,0]),pt(cyl(.078,.078,.05,18),0x22262c,[0,-.25,0]),pt(cyl(.03,.03,.012,12),0x111316,[0,.276,0])];
+  for(let k=0;k<5;k++)p.push(pt(TO(.072,.006,4,18),0x3b424b,[0,-.14+k*.07,0],[Math.PI/2,0,0]));p.push(pt(cyl(.04,.04,.07,14),0xb9c0c8,[0,-.3,0]));for(let k=0;k<4;k++)p.push(pt(TO(.041,.006,4,14),0x9fa8b0,[0,-.325+k*.016,0],[Math.PI/2,0,0]));
+  const g=put('lk_att_supp',p);g.rotateZ(Math.PI/2);g.translate(0,.078,0)}
+ /* ---------------- 씨앗 봉투 9종 ---------------- */
+ for(const id of K.SEEDS){const q=(typeof PLANTS!=='undefined'?PLANTS:[]).find(o=>o.id===id),fl=q&&q.cat==='flower',col=K.PC[id],p=[];
+  p.push(pt(R(.46,.6,.05,.04,.02),0xead9b8,[0,.3,0]),pt(R(.46,.12,.055,.03,.015),fl?0xe98bb0:0x6ea844,[0,.53,0]),pt(R(.4,.012,.058,.004,.003),0xf7f0e3,[0,.465,0]));
+  for(let k=0;k<8;k++)p.push(pt(R(.03,.03,.056,.006,.004),0xd9c49a,[-.2+k*.057,.6,0],[0,0,Math.PI/4]));
+  p.push(pt(cyl(.175,.175,.012,24),0xf7f0e3,[0,.27,.028],[Math.PI/2,0,0]),pt(cyl(.19,.19,.008,24),col,[0,.27,.026],[Math.PI/2,0,0]));
+  const pi=GEO['pi_'+id];if(pi){pi.computeBoundingBox();const b=pi.boundingBox,sz=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z),k=.3/sz;p.push(pt(pi,null,[-(b.min.x+b.max.x)/2*k,.27-(b.min.y+b.max.y)/2*k,.06-(b.min.z)*k*.2],[0,0,0],[k,k,k*.5]))}
+  const sc=id==='flower_yellow'?[0x2b2f36,0xf7f0e3]:id==='avocado'?[0x8a5a36,0x9c6a3d]:id==='poppy'?[0x22262c,0x3b424b]:id==='grape'?[0x6b4a35,0x7d5232]:[0xc9a06a,0xb98b5a];
+  for(let k=0;k<5;k++){const a=k*1.3;p.push(pt(S(id==='avocado'?.04:.022,8,6),sc[k%2],[Math.cos(a)*.14+.05,.02,.12+Math.sin(a)*.05],[0,a,0],[1.4,.7,.9]))}
+  put('lk_seed_'+id,p)}
+ /* ---------------- 심은 모양 3단계 ---------------- */
+ const mound=(id)=>{const col=K.PC[id],p=[pt(new THREE.SphereGeometry(.44,18,8,0,Math.PI*2,0,Math.PI/2),0x5f4230,[0,-.03,0],[0,0,0],[1,.38,1])];
+  for(let k=0;k<11;k++){const a=k/11*Math.PI*2+hash(k,3,11)*.3,r=.4+hash(k,4,11)*.06;p.push(pt(IC(.07+hash(k,5,11)*.04,0),[0x6b4a35,0x5b4636,0x7a5a40][k%3],[Math.cos(a)*r,-.01,Math.sin(a)*r],[k,k*2,0],[1.3,.55,1]))}
+  for(let k=0;k<3;k++)p.push(pt(R(.5,.012,.03,.008,.005),0x4e3626,[0,.125+(k===1?.015:0),(k-1)*.13],[0,0,0],[1-Math.abs(k-1)*.25,1,1]));
+  for(let k=0;k<9;k++){const a=k*2.3,r=.18+hash(k,1,11)*.22;p.push(pt(IC(.035+hash(k,2,11)*.02,0),[0x5b4636,0x7d5a40,0x8a6a4a][k%3],[Math.cos(a)*r,.09-r*.12,Math.sin(a)*r],[k,k,0]))}
+  p.push(pt(R(.025,.42,.025,.006,.004),0xc08d5c,[.3,.18,.26],[0,0,-.06]),pt(R(.16,.09,.02,.02,.008),0xf7f0e3,[.31,.38,.27],[0,-.3,-.06]),pt(cyl(.03,.03,.022,12),col,[.31,.38,.284],[Math.PI/2,-.3,0]));return p};
+ const LF=[0x5f9a3c,0x6ea844,0x4f8a3c],leaf=(p,x,y,z,s,ry,rz,c,sh=[1,.18,.55])=>p.push(pt(IC(s,1),c,[x,y,z],[0,ry,rz],sh)),stem=(p,a,b,r,c=0x6f9a4a)=>p.push(lkRod(a,b,r,c,6));
+ const S0={potato:p=>{p.push(pt(S(.09,12,8),0xb98b5a,[0,.12,0],[.3,0,.2],[1.2,.8,1]));for(const [x,c] of [[-.03,0x9fd06a],[.04,0xb86ab8]])p.push(pt(cyl(.012,.018,.05,6),c,[x,.21,.02],[0,0,x*4]))},
+  wheat:p=>{p.push(pt(R(.6,.02,.1,.01,.008),0x4e3626,[0,.13,0],[0,.3,0]));for(let k=0;k<9;k++)p.push(pt(S(.018,8,6),0xe6c25a,[(k-4)*.06*Math.cos(.3),.145,-(k-4)*.06*Math.sin(.3)+(hash(k,3,12)-.5)*.04],[0,k,0],[1.5,.8,.9]))},
+  strawberry:p=>{for(let k=0;k<10;k++)p.push(pt(R(.12,.008,.012,.004,.002),0xe8d48a,[(hash(k,1,13)-.5)*.5,.13+hash(k,4,13)*.02,(hash(k,2,13)-.5)*.4],[0,k*1.1,0]));for(let k=0;k<6;k++)p.push(pt(S(.014,6,4),0xc0402f,[(hash(k,5,13)-.5)*.2,.15,(hash(k,6,13)-.5)*.2]))},
+  grape:p=>{p.push(lkRod([0,.1,0],[.02,.42,.01],.02,0x7d5232,8));for(const y of[.25,.36])p.push(pt(S(.022,8,6),0x9fd06a,[.03,y,.02]))},
+  avocado:p=>{p.push(pt(S(.1,14,10),0x8a5a36,[0,.15,0],[0,0,0],[1,1.2,1]),pt(S(.07,10,8),0xa8744a,[.03,.2,.05]),pt(cyl(.01,.012,.08,6),0x9fd06a,[0,.29,0]))},
+  poppy:p=>{p.push(pt(S(.05,10,8),0xb8b08a,[.08,.15,.05],[0,0,1.2],[1,1.25,1]),pt(cyl(.035,.03,.02,8),0x9a9270,[.14,.17,.05],[0,0,1.2]));for(let k=0;k<8;k++)p.push(pt(S(.01,5,4),0x22262c,[(hash(k,1,14)-.5)*.25,.14,(hash(k,2,14)-.5)*.2]))},
+  flower_blue:p=>{for(let k=0;k<7;k++)p.push(pt(S(.016,6,4),0x8a8478,[(hash(k,1,15)-.5)*.26,.14,(hash(k,2,15)-.5)*.22],[0,k,0],[1.6,.8,1]))},
+  flower_yellow:p=>{for(let k=0;k<6;k++){const x=(hash(k,1,16)-.5)*.28,z=(hash(k,2,16)-.5)*.22,r=k*1.1;p.push(pt(S(.03,10,6),0x2b2f36,[x,.145,z],[0,r,0],[1.8,.55,1]),pt(R(.05,.008,.006,.003,.002),0xf7f0e3,[x,.162,z],[0,r,0]))}},
+  flower_black:p=>{p.push(pt(lathe([[0,0],[.07,.02],[.085,.07],[.06,.13],[.02,.18],[0,.2]],14),0x7a5a6a,[0,.07,0]),pt(cyl(.004,.01,.05,6),0x9fd06a,[0,.27,0]));for(let k=0;k<5;k++)p.push(pt(cyl(.003,.003,.05,4),0xd9c49a,[Math.cos(k)*.04,.07,Math.sin(k)*.04],[Math.cos(k),0,Math.sin(k)]))}};
+ const S1={potato:p=>{for(let k=0;k<5;k++){const a=k/5*Math.PI*2+.4,b=[Math.cos(a)*.1,.1,Math.sin(a)*.1],t=[Math.cos(a)*.2,.36+hash(k,1,21)*.06,Math.sin(a)*.2];stem(p,b,t,.014);for(let q=0;q<3;q++)leaf(p,t[0]+Math.cos(a+q*2.1)*.06,t[1]+.02-q*.06,t[2]+Math.sin(a+q*2.1)*.06,.07,a+q,.3,LF[(k+q)%3])}
+   leaf(p,0,.36,0,.08,0,0,LF[1])},
+  wheat:p=>{for(let k=0;k<16;k++){const a=k*2.4,r=.05+hash(k,1,22)*.12,h=.32+hash(k,2,22)*.14,b=[Math.cos(a)*r,.1,Math.sin(a)*r],t=[Math.cos(a)*(r+.08),h,Math.sin(a)*(r+.08)];const q=lkAim(b,t);p.push(pt(cone(.016,q.L,4),k%3?0x7fb24a:0x6ea844,q.pos,q.rot))}},
+  strawberry:p=>{for(let k=0;k<5;k++){const a=k/5*Math.PI*2,t=[Math.cos(a)*.2,.24,Math.sin(a)*.2];stem(p,[0,.1,0],t,.01);for(let q=0;q<3;q++){const b=a+(q-1)*.7;leaf(p,t[0]+Math.cos(b)*.06,t[1]+.01,t[2]+Math.sin(b)*.06,.06,b,0,LF[q])}}
+   for(const [x,z] of [[.08,.12],[-.12,-.06]]){for(let q=0;q<5;q++){const b=q/5*Math.PI*2;p.push(pt(S(.022,8,6),0xf7f0e3,[x+Math.cos(b)*.025,.27,z+Math.sin(b)*.025],[0,0,0],[1,.4,1]))}p.push(pt(S(.016,8,6),0xffd35c,[x,.28,z]))}},
+  grape:p=>{p.push(pt(R(.04,.72,.04,.01,.008),0xb98556,[-.06,.38,-.06]),pt(R(.04,.04,.04,.01,.008),0xc08d5c,[-.06,.75,-.06]));const pts=[];for(let i=0;i<=24;i++){const t=i/24,a=t*Math.PI*3;pts.push(new THREE.Vector3(-.06+Math.cos(a)*.06,.1+t*.58,-.06+Math.sin(a)*.06))}
+   p.push(pt(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),40,.014,5,false),0x7d5232));for(let k=0;k<5;k++){const t=.25+k*.15,a=t*Math.PI*3,x=-.06+Math.cos(a)*.14,z=-.06+Math.sin(a)*.14;p.push(pt(ex([[0,0],[.06,.04],[.08,.1],[.03,.09],[0,.14],[-.03,.09],[-.08,.1],[-.06,.04]],.012,.004),LF[k%3],[x,.1+t*.58,z],[.4,a,0],[1.1,1.1,1.1]))}},
+  avocado:p=>{p.push(pt(cyl(.018,.026,.62,8),0x7a5236,[0,.4,0]));for(let k=0;k<6;k++){const a=k/6*Math.PI*2,e=.5+hash(k,1,24)*.3;p.push(pt(IC(.1,1),LF[k%3],[Math.cos(a)*.12,.66+hash(k,2,24)*.08,Math.sin(a)*.12],[0,-a,e],[1.5,.16,.55]))}p.push(pt(IC(.06,1),0x7fb24a,[0,.74,0],[0,0,0],[.6,1.2,.6]))},
+  poppy:p=>{for(let k=0;k<6;k++){const a=k*1.05;leaf(p,Math.cos(a)*.13,.13,Math.sin(a)*.13,.07,a,.1,LF[k%3],[1.3,.2,.5])}for(let k=0;k<3;k++){const a=k*2.1+.3,b=[Math.cos(a)*.05,.12,Math.sin(a)*.05],t=[Math.cos(a)*.1,.44+k*.04,Math.sin(a)*.1];stem(p,b,t,.01,0x7aa652);p.push(pt(S(.04,10,8),0x6ea844,[t[0]+Math.cos(a)*.03,t[1]-.03,t[2]+Math.sin(a)*.03],[Math.cos(a)*.8,0,Math.sin(a)*.8],[1,1.4,1]))}},
+  flower_blue:p=>{for(let k=0;k<5;k++){const a=k*1.25,b=[Math.cos(a)*.05,.12,Math.sin(a)*.05],t=[Math.cos(a)*.11,.36+hash(k,1,26)*.08,Math.sin(a)*.11];stem(p,b,t,.008,0x8aae74);p.push(pt(S(.03,10,8),0x7f9a6a,[t[0],t[1]+.02,t[2]]),pt(S(.02,8,6),0x4f7fe0,[t[0],t[1]+.045,t[2]]));for(let q=0;q<2;q++)leaf(p,b[0]+(t[0]-b[0])*(.3+q*.3),.18+q*.08,b[2]+(t[2]-b[2])*(.3+q*.3),.06,a+q,.4,0x8aae74,[1.4,.12,.3])}},
+  flower_yellow:p=>{p.push(pt(cyl(.022,.03,.66,8),0x6f9a4a,[0,.43,0]));for(let k=0;k<4;k++){const a=k*1.6,y=.26+k*.12;p.push(pt(ex([[0,0],[.08,.05],[.1,.12],[.05,.17],[0,.13],[-.05,.17],[-.1,.12],[-.08,.05]],.014,.005),LF[k%3],[Math.cos(a)*.03,y,Math.sin(a)*.03],[.9,a,0],[1.2,1.2,1.2]))}
+   p.push(pt(S(.07,12,8),0x6ea844,[0,.8,.02],[.5,0,0],[1,.8,1]));for(let k=0;k<8;k++){const a=k/8*Math.PI*2;p.push(pt(cone(.03,.07,4),0x5f9a3c,[Math.cos(a)*.06,.8+Math.sin(a)*.02,.02+Math.sin(a)*.05],[.5+Math.sin(a)*.6,0,-Math.cos(a)*.6]))}},
+  flower_black:p=>{for(let k=0;k<3;k++){const a=k*2.1+.2;p.push(pt(IC(.1,1),LF[k%3],[Math.cos(a)*.06,.24,Math.sin(a)*.06],[0,-a,1.25],[1.9,.13,.55]))}p.push(pt(cyl(.012,.015,.32,8),0x6f9a4a,[0,.3,0]),pt(lathe([[0,0],[.04,.02],[.05,.07],[.035,.12],[0,.15]],12),0x3a2a3f,[0,.44,0]))}};
+ for(const id of K.SEEDS){const a=mound(id),b=mound(id),c=mound(id);(S0[id]||(()=>{}))(a);(S1[id]||(()=>{}))(b);
+  const pw=GEO['pw_'+id];if(pw){const s=id==='avocado'?.8:id==='grape'?.9:1;c.push(pt(pw,null,[0,.08,0],[0,.5,0],[s,s,s]))}else (S1[id]||(()=>{}))(c);
+  put('pc_'+id+'_0',a);put('pc_'+id+'_1',b);put('pc_'+id+'_2',c)}
+ /* ---------------- 손에 드는 것(손도끼와 같은 배치: 자루 y축 -0.3~1.0, 머리는 위에서 x축) ---------------- */
+ /* 고급 곡괭이: 짙은 호두나무 자루 + 가죽 감은 손잡이 + 빨간 쇠 띠 + 날렵하게 휜 짙은 쇠 머리, 끝은 밝게 간 쇠 */
+ {const p=[pt(cyl(.042,.05,1.32,10),0x7a4a2c,[0,.34,0]),pt(cyl(.055,.055,.3,10),0x5b3a24,[0,-.16,0]),pt(cyl(.06,.06,.04,10),0x3b2a1e,[0,-.32,0])];for(let k=0;k<5;k++)p.push(pt(TO(.054,.009,4,10),0x3b2a1e,[0,-.29+k*.065,0],[Math.PI/2,0,0]));
+  p.push(pt(cyl(.064,.064,.18,12),K.RD,[0,.9,0]),pt(cyl(.07,.07,.03,12),K.GO,[0,.99,0]),pt(cyl(.07,.07,.03,12),K.GO,[0,.81,0]));
+  const arm=sx=>{const pts=[];for(let i=0;i<=10;i++){const t=i/10;pts.push(new THREE.Vector3(sx*(.06+t*.42),.95-t*t*.16,0))}return pts};
+  for(const sx of[-1,1]){const pts=arm(sx);for(let i=0;i<10;i++){const a=pts[i],b=pts[i+1],t=i/10,w=.085*(1-t*.6);p.push(lkBeam([a.x,a.y,a.z],[b.x,b.y,b.z],w,.07*(1-t*.4),i>=7?0xe6ebf0:0x4b525c))}}
+  p.push(pt(R(.14,.14,.1,.03,.02),0x4b525c,[0,.95,0]));put('lk_pick_adv',p,50)}
+ /* 전기 곡괭이: 노랑·검정 모터 머리 + 빛나는 파란 줄 + 쇠 날 둘 + 배터리 팩 손잡이 */
+ {const p=[pt(cyl(.04,.046,1.2,10),0x2b2f36,[0,.36,0]),pt(R(.16,.22,.12,.04,.03),0xf2c94c,[0,-.12,0]),pt(R(.17,.06,.13,.03,.02),K.DK2,[0,-.25,0]),pt(R(.1,.03,.13,.01,.008),0x5fd3ff,[0,-.18,.0])];
+  for(let k=0;k<4;k++)p.push(pt(TO(.047,.008,4,10),0x111316,[0,.06+k*.06,0],[Math.PI/2,0,0]));
+  p.push(pt(R(.3,.2,.2,.06,.04),0xf2c94c,[0,.95,0]),pt(R(.32,.06,.21,.03,.02),K.DK2,[0,.86,0]),pt(cyl(.07,.07,.22,14),K.DK2,[0,.98,0],[Math.PI/2,0,0]),pt(cyl(.05,.05,.225,14),0x5fd3ff,[0,.98,0],[Math.PI/2,0,0]));
+  for(let k=0;k<3;k++)p.push(pt(R(.02,.12,.205,.006,.004),K.DK2,[-.09+k*.09,1.0,0]));
+  for(const sx of[-1,1]){const pts=[];for(let i=0;i<=8;i++){const t=i/8;pts.push([sx*(.15+t*.34),.95-t*t*.13,0])}for(let i=0;i<8;i++){const t=i/8;p.push(lkBeam(pts[i],pts[i+1],.07*(1-t*.55),.06*(1-t*.3),i>=6?0xe6ebf0:0x8e99a6))}p.push(pt(R(.03,.03,.07,.01,.006),0x5fd3ff,[sx*.3,.925,0]))}
+  put('lk_pick_elec',p,50)}
+ /* 철거 망치: 큰 쇠 망치 머리(양쪽 주황·검정 경고 띠) + 노란 자루 + 검은 고무 손잡이 */
+ {const p=[pt(cyl(.04,.046,1.28,10),0xf2c94c,[0,.35,0]),pt(cyl(.055,.055,.34,10),0x22262c,[0,-.14,0]),pt(cyl(.062,.062,.05,10),0x22262c,[0,-.32,0])];for(let k=0;k<6;k++)p.push(pt(TO(.054,.008,4,10),0x3b424b,[0,-.28+k*.05,0],[Math.PI/2,0,0]));
+  p.push(pt(R(.56,.2,.2,.05,.03),0x6b7480,[0,.98,0]),pt(R(.08,.21,.21,.03,.02),0x8e99a6,[-.29,.98,0]),pt(R(.08,.21,.21,.03,.02),0x8e99a6,[.29,.98,0]));
+  for(const sx of[-1,1])for(let k=0;k<3;k++)p.push(pt(R(.04,.205,.205,.008,.005),k%2?0x22262c:0xf2a33c,[sx*(.12+k*.045),.98,0]));p.push(pt(R(.12,.06,.12,.02,.012),K.DK2,[0,.86,0]));put('lk_dhammer',p,50)}
+ /* ---------------- 설치 ---------------- */
+ /* 랜턴 가로등: 둥근 돌 받침 + 짙은 초록 쇠기둥 + 앞으로 휜 팔 끝에 매단 육각 랜턴(유리 등불은 z .48, 높이 2.42) + 걸이 화분 */
+ {const IR=0x2f5a4a,IR2=0x234638,p=[pt(cyl(.26,.3,.14,14),0xc9c4bd,[0,.07,0]),pt(cyl(.18,.22,.12,14),0xb5aea5,[0,.19,0]),pt(cyl(.09,.12,.22,12),IR2,[0,.36,0]),pt(cyl(.055,.07,2.2,12),IR,[0,1.5,0]),pt(TO(.075,.02,6,14),0xd9a441,[0,.5,0],[Math.PI/2,0,0]),pt(TO(.065,.018,6,14),0xd9a441,[0,2.1,0],[Math.PI/2,0,0]),pt(S(.075,12,8),IR,[0,2.62,0])];
+  const arc=[];for(let i=0;i<=10;i++){const t=i/10,a=t*Math.PI*.9;arc.push([0,2.5+Math.sin(a)*.18,Math.sin(a*.55)*.52])}for(let i=0;i<10;i++)p.push(lkRod(arc[i],arc[i+1],.03,IR,8));
+  p.push(lkRod([0,2.18,0],[0,2.5,.3],.018,IR,6),pt(cyl(.012,.012,.12,6),IR2,[0,2.66,.48]));
+  p.push(pt(cyl(.1,.13,.06,6),IR2,[0,2.58,.48]),pt(cone(.15,.1,6),IR,[0,2.66,.48]),pt(cyl(.13,.1,.04,6),IR2,[0,2.25,.48]),pt(cyl(.05,.07,.06,6),IR2,[0,2.2,.48]));
+  for(let k=0;k<6;k++){const a=(k+.5)/6*Math.PI*2;p.push(pt(R(.018,.33,.018,.006,.004),IR2,[Math.cos(a)*.11,2.42,.48+Math.sin(a)*.11]))}
+  p.push(pt(cyl(.012,.012,.3,4),0x5b3d2b,[0,1.7,-.2],[0,0,0]),pt(lkRb(.04,.04,.36,.01,.008),IR,[0,1.88,-.14]),pt(cyl(.13,.09,.12,12),0xc77a52,[0,1.5,-.32]));
+  for(let k=0;k<6;k++){const a=k/6*Math.PI*2;p.push(pt(IC(.07,0),LF[k%3],[Math.cos(a)*.1,1.6,-.32+Math.sin(a)*.1]),pt(IC(.035,0),[0xf28bb0,0xffd35c,0xf7f0e3][k%3],[Math.cos(a)*.13,1.64,-.32+Math.sin(a)*.13]))}
+  for(let k=0;k<3;k++)p.push(pt(IC(.05,0),LF[k],[(k-1)*.07,1.44-k*.04,-.38]));
+  p.push(pt(cyl(.09,.09,.3,6),0xffe9b0,[0,2.42,.48]),pt(S(.05,8,6),0xfff6d8,[0,2.42,.48]));put('lk_lamp2',p,45)}
+ /* 고급 작업대: 철제 틀 + 두꺼운 나무 상판 + 빨간 공구 서랍 + 바이스 + 구멍판(공구 걸이) + 작업등 */
+ {const p=[],W=2.8,D=1.3,H=.92;for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]])p.push(pt(R(.12,H,.12,.03,.02),0x4b525c,[sx*(W/2-.12),H/2,sz*(D/2-.12)]));
+  for(const sz of[-1,1])p.push(pt(R(W-.2,.08,.08,.02,.015),0x4b525c,[0,.24,sz*(D/2-.12)]));p.push(pt(R(W-.3,.05,D-.3,.02,.015),0x6b7480,[0,.27,0]));
+  p.push(pt(R(W,.12,D,.04,.025),0xc08550,[0,H+.06,0]));for(let k=0;k<5;k++)p.push(pt(R(W-.02,.004,.012,.002,.001),0x9c6a3d,[0,H+.122,-D/2+.15+k*.25]));
+  p.push(pt(R(.95,.62,D-.25,.04,.025),K.RD,[.75,.6,.02]));for(let k=0;k<3;k++){p.push(pt(R(.88,.02,.02,.008,.006),0xb8402f,[.75,.38+k*.2,D/2-.09]),pt(R(.22,.04,.03,.01,.008),0xd3d9df,[.75,.47+k*.2,D/2-.1]))}
+  p.push(pt(R(.3,.2,.2,.04,.03),0x3d7fb0,[-1.05,H+.22,.4]),pt(R(.1,.16,.26,.02,.015),0x3d7fb0,[-1.05,H+.2,.56]),pt(cyl(.025,.025,.4,8),0xd3d9df,[-1.05,H+.24,.62],[Math.PI/2,0,0]),pt(cyl(.03,.03,.16,8),0x2b2f36,[-1.05,H+.24,.84],[0,0,Math.PI/2]));
+  p.push(pt(R(W-.1,1.0,.06,.03,.02),0xe6d2a8,[0,H+.66,-D/2+.06]),pt(R(W,.06,.1,.02,.015),0x8a5a36,[0,H+1.18,-D/2+.06]));for(const sx of[-1,1])p.push(pt(R(.08,1.1,.08,.02,.015),0x4b525c,[sx*(W/2-.05),H+.62,-D/2+.06]));
+  for(let i=0;i<14;i++)for(let j=0;j<5;j++)p.push(pt(box(.026,.026,.07),0xb99a70,[-1.3+i*.2,H+.3+j*.18,-D/2+.06]));
+  const tl=(x,y,g)=>p.push(pt(g,null,[x,H+y,-D/2+.13]));
+  tl(-.95,.65,mg([pt(R(.05,.42,.03,.01,.008),0xd3d9df,[0,0,0]),pt(TO(.06,.02,5,12),0xd3d9df,[0,.24,0])]));tl(-.6,.6,mg([pt(cyl(.025,.025,.26,8),0xe0533f,[0,.08,0]),pt(cyl(.008,.008,.22,6),0xd3d9df,[0,-.15,0])]));
+  tl(-.3,.62,mg([pt(cyl(.022,.022,.34,8),0x9c6a3d,[0,-.02,0]),pt(R(.18,.07,.06,.02,.012),0x6b7480,[0,.18,0])]));tl(.1,.7,mg([pt(TO(.12,.02,5,16,Math.PI*1.3),0xf2a33c,[0,0,0],[0,0,-.6])]));
+  tl(.5,.6,mg([pt(R(.3,.05,.02,.01,.006),0x3aa6b0,[0,.12,0]),pt(R(.05,.3,.02,.01,.006),0x3aa6b0,[-.12,0,0])]));tl(.9,.66,mg([pt(cyl(.03,.03,.32,8),0xf2c94c,[0,0,0]),pt(cyl(.008,.008,.18,6),0xd3d9df,[0,-.25,0])]));
+  p.push(pt(R(.14,.06,.14,.02,.012),0x2b2f36,[1.15,H+.15,-.3]),lkRod([1.15,H+.15,-.3],[1.15,H+.75,-.28],.02,0x2b2f36,6),lkRod([1.15,H+.75,-.28],[.9,H+.85,-.1],.02,0x2b2f36,6),pt(cone(.12,.14,12),0x3aa6b0,[.86,H+.8,-.07],[Math.PI-.4,0,0]));
+  p.push(pt(R(.26,.12,.18,.03,.02),0x6b7480,[-.3,H+.18,.2]),pt(cyl(.06,.06,.06,10),0xd3d9df,[-.3,H+.27,.2]),pt(R(.22,.05,.16,.02,.015),0xc8a46a,[.2,H+.15,.32],[0,.3,0]));
+  p.push(pt(cyl(.08,.08,.02,10),0xfff6d8,[.86,H+.74,-.05],[-.4,0,0]));put('lk_bench2',p,45)}
+ /* 고기잡이 그물(물 위): 대나무 말뚝 넷 + 마름모 밧줄 그물(물 위로 0.6m) + 위 밧줄의 주황·흰 찌 + 깃발 하나 (물 높이 y=0, 물속으로 1m) */
+ {const p=[],W=2.5,D=1.7,BA=0xd9c27a,RO=0xd9c49a,Pc=[[-W/2,-D/2],[W/2,-D/2],[W/2,D/2],[-W/2,D/2]];
+  Pc.forEach(([x,z],i)=>{p.push(pt(cyl(.05,.06,2.3,8),BA,[x,.15,z]));for(let k=0;k<3;k++)p.push(pt(TO(.055,.012,4,10),0xa89050,[x,-.3+k*.45,z],[Math.PI/2,0,0]));p.push(pt(S(.06,8,6),0xc8b06a,[x,1.31,z]))});
+  for(let e=0;e<4;e++){const [ax,az]=Pc[e],[bx,bz]=Pc[(e+1)%4],L=Math.hypot(bx-ax,bz-az),n=Math.round(L/.22);
+   for(const y of[.62,-.05])p.push(lkRod([ax,y,az],[bx,y,bz],.014,RO,5));
+   for(let k=0;k<n;k++){const t0=k/n,t1=(k+1)/n,x0=ax+(bx-ax)*t0,z0=az+(bz-az)*t0,x1=ax+(bx-ax)*t1,z1=az+(bz-az)*t1;p.push(lkRod([x0,.62,z0],[x1,-.05,z1],.007,0xcbb88c,4),lkRod([x1,.62,z1],[x0,-.05,z0],.007,0xcbb88c,4));
+    if(k%2===0){const mx=(x0+x1)/2,mz=(z0+z1)/2;p.push(pt(cyl(.07,.07,.1,10),k%4?0xf7f0e3:0xf2a33c,[mx,.66,mz]))}}}
+  p.push(pt(cyl(.012,.012,.6,4),0x7d5232,[-W/2,1.6,-D/2]),pt(R(.36,.22,.01,.02,.004),K.RD,[-W/2+.2,1.78,-D/2]));
+  for(let k=0;k<6;k++){const a=k/6*Math.PI*2;p.push(pt(cyl(.18,.18,.012,12),0x6fb6d0,[Math.cos(a)*.6,.02,Math.sin(a)*.4],[0,0,0],[1,1,.6]))}
+  put('lk_fnet',p,40)}
+ /* 흰 울타리(길이 2): 끝이 뾰족한 흰 말뚝 + 가로대 둘 + 둥근 갓 기둥(23차 널 울타리처럼 촘촘하게) */
+ {const p=[],WH=[0xf7f5ef,0xf1eee6,0xfbfaf6];for(const sx of[-1,1]){p.push(pt(R(.14,1.12,.14,.04,.03),0xf4f2ec,[sx*1.0,.56,0]),pt(R(.18,.05,.18,.03,.02),0xe9e5dc,[sx*1.0,1.14,0]),pt(S(.06,12,8),0xf7f5ef,[sx*1.0,1.2,0]))}
+  for(const y of[.3,.74])p.push(pt(R(1.9,.07,.05,.02,.015),0xe6e1d6,[0,y,-.05]));
+  for(let k=0;k<9;k++){const x=-.8+k*.2,h=.86+(k%2)*.03;p.push(pt(R(.13,h,.04,.03,.015),WH[k%3],[x,h/2+.04,.0]),pt(cone(.066,.12,4),WH[k%3],[x,h+.1,0],[0,Math.PI/4,0],[1,1,.32]))}
+  for(let k=0;k<4;k++)p.push(pt(IC(.05,0),LF[k%3],[-.7+k*.5,.06,.05],[k,k,0],[1.4,.7,1.2]));put('lk_fence_white',p,40)}
+}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkItems47()}catch(e){console.error('look: 47차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
