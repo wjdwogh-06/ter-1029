@@ -369,3 +369,9 @@ BUILDS.turret.kit='kit_turret';
 Object.assign(BUILDS,{fence_conc:{n:'콘크리트 울타리',g:'lk_fence_conc',s:1,bx:1,bz:.25,hp:800,c:{cement:2,stone:3},kit:'kit_fconc',grid:1,d:'단단한 콘크리트 판 울타리 (임시)'},
  gate_conc:{n:'콘크리트 울타리 문',g:'lk_gate_conc',s:1,bx:1,bz:.25,hp:700,c:{cement:2,stone:2,scrap:3},kit:'kit_gconc',grid:1,gate:1,d:'나는 지나가고 적은 막아요 (임시)'}});
 ITEMS.copper.d='구리 알갱이가 박힌 초록빛 광석. 녹이면 구리 주괴 (임시)';
+/* ===== 51차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-21 22:52: '페인트 아이템도 만들어 줬으면, 도색 작업대도 하나, 페인트 종류는 8종류 정도, 대중적인 색들 색감 괜찮게') =====
+   페인트 8색(ty res, 그림만 — 칠하기 기능은 기획자가 정할 때) + 도색 작업대(키트로 설치, 밖에도·텐트/집 안에도(inok), 누르면 '준비 중' 안내 — js/farm.js). 가격·재료 임시, 자판기에 저절로. */
+const PAINTS=[['red','빨간',0xe0533f],['orange','주황',0xf28c38],['yellow','노란',0xf7c948],['green','초록',0x5bae5f],['blue','파란',0x3f7fd0],['purple','보라',0x8b5cc9],['white','흰',0xf4f1ea],['black','검은',0x33363b]];
+for(const [k,n] of PAINTS)ITEMS['paint_'+k]={n:n+' 페인트',ic:'lk_paint_'+k,ty:'res',p:80,d:`${n} 페인트 한 통. 칠하기는 아직 (임시)`};
+Object.assign(ITEMS,{kit_paintbench:{n:'도색 작업대',ic:'lk_paintbench',ty:'kit',b:'paintbench',p:900,d:'페인트를 섞고 칠하는 작업대. 밖에도, 텐트·집 안에도 놓아요 (도색 기능은 아직, 임시)'}});
+Object.assign(BUILDS,{paintbench:{n:'도색 작업대',g:'lk_paintbench',s:1,bx:.92,bz:.45,hp:150,c:{wood:8,scrap:4},kit:'kit_paintbench',inok:1,fixR:1,d:'페인트를 섞고 칠하는 작업대 (도색 기능은 아직, 임시)'}});

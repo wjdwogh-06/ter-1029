@@ -41,3 +41,6 @@ let farmHooked=false;function farmHook(){if(farmHooked||typeof drawFx!=='functio
   const L=[];for(const s of structs){if(!s.own||!cropQ(s))continue;const d=dist(s.x,s.z,P.x,P.z);if(d>5.5||target&&target.s===s)continue;L.push([d,s])}L.sort((a,b)=>a[0]-b[0]);for(const [d,s] of L.slice(0,4)){const st=cropStage(s),p=scr(s.x,groundY(s.x,s.z)+(st===2?1.25:.75),s.z);
    uiPill(fctx,st===2?'✓ 다 자랐어요':'⏳ '+cropMS(cropLeft(s)),p[0],p[1],10.5*k,st===2?(UIC.grn||'#5fae7e'):'rgba(251,244,230,.92)',st===2?'#fff':'#5B3D2B')}}catch(e){}}}
 {const _ud2=updDress;updDress=function(dt,px,pz){farmHook();_ud2(dt,px,pz)}}
+/* 51차(디자인): 도색 작업대 — 바짝 붙어 누르면 '준비 중' 안내(도색 기능은 기획자가 정할 때). 텐트·집 안에 놓았으면 그 집에 들어가 있을 때만 이름표 */
+{const _sl=sLabel;sLabel=function(s){if(s.t==='paintbench'&&!(curId()==='dhammer'&&hamOK(s))){if(s.in&&typeof curHK==='function'&&s.hk!=null&&s.hk!==curHK())return null;return'🎨 도색 작업대'}return _sl(s)}}
+{const _ia=interact;interact=function(){const t=target;if(t&&t.k==='s'&&t.s.t==='paintbench'&&!(curId()==='dhammer'&&hamOK(t.s))){if(inp.actEdge)toast('🎨 도색 작업대예요. 칠하기 기능은 준비 중이에요');return}return _ia()}}
