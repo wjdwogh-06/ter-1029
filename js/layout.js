@@ -25,7 +25,7 @@ devInit=async function(){
     return select;
   }
   const spacing=options('이동 간격',[0,.1,.25,.5,1,2.5,5],.5,'m');
-  const turnStep=options('회전 간격',[1,5,15,45,90],15,'°');
+  const turnStep=options('회전 간격',[1,5,15,45,90],1,'°');
   panel.append(undo);
   function record(m,name,opts={}){
     if(!m)return;
@@ -129,11 +129,10 @@ devInit=async function(){
     for(const q of group){q.e.m.position.x=q.x;q.e.m.position.z=q.z;q.e.m.rotation.y=q.r}
   }
   function showAngle(){rotation.querySelector('output').textContent=angle.value+'°'}
-  angle.step=turnStep.value;
-  turnStep.onchange=()=>{angle.step=turnStep.value;if(selected)angle.oninput()};
+  angle.step=1;
   angle.oninput=()=>{
     if(!selected)return;
-    const step=+turnStep.value;angle.value=Math.round(+angle.value/step)*step;showAngle();
+    showAngle();
     const p=pivot(),dr=(+angle.value)*Math.PI/180-p.r,c=Math.cos(dr),sn=Math.sin(dr);
     for(const q of group){
       const dx=q.x-p.x,dz=q.z-p.z;

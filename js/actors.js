@@ -104,7 +104,9 @@ const curId=()=>{const q=S.quick[S.sel];return q&&WEAP[q]&&invN(q)>0?q:'fist'};
 const canChop=()=>{const c=curId();return c==='axe'||c==='chainsaw'};
 /* 48차: 설치 방향 = brot(-1 왼쪽 사선 · 0 정면 · 1 오른쪽 사선) × ROT_A(30°). 카메라를 돌릴 수 없어서 세 가지만 */
 const ROT_A=Math.PI/6,rotStep=()=>clamp(Math.round(brot)||0,-1,1),rotExt=(bx,bz,r)=>{const c=Math.abs(Math.cos(r)),n=Math.abs(Math.sin(r));return[c*bx+n*bz,n*bx+c*bz]};
-const ROT_N=['왼쪽 사선','정면','오른쪽 사선'];function rotNext(){brot=brot===0?-1:brot===-1?1:0;if(typeof buildUI==='function')buildUI()}   /* [↻] 정면 → 왼쪽 → 오른쪽 → 정면 */
+let adminBuildDegrees=0;
+function placementAngle(){return DEV.on?adminBuildDegrees*Math.PI/180:rotStep()*ROT_A}
+const ROT_N=['왼쪽 사선','정면','오른쪽 사선'];function rotNext(){if(DEV.on)adminBuildDegrees=(adminBuildDegrees+1)%360;else brot=brot===0?-1:brot===-1?1:0;if(typeof buildUI==='function')buildUI()}   /* [↻] 정면 → 왼쪽 → 오른쪽 → 정면 */
 /* 46차(기획자: '나무·바위가 너무 쉽게 부서져, 어느 정도 도끼질을 해야 부서지게, 전기톱은 더 빠르게'): 한 번에 깎는 양과 다음 휘두르기까지(초). 나무·바위 체력은 아래 OBJT_HP */
 const CHOP={hit:1,saw:2,cd:.42,sawCd:.3};   /* 25차: 전기톱도 나무를 벨 수 있어요(임시) */
 function nearestEnemy(x,z,r){let b=null,bd=r;for(const e of enemies){if(e.dead)continue;const d=dist(x,z,e.x,e.z);if(d<bd){bd=d;b=e}}return b}
@@ -211,7 +213,7 @@ function interact(){const t=target;if(!t)return;
  else if(s.t==='mg'){const n=Math.min(40,invN('ammoS'),240-s.ammo);take('ammoS',n);s.ammo+=n;sfx(500,.08);ftext(s.x,groundY(s.x,s.z)+2.6,s.z,`탄약 ${s.ammo}`,'#ffe08a');hudDirty=true}
  else if(s.own){take('wood',1);s.hp=Math.min(s.max,s.hp+s.max*.34);sfx(300,.07,'square',.04);P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.3,force:1,speed:1.7})}}
 /* ---- building ---- */
-function setBuild(m){if(!bmode&&m)brot=0;bmode=m;if(ghost){scene.remove(ghost);ghost=null}if(m&&m!=='demo'){ghost=new THREE.Mesh(GEO[BUILDS[m].g],new THREE.MeshBasicMaterial({color:0x66dd77,transparent:true,opacity:.55,depthWrite:false}));ghost.scale.setScalar(BUILDS[m].s);scene.add(ghost)}if(typeof buildUI==='function')buildUI()}
+function setBuild(m){if(!bmode&&m){brot=0;adminBuildDegrees=0}bmode=m;if(ghost){scene.remove(ghost);ghost=null}if(m&&m!=='demo'){ghost=new THREE.Mesh(GEO[BUILDS[m].g],new THREE.MeshBasicMaterial({color:0x66dd77,transparent:true,opacity:.55,depthWrite:false}));ghost.scale.setScalar(BUILDS[m].s);scene.add(ghost)}if(typeof buildUI==='function')buildUI()}
 /* ---- 설치 금지 구역 (기획자 요청): 등대·보급지·항구 둘레에 그곳보다 조금 큰 원. 설치할 때만 빨갛게 보여요 ----
    크기는 그 자리에 실제로 놓인 것(등대섬 땅, 보급 상자·모래주머니·철조망, 부두·배·가게·소품)의 가장 먼 곳 + 여유(NOB_PAD)로 정해요.
    새 게임 시작 때 한 번(buildNoBuild), 플레이어가 지은 건 빼고 월드 구조물만 봐요 */
@@ -246,7 +248,7 @@ function drawNoBuild(c,k){if(!bmode||bmode==='demo')return;const g=ghost&&ghost.
  if(!nobG||!nobG.visible)return;for(const n of NOB){const d=dist(P.x,P.z,n.x,n.z);if(d>n.r+22||d<=n.r)continue;const t=n.r/d,x=n.x+(P.x-n.x)*t,z=n.z+(P.z-n.z)*t;if(g&&!g.ok&&dist(x,z,g.x,g.z)<6)continue;const q=scr(x,Math.max(hAt(x,z),0)+.4,z);if(!q[2])continue;uiPill(c,`${NOB_N[n.k]} 주변 설치 금지`,q[0],q[1],10.5*k,'rgba(229,83,75,.9)','#fff','rgba(255,255,255,.3)')}}
 /* where the next build would go, and why it cannot go there (pr.why) */
 const BPIN={on:0,x:0,z:0};   /* 33차(기획자: '들고 왔다 갔다 하다가 놓고 싶은 곳을 누르면 거기에'): 화면을 누르는 동안 미리보기가 누른 곳으로 (ui.js bldTouch) */
-function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=BPIN.on?BPIN.x:P.x+Math.sin(P.rot)*d,z=BPIN.on?BPIN.z:P.z+Math.cos(P.rot)*d,r=rotStep()*ROT_A;if(b.grid){x=Math.round(x);z=Math.round(z)}   /* 48차(기획자: '360도 말고 원래 각도·왼쪽·오른쪽 사선 세 가지만'): 정면(+z)·왼쪽 사선·오른쪽 사선 */
+function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=BPIN.on?BPIN.x:P.x+Math.sin(P.rot)*d,z=BPIN.on?BPIN.z:P.z+Math.cos(P.rot)*d,r=placementAngle();if(b.grid){x=Math.round(x);z=Math.round(z)}   /* 48차(기획자: '360도 말고 원래 각도·왼쪽·오른쪽 사선 세 가지만'): 정면(+z)·왼쪽 사선·오른쪽 사선 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
  /* 실내 설치(14차): 작업대(b.indoor)는 텐트 안에서만, 텐트 안에는 실내 설치물만. 방 안으로 끌어당기고 앞쪽 1.2m(나가는 길)는 비워요 */
  if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const E=rotExt(b.bx,b.bz,r),ax=INT.hw-E[0]-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+E[1]+.1,INT.z+INT.hd-1.3-E[1]);pr.r=r;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);

@@ -71,7 +71,11 @@ function hud(){$('bHp').style.width=clamp(S.hp,0,100)+'%';$('bHu').style.width=S
  $('atkIc').style.display=id==='fist'?'none':'';if(id!=='fist')$('atkIc').src=ICON[id];const sw=WTR.st==='swim',wd=w.rod&&WTR.st==='wade';$('bAtk').style.opacity=sw||wd?.45:1;$('atkN').textContent=sw?'헤엄 중':wd?'물 밖에서':w.rod?(!fishing?'던지기':fishing.st==='bite'?'챔질!':fishing.st==='reel'?'꾹 눌러 감기':fishing.st==='wait'?'기다리는 중':''):id==='fist'?'주먹':w.ammo?invN(w.ammo):'';$('bAtk').classList.toggle('bite',!!fishing&&fishing.st==='bite');
  {const md=actMode(),lb=md==='build'?(bmode==='demo'?'철거':'설치'):md==='act'?target.lab:'',L=$('atkL');if(L.textContent!==lb)L.textContent=lb;$('bAtk').classList.toggle('act',md!=='fire');if(md!=='fire')$('bAtk').style.opacity=1}
  devHud();if(hudDirty){drawQuick();if(panel&&panel!=='dev'&&panel!=='fmap'&&panel!=='devitem')renderPanel();hudDirty=false}drawMap($('mm').getContext('2d'),110,198);$('cold').style.opacity=S.warm<30?(30-S.warm)/30*.9:0}
-function buildUI(){const b=$('bbar');b.classList.toggle('hide',!bmode);if(!bmode)return;const d=BUILDS[bmode];b.innerHTML=(bmode==='demo'?'<span>철거할 내 건물 가까이에서 [철거]</span>':`<span>${d.n}</span><span style="color:var(--mut);font-weight:500">${costHtml(d.c)}</span><button class="btn g" data-b="rot">↻ ${ROT_N[rotStep()+1]}</button>`)+'<button class="btn r" data-b="x">그만</button>'}
+function buildUI(){const b=$('bbar');b.classList.toggle('hide',!bmode);if(!bmode)return;const d=BUILDS[bmode];
+ const rotateControl=DEV.on
+   ? `<button data-b="left" aria-label="왼쪽 1도">−</button><input aria-label="설치 방향" type="range" data-build-angle min="0" max="360" step="1" value="${adminBuildDegrees}" style="width:clamp(64px,15vw,130px)"><output>${adminBuildDegrees}°</output><button data-b="rot" aria-label="오른쪽 1도">+</button>`
+   : `<button class="btn g" data-b="rot">↻ ${ROT_N[rotStep()+1]}</button>`;
+ b.innerHTML=(bmode==='demo'?'<span>철거할 내 건물 가까이에서 [철거]</span>':`<span>${d.n}</span><span style="color:var(--mut);font-weight:500">${DEV.on?"":costHtml(d.c)}</span>${rotateControl}`)+'<button class="btn r" data-b="x">그만</button>'}
 const costHtml=c=>Object.keys(c).map(k=>`<span class="cost ${invN(k)>=c[k]?'ok':'no'}">${ITEMS[k].n} ${invN(k)}/${c[k]}</span>`).join('');
 /* ---- panels ---- */
 const TABS=[];   /* 27차(기획자): 가방 창의 제작·건설·지도 탭을 없앴어요. 창마다 제목 하나만 */
@@ -153,7 +157,7 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(
   if(it.one&&invN(k)){toast('이미 갖고 있어요')}else if(S.coins<pr){toast('동전이 모자라요')}else{S.coins-=pr;give(k,n);sfx(880,.07);sfx(1320,.05,'sine',.03);toast(`${it.n}${n>1?' ×'+n:''} 샀어요`)}}
  else if(a==='rsell'){const n=Math.min(+b.dataset.n,invN(k));if(n>0&&take(k,n)){const g=sellPrice(k)*n;S.coins+=g;sfx(700,.07);sfx(980,.05,'sine',.03);toast(`${ITEMS[k].n}${n>1?' ×'+n:''} 팔았어요 · +${g} 동전`)}}
  else if(a==='sell'){const n=Math.min(+b.dataset.n,invN(k));if(take(k,n)){S.coins+=sellP(k)*n;sfx(700,.07)}}
- else if(a==='dev'){DEV.on=!DEV.on;devSave();syncMarks();unstuck();toast(DEV.on?'🛠 관리자 모드 켜짐: 왼쪽 패널이나 지도에서 위치를 표시해요':'관리자 모드 꺼짐');closePanel();return}
+ else if(a==='dev'){DEV.on=!DEV.on;buildUI();devSave();syncMarks();unstuck();toast(DEV.on?'🛠 관리자 모드 켜짐: 왼쪽 패널이나 지도에서 위치를 표시해요':'관리자 모드 꺼짐');closePanel();return}
  else if(a==='dgive'){const n=ITEMS[k].one?1:DEV.qty;give(k,n);sfx(880,.05);toast(`${ITEMS[k].n} +${n}`);$('devGrid').innerHTML=devGrid();drawQuick();return}
  else if(a==='dqty'){DEV.qty=+k}
  else if(a==='dtool'){if(k==='coin')S.coins+=5000;else if(k==='day')S.time=.4;else if(k==='night')S.time=.92;else if(k==='rain')WX.t=0;else if(k==='clear')enemies.slice().forEach(dropEnemy);else{const L=k==='mob'?['rgolem','wgolem','plant','wraith']:['bandit','bandit','gunner'];L.forEach((m,i)=>{const a=P.rot+(-.6+i*.4),e=spawnEnemy(m,P.x+Math.sin(a)*11,P.z+Math.cos(a)*11,{wild:1});e.agg=k==='raid'?1:0});closePanel();toast('소환했어요. 관리자 모드에서는 적이 먼저 덤비지 않아요');return}sfx(600,.05)}
@@ -209,7 +213,11 @@ function actMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(fis
 {const b=$('bAct');b.addEventListener('pointerdown',e=>{e.preventDefault();inp.act=true;inp.actEdge=true});['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,()=>inp.act=false))}
 $('bBag').onclick=()=>openPanel('bag');$('bBuild').onclick=()=>openPanel('build');$('bMenu').onclick=()=>openPanel('menu');$('bZoom').onclick=()=>{zoomK=zoomK===1?.74:zoomK<1?1.3:1};
 $('quick').addEventListener('pointerdown',e=>{const s=e.target.closest('[data-q]');if(s){e.preventDefault();useQuick(+s.dataset.q)}});
-$('bbar').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='rot'){rotNext();sfx(500,.04)}else setBuild(null)});
+$('bbar').addEventListener('input',e=>{
+ if(!DEV.on||!bmode||!e.target.matches('[data-build-angle]'))return;
+ adminBuildDegrees=Number(e.target.value);$('bbar').querySelector('output').textContent=adminBuildDegrees+'°';
+});
+$('bbar').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='left'&&DEV.on){adminBuildDegrees=(adminBuildDegrees+359)%360;buildUI()}else if(b.dataset.b==='rot'){rotNext();sfx(500,.04)}else setBuild(null)});
 addEventListener('keydown',e=>{keys[e.code]=1;if(mode!=='play')return;if(e.code==='Escape'){panel?closePanel():setBuild(null)}if(panel)return;if(e.code==='KeyE'&&!e.repeat){inp.act=true;inp.actEdge=true}if(e.code==='Space'){inp.fire=true;inp.aiming=false;e.preventDefault()}
  if(e.code==='Tab'||e.code==='KeyI'){e.preventDefault();openPanel('bag')}if(e.code==='KeyB')openPanel('build');if(e.code==='KeyR'&&bmode)rotNext()});
 addEventListener('keyup',e=>{keys[e.code]=0;if(e.code==='KeyE')inp.act=false;if(e.code==='Space')inp.fire=false});
