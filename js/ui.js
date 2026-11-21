@@ -258,7 +258,7 @@ async function boot(){const L=t=>$('loadTx').textContent=t;try{initRenderer();in
  P.a=new Actor('hero');P.a.helmet();P.a.xray();P.x=S.px;P.z=S.pz;unstuck();P.a.play('Idle',{force:1});P.a.set(P.x,P.z,0);
  merchant={a:new Actor('merchant'),x:VIL.mx,z:VIL.mz};merchant.a.play('Idle',{force:1});merchant.a.set(merchant.x,merchant.z,2.2);merchant.a.mixer.update(.5);
  ring=new THREE.Mesh(new THREE.RingGeometry(.86,1,28),new THREE.MeshBasicMaterial({color:0x7BD88F,transparent:true,opacity:.9,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.visible=false;scene.add(ring);
- placeBag();devInit();L('아이콘을 그리는 중…');await new Promise(r=>setTimeout(r,30));makeIcons();makeMap();resize();$('load').classList.add('hide');toTitle();if(typeof NET!=='undefined')NET.init();last=performance.now();requestAnimationFrame(loop)}
+ placeBag();await devInit();L('아이콘을 그리는 중…');await new Promise(r=>setTimeout(r,30));makeIcons();makeMap();resize();$('load').classList.add('hide');toTitle();if(typeof NET!=='undefined')NET.init();last=performance.now();requestAnimationFrame(loop)}
  catch(e){console.error(e);L('불러오지 못했어요: '+e.message+' — 새로고침 해주세요')}}
 /* ===== 27차(기획자): 가방 20칸 · 에너지 10칸 =====
    가방: 아이템 한 종류 = 한 칸(개수는 한 칸에 얼마든지), 모두 20칸. 꽉 찼을 때 새 종류가 들어오면 발밑에 자루로 내려놓고(5분 뒤 사라짐),

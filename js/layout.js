@@ -1,7 +1,7 @@
 'use strict';
 // The catalog is built after the authored world has finished spawning.
 const layoutInit=devInit;
-devInit=function(){
+devInit=async function(){
   layoutInit();
   if(window.MP)return;
   const entries=[],owners=new Map(),key='frontisle-layout-v1-'+S.seed;
@@ -68,8 +68,38 @@ devInit=function(){
     m.position.x=x;m.position.z=z;m.rotation.y=r;
     if(p && m.parent===p.g)scene.attach(m);
   }
+  const response=await fetch('assets/world-layout.json');
+  if(!response.ok)throw Error('기본 배치를 불러올 수 없어요');
+  const published=await response.json();
+  if(published.version!==1 || !published.objects || Array.isArray(published.objects))
+    throw Error('기본 배치 파일을 확인하세요');
+  const defaults=published.seed==null||published.seed===S.seed?published.objects:{};
   try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}
-  for(const e of entries){const v=saved[e.id];if(Array.isArray(v)&&v.length===3&&v.every(Number.isFinite))move(e,...v)}
+  const valid=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
+  for(const e of entries){
+    const v=valid(saved[e.id])?saved[e.id]:defaults[e.id];
+    if(valid(v))move(e,...v);
+  }
+  const output=document.createElement('button');
+  output.textContent='배치 내보내기';
+  const upload=document.createElement('a');
+  upload.textContent='GitHub에 배치 올리기';
+  upload.href='https://github.com/wjdwogh-06/ter-1029/upload/main/assets';
+  upload.target='_blank';upload.rel='noopener';
+  panel.append(output,document.createTextNode(' '),upload);
+  output.onclick=()=>{
+    if(!active||!DEV.on)return;
+    if(selected){toast('선택한 구조물을 먼저 적용하거나 취소하세요');return}
+    const objects={};
+    for(const e of entries){
+      const v=saved[e.id]??defaults[e.id];
+      if(!e.s?.own&&valid(v))objects[e.id]=v;
+    }
+    const json=JSON.stringify({version:1,seed:S.seed,objects},null,2);
+    const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='world-layout.json';
+    document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  };
   function select(e,all=false){
     selected=e;
     group=(all?entries.filter(q=>q.p===e.p):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
