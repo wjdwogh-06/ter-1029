@@ -23,7 +23,7 @@ class Actor{constructor(kind){this.kind=kind;const src=kind==='hero'?CH.hero:(ki
   if(this.curA&&this.curA!==a)a.crossFadeFrom(this.curA,o.fade===undefined?.14:o.fade,false);a.play();this.curA=a;this.cur=n;if(o.lock)this.lock=o.lock}
  weapon(id){const h=this.holder;while(h.children.length)h.remove(h.children[0]);this.wid=id;if(!id||id==='fist')return;const g=GEO[id==='axe'?'axe_m':ITEMS[id]&&ITEMS[id].hg||id];if(!g)return;const m=mesh(g,MATT);if(this.xr){m.material=xrMat(MATT);m.renderOrder=5}
   const it=ITEMS[id];if(it&&it.hs)m.scale.setScalar(it.hs);   /* 25차: 손에 든 모양 크기(hs)·총처럼 앞으로 드는 근접 도구(gh) */
-  this.tip=null;if(WEAP[id]&&(!WEAP[id].melee||it&&it.gh)){h.rotation.set(0,Math.PI/2,0);h.position.set(-.1,-.02,0)}else{h.rotation.set(0,Math.PI,0);h.position.set(0,0,0)}h.add(m);if(id==='rod'){const t=new THREE.Object3D();t.position.fromArray(g.userData.tip);m.add(t);this.tip=t}}
+  this.tip=null;if(WEAP[id]&&(!WEAP[id].melee||it&&it.gh)){h.rotation.set(0,Math.PI/2,0);h.position.set(-.1,-.02,0)}else{h.rotation.set(0,Math.PI,0);h.position.set(0,0,0)}h.add(m);if(isRod(id)){const t=new THREE.Object3D();t.position.fromArray(g.userData.tip||GEO.rod.userData.tip);m.add(t);this.tip=t}}
  /* show a faint silhouette of this actor wherever something hides it (the camera cannot be turned) */
  xray(){this.xr=1;const sk=[];this.root.traverse(o=>{if(o.isMesh){o.renderOrder=5;o.material=xrMat(o.material);if(o.isSkinnedMesh)sk.push(o)}});for(const o of sk){const c=new THREE.SkinnedMesh(o.geometry,XRAY);c.bind(o.skeleton,o.bindMatrix);c.position.copy(o.position);c.quaternion.copy(o.quaternion);c.scale.copy(o.scale);c.frustumCulled=false;c.renderOrder=30;o.parent.add(c)}}
  helmet(){const m=mesh(GEO.helmet,MATT);m.position.set(0,.6,.03);m.rotation.x=-.08;this.head.add(m)}
@@ -101,7 +101,9 @@ function plFall(dt){const g=groundY(P.x,P.z),tg=WTR.st==='swim'?-.6:g;   /* 헤�
 const turn=(a,b,k)=>{let d=b-a;while(d>Math.PI)d-=6.283;while(d<-Math.PI)d+=6.283;return a+d*Math.min(1,k)};
 function unstuck(){if(walk(P.x,P.z,.42,P)===null)return;for(let r=.3;r<14;r+=.3)for(let a=0;a<16;a++){const x=P.x+Math.cos(a*.39)*r,z=P.z+Math.sin(a*.39)*r;if(walk(x,z,.42,P)===null){P.x=x;P.z=z;return}}P.x=S.home.x;P.z=S.home.z}
 const curId=()=>{const q=S.quick[S.sel];return q&&WEAP[q]&&invN(q)>0?q:'fist'};
-const canChop=()=>{const c=curId();return c==='axe'||c==='chainsaw'};   /* 25차: 전기톱도 나무를 벨 수 있어요(임시) */
+const canChop=()=>{const c=curId();return c==='axe'||c==='chainsaw'};
+/* 46차(기획자: '나무·바위가 너무 쉽게 부서져, 어느 정도 도끼질을 해야 부서지게, 전기톱은 더 빠르게'): 한 번에 깎는 양과 다음 휘두르기까지(초). 나무·바위 체력은 아래 OBJT_HP */
+const CHOP={hit:1,saw:2,cd:.42,sawCd:.3};   /* 25차: 전기톱도 나무를 벨 수 있어요(임시) */
 function nearestEnemy(x,z,r){let b=null,bd=r;for(const e of enemies){if(e.dead)continue;const d=dist(x,z,e.x,e.z);if(d<bd){bd=d;b=e}}return b}
 /* ---- combat ---- */
 function hitscan(ox,oz,dx,dz,range,dmg){let best=null,bt=range;for(const e of enemies){if(e.dead)continue;const rx=e.x-ox,rz=e.z-oz,t=rx*dx+rz*dz;if(t<0||t>bt)continue;if(Math.abs(rx*dz-rz*dx)<(e.big?1.05:.78)){bt=t;best=e}}
@@ -165,7 +167,7 @@ function ferryDockSpot(s){let best=null,bs=1e9;for(const d of DOCKS){if(dist(d.x
    if(db<1.6||walk(x,z,.42,P)!==null||onDock(x,z)!==d)continue;const sc=db+Math.abs(lz-lz0)*.5;if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),dock:1}}break}}return best}
 function ferrySpot(i){const s=structs.find(q=>q.t==='ferry'&&q.pi===i);if(!s)return null;{const q=ferryDockSpot(s);if(q){q.p=PORTS[i];return q}}let best=null,bs=1e9;for(let r=1.7;r<5.2;r+=.15)for(let a=0;a<36;a++){const an=a/36*Math.PI*2,x=s.x+Math.cos(an)*r,z=s.z+Math.sin(an)*r,dk=onDock(x,z);if(!dk&&hAt(x,z)<.9)continue;if(walk(x,z,.42,P)!==null)continue;const sc=r-(dk?.35:0);if(sc<bs){bs=sc;best={x,z,rot:Math.atan2(x-s.x,z-s.z),p:PORTS[i]}}}return best}
 function ferryNear(){let b=null,bd=1e9;for(const s of structs){if(s.t!=='ferry'||dist(P.x,P.z,s.x,s.z)>8)continue;const g=sGap(P.x,P.z,s);if(g<=ferThr(s)&&g<bd){bd=g;b={k:'s',s,x:s.x,z:s.z,lab:'배 타기',rr:3.4}}}return b}   /* 34차: 낚싯대를 들었을 때 배 타기도 바짝 붙어야 */
-function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(curId()==='rod'&&!INT.on)return ferryNear();return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,TREACH)}
+function findTarget(){if(bmode||P.dead||WTR.st==='swim'||fishing)return null;if(isRod(curId())&&!INT.on)return ferryNear();return findNear(P.x,P.z,P.x+Math.sin(P.rot)*1.1,P.z+Math.cos(P.rot)*1.1,TREACH)}
 /* 34차(기획자: '조이스틱이 아닌 다른 곳을 터치했는데 캐릭터가 움직이면 이상하다, 멀리 있는 자판기를 클릭했다고 따라가는 것 없애라'):
    누르면 걸어가는 것(P.auto: 물건·문·배·낚시 자리·땅으로 걸어가기)을 모두 없앴어요. 움직임은 조이스틱으로만.
    worldTap(x,z) = 그 자리를 누름: 적이면 그쪽으로 공격, 낚싯대로 사거리 안 떼면 던지기, 바짝 붙은 대상이면 상호작용, 멀면 '더 가까이' 알림만 */
@@ -175,8 +177,8 @@ function tapThing(x,z){if(S.bag&&dist(x,z,S.bag.x,S.bag.z)<1.2)return{k:'bag',x:
 const sameT=(a,b)=>!!a&&!!b&&a.k===b.k&&(a.k==='s'?a.s===b.s:a.k==='pl'?a.pl===b.pl:a.k==='o'?a.o===b.o:true);
 function farHint(t){const y=(t.k==='s'?groundY(t.x,t.z)+Math.min(3.2,1.4+(sdef(t.s).s||1)*.5):groundY(t.x,t.z)+1.4);ftext(t.x,y,t.z,'더 가까이 가요','#fff3d6');sfx(300,.05,'sine',.03)}
 function worldTap(x,z){if(bmode||P.dead||busy)return 0;let e=null,bd=2.6;for(const o of enemies){if(o.dead)continue;const d=dist(x,z,o.x,o.z);if(d<bd){bd=d;e=o}}
- if(e&&curId()!=='rod'){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;return 1}
- if(curId()==='rod'&&!INT.on&&!fishing&&waterDepth(x,z)>.05&&WTR.st!=='swim'){const sp=spotAt(x,z);if(sp){if(inWater()){fishWarn('물 안에서는 낚시할 수 없어요. 물 밖으로 나가요');return 0}const d=dist(P.x,P.z,x,z);if(d<=ROD_R&&d>=1.6){castAt(x,z,sp);return 1}fishWarn(d>ROD_R?'너무 멀어요. 물가로 더 가까이 가서 던져요':'너무 가까워요');return 0}}
+ if(e&&!isRod(curId())){P.tapE=e;P.tapT=WEAP[curId()].melee?.6:.9;return 1}
+ if(isRod(curId())&&!INT.on&&!fishing&&waterDepth(x,z)>.05&&WTR.st!=='swim'){const sp=spotAt(x,z);if(sp){if(inWater()){fishWarn('물 안에서는 낚시할 수 없어요. 물 밖으로 나가요');return 0}const d=dist(P.x,P.z,x,z);if(d<=ROD_R&&d>=1.6){castAt(x,z,sp);return 1}fishWarn(d>ROD_R?'너무 멀어요. 물가로 더 가까이 가서 던져요':'너무 가까워요');return 0}}
  const t=tapThing(x,z);if(!t)return 0;const tg=findTarget();if(sameT(tg,t)||t.k==='bag'&&tg&&tg.k==='bag'){target=tg;P.rot=Math.atan2(tg.x-P.x,tg.z-P.z)||P.rot;if(tg.k==='o'||tg.k==='pl')interact();else{inp.actEdge=true;interact();inp.actEdge=false}return 1}
  farHint(t);return 0}
 const LOOT=[['ammoS',12,22],['can',1,2],['cloth',2,3],['powder',2,4],['bandage',1,1],['wood',4,8]];
@@ -189,10 +191,10 @@ function lootGen(s){const df=sdef(s),got={};const add=(k,n)=>got[k]=(got[k]||0)+
  for(const k in got)if(k!=='coin'&&ITEMS[k]&&ITEMS[k].one&&invN(k)){delete got[k];add('scrap',df.loot===3?12:df.loot===4?8:6)}
  return got}
 function interact(){const t=target;if(!t)return;
- if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=.42;P.rot=Math.atan2(o.x-P.x,o.z-P.z);
+ if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=curId()==='chainsaw'?CHOP.sawCd:CHOP.cd;P.rot=Math.atan2(o.x-P.x,o.z-P.z);
   if(isTree(T)&&!canChop()){P.cd=.9;P.auto=null;toast(invN('axe')||invN('chainsaw')?'가방에서 손도끼나 전기톱을 장착해야 나무를 벨 수 있어요':'나무는 손도끼나 전기톱으로만 벨 수 있어요. 상인에게 받거나 제작해요');sfx(240,.06,'square',.03);return}
   if(T.berry){P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6})}else{P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.34,force:1,speed:1.6});sfx(o.t===3?330:o.t===5?520:170,.06,'square',.04)}
-  o.hp-=curId()==='chainsaw'?3:invN('axe')?2:1;o.sh=.28;depSet.add(t.key);puff(o.x,groundY(o.x,o.z)+1.2,o.z,o.t===3?0xb9c0c9:o.t===5?0x8a929c:0x6fae5a,4);
+  o.hp-=curId()==='chainsaw'?CHOP.saw:CHOP.hit;o.sh=.28;depSet.add(t.key);puff(o.x,groundY(o.x,o.z)+1.2,o.z,o.t===3?0xb9c0c9:o.t===5?0x8a929c:0x6fae5a,4);
   if(o.hp<=0){const n=T.drop[1]+(Math.random()<.4?1:0);give(T.drop[0],n);ftext(o.x,groundY(o.x,o.z)+2.6,o.z,`+${n} ${ITEMS[T.drop[0]].n}`,'#b8f0c0');o.re=T.re;depSet.add(t.key);sfx(520,.1);hudDirty=true}refreshObj(o);return}
  if(!inp.actEdge)return;
  if(t.k==='bag'){for(const k in S.bag.inv)if(S.bag.inv[k]>0)give(k,S.bag.inv[k]);S.bag=null;placeBag();P.a.play('PickUp',{once:1,lock:.5,force:1});toast('가방을 되찾았어요!');jingle([523,784]);hudDirty=true;return}
@@ -318,7 +320,7 @@ function updRaid(dt){const t=S.time;if(!raid.on&&S.raidDone<S.day){if(t>.7&&t<.8
 function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=dt;a.lock-=dt;if(P.dead||busy){unpose(a);a.mixer.update(dt);a.set(P.x,P.z,P.rot);waterPose(dt);return}
  const ws=updWaterState(dt),swim=ws==='swim',smul=speedMul()*(DEV.on?DEV.sp:1);
  let mx=inp.mx,mz=inp.mz,l=Math.hypot(mx,mz);if(l>1){mx/=l;mz/=l;l=1}P.moving=l>.15;if(P.moving&&l<.55){const k=.45/l;mx*=k;mz*=k}const id=curId(),w=WEAP[id],press=inp.fire&&!P.fireWas;P.fireWas=inp.fire;
- if(fishing&&id!=='rod')endFish();
+ if(fishing&&!isRod(id))endFish();
  if(false&&inp.roll&&P.rollT<=0&&P.rollCd<=0&&!swim&&!fishing){   /* 구르기는 없앴어요(기획자 요청) */P.rollT=.4;P.rollCd=.85;P.inv=.42;if(P.moving){P.rdx=mx/l;P.rdz=mz/l}else{P.rdx=Math.sin(P.rot);P.rdz=Math.cos(P.rot)}a.play('Dodge_Forward',{once:1,lock:.4,force:1,speed:1.6});sfx(300,.14,'sine',.04,.5)}inp.roll=false;
  if(P.rollT>0){P.rollT-=dt;moveEnt(P,P.rdx*12*smul*dt,P.rdz*12*smul*dt);P.rot=Math.atan2(P.rdx,P.rdz)}
  else{const firing=(inp.fire||P.tapT>0)&&!bmode&&!swim&&!w.rod;if(P.moving||firing)P.auto=null;
@@ -364,6 +366,22 @@ function updStats(dt){const dk=dark(),nw=nearWarm(),h=hAt(P.x,P.z);S.time+=dt/DA
  /* 27차(기획자: '체력바만, 에너지 개념 10칸, 수영할 때도 계속 소비되고 맞아도 소비'): 배고픔·체온은 없어요(값은 100으로 묶어 둠).
     에너지 = S.hp(10 = 1칸). 헤엄치는 동안 NRG.swim/초씩 줄고, 맞으면 줄어요. 물 밖에서 5초 안 맞으면 천천히 차요(텐트·집 안은 빨리, 불 옆은 조금 빨리). 숫자는 임시 */
  if(WTR.st==='swim'){hurtSoft(dt*NRG.swim);if((P.nrgT=(P.nrgT||0)-dt)<=0&&S.hp<30&&!P.dead){P.nrgT=12;toast('⚡ 에너지가 얼마 안 남았어요! 물 밖으로 나가요')}}
- else if(P.lastHurt>5&&!P.dead)S.hp=Math.min(100,S.hp+dt*(INT.on?NRG.rest:nw?NRG.fire:NRG.idle))}
+ else if(P.lastHurt>5&&!P.dead)S.hp=Math.min(100,S.hp+dt*(INT.on&&INT.kind!=='cave'?NRG.rest:nw?NRG.fire:NRG.idle))}
 const NRG={swim:2,idle:.25,fire:.8,rest:2.5};   /* 에너지(0~100)가 1초에 줄거나 차는 양: 헤엄 1칸/5초, 쉬기(밖) 1칸/40초, 불 옆 1칸/12초, 텐트·집 안 1칸/4초 */
 function hurtSoft(d){if(P.dead)return;S.hp-=d;if(S.hp<=0)die()}
+/* ===== 46차(규칙, 기획자 11-21 13:14) 나무·바위 더 단단하게 · 뭉친 나무 따로따로 =====
+   - 체력(OBJT_HP): 나무 7·8, 바위 9. 손도끼·맨손은 한 번에 1(0.42초마다) → 나무 7~8번, 바위 9번. 전기톱은 한 번에 2(0.3초마다) → 나무 4번(약 1초).
+   - 예전엔 나무 3~4그루가 한 덩어리 모델(OBJT[2] 'trees_A_small')이라 한 번 베면 여러 그루가 같이 사라졌어요.
+     이제 그 덩어리는 만들지 않고, 그 자리에 낱그루 하나 + 바로 옆 빈 칸에 낱그루 0~2그루를 따로 심어요(splitClusters, 해시로 정해서 누구에게나 같음). */
+const OBJT_HP=[7,8,9,9];OBJT_HP.forEach((h,i)=>{if(OBJT[i])OBJT[i].hp=h});
+function objSpotOk(x,z,sd){const h0=hAt(x,z);if(h0<.85||lhD(x,z)<17)return false;const I=islAt(x,z)||ISL[0];if(I.ty===2&&dist(x,z,I.x,I.z)<3.2)return false;
+ if(supD(x,z)<8.5||pathD(x,z)<2.6||PORTS.some(p=>dist(x,z,p.x-p.dx*p.R*.4,p.z-p.dz*p.R*.4)<p.R*(p.town?1.05:.9)))return false;if(POI.lh.some(c=>dist(x,z,c.x,c.z)<6))return false;return true}
+function objSingle(t,x,z,cx,cz,sd){const T=OBJT[t],I=islAt(x,z)||ISL[0],o={t,x,z,hp:T.hp,re:0,sc:lerp(T.s[0],T.s[1],hash(cx,cz,sd+11)),rot:hash(cx,cz,sd+12)*6.28,sh:0,gk:objKey(t,x,z,UH(hAt(x,z)),I,cx,cz,sd)};
+ const sp=['t_oak','t_maple','t_gold'].indexOf(o.gk);if(sp>=0){o.gk=sp?'t_fall':'t_leaf';o.sp=sp}return o}
+function splitClusters(sd){const add=new Map(),NB=[[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[-1,-1],[1,-1]];let n=0;
+ objs.forEach((o,k)=>{if(o.t!==2)return;n++;const cx=k%CN,cz=(k/CN)|0;objs.set(k,objSingle(hash(cx,cz,sd+51)<.5?0:1,o.x,o.z,cx,cz,sd));
+  const want=hash(cx,cz,sd+52)<.35?1:2,st=(hash(cx,cz,sd+53)*8)|0;let got=0;
+  for(let q=0;q<8&&got<want;q++){const d=NB[(st+q)%8],i=cx+d[0],j=cz+d[1],key=j*CN+i;if(i<1||j<1||i>=CN-1||j>=CN-1||objs.has(key)||add.has(key))continue;
+   const x=(i+.5)*CELL+(hash(i,j,sd+1)-.5)*1.8,z=(j+.5)*CELL+(hash(i,j,sd+2)-.5)*1.8;if(!objSpotOk(x,z,sd))continue;add.set(key,objSingle(hash(i,j,sd+54)<.5?0:1,x,z,i,j,sd));got++}});
+ add.forEach((o,k)=>objs.set(k,o));return {clusters:n,added:add.size}}
+{const _go=genObjects;genObjects=function(sd){_go(sd);genObjects.split=splitClusters(sd)}}

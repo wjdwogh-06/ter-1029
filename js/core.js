@@ -278,7 +278,7 @@ function devLoad(){try{const d=JSON.parse(localStorage.getItem('frontisle_dev'))
 function devSave(){try{localStorage.setItem('frontisle_dev',JSON.stringify({on:DEV.on,marks:DEV.marks,sp:DEV.sp}))}catch(e){}}
 /* ===== state ===== */
 let S=null,opt={snd:true,gfx:1};
-function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:300,cx:1,inv:{pistol:1,ammoS:36,can:2,bandage:1},quick:['pistol',null,'can','bandage',null,null],sel:0,
+function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:100,cx:1,inv:{pistol:1,ammoS:36,can:2,bandage:1,rod:1},quick:['pistol',null,'can','bandage',null,null],sel:0,
  home:null,q:0,qv:1,st:{wood:0,stone:0,scrap:0,kills:0,raids:0,camps:0,boss:0,c_ammoS:0,c_ammoL:0,b_fire:0,b_ptent:0,b_sandbag:0,b_mg:0,b_tur:0,b_slight:0,bunk:0,fish:0,cook:0},caught:{},best:{},
  built:[],dep:{},looted:{},lh:{},campDay:{},bag:null,raidDone:0,stash:{}}}
 const invN=id=>S.inv[id]||0;
@@ -304,9 +304,17 @@ Object.assign(ITEMS,{gkit_pistol:{n:ITEMS.pistol.n+' 키트',ic:'lk_gkit_pistol'
  gkit_rifle:{n:ITEMS.rifle.n+' 키트',ic:'lk_gkit_rifle',ty:'res',p:2600,d:ITEMS.rifle.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
  gkit_shotgun:{n:ITEMS.shotgun.n+' 키트',ic:'lk_gkit_shotgun',ty:'res',p:3400,d:ITEMS.shotgun.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
  gkit_smg:{n:ITEMS.smg.n+' 키트',ic:'lk_gkit_smg',ty:'res',p:4200,d:ITEMS.smg.n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'},
- rod2:{n:'중급 낚싯대',ic:'lk_rod2_i',hg:'lk_rod2',ty:'tool',p:900,d:'튼튼한 철제 낚싯대 (낚시 기능·성능은 아직, 임시)',one:1},
- rod3:{n:'고급 낚싯대',ic:'lk_rod3_i',hg:'lk_rod3',ty:'tool',p:2400,d:'밝게 빛나는 고급 철제 낚싯대 (낚시 기능·성능은 아직, 임시)',one:1}});
+ rod2:{n:'중급 낚싯대',ic:'lk_rod2_i',hg:'lk_rod2',ty:'tool',p:900,d:'튼튼한 철제 낚싯대. 입질이 6~12초로 빨라요 (사거리 8m)',one:1},
+ rod3:{n:'고급 낚싯대',ic:'lk_rod3_i',hg:'lk_rod3',ty:'tool',p:2400,d:'밝게 빛나는 고급 철제 낚싯대. 입질이 4~8초로 가장 빨라요 (사거리 8m)',one:1}});
 /* ===== 37차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-19 22:54: '아이템 중에서 금속부품, 구리 추가') ===== 
    모양·아이콘은 look.js 37차(lk_mparts, lk_copper). p가 있어서 랜덤 자판기 목록에 저절로 들어가요. 가격·설명·쓰는 곳은 임시(기획자가 정하면 숫자만). */
 Object.assign(ITEMS,{mparts:{n:'금속부품',ic:'lk_mparts',ty:'res',p:120,d:'톱니바퀴·볼트·스프링 같은 쇠 부품. 제작 재료 (임시)'},
  copper:{n:'구리',ic:'lk_copper',ty:'res',p:90,d:'붉게 빛나는 구리 덩어리. 제작 재료 (임시)'}});
+/* ===== 46차(규칙, 기획자 11-21 13:14) =====
+   ① 낚싯대 3단계 — 입질까지 기다리는 시간(초): 기본 8~15, 중급 6~12, 고급 4~8(WEAP[id].bite, water.js가 씀). 나머지(사거리 8m·감기)는 같아요.
+   ② 등대 2곳 없앰: 맨 아래 가운데 '남쪽 바다 등대'(LH_SITES[0])와 맵 가운데 '안쪽만 등대'(LH_SITES[4]). 바위섬 땅은 그대로(서버도 같은 땅, 둘레 낚시 포인트도 그대로).
+      가운데 바위섬에는 동굴 입구(LH_CAVE, js/cave.js). LH_SITES 번호는 그대로라 예전 저장의 S.lh[i]도 그대로 맞아요. */
+ITEMS.rod.d='물고기 떼(물속 그림자)가 도는 곳에 던져요. 사거리 8m, 물 밖에서만. 입질 8~15초';
+WEAP.rod.bite=[8,15];Object.assign(WEAP,{rod2:{rod:1,dmg:0,cd:1,range:0,h1:1,bite:[6,12]},rod3:{rod:1,dmg:0,cd:1,range:0,h1:1,bite:[4,8]}});
+const isRod=id=>!!(WEAP[id]&&WEAP[id].rod);
+const LH_GONE=[0,4],LH_CAVE=4;

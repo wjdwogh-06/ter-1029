@@ -79,7 +79,7 @@ async def steps(pg):
       P.x=o.x-(T.r+.75);P.z=o.z;P.rot=Math.PI/2;P.yv=undefined;P.cd=0;window._TR=o;await sl(300);return JSON.stringify({hp:o.hp,wood:invN('wood'),blocked:walk(P.x,P.z,.42,P)!==null})}""")
     T0=json.loads(r)
     half=await rdrag(25,0,700);h1=await ev("()=>_TR.hp")
-    full=await rdrag(80,0,1600);h2=await ev("()=>JSON.stringify({hp:_TR.hp,re:_TR.re,wood:invN('wood')})")
+    full=await rdrag(80,0,3400);h2=await ev("()=>JSON.stringify({hp:_TR.hp,re:_TR.re,wood:invN('wood')})")
     await pg.wait_for_timeout(900);h3=await ev("()=>JSON.stringify({hp:_TR.hp,fire:inp.fire,mf:RJ.mf})")
     R={'start':T0,'half':half,'afterHalf':h1,'full':full,'afterFull':json.loads(h2),'later':json.loads(h3)}
     hits=(T0['hp']-R['afterFull']['hp']) if R['afterFull']['re']<=0 else 99

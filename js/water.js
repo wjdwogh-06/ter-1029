@@ -127,10 +127,10 @@ function endFish(msg){fishing=null;if(bobM)bobM.visible=lineM.visible=false;if(m
 function pickFish(sp){const t=FISH_ZONES[sp.zone].t;let tot=0;for(const q of t)tot+=q[1];let r=Math.random()*tot;for(const q of t){r-=q[1];if(r<=0)return FISHD[q[0]]}return FISHD[t[0][0]]}
 function updFishing(dt,press){const f=fishing;if(!f){if(press&&!P.moving)tryCast();return}
  if(P.moving||P.auto||inWater()||dist(P.x,P.z,f.bx,f.bz)>ROD_R+1.5){endFish();return}f.t+=dt;
- if(f.st==='cast'){if(f.t>=f.T){f.st='wait';f.t=0;f.W=rand(2.4,6.5);splash(f.bx,f.bz,4);sfx(250,.14,'sine',.04,.6)}}
+ if(f.st==='cast'){if(f.t>=f.T){f.st='wait';f.t=0;f.W=rodBite();splash(f.bx,f.bz,4);sfx(250,.14,'sine',.04,.6)}}
  else if(f.st==='wait'){if(press){endFish();return}if(Math.random()<dt*.5){f.nib=.22;sfx(700,.03,'sine',.015)}if(f.t>=f.W){f.st='bite';f.t=0;sfx(950,.12,'square',.05);buzz(140);ripple(f.bx,f.bz,1.3,.8)}}
  else if(f.st==='bite'){if(press){f.st='reel';f.t=0;f.fish=pickFish(f.spot);f.prog=.2;f.ten=.12;f.thr=0;f.thrT=rand(1,2);f.sx=f.bx;f.sz=f.bz;sfx(620,.08);buzz(40);return}
-  if(f.t>1.25){f.miss++;if(f.miss>=2){endFish('물고기가 미끼만 먹고 도망갔어요');return}f.st='wait';f.t=0;f.W=rand(2,4.5)}}
+  if(f.t>1.25){f.miss++;if(f.miss>=2){endFish('물고기가 미끼만 먹고 도망갔어요');return}f.st='wait';f.t=0;f.W=rodBite()}}
  else if(f.st==='reel'){const s=f.fish.str,hold=inp.fire;f.thrT-=dt;if(f.thr>0){f.thr-=dt;if(f.thr<=0)f.thrT=rand(1.4,3.2)-s*.22}else if(f.thrT<=0){f.thr=rand(.55,.9)+s*.07;buzz(70);sfx(200,.15,'sawtooth',.03,.7)}
   if(hold){f.ten+=dt*(f.thr>0?1.2+s*.14:.16+s*.05);if(f.thr<=0)f.prog+=dt*(.32-s*.035)}else{f.ten-=dt*.9;f.prog-=dt*(.025+s*.018)}f.ten=Math.max(0,f.ten);
   if(hold&&f.thr<=0){f.tick=(f.tick||0)-dt;if(f.tick<=0){f.tick=.09;sfx(1200,.015,'square',.012)}}
@@ -174,7 +174,7 @@ function updFishFx(dt){updSchools(dt);if(FCB){FCB.t-=dt;if(FCB.t<=0)FCB=null}if(
  f.vx=bx;f.vz=bz;if(f.st==='wait'||f.st==='bite'){f.rpT=(f.rpT||0)-dt;if(f.rpT<=0){f.rpT=f.st==='bite'?.28:rand(1.1,1.9);ripple(bx,bz,f.st==='bite'?.7:.5,f.st==='bite'?.7:1.3)}}f.vx=bx;f.vz=bz;bobM.visible=lineM.visible=true;bobM.position.set(bx,by,bz);bobM.rotation.z=f.st==='bite'?Math.sin(gt*30)*.5:0;
  const sag=f.st==='reel'?lerp(.5,.02,clamp(f.ten*1.4,0,1)):f.st==='cast'?0:.6,arr=lineM.geometry.attributes.position.array;for(let i=0;i<16;i++){const u=i/15;arr[i*3]=lerp(_tip.x,bx,u);arr[i*3+1]=lerp(_tip.y,by+.16,u)-Math.sin(u*Math.PI)*sag;arr[i*3+2]=lerp(_tip.z,bz,u)}lineM.geometry.attributes.position.needsUpdate=true}
 function drawFishUI(c,k){if(FCB)drawCatch(c,k);const f=fishing;
- if(!f){if(curId()==='rod'&&!P.dead&&!INT.on&&!panel&&!inWater()){const a=aimSpot();if(a){const q=scr(a.s.x,.3,a.s.z);uiPill(c,'🎣 여기 던져요',q[0],q[1],11*k,UIC.pn,UIC.tx,UIC.pn3)}}return}
+ if(!f){if(isRod(curId())&&!P.dead&&!INT.on&&!panel&&!inWater()){const a=aimSpot();if(a){const q=scr(a.s.x,.3,a.s.z);uiPill(c,'🎣 여기 던져요',q[0],q[1],11*k,UIC.pn,UIC.tx,UIC.pn3)}}return}
  const y0=groundY(P.x,P.z),hp=scr(P.x,y0+2.9,P.z);
  const bq=scr(f.vx||f.bx,.35,f.vz||f.bz),bo=Math.sin(gt*2.4)*2*k;
  if(f.st==='wait')uiPill(c,'…',bq[0],bq[1]-26*k+bo,12*k,UIC.pn,UIC.tx,UIC.pn3);
@@ -190,3 +190,5 @@ function drawCatch(c,k){const B=FCB,f=B.f,g=f.g||0,G=FGRADE[g],a=clamp(B.t/.35,0
  tags.forEach((q,i)=>{uiPill(c,q[0],tx+tw[i]/2,y-h/2+2*k,12*k,q[1],'#fff','#fff');tx+=tw[i]+6*k});
  c.font=`900 ${fs}px ${UIF}`;c.textAlign='center';c.textBaseline='middle';c.fillStyle=UIC.tx;c.fillText(t2,cx,y+6*k);c.font=`700 ${11*k}px ${UIF}`;c.fillStyle=UIC.mut||'#A08368';c.fillText('낚았어요!',cx,y+26*k);c.restore()}
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+/* 46차(기획자: '입질은 기본 8~15초, 중급 6~12초, 고급 4~8초'): 손에 든 낚싯대(WEAP[id].bite)로 입질까지 기다리는 시간. 놓친 뒤 다시 기다릴 때도 같아요 */
+function rodBite(){const w=WEAP[curId()]||WEAP.rod,b=w.bite||WEAP.rod.bite;return rand(b[0],b[1])}
