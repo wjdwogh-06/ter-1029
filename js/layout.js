@@ -133,6 +133,39 @@ devInit=async function(){
     if(deletedValue(v)){setDeleted(e,true);continue}
     if(valid(v))move(e,...v);
   }
+  const propNames={cfence:'철조망',vend:'자판기',recycle:'재활용함',market:'상점',fbuy:'생선 판매대',supply:'보급 상자',chest:'보물 상자',barrel:'통',crate:'나무 상자',well:'우물',towerB:'파란 감시탑',towerR:'빨간 감시탑',home_A:'오두막 A',home_B:'오두막 B',rack:'건조대',flagR:'빨간 깃발',flagB:'파란 깃발',suplamp:'보급지 조명'};
+  const catalog=new Map();
+  for(const [t,label] of Object.entries(propNames)){
+    if(DECO[t]&&GEO[DECO[t].g])catalog.set(t,label);
+  }
+  for(const [t,b] of Object.entries(BUILDS)){
+    if(!b.indoor&&b.n&&GEO[b.g])catalog.set(t,b.n);
+  }
+  function spawn(id,t,origin){
+    const [x,z,r]=origin;
+    const port=PORTS.reduce((best,p)=>!best||dist(x,z,p.x,p.z)<dist(x,z,best.x,best.z)?p:best,null);
+    const s=addStruct({t,x,z,r,li:id,pi:port?.i??0});
+    const e=record(s.m,catalog.get(t),{id,s,added:t,p:port&&dist(x,z,port.x,port.z)<(port.town?32:21)?port:null});
+    return e;
+  }
+  for(const [id,v] of Object.entries({...defaults,...saved})){
+    if(!id.startsWith('add:')||!catalog.has(v?.type)||!valid(v.origin)||!valid(v.pose))continue;
+    const e=spawn(id,v.type,v.origin);move(e,...v.pose);
+  }
+  const picker=document.createElement('select'),add=document.createElement('button');
+  picker.setAttribute('aria-label','추가할 구조물');
+  for(const [type,name] of catalog)picker.add(new Option(name,type));
+  let pending=null;
+  function adding(type){
+    pending=type;add.textContent=type?'추가 취소':'구조물 추가';
+    if(type)status.textContent=catalog.get(type)+' 놓을 곳을 탭하세요';
+  }
+  adding(null);panel.append(picker,add);
+  add.onclick=()=>{
+    if(!active||!DEV.on||gesture)return;
+    resetModels();clear();adding(pending?null:picker.value);
+  };
+  picker.onchange=()=>{if(pending)adding(picker.value)};
   const output=document.createElement('button');
   output.textContent='배치 내보내기';
   const upload=document.createElement('a');
@@ -146,7 +179,9 @@ devInit=async function(){
     const objects={};
     for(const e of entries){
       const v=saved[e.id]??defaults[e.id];
-      if(!e.s?.own&&(valid(v)||deletedValue(v)))objects[e.id]=v;
+      if(e.added){
+        if(!e.reinstate&&v?.type)objects[e.id]=v;
+      }else if(!e.s?.own&&(valid(v)||deletedValue(v)))objects[e.id]=v;
     }
     const json=JSON.stringify({version:1,seed:S.seed,objects},null,2);
     const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
@@ -179,21 +214,28 @@ devInit=async function(){
   resetOne.onclick=()=>restoreOriginal(group.map(q=>q.e));
   resetAll.onclick=()=>{
     if(active&&DEV.on&&!gesture&&window.confirm('기본 맵 구조물 전체를 최초 위치와 방향으로 되돌릴까요?'))
-      restoreOriginal(entries.filter(e=>!e.s?.own));
+      restoreOriginal(entries.filter(e=>!e.s?.own),true);
   };
-  function restoreOriginal(targets){
+  function restoreOriginal(targets,all=false){
     if(!active||!DEV.on||gesture)return;
     resetModels();
     const before=[];
     for(const e of targets){
       if(!e.reinstate&&e.s&&!structs.includes(e.s))continue;
       const p=e.m.position;
+      if(all&&e.added){
+        if(!e.reinstate){
+          before.push({e,x:p.x,z:p.z,r:e.m.rotation.y,override:saved[e.id]});
+          setDeleted(e,true);saved[e.id]={deleted:true};
+        }
+        continue;
+      }
       if(!e.reinstate&&Math.abs(p.x-e.x)<1e-7&&Math.abs(p.z-e.z)<1e-7&&Math.abs(e.m.rotation.y-e.r)<1e-7)continue;
       before.push({e,x:p.x,z:p.z,r:e.m.rotation.y,deleted:!!e.reinstate,override:saved[e.id]});
       setDeleted(e,false);
       move(e,e.x,e.z,e.r);
       if(!e.s?.own){
-        if(valid(defaults[e.id])||deletedValue(defaults[e.id]))saved[e.id]=[e.x,e.z,e.r];
+        if(e.added||valid(defaults[e.id])||deletedValue(defaults[e.id]))saved[e.id]=[e.x,e.z,e.r];
         else delete saved[e.id];
       }
     }
@@ -224,7 +266,7 @@ devInit=async function(){
   }
   let dest;
   function clear(){turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
-  function close(){abortDrag();resetModels();clear();active=false;panel.hidden=true;button.textContent='구조물 배치'}
+  function close(){adding(null);abortDrag();resetModels();clear();active=false;panel.hidden=true;button.textContent='구조물 배치'}
   button.onclick=()=>{if(active)return close();if(!DEV.on)return;structs.forEach(registerStruct);clear();active=true;panel.hidden=false;button.textContent='배치 종료'};
   cancel.onclick=()=>{resetModels();clear()};
   whole.onclick=()=>{if(selected?.p){dest=null;select(entries.find(q=>q.anchor===selected.p),true);status.textContent="항구 시설을 꾹 눌러 함께 이동"}};
@@ -257,6 +299,14 @@ devInit=async function(){
     undo.disabled=!history.length;persist('이전 배치로 되돌렸어요');
   };
   function persist(message='배치를 저장했어요'){
+    for(const e of entries){
+      if(!e.added)continue;
+      if(e.reinstate){
+        if(defaults[e.id])saved[e.id]={deleted:true};else delete saved[e.id];
+      }else{
+        const m=e.m;saved[e.id]={type:e.added,origin:[e.x,e.z,e.r],pose:[m.position.x,m.position.z,m.rotation.y]};
+      }
+    }
     try{localStorage.setItem(key,JSON.stringify(saved));save();clear();toast(message)}catch{toast('이 기기에 배치를 저장하지 못했어요')}
   };
   function restore(){
@@ -280,6 +330,15 @@ devInit=async function(){
   window.addEventListener('pointerdown',ev=>{
     if(!active||!DEV.on||mode!=='play'||ev.target!==cv||gesture)return;
     if([joyC(),rjC()].some(([x,y,r])=>Math.hypot(ev.clientX-x,ev.clientY-y)<r*1.5))return;
+    if(pending){
+      stop(ev);
+      const at=groundAt(ev.clientX,ev.clientY);if(!at)return;
+      const step=+spacing.value;
+      const [x,z]=at.map(v=>step?Math.round(v/step)*step:v);
+      const id='add:'+Array.from(crypto.getRandomValues(new Uint32Array(4)),n=>n.toString(16).padStart(8,'0')).join('');
+      const e=spawn(id,pending,[x,z,0]);adding(null);
+      remember([{e,x,z,r:0,deleted:true}]);persist('구조물을 추가했어요');select(e);return;
+    }
     _ray.setFromCamera({x:ev.clientX/innerWidth*2-1,y:1-ev.clientY/innerHeight*2},cam);
     const hits=_ray.intersectObjects(entries.filter(e=>!e.anchor&&e.m.parent&&e.m.visible).map(e=>e.m),true);
     let hit;for(const h of hits){let m=h.object;while(m&&!owners.has(m))m=m.parent;if(m){hit=owners.get(m);break}}
