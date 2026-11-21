@@ -85,8 +85,27 @@ function buildPorts(){buildPortGeo();let sv=0;
    S_('fire',3.6,-8.2,0,{hp:1e9});   /* 항구 건물은 없앴어요(기획자 요청: 건물 대신 철조망과 소품) */S_('barrel',-1.6,-5.2);
    for(const e of v.ex){if(e==='net')put('pnet',5.4,-5.6,.5).rotation.y=.2;else if(e==='rack')put('prack',7,-7.6,-.35).rotation.y=-.2;else if(e==='stack')put('pstack',-4.6,-4.9,.4,.85);else if(e==='crane')put('pcrane',w/2-.55,L-8,Math.PI/2);else if(e==='raft'){const [x,z]=W(-6,10);const m=put('praft',-6,10,.3,1,.0);PBOATS.push({m,y:0,ph:2,p});addDock(x,z,p.r+.3*sx,1.9,1.9,.56)}}
    if(v.sh==='II'||v.sh==='U'){lamp(7+w/2-.35,L-4.6,-Math.PI/2);put('pboll',7-(w/2-.3),5)}}
-  placeVend(p,W)}}
+  placeVend(p,W);placeFishBuyer(p)}}
 function updPorts(px,pz){const dk=dark()>.3;for(const p of PORTS)if(p.g)p.g.visible=Math.abs(p.x-px)<170&&Math.abs(p.z-pz)<170;
  for(const b of PBOATS){if(!b.p.g.visible)continue;b.m.position.y=b.y+Math.sin(gt*1.25+b.ph)*.05;b.m.rotation.z=Math.sin(gt*1.05+b.ph)*.045;b.m.rotation.x=Math.sin(gt*.8+b.ph*1.7)*.02}
  if(PLAMPS.length&&PLAMPS[0].visible!==dk)for(const s of PLAMPS)s.visible=dk}
 function drawPortLabels(c,k){for(const p of PORTS){const d=dist(p.x,p.z,P.x,P.z);if(d>(p.town?60:34))continue;const s=scr(p.x-p.dx*3,groundY(p.x,p.z)+(p.town?6.5:4.2),p.z-p.dz*3);if(!s[2])continue;uiPill(c,'⚓ '+p.n,s[0],s[1],(p.town?14.5:12.5)*k,UIC.nav,'#fff','rgba(255,255,255,.18)')}}
+/* ===== 48차(규칙, 기획자 11-21 14:18): 항구마다 생선 상인 =====
+   기획자: '항구마다 랜덤 자판기와 쓰레기통 옆에 정식으로 파는 상인을 하나씩. 모든 항구에서 일반·희귀 물고기를 제값에 팔아 주는 상인'.
+   판매대(DECO.fbuy, 모양은 낚시섬 판매대 plStallGeo) + 그 뒤에 선 사람(DECO.fbuy_npc 보이지 않는 막이, 사람 모양은 ui.js 48차).
+   자리: 쓰레기통 오른쪽 → 자판기 왼쪽(앞줄을 맞춤, 사이 1.25m) → 그 둘레에서 평평하고 비어 있는 곳. 정면은 +z. */
+Object.assign(DECO,{fbuy:{g:'fbuy_stall',s:1,bx:1.31,bz:.45,hp:1e9},fbuy_npc:{g:'nil',s:1,bx:.36,bz:.36,hp:1e9}});
+function fbFits(x,z,p){const x0=x-1.31,x1=x+1.31,z0=z-1.65,z1=z+.45,C=.9;let lo=1e9,hi=-1e9;
+ for(let u=0;u<=6;u++)for(let v=0;v<=4;v++){const px=x0-.3+(x1-x0+.6)*u/6,pz=z0-.3+(z1-z0+2.2)*v/4,h=hAt(px,pz);if(h<1.03||onDock(px,pz))return false;if(pz<=z1+.3){lo=Math.min(lo,h);hi=Math.max(hi,h)}}
+ if(hi-lo>.18)return false;
+ for(const q of structs){if(Math.abs(q.x-x)>14||Math.abs(q.z-z)>14)continue;const d=sdef(q);if(d.pass)continue;const e=Math.max(d.bx,d.bz);if(q.x+e>x0-C&&q.x-e<x1+C&&q.z+e>z0-C&&q.z-e<z1+C+1.2)return false}
+ for(const P2 of PORTS)for(const [qx,qz,qr] of P2.pp||[])if(qx+qr>x0-C&&qx-qr<x1+C&&qz+qr>z0-C&&qz-qr<z1+C+1.2)return false;
+ for(const b of PBOATS)if(Math.abs(b.m.position.x-x)<6.5&&Math.abs(b.m.position.z-z)<6.5)return false;
+ if(p&&!p.town){const w=(p.v&&p.v.w)||2.8;for(const [cx,cz] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1],[x,z]]){const ex=cx-p.x,ez=cz-p.z,lx=ex*p.dz-ez*p.dx,lz=ex*p.dx+ez*p.dz;if(Math.abs(lx)<w/2+1.4&&lz>-16)return false}}
+ return true}
+function placeFishBuyer(p){if(!GEO.fbuy_stall)GEO.fbuy_stall=typeof plStallGeo==='function'?plStallGeo():mg([pt(box(2.5,.9,.78),0xb9773f,[0,.45,0]),pt(box(2.62,.08,.9),0xf0d9a8,[0,.94,0])]);
+ const v=structs.find(q=>q.t==='vend'&&q.pi===p.i),rc=structs.find(q=>q.t==='recycle'&&q.pi===p.i),C=[];
+ if(rc)C.push([rc.x+DECO.recycle.bx+1.25+1.31,rc.z+DECO.recycle.bz-.45]);if(v)C.push([v.x-DECO.vend.bx-1.25-1.31,v.z+DECO.vend.bz-.45]);
+ const o=v||p;for(let r=3;r<=14;r+=1)for(let k=0;k<16;k++){const a=k/16*Math.PI*2;C.push([o.x+Math.cos(a)*r,o.z+Math.sin(a)*r])}
+ for(const [x,z] of C)if(fbFits(x,z,p)){addStruct({t:'fbuy',x,z,r:0,pi:p.i,hp:1e9});addStruct({t:'fbuy_npc',x,z:z-1.25,r:0,pi:p.i,hp:1e9});return true}
+ console.warn('생선 상인 자리를 못 찾음',p.n);return false}

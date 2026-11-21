@@ -59,7 +59,7 @@ function intLight(dk){const k=lerp(1,.85,dk);scene.background.setRGB(.016,.02,.0
  hemi.intensity=.2*k;hemi.color.setRGB(.82,.86,1);hemi.groundColor.setRGB(.25,.28,.4);sun.intensity=.17*k;sun.color.setRGB(.9,.92,1);sun.position.set(INT.x-5,INT.y+15,INT.z+8);sun.target.position.set(INT.x,INT.y,INT.z);pLights.forEach(L=>L.intensity=0)}
 /* pick the room for this home (tent / house) */
 function intRoom(kind){intBuild();const R=INT_ROOM[kind]||INT_ROOM.tent;INT.kind=INT_ROOM[kind]?kind:'tent';INT.hw=R.hw;INT.hd=R.hd;INT.cw=R.cor?R.cor[0]:0;INT.cl=R.cor?R.cor[1]:0;INT.door=R.hd+INT.cl;for(const k in INT.gr)INT.gr[k].visible=k===INT.kind;INT.L.color.setHex(R.lc);INT.L.distance=R.ld;INT.L.intensity=R.li}
-function intEnter(s){if(P.dead||busy)return;const df=sdef(s);fadeDo(df.room==='house'?'집 안으로…':'텐트 안으로…',()=>{intRoom(df.room);setBuild(null);if(fishing)endFish();INT.ret={x:s.x,z:s.z+df.bz+1.1};INT.s=s;S.home={x:INT.ret.x,z:INT.ret.z};INT.on=true;INT.dock.hw=INT.full;INT.g.visible=true;intShow(true);
+function intEnter(s){if(P.dead||busy)return;const df=sdef(s);fadeDo(df.room==='house'?'집 안으로…':'텐트 안으로…',()=>{intRoom(df.room);setBuild(null);if(fishing)endFish();INT.ret={x:s.x+Math.sin(s.r||0)*(df.bz+1.1),z:s.z+Math.cos(s.r||0)*(df.bz+1.1)};INT.s=s;S.home={x:INT.ret.x,z:INT.ret.z};INT.on=true;INT.dock.hw=INT.full;INT.g.visible=true;intShow(true);
   INT.it=[addStruct({t:'int_exit',x:INT.x,z:INT.z+INT.door-.2,yo:INT.y-hAt(INT.x,INT.z+INT.door-.2),hp:1e9})];
   P.x=INT.x;P.z=INT.z+INT.door-1.75;P.rot=Math.PI;P.auto=null;enemies.forEach(e=>{if(!e.raid)e.agg=0});sfx(260,.12,'sine',.05,.6)})}
 /* 텐트 안에 놓은 것(s.in: 작업대)은 들어가 있을 때만 보여요 */

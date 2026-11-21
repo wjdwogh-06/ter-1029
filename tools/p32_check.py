@@ -2,6 +2,7 @@
 # 진짜 터치(CDP). touchEnd에 적은 손가락이 떼져요. 기대: 각 줄 ok true, ALL True, errs []
 import os, json
 async def steps(pg):
+    await pg.evaluate("()=>{for(const [k,n] of [['pistol',1],['ammoS',36],['can',2],['bandage',1]])give(k,n);S.quick[S.sel]='pistol'}")   # 48차: 시작이 100원+낚싯대만이 돼서 예전 시작 소지품을 직접 넣어요
     ev=pg.evaluate;O=lambda n:os.path.join(OUT,n)
     await ev("()=>{WX.t=1e9;WX.on=false;WX.b=0;S.time=.42;enemies.slice().forEach(dropEnemy);DEV.god=true;window.updSpawns=()=>{};P.x=VIL.x+18;P.z=VIL.z+14;unstuck();P.yv=undefined;S.quick[S.sel]='pistol';give('ammoS',40)}")
     await pg.wait_for_timeout(500)

@@ -1,8 +1,8 @@
-# 상점/키트/현대식 아이템 확인: 마을 상인 → 무료 구매 → 텐트·상자 설치 → 걷기, 뒤지기(고철 더미) 0개
+# 상점/키트/현대식 아이템 확인(48차: 가게 보급상은 게임에서 없앴고, 보급상 창 코드만 직접 열어 확인): 무료 구매 → 텐트·상자 설치 → 걷기, 뒤지기(고철 더미) 0개
 async def steps(pg):
     ev=pg.evaluate
     print(await ev("""()=>{let scrap=0;objs.forEach(o=>{if(o.t===5)scrap++});return JSON.stringify({scrap,markets:structs.filter(s=>s.t==='market').length,shop:SHOP.sell,coins:S.coins})}"""))
-    await ev("()=>{const m=structs.find(s=>s.t==='market');P.x=m.x;P.z=m.z+3.2;openPanel('shop')}");await pg.wait_for_timeout(800);await pg.screenshot(path=os.path.join(OUT,'shop.jpg'),type='jpeg',quality=88)
+    await ev("()=>{const m=structs.find(s=>s.t==='market');P.x=m.x;P.z=m.z+3.2;delete S.inv.rod;openPanel('shop')}");await pg.wait_for_timeout(800);await pg.screenshot(path=os.path.join(OUT,'shop.jpg'),type='jpeg',quality=88)
     for k in ['kit_tent','axe','rod','kit_stash']:
         await pg.click(f'[data-a="buy"][data-k="{k}"]');await pg.wait_for_timeout(200)
     print(await ev("()=>JSON.stringify(S.inv)"))

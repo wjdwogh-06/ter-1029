@@ -19,7 +19,7 @@ async def steps(pg):
           return JSON.stringify({panel,tabs,cells:g?g.children.length:0,kids:B.children.length,scroll:B.scrollHeight-B.clientHeight,ov:getComputedStyle(B).overflowY,view:!!(cam.view&&cam.view.enabled),txt:[...B.children].filter(x=>x!==g).map(x=>x.textContent).join('|')})}""")
         R=json.loads(r);p1=await ev(PROJ);R['moved']=[p1[0]-p0[0],p1[1]-p0[1]]
         await pg.screenshot(path=O(f'p38_inv_{nm}.jpg'),type='jpeg',quality=86)
-        R['ok']=R['panel']=='bag' and len(R['tabs'])==2 and '인벤토리' in R['tabs'][0] and '도감' in R['tabs'][1] and R['cells']==20 and R['kids']==1 and R['scroll']<=1 and not R['view'] and abs(R['moved'][0])<3 and abs(R['moved'][1])<3
+        R['ok']=R['panel']=='bag' and len(R['tabs'])==3 and '인벤토리' in R['tabs'][0] and '도감' in R['tabs'][1] and '장비' in R['tabs'][2] and R['cells']==20 and R['kids']==1 and R['scroll']<=1 and not R['view'] and abs(R['moved'][0])<3 and abs(R['moved'][1])<3
         res['inv_'+nm]=R
         # 재료를 누르면 이름 알림, 아래 글은 그대로 없음
         await tapSel("#pbody [data-a=sel][data-k=wood]")

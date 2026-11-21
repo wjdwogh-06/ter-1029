@@ -35,7 +35,7 @@ function hzNew(g,far){const Z=HZ.Z[g.k].cells;if(!Z.length)return false;let c=nu
  Object.assign(g,{n,alive:n,comp,dead:new Array(n).fill(false),mem:new Array(n).fill(null),a:{x:c.x,z:c.z},w:null,rest:rand(1,4),on:false,re:0,wait:0,dx:0,dz:1,slots:[]});
  for(let i=0;i<n;i++){const an=i*2.39996,r=i?1.5+.85*Math.sqrt(i):0;g.slots.push([Math.cos(an)*r,Math.sin(an)*r])}return true}
 function hzNext(g){const Z=HZ.Z[g.k].cells,c=[];for(const q of Z){const d=dist(q.x,q.z,g.a.x,g.a.z);if(d>=18&&d<=70)c.push(q)}
- for(let i=0;i<14&&c.length;i++){const j=(Math.random()*c.length)|0,q=c[j];c.splice(j,1);if(hzLine(g.a.x,g.a.z,q.x,q.z))return{x:q.x+rand(-2,2),z:q.z+rand(-2,2)}}
+ for(let i=0;i<14&&c.length;i++){const j=(Math.random()*c.length)|0,q=c[j];c.splice(j,1);if(hzLine(g.a.x,g.a.z,q.x,q.z)){const x=q.x+rand(-2,2),z=q.z+rand(-2,2);return hzOk(x,z)&&hzLine(g.a.x,g.a.z,x,z)?{x,z}:{x:q.x,z:q.z}}}
  for(const q of Z)if(dist(q.x,q.z,g.a.x,g.a.z)<16&&hzLine(g.a.x,g.a.z,q.x,q.z))return{x:q.x,z:q.z};return null}
 function hzSpot(x,z){if(hzFree(x,z))return[x,z];for(let k=0;k<16;k++){const an=rand(0,6.28),r=rand(.5,4.5),xx=x+Math.cos(an)*r,zz=z+Math.sin(an)*r;if(hzFree(xx,zz))return[xx,zz]}return null}
 function hzOn(g){g.on=true;for(let i=0;i<g.n;i++){if(g.dead[i]||g.mem[i])continue;const p=hzSpot(g.a.x+g.slots[i][0],g.a.z+g.slots[i][1])||hzSpot(g.a.x,g.a.z);if(!p)continue;g.mem[i]=spawnEnemy(g.comp[i],p[0],p[1],{grp:g,gi:i,ax:p[0],az:p[1]})}}

@@ -53,7 +53,7 @@ async def steps(pg):
     # 전설 배너 모양
     await ev("()=>{FCB={f:FISHD.f_hammer,cm:388,first:1,t:2.5}}");await pg.wait_for_timeout(150);await pg.screenshot(path=os.path.join(OUT,'fish_legend.jpg'),type='jpeg',quality=85)
     # 등대 앞바다: 안쪽만 등대 떼들
-    await ev("""()=>{FCB=null;const s=FSP.find(q=>q.lb==='메모5');let best=null,bd=1e9;for(let dx=-12;dx<=12;dx+=.5)for(let dz=-12;dz<=12;dz+=.5){const x=s.x+dx,z=s.z+dz,d=Math.hypot(dx,dz);if(d<bd&&waterDepth(x,z)<=SHALLOW&&walk(x,z,.42,P)===null){bd=d;best=[x,z]}}P.x=best[0];P.z=best[1];P.rot=Math.atan2(s.x-P.x,s.z-P.z);updWaterState(0);endFish()}""")
+    await ev("""()=>{FCB=null;const s=FSP.find(q=>q.lb==='메모7');let best=null,bd=1e9;for(let dx=-12;dx<=12;dx+=.5)for(let dz=-12;dz<=12;dz+=.5){const x=s.x+dx,z=s.z+dz,d=Math.hypot(dx,dz);if(d<bd&&waterDepth(x,z)<=SHALLOW&&walk(x,z,.42,P)===null){bd=d;best=[x,z]}}P.x=best[0];P.z=best[1];P.rot=Math.atan2(s.x-P.x,s.z-P.z);updWaterState(0);endFish()}""")
     await pg.wait_for_timeout(1500);await pg.screenshot(path=os.path.join(OUT,'fish_lighthouse.jpg'),type='jpeg',quality=85)
     print('schools drawn',await ev("()=>SCH.m.count"))
     # 아이콘 판: 새 물고기 10종 + 익힌 것

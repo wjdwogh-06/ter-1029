@@ -2,6 +2,7 @@
 # 기대: errs=[], 아래 각 줄의 ok가 모두 true
 import os, json
 async def steps(pg):
+    await pg.evaluate("()=>{for(const [k,n] of [['pistol',1],['ammoS',36],['can',2],['bandage',1]])give(k,n);S.quick[S.sel]='pistol'}")   # 48차: 시작이 100원+낚싯대만이 돼서 예전 시작 소지품을 직접 넣어요
     ev=pg.evaluate;O=lambda n:os.path.join(OUT,n)
     await ev("()=>{WX.t=1e9;WX.on=false;WX.b=0;S.time=.42;enemies.slice().forEach(dropEnemy);DEV.god=true;window.updSpawns=()=>{}}")
     # ① ② 재화·탄알 표시
@@ -44,14 +45,14 @@ async def steps(pg):
     print('ammo',r)
     # ⑥ 가방 누르기 · 끌어서 버리기
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const out={};give('pistol',1);give('can',3);give('wood',5);S.quick[S.sel]=null;S.hp=50;openPanel('bag');await sl(50);
-      const slot=k=>document.querySelector(`#pbody [data-a=sel][data-k="${k}"]`);slot('pistol').click();await sl(30);out.eq1=curId();renderPanel();slot('pistol').click();await sl(30);out.eq2=curId();
+      const slot=k=>document.querySelector(`#pbody [data-a=sel][data-k="${k}"]`);slot('pistol').click();await sl(30);out.eq1=curId();renderPanel();out.hidden=!slot('pistol');eqOff('gear');await sl(30);out.eq2=curId();renderPanel();   /* 48차: 낀 총은 가방 칸에서 빠지고, 빼기는 장비 탭(eqOff) */
       renderPanel();const c0=invN('can');slot('can').click();await sl(30);out.ate=c0-invN('can');out.hp=S.hp;renderPanel();const w0=invN('wood');slot('wood').click();await sl(30);out.wood=invN('wood')===w0&&selItem==='wood';renderPanel();
       out.info=!document.getElementById('pbody').textContent.includes('끌어서 가방 밖에');   /* 38차: 아래 안내 글 없음 */out.btns=document.querySelectorAll('#pbody [data-a=use],#pbody [data-a=equip],#pbody [data-a=drop]').length;
       /* 끌어서 창 안에 놓기 → 안 버림 */const pe=(t,el,x,y)=>el.dispatchEvent(new PointerEvent(t,{pointerId:31,clientX:x,clientY:y,bubbles:true,pointerType:'touch'}));
       let s=slot('wood'),r=s.getBoundingClientRect();pe('pointerdown',s,r.x+20,r.y+20);for(let i=1;i<=6;i++)pe('pointermove',s,r.x+20+i*8,r.y+20+i*4);out.ghost=!!document.getElementById('bagDrag');pe('pointerup',s,r.x+68,r.y+44);s.click();await sl(30);out.keepIn=invN('wood')===w0&&!document.getElementById('bagDrag');
       /* 끌어서 창 밖(왼쪽 화면)에 놓기 → 버림 */const nd=drops.length;s=slot('wood');r=s.getBoundingClientRect();pe('pointerdown',s,r.x+20,r.y+20);for(let i=1;i<=12;i++)pe('pointermove',s,r.x+20-i*(r.x/12),r.y+20);const outCls=document.getElementById('bagDrag').classList.contains('out');
       pe('pointerup',s,20,r.y+20);await sl(60);out.dropped=!invN('wood')&&drops.length===nd+1;out.outCls=outCls;closePanel();
-      out.ok=out.eq1==='pistol'&&out.eq2==='fist'&&out.ate===1&&out.wood&&out.info&&out.btns===0&&out.ghost&&out.keepIn&&out.dropped&&outCls;return JSON.stringify(out)}""")
+      out.ok=out.eq1==='pistol'&&out.hidden&&out.eq2==='fist'&&out.ate===1&&out.wood&&out.info&&out.btns===0&&out.ghost&&out.keepIn&&out.dropped&&outCls;return JSON.stringify(out)}""")
     print('bag',r)
     await ev("()=>{give('wood',5);openPanel('bag');selItem='pistol';renderPanel()}");await pg.wait_for_timeout(400);await pg.screenshot(path=O('p30_bag.jpg'),type='jpeg',quality=85)
     await ev("()=>closePanel()")

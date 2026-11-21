@@ -71,7 +71,7 @@ function hud(){$('bHp').style.width=clamp(S.hp,0,100)+'%';$('bHu').style.width=S
  $('atkIc').style.display=id==='fist'?'none':'';if(id!=='fist')$('atkIc').src=ICON[id];const sw=WTR.st==='swim',wd=w.rod&&WTR.st==='wade';$('bAtk').style.opacity=sw||wd?.45:1;$('atkN').textContent=sw?'헤엄 중':wd?'물 밖에서':w.rod?(!fishing?'던지기':fishing.st==='bite'?'챔질!':fishing.st==='reel'?'꾹 눌러 감기':fishing.st==='wait'?'기다리는 중':''):id==='fist'?'주먹':w.ammo?invN(w.ammo):'';$('bAtk').classList.toggle('bite',!!fishing&&fishing.st==='bite');
  {const md=actMode(),lb=md==='build'?(bmode==='demo'?'철거':'설치'):md==='act'?target.lab:'',L=$('atkL');if(L.textContent!==lb)L.textContent=lb;$('bAtk').classList.toggle('act',md!=='fire');if(md!=='fire')$('bAtk').style.opacity=1}
  devHud();if(hudDirty){drawQuick();if(panel&&panel!=='dev'&&panel!=='fmap'&&panel!=='devitem')renderPanel();hudDirty=false}drawMap($('mm').getContext('2d'),110,198);$('cold').style.opacity=S.warm<30?(30-S.warm)/30*.9:0}
-function buildUI(){const b=$('bbar');b.classList.toggle('hide',!bmode);if(!bmode)return;const d=BUILDS[bmode];b.innerHTML=(bmode==='demo'?'<span>철거할 내 건물 가까이에서 [철거]</span>':`<span>${d.n}</span><span style="color:var(--mut);font-weight:500">${costHtml(d.c)}</span><button class="btn g" data-b="rot">회전</button>`)+'<button class="btn r" data-b="x">그만</button>'}
+function buildUI(){const b=$('bbar');b.classList.toggle('hide',!bmode);if(!bmode)return;const d=BUILDS[bmode];b.innerHTML=(bmode==='demo'?'<span>철거할 내 건물 가까이에서 [철거]</span>':`<span>${d.n}</span><span style="color:var(--mut);font-weight:500">${costHtml(d.c)}</span><button class="btn g" data-b="rot">↻ ${ROT_N[rotStep()+1]}</button>`)+'<button class="btn r" data-b="x">그만</button>'}
 const costHtml=c=>Object.keys(c).map(k=>`<span class="cost ${invN(k)>=c[k]?'ok':'no'}">${ITEMS[k].n} ${invN(k)}/${c[k]}</span>`).join('');
 /* ---- panels ---- */
 const TABS=[];   /* 27차(기획자): 가방 창의 제작·건설·지도 탭을 없앴어요. 창마다 제목 하나만 */
@@ -122,10 +122,10 @@ function renderPanel(){const B=$('pbody');$('pcoin').innerHTML=mode==='play'?`<s
  else if(panel==='vend'){const L=vendItems(VENDAT),mn=Math.ceil(vendLeft()/60000);
   h=`<div class="sec" style="margin-top:0">1시간마다 물건 5개가 무작위로 바뀌어요 · <span id="vLeft">다음 교체까지 ${mn}분</span></div>`+L.map(k=>{const it=ITEMS[k],n=VEND.pack[k]||1,pr=VEND.free?0:it.p*n,has=it.one&&invN(k),ok=!has&&S.coins>=pr;
    return`<div class="row">${invIcon(k)}<div class="tx">${it.n}${n>1?' ×'+n:''}<small>${it.d}</small></div><button class="btn" data-a="vbuy" data-k="${k}" ${ok?'':'disabled'}>${has?'보유 중':pr?pr+' 동전':'무료로 받기'}</button></div>`}).join('')}
- else if(panel==='recycle'){const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0&&ITEMS[k]),eq=curId();
+ else if(panel==='recycle'){const ks=bagList(),eq=null;   /* 48차: 장비 칸에 낀 것은 빼고 팔아요 */
   h=`<div class="sec" style="margin-top:0">무엇이든 팔 수 있어요 · 원래 가격의 ${Math.round(ECON.sell*100)}%를 받아요</div>`+(ks.map(k=>{const it=ITEMS[k],n=S.inv[k],sp=sellPrice(k);
    return`<div class="row">${invIcon(k)}<div class="tx">${it.n}${it.one?'':' ×'+n}${k===eq?' <span style="font-size:13px;color:var(--grn)">장착 중</span>':''}<small>개당 ${sp} 동전 · 원래 가격 ${it.p}</small></div><button class="btn g" data-a="rsell" data-k="${k}" data-n="1">${it.one||n===1?'팔기 +'+sp:'1개'}</button>${!it.one&&n>1?`<button class="btn g" data-a="rsell" data-k="${k}" data-n="${n}">전부 +${sp*n}</button>`:''}</div>`}).join('')||'<div class="row"><div class="tx">팔 물건이 없어요</div></div>')}
- else if(panel==='stash'){const row=(k,n,a,l)=>`<div class="row">${invIcon(k)}<div class="tx">${ITEMS[k].n} ×${n}</div><button class="btn ${a==='put'?'':'g'}" data-a="${a}" data-k="${k}">${l}</button></div>`,iv=Object.keys(S.inv).filter(k=>S.inv[k]>0),st=Object.keys(S.stash).filter(k=>S.stash[k]>0);
+ else if(panel==='stash'){const row=(k,n,a,l)=>`<div class="row">${invIcon(k)}<div class="tx">${ITEMS[k].n} ×${n}</div><button class="btn ${a==='put'?'':'g'}" data-a="${a}" data-k="${k}">${l}</button></div>`,iv=bagList(),st=Object.keys(S.stash).filter(k=>S.stash[k]>0);
   h=`<div class="cols"><div class="grow"><div class="sec">내 가방</div>${iv.map(k=>row(k,S.inv[k],'put','넣기')).join('')||'<div class="row"><div class="tx">비었어요</div></div>'}</div><div class="grow"><div class="sec">상자 안 (쓰러져도 안전해요)</div>${st.map(k=>row(k,S.stash[k],'get','꺼내기')).join('')||'<div class="row"><div class="tx">비었어요</div></div>'}</div></div>`}
  else if(panel==='cook'){const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0&&ITEMS[k].ty==='fish');h=ks.length?ks.map(k=>`<div class="row">${invIcon(k)}<div class="tx">${ITEMS[k].n} ×${S.inv[k]}<small>구우면 ${nrgTx(ITEMS['c'+k].food)} · 판매가 ${sellP('c'+k)} 동전</small></div><button class="btn" data-a="cook" data-k="${k}" data-n="1">굽기</button><button class="btn g" data-a="cook" data-k="${k}" data-n="99">전부</button></div>`).join(''):'<div class="sec">구울 생선이 없어요. 낚싯대로 물고기를 낚아 오세요</div>'}
  else if(panel==='lh'){h='<div class="sec">불을 켠 등대로 바로 이동해요. 다른 등대는 직접 찾아가서 불을 켜야 해요</div>'+POI.lh.map((l,i)=>LH_GONE.includes(i)?'':`<div class="row"><div class="tx">🗼 ${l.n}<small>${S.lh[i]?'불 켜짐':'아직 못 찾았어요 (지도의 회색 세모)'}</small></div><button class="btn" data-a="lhgo" data-i="${i}" ${S.lh[i]&&dist(P.x,P.z,l.x,l.z)>12?'':'disabled'}>${dist(P.x,P.z,l.x,l.z)<=12?'여기':'이동'}</button></div>`).join('')}
@@ -209,9 +209,9 @@ function actMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(fis
 {const b=$('bAct');b.addEventListener('pointerdown',e=>{e.preventDefault();inp.act=true;inp.actEdge=true});['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,()=>inp.act=false))}
 $('bBag').onclick=()=>openPanel('bag');$('bBuild').onclick=()=>openPanel('build');$('bMenu').onclick=()=>openPanel('menu');$('bZoom').onclick=()=>{zoomK=zoomK===1?.74:zoomK<1?1.3:1};
 $('quick').addEventListener('pointerdown',e=>{const s=e.target.closest('[data-q]');if(s){e.preventDefault();useQuick(+s.dataset.q)}});
-$('bbar').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='rot'){brot+=Math.PI/2;sfx(500,.04)}else setBuild(null)});
+$('bbar').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='rot'){rotNext();sfx(500,.04)}else setBuild(null)});
 addEventListener('keydown',e=>{keys[e.code]=1;if(mode!=='play')return;if(e.code==='Escape'){panel?closePanel():setBuild(null)}if(panel)return;if(e.code==='KeyE'&&!e.repeat){inp.act=true;inp.actEdge=true}if(e.code==='Space'){inp.fire=true;inp.aiming=false;e.preventDefault()}
- if(e.code==='Tab'||e.code==='KeyI'){e.preventDefault();openPanel('bag')}if(e.code==='KeyB')openPanel('build');if(e.code==='KeyR')brot+=Math.PI/2});
+ if(e.code==='Tab'||e.code==='KeyI'){e.preventDefault();openPanel('bag')}if(e.code==='KeyB')openPanel('build');if(e.code==='KeyR'&&bmode)rotNext()});
 addEventListener('keyup',e=>{keys[e.code]=0;if(e.code==='KeyE')inp.act=false;if(e.code==='Space')inp.fire=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=0;inp.fire=inp.act=false;joyEnd()});document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('gesturestart',e=>e.preventDefault());
 function readKeys(){if(joy.id!==null)return;const x=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),z=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);inp.mx=x;inp.mz=z}
@@ -265,7 +265,7 @@ async function boot(){const L=t=>$('loadTx').textContent=t;try{initRenderer();in
    칸이 비면 그 자루를 다시 주워요. 상점·자판기·보관 상자 꺼내기·제작·굽기는 꽉 차 있으면 막혀요. 버리기 = 발 앞에 자루(멀어졌다 오면 다시 주움).
    에너지: 왼쪽 위에 ⚡ 10칸(S.hp 10 = 1칸). 배고픔·체온 줄은 숨겼어요(actors.js updStats). */
 const BAG_N=20;
-const bagList=()=>Object.keys(S.inv).filter(k=>S.inv[k]>0&&ITEMS[k]);
+const bagList=()=>Object.keys(S.inv).filter(k=>S.inv[k]>0&&ITEMS[k]&&!(typeof eqHas==='function'&&eqHas(k)));   /* 48차: 장비 칸에 낀 것은 가방 칸에서 빠져요(gear.js) */
 const bagHas=id=>id==='coin'||(S.inv[id]||0)>0||bagList().length<BAG_N;
 const bagFits=items=>{let need=0;for(const k in items)if(k!=='coin'&&items[k]>0&&!(S.inv[k]>0))need++;return bagList().length+need<=BAG_N};
 const BAGX={t:0};
@@ -740,5 +740,27 @@ function hkMigrate(){const homes=new Set(structs.filter(s=>isZoneT(s.t)&&s.own&&
 {const e=document.createElement('div');e.id='safeP';e.textContent='🛡 안전 구역 · 사람끼리 다치지 않아요';$('ui').appendChild(e)}
 {const _u=updPlayer;updPlayer=function(dt){_u(dt);if(HKM.s!==S&&mode==='play'){HKM.s=S;try{hkMigrate()}catch(e){console.warn(e)}}
   const on=mode==='play'&&!INT.on&&!P.dead&&!!inSafe(P.x,P.z),e=$('safeP');if(e&&e.classList.contains('on')!==on)e.classList.toggle('on',on)}}
+/* ===== 48차(규칙, 기획자 11-21 14:18): 항구마다 생선 상인 · 가운데 항구 보급상 없앰 =====
+   - 생선 상인(ports.js placeFishBuyer: 판매대 fbuy + 뒤에 선 사람): [생선 팔기] → 가방의 일반·희귀 물고기(날것)를 원래 가격 그대로 사요(쓰레기통은 20%).
+     영웅·전설 물고기는 안 사요. 낚싯대를 들고 있어도 말을 걸 수 있어요(배 타기처럼).
+   - 가운데 항구(초승달 항구마을)의 보급상(사람·[거래])은 없앴어요. 가게 건물은 그대로 서 있어요. */
+const FBUY={L:[],far:72};
+const fbFish=k=>{const f=FISH.find(q=>q.id===k);return f&&!f.old&&f.g<=1?f:null};
+{const _sl=sLabel;sLabel=function(s){if(s.t==='fbuy')return'생선 팔기';if(s.t==='fbuy_npc'||s.t==='market')return null;return _sl(s)}}
+{const _it=interact;interact=function(){const t=target;if(t&&t.k==='s'&&t.s.t==='fbuy'){if(inp.actEdge){FBUY.pi=t.s.pi;openPanel('fishbuy')}return}_it()}}
+{const _ft=findTarget;findTarget=function(){if(isRod(curId())&&!INT.on&&!bmode&&!P.dead&&!fishing&&WTR.st!=='swim'){let b=null,bd=TREACH;for(const s of structs){if(s.t!=='fbuy'||dist(P.x,P.z,s.x,s.z)>6)continue;const g=sGap(P.x,P.z,s);if(g<=bd){bd=g;b={k:'s',s,x:s.x,z:s.z,lab:'생선 팔기',rr:1.7}}}if(b)return b}return _ft()}}
+function fbuyHtml(){const ks=bagList().filter(k=>fbFish(k)),all=ks.reduce((a,k)=>a+ITEMS[k].p*invN(k),0);
+ return`<div class="sec" style="margin-top:0">일반·희귀 물고기를 원래 가격 그대로 사요${ks.length?` · <button class="btn" data-a="fsell" data-k="*" style="padding:4px 10px;font-size:12.5px">모두 팔기 +${all}</button>`:''}</div>`+(ks.map(k=>{const it=ITEMS[k],n=invN(k),f=fbFish(k),G=FGRADE[f.g];
+  return`<div class="row">${invIcon(k)}<div class="tx">${it.n} ×${n} <span style="display:inline-block;background:${G[1]};color:#fff;border-radius:9px;padding:0 6px;font-size:10px;font-weight:800">${G[0]}</span><small>개당 ${it.p} 동전</small></div><button class="btn g" data-a="fsell" data-k="${k}" data-n="1">${n===1?'팔기 +'+it.p:'1개'}</button>${n>1?`<button class="btn g" data-a="fsell" data-k="${k}" data-n="${n}">전부 +${it.p*n}</button>`:''}</div>`}).join('')||'<div class="row"><div class="tx">팔 물고기가 없어요<small>영웅·전설 물고기와 구운 생선은 사지 않아요</small></div></div>')}
+{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='fishbuy')return;$('ptabs').innerHTML='<div class="tab on">🐟 생선 상인</div>';$('pbody').innerHTML=fbuyHtml()}}
+$('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a="fsell"]');if(!b||panel!=='fishbuy')return;const ks=b.dataset.k==='*'?bagList().filter(k=>fbFish(k)):[b.dataset.k];let g=0,c=0;
+ for(const k of ks){if(!fbFish(k))continue;const n=b.dataset.k==='*'?invN(k):Math.min(+b.dataset.n,invN(k));if(n>0&&take(k,n)){g+=ITEMS[k].p*n;c+=n}}
+ if(c){S.coins+=g;sfx(700,.07);sfx(980,.05,'sine',.03);toast(`🐟 물고기 ${c}마리를 팔았어요 · +${g} 동전`);hudDirty=true}renderPanel()});
+/* 상인 사람: 가까이 가면 만들고(가게 보급상과 같은 모습), 판매대 뒤에서 가만히 서 있어요. 머리 위에 '생선 상인' */
+{const _up=updPlayer;let s0=null;updPlayer=function(dt){_up(dt);if(mode!=='play')return;
+ if(s0!==S){s0=S;if(typeof merchant!=='undefined'&&merchant&&merchant.a){merchant.a.root.visible=false;merchant.x=merchant.z=-9999}FBUY.L=structs.filter(s=>s.t==='fbuy_npc').map(s=>({s,a:null}))}
+ for(const q of FBUY.L){const d=dist(P.x,P.z,q.s.x,q.s.z),near=d<FBUY.far&&!INT.on;if(near&&!q.a&&CMAT.merchant){q.a=new Actor('merchant');q.a.play('Idle',{force:1});q.a.set(q.s.x,q.s.z,0)}
+  if(q.a){q.a.root.visible=near;if(near)q.a.mixer.update(dt)}}}}
+{const _df=drawFx;drawFx=function(dt){_df(dt);if(mode!=='play'||INT.on)return;const c=fctx,k=Math.max(.8,UIS*1.25);for(const q of FBUY.L){if(!q.a||dist(P.x,P.z,q.s.x,q.s.z)>14)continue;const p=scr(q.s.x,groundY(q.s.x,q.s.z)+3.0,q.s.z);uiPill(c,'🐟 생선 상인',p[0],p[1],12.5*k,UIC.grn,'#fff')}}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
