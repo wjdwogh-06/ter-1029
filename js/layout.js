@@ -84,6 +84,42 @@ devInit=async function(){
     m.position.x=x;m.position.z=z;m.rotation.y=r;
     if(p && m.parent===p.g)scene.attach(m);
   }
+  // Keep the exact objects for undo, including their gameplay registrations.
+  function setDeleted(e,deleted){
+    if(Boolean(e.reinstate)===deleted)return;
+    if(!deleted){
+      for(const restore of e.reinstate.reverse())restore();
+      delete e.reinstate;return;
+    }
+    const restore=e.reinstate=[];
+    function detach(node){
+      if(!node?.parent)return;
+      const parent=node.parent;parent.remove(node);restore.push(()=>parent.add(node));
+    }
+    function drop(list,item){
+      if(!list||!item)return;
+      const i=list.indexOf(item);if(i<0)return;
+      list.splice(i,1);restore.push(()=>list.splice(Math.min(i,list.length),0,item));
+    }
+    function detachStruct(s){
+      if(!s||!structs.includes(s))return;
+      detach(s.m);detach(s.zg);
+      for(const list of [structs,lightsrc,warmsrc,POI.lhS])drop(list,s);
+    }
+    if(e.s?.own&&isZoneT(e.s.t)){
+      const hk=homeKey(e.s);
+      for(const item of structs.filter(q=>q.in&&q.hk===hk))detachStruct(item);
+    }
+    detachStruct(e.s);detachStruct(e.block);
+    detach(e.m);detach(e.lamp);drop(PLAMPS,e.lamp);
+    drop(PBOATS,e.boat);drop(e.p?.pp,e.prop);
+    if(e.dock){
+      drop(DOCKS,e.dock);
+      for(const bucket of Object.values(DOCKG))drop(bucket,e.dock);
+    }
+    if(e.s && target?.s===e.s)target=null;
+  }
+  const deletedValue=v=>v?.deleted===true;
   const response=await fetch('assets/world-layout.json');
   if(!response.ok)throw Error('기본 배치를 불러올 수 없어요');
   const published=await response.json();
@@ -93,7 +129,8 @@ devInit=async function(){
   try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}
   const valid=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
   for(const e of entries){
-    const v=valid(saved[e.id])?saved[e.id]:defaults[e.id];
+    const v=saved[e.id]??defaults[e.id];
+    if(deletedValue(v)){setDeleted(e,true);continue}
     if(valid(v))move(e,...v);
   }
   const output=document.createElement('button');
@@ -109,7 +146,7 @@ devInit=async function(){
     const objects={};
     for(const e of entries){
       const v=saved[e.id]??defaults[e.id];
-      if(!e.s?.own&&valid(v))objects[e.id]=v;
+      if(!e.s?.own&&(valid(v)||deletedValue(v)))objects[e.id]=v;
     }
     const json=JSON.stringify({version:1,seed:S.seed,objects},null,2);
     const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
@@ -127,6 +164,18 @@ devInit=async function(){
   const resetOne=document.createElement('button'),resetAll=document.createElement('button');
   resetOne.textContent='선택 원위치';resetAll.textContent='기본 맵 전체 원위치';
   panel.append(resetOne,resetAll);turnButtons.push(resetOne);
+  const remove=document.createElement('button');remove.textContent='선택 삭제';
+  panel.append(remove);turnButtons.push(remove);
+  remove.onclick=()=>{
+    if(!active||!DEV.on||gesture||!selected||selected.anchor)return;
+    if(!window.confirm(selected.name+' 삭제할까요?'))return;
+    resetModels();
+    const e=selected;
+    remember([{e,x:e.m.position.x,z:e.m.position.z,r:e.m.rotation.y,deleted:false,override:saved[e.id]}]);
+    setDeleted(e,true);
+    if(!e.s?.own)saved[e.id]={deleted:true};
+    persist('삭제했어요 · 되돌리기로 복구할 수 있어요');
+  };
   resetOne.onclick=()=>restoreOriginal(group.map(q=>q.e));
   resetAll.onclick=()=>{
     if(active&&DEV.on&&!gesture&&window.confirm('기본 맵 구조물 전체를 최초 위치와 방향으로 되돌릴까요?'))
@@ -137,13 +186,14 @@ devInit=async function(){
     resetModels();
     const before=[];
     for(const e of targets){
-      if(e.s&&!structs.includes(e.s))continue;
+      if(!e.reinstate&&e.s&&!structs.includes(e.s))continue;
       const p=e.m.position;
-      if(Math.abs(p.x-e.x)<1e-7&&Math.abs(p.z-e.z)<1e-7&&Math.abs(e.m.rotation.y-e.r)<1e-7)continue;
-      before.push({e,x:p.x,z:p.z,r:e.m.rotation.y,override:saved[e.id]});
+      if(!e.reinstate&&Math.abs(p.x-e.x)<1e-7&&Math.abs(p.z-e.z)<1e-7&&Math.abs(e.m.rotation.y-e.r)<1e-7)continue;
+      before.push({e,x:p.x,z:p.z,r:e.m.rotation.y,deleted:!!e.reinstate,override:saved[e.id]});
+      setDeleted(e,false);
       move(e,e.x,e.z,e.r);
       if(!e.s?.own){
-        if(valid(defaults[e.id]))saved[e.id]=[e.x,e.z,e.r];
+        if(valid(defaults[e.id])||deletedValue(defaults[e.id]))saved[e.id]=[e.x,e.z,e.r];
         else delete saved[e.id];
       }
     }
@@ -167,10 +217,10 @@ devInit=async function(){
   };
   function select(e,all=false){
     resetModels();selected=e;
-    group=(all?entries.filter(q=>q.p===e.p):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
+    group=(all?entries.filter(q=>q.p===e.p&&!q.reinstate):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
     angle.value=Math.round((e.m.rotation.y*180/Math.PI%360+360)%360);
     showAngle();turnButtons.forEach(b=>b.hidden=false);rotation.hidden=apply.hidden=cancel.hidden=false;
-    status.textContent=e.name+' 선택';whole.disabled=!e.p;
+    status.textContent=e.name+' 선택';whole.disabled=!e.p;remove.disabled=!!e.anchor;
   }
   let dest;
   function clear(){turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
@@ -198,8 +248,10 @@ devInit=async function(){
     if(!active||!DEV.on||gesture||!history.length)return;
     resetModels();clear();
     for(const q of history.pop()){
-      if(q.e.s&&!structs.includes(q.e.s))continue;
+      if(!q.e.reinstate&&q.e.s&&!structs.includes(q.e.s))continue;
+      setDeleted(q.e,false);
       move(q.e,q.x,q.z,q.r);
+      if(q.deleted)setDeleted(q.e,true);
       if(q.override===undefined)delete saved[q.e.id];else saved[q.e.id]=q.override;
     }
     undo.disabled=!history.length;persist('이전 배치로 되돌렸어요');
