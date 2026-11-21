@@ -147,9 +147,10 @@ function initSchools(){fishSpotsInit();if(SCH.m)return;const sh=new THREE.Shape(
  for(let i=0;i<SCH.max;i++)m.setColorAt(i,new THREE.Color(1,1,1));m.count=0;m.frustumCulled=false;m.renderOrder=3;scene.add(m);SCH.m=m}
 /* 물고기 한 마리 위치: 작은 원 + 엇갈린 흔들림(리사주) + 떼 전체가 천천히 돌아서, 같은 자리에서 자연스럽게 맴돌아요. 반지름 R 밖으로 안 나가요 */
 function fishPos(s,q,t){const a=q.w*t+q.p,x=q.ax*Math.sin(a)+q.bx*Math.sin(2.3*a+q.q),z=q.az*Math.cos(a)+q.bz*Math.sin(1.7*a+q.q*1.3),r=.07*t*s.dir,c=Math.cos(r),sn=Math.sin(r);return[s.x+x*c-z*sn,s.z+x*sn+z*c]}
-function updSchools(dt){const m=SCH.m;if(!m)return;let k=0;const vis=[];for(const s of FSP){const d=(s.x-camT.x)**2+(s.z-camT.z)**2;if(d<48*48)vis.push([d,s])}vis.sort((a,b)=>a[0]-b[0]);
+const nearbySchools=[];
+function updSchools(dt){const m=SCH.m;if(!m)return;let k=0;const vis=nearbySchools;vis.length=0;for(const s of FSP){const d=(s.x-camT.x)**2+(s.z-camT.z)**2;if(d<48*48){s.cameraDistanceSq=d;vis.push(s)}}vis.sort((a,b)=>a.cameraDistanceSq-b.cameraDistanceSq);
  const f=fishing,seen=!INT.on;
- for(let vi=0;vi<vis.length&&seen;vi++){const s=vis[vi][1];s.gone=Math.max(0,s.gone-dt);
+ for(let vi=0;vi<vis.length&&seen;vi++){const s=vis[vi];s.gone=Math.max(0,s.gone-dt);
   if(vi<3){s.ripT-=dt;if(s.ripT<=0){s.ripT=rand(.7,1.6);const q=s.fish[(Math.random()*s.fish.length)|0],pp=fishPos(s,q,gt);ripple(pp[0],pp[1],.4,.9)}
    s.jmpT-=dt;if(s.jmpT<=0){s.jmpT=rand(6,12);const pp=fishPos(s,s.fish[1],gt);splash(pp[0],pp[1],3)}}
   for(let j=0;j<s.fish.length&&k<SCH.max;j++){const q=s.fish[j];if(j===0&&s.gone>0&&!(f&&f.spot===s))continue;const p0=fishPos(s,q,gt),p1=fishPos(s,q,gt+.06);let x=p0[0],z=p0[1],hx=p1[0]-x,hz=p1[1]-z,sp=Math.hypot(hx,hz)/.06,wig=7+sp*5;
