@@ -344,3 +344,28 @@ const FARM={T:600,bat:w=>{const c=w.charCodeAt(w.length-1)-0xac00;return c>=0&&c
 for(const id of FARM.ids){const q=PLANTS.find(o=>o.id===id);if(!q)continue;
  ITEMS['seed_'+id]={n:q.n+' 씨앗',ic:'lk_seed_'+id,ty:'kit',b:'crop_'+id,p:Math.max(10,Math.round(q.p*.5)),d:`땅에 심으면 ${FARM.T/60}분 뒤 ${q.n}${q.cat==='flower'?(FARM.bat(q.n)?'이':'가')+' 피어요':(FARM.bat(q.n)?'을':'를')+' 거둬요'}. 가방에서 눌러 심어요 (임시)`};
  BUILDS['crop_'+id]={n:q.n+' 밭',g:'pc_'+id+'_0',s:1,bx:.45,bz:.45,pass:1,hp:30,c:{['seed_'+id]:1},kit:'seed_'+id,crop:id,d:`${q.n} 씨앗을 심어요. ${FARM.T/60}분 뒤 거둬요 (임시)`}}
+/* ===== 49차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-21 22:18: '소금 후추 나무개머리판 강철개머리판 장총포신 산탄총포신 뷰적(→ 부적으로 읽음) 금 금주괴 포탑키트 방수포 못
+   고급 회로기판 플라스틱 조준경스코프 시멘트 콘크리트 울타리 콘크리트 울타리문 화약 구리주괴 철 철주괴 은 은두괴(→ 은 주괴) 석탄 석탄주괴 티타늄 티타늄주괴 이렇게 추가해버려') =====
+   모양·아이콘은 look.js 49차(lkItems49). 쓰는 곳(제작법)·얻는 곳·가격·재료는 모두 임시(기획자가 정하면 숫자만). p가 있어서 모두 랜덤 자판기 목록에 저절로 들어가요.
+   화약(powder)은 이미 있어서 새로 만들지 않고 그림만 바꿔요(look.js). 구리(copper, 37차)는 '광석'으로 그림을 바꾸고 구리 주괴를 새로 넣어요.
+   포탑 키트 = 기존 자동 포탑(BUILDS.turret)을 재료 대신 키트 1개로 놓는 것(철거하면 키트가 돌아와요). 콘크리트 울타리·문 = 2m 칸 울타리(문은 사람이 가까이 오면 열려요, look.js lkGates). */
+Object.assign(ITEMS,{salt:{n:'소금',ic:'lk_salt',ty:'res',p:20,d:'하얀 소금. 요리에 쓸 예정 (임시)'},pepper:{n:'후추',ic:'lk_pepper',ty:'res',p:30,d:'통후추와 후추 갈이. 요리에 쓸 예정 (임시)'},
+ gp_wstock:{n:'나무 개머리판',ic:'lk_gp_wstock',ty:'res',p:300,d:'나무로 깎은 총 개머리판. 총 제작 재료 (임시)'},gp_sstock:{n:'강철 개머리판',ic:'lk_gp_sstock',ty:'res',p:700,d:'가볍고 튼튼한 강철 개머리판. 총 제작 재료 (임시)'},
+ gp_rbarrel:{n:'장총 포신',ic:'lk_gp_rbarrel',ty:'res',p:800,d:'길고 가는 소총 총열. 총 제작 재료 (임시)'},gp_sbarrel:{n:'산탄총 포신',ic:'lk_gp_sbarrel',ty:'res',p:700,d:'굵은 산탄총 총열. 총 제작 재료 (임시)'},
+ charm:{n:'부적',ic:'lk_charm',ty:'res',p:500,d:'붉은 글씨가 적힌 노란 부적. 쓰는 곳은 아직 (임시)'},
+ ore_gold:{n:'금',ic:'lk_ore_gold',ty:'res',p:400,d:'금 알갱이가 박힌 광석. 녹이면 금 주괴 (임시)'},bar_gold:{n:'금 주괴',ic:'lk_bar_gold',ty:'res',p:1200,d:'번쩍이는 금 덩어리 (임시)'},
+ ore_silver:{n:'은',ic:'lk_ore_silver',ty:'res',p:200,d:'은 결정이 박힌 광석. 녹이면 은 주괴 (임시)'},bar_silver:{n:'은 주괴',ic:'lk_bar_silver',ty:'res',p:600,d:'하얗게 빛나는 은 덩어리 (임시)'},
+ ore_iron:{n:'철',ic:'lk_ore_iron',ty:'res',p:60,d:'붉은 녹빛 철광석. 녹이면 철 주괴 (임시)'},bar_iron:{n:'철 주괴',ic:'lk_bar_iron',ty:'res',p:180,d:'단단한 쇠 덩어리 (임시)'},
+ bar_copper:{n:'구리 주괴',ic:'lk_bar_copper',ty:'res',p:250,d:'붉은빛 구리 덩어리 (임시)'},
+ coal:{n:'석탄',ic:'lk_coal',ty:'res',p:30,d:'까만 석탄 덩이. 연료·제련에 쓸 예정 (임시)'},bar_coal:{n:'석탄 주괴',ic:'lk_bar_coal',ty:'res',p:90,d:'석탄을 눌러 굳힌 덩어리 (임시)'},
+ ore_ti:{n:'티타늄',ic:'lk_ore_ti',ty:'res',p:500,d:'푸른 결정이 박힌 티타늄 광석. 녹이면 티타늄 주괴 (임시)'},bar_ti:{n:'티타늄 주괴',ic:'lk_bar_ti',ty:'res',p:1500,d:'가볍고 아주 단단한 푸른 은빛 덩어리 (임시)'},
+ tarp:{n:'방수포',ic:'lk_tarp',ty:'res',p:150,d:'접어 둔 파란 방수포. 제작 재료 (임시)'},nails:{n:'못',ic:'lk_nails',ty:'res',p:20,d:'쇠못 한 상자. 제작 재료 (임시)'},
+ pcb2:{n:'고급 회로기판',ic:'lk_pcb2',ty:'res',p:900,d:'냉각 팬과 큰 칩이 붙은 남색 기판. 제작 재료 (임시)'},plastic:{n:'플라스틱',ic:'lk_plastic',ty:'res',p:60,d:'알록달록한 플라스틱 판. 제작 재료 (임시)'},
+ att_scope:{n:'조준경 스코프',ic:'lk_att_scope',ty:'res',p:1200,d:'멀리 보이게 하는 총 조준경. 다는 기능은 아직 (임시)'},cement:{n:'시멘트',ic:'lk_cement',ty:'res',p:80,d:'회색 가루가 든 시멘트 포대. 콘크리트를 만들 예정 (임시)'},
+ kit_turret:{n:'포탑 키트',ic:'lk_kit_turret',ty:'kit',b:'turret',p:2400,d:'자동 포탑 부품이 든 상자. 가방에서 눌러 바로 설치해요'},
+ kit_fconc:{n:'콘크리트 울타리',ic:'lk_fence_conc',ty:'kit',b:'fence_conc',p:200,d:'단단한 콘크리트 판 울타리(한 칸 2m)'},
+ kit_gconc:{n:'콘크리트 울타리 문',ic:'lk_gate_conc',ty:'kit',b:'gate_conc',p:300,d:'콘크리트 울타리에 다는 철문. 나는 지나가고 적은 막아요'}});
+BUILDS.turret.kit='kit_turret';
+Object.assign(BUILDS,{fence_conc:{n:'콘크리트 울타리',g:'lk_fence_conc',s:1,bx:1,bz:.25,hp:800,c:{cement:2,stone:3},kit:'kit_fconc',grid:1,d:'단단한 콘크리트 판 울타리 (임시)'},
+ gate_conc:{n:'콘크리트 울타리 문',g:'lk_gate_conc',s:1,bx:1,bz:.25,hp:700,c:{cement:2,stone:2,scrap:3},kit:'kit_gconc',grid:1,gate:1,d:'나는 지나가고 적은 막아요 (임시)'}});
+ITEMS.copper.d='구리 알갱이가 박힌 초록빛 광석. 녹이면 구리 주괴 (임시)';
