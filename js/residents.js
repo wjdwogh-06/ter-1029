@@ -20,6 +20,21 @@ const residents = (() => {
       const p=portSpawn(i===0||i===10?nearest(P,PORTS).i:i%PORTS.length);
       return {name,id:i,x:p.x,z:p.z,coins:100,bag:{},dex:{},wait:Math.random()*2,hp:100};
     });
+    // Introduce two residents within camera range, including on pre-update saves.
+    if(!S.residentWelcome && !INT.on){
+      for(const [id,side] of [[0,-1],[10,1]]){
+        const b=S.residents.find(q=>q.id===id);
+        if(!b)continue;
+        for(let i=0;i<48;i++){
+          const angle=i*Math.PI/12,r=3.5+Math.floor(i/24)*2;
+          const x=P.x+side*r*Math.cos(angle),z=P.z+r*Math.sin(angle);
+          if((onDock(x,z)||hAt(x,z)>.4) && !walk(x,z,.45,{pl:true})){
+            Object.assign(b,{x,z,wait:8,trip:0});break;
+          }
+        }
+      }
+      S.residentWelcome=1;
+    }
     for(const b of S.residents) if(b.home && !structs.some(s=>s.resident===b.id))
       addStruct({...b.home,resident:b.id});
   }
@@ -136,3 +151,18 @@ const residents = (() => {
   }
   return {tick,hit};
 })();
+
+// Use the same canvas projection as network player names.
+{
+  const previousDraw=drawFx;
+  drawFx=function(dt){
+    previousDraw(dt);
+    if(mode!=='play'||window.MP||INT.on)return;
+    const k=Math.max(.8,UIS*1.25);
+    for(const b of S.residents||[]){
+      if(dist(P.x,P.z,b.x,b.z)>22)continue;
+      const [x,y,visible]=scr(b.x,groundY(b.x,b.z)+3.1,b.z);
+      if(visible)uiPill(fctx,b.name+' · 봇',x,y,11*k,'#574934','#fff');
+    }
+  };
+}
