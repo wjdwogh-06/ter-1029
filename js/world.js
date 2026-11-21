@@ -228,11 +228,11 @@ function addStruct(s){const d=sdef(s),g=new THREE.Group();const m=mesh(GEO[d.g])
  if(s.t==='mg'){s.gun=mesh(GEO.mggun);s.gun.position.y=1.12;g.add(s.gun);s.cd=0;s.ammo=s.ammo||0}
  if(s.hp===undefined)s.hp=d.hp||1e9;s.max=d.hp||1e9;s.m=g;scene.add(g);structs.push(s);return s}
 function removeStruct(s){scene.remove(s.m);const i=structs.indexOf(s);if(i>=0)structs.splice(i,1);const j=lightsrc.indexOf(s);if(j>=0)lightsrc.splice(j,1)}
-function inStruct(s,x,z,r){const d=sdef(s);if(d.pass||s.open)return false;   /* s.open: 열린 문(places.js) */const dx=x-s.x,dz=z-s.z;if(dx*dx+dz*dz>36)return false;const c=Math.cos(s.r||0),sn=Math.sin(s.r||0),lx=dx*c-dz*sn,lz=dx*sn+dz*c,qx=clamp(lx,-d.bx,d.bx),qz=clamp(lz,-d.bz,d.bz);return (lx-qx)**2+(lz-qz)**2<r*r}
+function inStruct(s,x,z,r){   /* s.open: 열린 문(places.js) */const dx=x-s.x,dz=z-s.z;if(dx*dx+dz*dz>36||s.open)return false;const d=sdef(s);if(d.pass)return false;const c=Math.cos(s.r||0),sn=Math.sin(s.r||0),lx=dx*c-dz*sn,lz=dx*sn+dz*c,qx=clamp(lx,-d.bx,d.bx),qz=clamp(lz,-d.bz,d.bz);return (lx-qx)**2+(lz-qz)**2<r*r}
 /* returns null (free), true (terrain/tree) or the struct in the way */
 function blocked(x,z,r,wm=0,pl=0){if(x<4||z<4||x>WS-4||z>WS-4)return true;const hh=hAt(x,z);if(wm===0?hh<.12:wm===1?hh<-.45:false)return true;
  const cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const rr=OBJT[o.t].r;if(rr&&(x-o.x)**2+(z-o.z)**2<(rr+r)**2)return true}
- for(const s of structs){if(pl&&sdef(s).gate)continue;if(inStruct(s,x,z,r))return s}return null}
+ for(const s of structs){if(Math.abs(s.x-x)>6||Math.abs(s.z-z)>6)continue;if(pl&&sdef(s).gate)continue;if(inStruct(s,x,z,r))return s}return null}
 /* world structures: only what the map owner asked for (ports are in ports.js, supply drops in dress.js) */
 function villageAndPOI(){POI.lhS=[];POI.guards=[];POI.lh.forEach((c,i)=>{addStruct({t:'lighthouse',x:c.x,z:c.z,r:0}).li=i;lhIslet(c,i)});buildSupply();villageDress()}
 /* boulders and moss around a sea lighthouse, set on the islet's real slope (the front path stays clear) */
