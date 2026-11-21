@@ -119,10 +119,36 @@ devInit=async function(){
   let gesture=null,frame=0;
   const rotation=angle.parentElement;
   const turnButtons=[];
-  for(const [label,sign] of [['↶ 왼쪽',-1],['오른쪽 ↷',1]]){
+  for(const [label,sign,fine] of [['↶ 왼쪽',-1,false],['오른쪽 ↷',1,false],['왼쪽 1°',-1,true],['오른쪽 1°',1,true]]){
     const b=document.createElement('button');b.textContent=label;
     rotation.after(b);turnButtons.push(b);
-    b.onclick=()=>{angle.value=(+angle.value+sign*(+turnStep.value)+360)%360;angle.oninput()};
+    b.onclick=()=>{angle.value=(+angle.value+sign*(fine?1:+turnStep.value)+360)%360;angle.oninput()};
+  }
+  const resetOne=document.createElement('button'),resetAll=document.createElement('button');
+  resetOne.textContent='선택 원위치';resetAll.textContent='기본 맵 전체 원위치';
+  panel.append(resetOne,resetAll);turnButtons.push(resetOne);
+  resetOne.onclick=()=>restoreOriginal(group.map(q=>q.e));
+  resetAll.onclick=()=>{
+    if(active&&DEV.on&&!gesture&&window.confirm('기본 맵 구조물 전체를 최초 위치와 방향으로 되돌릴까요?'))
+      restoreOriginal(entries.filter(e=>!e.s?.own));
+  };
+  function restoreOriginal(targets){
+    if(!active||!DEV.on||gesture)return;
+    resetModels();
+    const before=[];
+    for(const e of targets){
+      if(e.s&&!structs.includes(e.s))continue;
+      const p=e.m.position;
+      if(Math.abs(p.x-e.x)<1e-7&&Math.abs(p.z-e.z)<1e-7&&Math.abs(e.m.rotation.y-e.r)<1e-7)continue;
+      before.push({e,x:p.x,z:p.z,r:e.m.rotation.y,override:saved[e.id]});
+      move(e,e.x,e.z,e.r);
+      if(!e.s?.own){
+        if(valid(defaults[e.id]))saved[e.id]=[e.x,e.z,e.r];
+        else delete saved[e.id];
+      }
+    }
+    if(!before.length){clear();toast('이미 원래 자리예요');return}
+    remember(before);persist('원래 위치와 방향으로 복원했어요');
   }
   function pivot(){return group.find(q=>q.e===selected)}
   function resetModels(){
@@ -163,8 +189,10 @@ devInit=async function(){
       const a=q.x-ox,b=q.z-oz,v=[x+a*c+b*sn,z-a*sn+b*c,q.r+rot];
       move(q.e,...v);if(!q.e.s?.own)saved[q.e.id]=v;
     }
+    remember(before);persist();
+  }
+  function remember(before){
     history.push(before);if(history.length>100)history.shift();undo.disabled=false;
-    persist();
   }
   undo.onclick=()=>{
     if(!active||!DEV.on||gesture||!history.length)return;
