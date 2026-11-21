@@ -54,7 +54,7 @@ function plGeoParts(){const R=(w,h,d,c,b)=>typeof lkRb==='function'?lkRb(w,h,d,c
 function plSignText(txt,w=2.7,h=.5,px=74){const cv=document.createElement('canvas');cv.width=512;cv.height=96;const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;
  const draw=()=>{const x=cv.getContext('2d');x.clearRect(0,0,512,96);x.fillStyle='#4a2f20';x.font=`900 ${px}px `+(typeof UIF!=='undefined'?UIF:'sans-serif');x.textAlign='center';x.textBaseline='middle';x.fillText(txt,256,52);tx.needsUpdate=true};
  draw();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);return new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false}))}
-const plAdd=(g,x,y,z,ry=0,m)=>{const o=mesh(g,m||MATT);o.position.set(x,y,z);o.rotation.y=ry;scene.add(o);return o};
+const plAdd=(g,x,y,z,ry=0,m)=>{const o=mesh(g,m||MATT);if(y!==0)o.userData.layoutName="시설 소품";o.position.set(x,y,z);o.rotation.y=ry;scene.add(o);return o};
 const plWallAlong=(pts,step,skip)=>{let acc=step;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],L=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let u=0;u<L;u+=.25){acc+=.25;if(acc>=step){acc=0;const x=a[0]+(b[0]-a[0])*u/L,z=a[1]+(b[1]-a[1])*u/L;if(!skip||!skip(x,z))addStruct({t:'iblk',x,z,r:Math.atan2(-(b[1]-a[1]),b[0]-a[0]),hp:1e9})}}}};
 
 /* ========== 2) 물개섬 특수 보급지: 바위 분지 (9차: 크게, 경사로·계단 옆모습) ========== */

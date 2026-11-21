@@ -116,13 +116,21 @@ const SUPV=[
  {cr:[[-1.6,0,-.1,.37],[1.8,.4,.25,.37],[0,2.6,.5],[-3.1,2.9,-.4]],de:[['pallet',-1.6,0,-.1,4.6],['pallet',1.8,.4,.25,4.6],['tarppile',3.0,-2.0,.3],['chute',-1.0,-3.0,2.6],['supsign',3.5,2.6,-.2],['ropefence',2.9,-4.0,0]],lamp:[-3.4,1.1],smoke:[.2,-1.2]}];
 function buildSupply(){SUPS.forEach(s=>{const i=s.i,V=SUPV[i%SUPV.length],n=2+i%3,y0=hAt(s.x,s.z),mir=i%2?-1:1;s.cr=[];
   for(let k=0;k<n;k++){const c=V.cr[k],o=addStruct({t:k===0&&i%4===2?'chest':'supply',x:s.x+c[0]*mir,z:s.z+c[1],r:c[2]*mir,yo:k===0&&i%4===2?0:c[3]||0});o.li='s'+i+'_'+k;s.cr.push(o)}
-  const parts=[];for(const d of V.de){if(d[0]==='tuftdeco')continue;if(d[0]==='sbagArc'){const rr=d[3]*mir;addStruct({t:'blk',x:s.x+d[1]*mir+Math.sin(rr)*.27,z:s.z+d[2]+Math.cos(rr)*.27,r:rr})}parts.push(pt(GEO[d[0]],null,[d[1]*mir,hAt(s.x+d[1]*mir,s.z+d[2])-y0,d[2]],[0,d[3]*mir+(mir<0&&d[0]==='chute'?Math.PI:0),0],[d[4]||1,d[4]||1,d[4]||1]))}
-  parts.push(pt(GEO.flarecan,null,[V.smoke[0]*mir,0,V.smoke[1]]));const m=mesh(mg(parts),MATT);m.position.set(s.x,y0-.03,s.z);scene.add(m);
+  for(const [type,lx,lz,rot,scale=1] of V.de){
+    if(type==='tuftdeco')continue;
+    const x=s.x+lx*mir,z=s.z+lz,r=rot*mir;
+    const m=mesh(GEO[type],MATT);m.scale.setScalar(scale);
+    m.position.set(x,hAt(x,z)-.03,z);m.rotation.y=r+(type==='chute'&&mir<0?Math.PI:0);
+    m.userData.layoutName=type;scene.add(m);
+    if(type==='sbagArc')m.userData.layoutBlock=addStruct({t:'blk',x:x+Math.sin(r)*.27,z:z+Math.cos(r)*.27,r});
+  }
+  const flare=mesh(GEO.flarecan,MATT);flare.userData.layoutName='신호탄';
+  flare.position.set(s.x+V.smoke[0]*mir,y0-.03,s.z+V.smoke[1]);scene.add(flare);
   addStruct({t:'suplamp',x:s.x+V.lamp[0]*mir,z:s.z+V.lamp[1],r:.4*mir});
-  const G=new THREE.Group();G.position.set(s.x+V.smoke[0]*mir,y0,s.z+V.smoke[1]);const sp=[];for(let q=0;q<9;q++){const g=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(),color:q%3?0xf26a1e:0xffa24a,transparent:true,opacity:.5,depthWrite:false}));g.userData.p=q/9;G.add(g);sp.push(g)}scene.add(G);SMOKES.push({s,G,sp,t:0})})}
+  const G=new THREE.Group();G.position.set(s.x+V.smoke[0]*mir,y0,s.z+V.smoke[1]);const sp=[];for(let q=0;q<9;q++){const g=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(),color:q%3?0xf26a1e:0xffa24a,transparent:true,opacity:.5,depthWrite:false}));g.userData.p=q/9;G.add(g);sp.push(g)}scene.add(G);flare.attach(G);SMOKES.push({s,G,sp,t:0})})}
 /* ---- bridges where a path crosses a river ---- */
 function buildBridges(){let a=-1;const P=PATHS,end=i=>{if(a<0)return;const A=P[Math.max(0,a-2)],B=P[Math.min(P.length-1,i+1)];const L=dist(A.x,A.z,B.x,B.z)+1.2;a=-1;if(L>34||L<3)return;if(hAt(A.x,A.z)<.4||hAt(B.x,B.z)<.4)return;const cx=(A.x+B.x)/2,cz=(A.z+B.z)/2,r=Math.atan2(B.x-A.x,B.z-A.z);
-   if(DOCKS.some(d=>dist(d.x,d.z,cx,cz)<6))return;const m=mesh(bridgeGeo(L),MATT);m.position.set(cx,.06,cz);m.rotation.y=r;scene.add(m);addDock(cx,cz,r,1.2,L/2,.87)};
+   if(DOCKS.some(d=>dist(d.x,d.z,cx,cz)<6))return;const m=mesh(bridgeGeo(L),MATT);m.position.set(cx,.06,cz);m.rotation.y=r;m.userData.layoutName="다리";scene.add(m);addDock(cx,cz,r,1.2,L/2,.87)};
  for(let i=0;i<P.length;i++){const wet=hAt(P[i].x,P[i].z)<.3,jump=i>0&&dist(P[i].x,P[i].z,P[i-1].x,P[i-1].z)>5;if(jump)end(i-1);if(wet){if(a<0)a=i}else end(i-1)}end(P.length-1)}
 /* ---- village and outpost touches ---- */
 function villageDress(){/* the old village and outpost were removed; town dressing lives in ports.js */}
