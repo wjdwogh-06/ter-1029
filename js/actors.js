@@ -110,7 +110,7 @@ const CHOP={hit:1,saw:2,cd:.42,sawCd:.3};   /* 25차: 전기톱도 나무를 벨
 function nearestEnemy(x,z,r){let b=null,bd=r;for(const e of enemies){if(e.dead)continue;const d=dist(x,z,e.x,e.z);if(d<bd){bd=d;b=e}}return b}
 /* ---- combat ---- */
 function hitscan(ox,oz,dx,dz,range,dmg){let best=null,bt=range;for(const e of enemies){if(e.dead)continue;const rx=e.x-ox,rz=e.z-oz,t=rx*dx+rz*dz;if(t<0||t>bt)continue;if(Math.abs(rx*dz-rz*dx)<(e.big?1.05:.78)){bt=t;best=e}}
- if(best)hurtEnemy(best,dmg,dx,dz);return bt}
+ const rb=residents.hit(ox,oz,dx,dz,bt,dmg);if(rb<bt)return rb;if(best)hurtEnemy(best,dmg,dx,dz);return bt}
 function hurtEnemy(e,d,dx,dz){if(e.dead)return;if(e.litT>0)d*=1.3;e.hp-=d;e.agg=1;e.hpT=3;const y=groundY(e.x,e.z);ftext(e.x,y+2.9,e.z,String(Math.round(d)),'#ffe08a');puff(e.x,y+1.4,e.z,ENEMY[e.kind].blood||0xb3352b,3,.7);
  if(!e.big&&!ENEMY[e.kind].root){const kx=e.x+dx*.35,kz=e.z+dz*.35;if(walk(kx,kz,.42,e)===null){e.x=kx;e.z=kz}if(e.a.lock<=0)e.a.play('Hit_A',{once:1,lock:.22,force:1})}
  if(e.camp!==undefined)enemies.forEach(o=>{if(o.camp===e.camp)o.agg=1});if(e.hp<=0)killEnemy(e)}
@@ -335,7 +335,7 @@ function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=d
   if(P.tapT>0){P.tapT-=dt;if(!P.tapE||P.tapE.dead)P.tapT=0}
   if(firing){if(inp.fire&&inp.aiming){P.adx=inp.ax;P.adz=inp.az}else{const e=!inp.fire&&P.tapE?P.tapE:nearestEnemy(P.x,P.z,w.melee?4:w.range);if(e){const d=dist(P.x,P.z,e.x,e.z)||1;P.adx=(e.x-P.x)/d;P.adz=(e.z-P.z)/d}else{P.adx=Math.sin(P.rot);P.adz=Math.cos(P.rot)}}
    P.rot=turn(P.rot,Math.atan2(P.adx,P.adz),dt*22);attack()}else if(P.moving&&!P.auto)P.rot=turn(P.rot,Math.atan2(mx,mz),dt*(swim?6:12));
-  if(P.hitT>0){P.hitT-=dt;if(P.hitT<=0){const fx=Math.sin(P.rot),fz=Math.cos(P.rot);for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<P.hitW.range+(e.big?.5:0)&&(dx*fx+dz*fz)/(d||1)>.3)hurtEnemy(e,P.hitW.dmg,dx/(d||1),dz/(d||1))}}}
+  if(P.hitT>0){P.hitT-=dt;if(P.hitT<=0){const fx=Math.sin(P.rot),fz=Math.cos(P.rot);residents.hit(P.x,P.z,fx,fz,P.hitW.range,P.hitW.dmg);for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<P.hitW.range+(e.big?.5:0)&&(dx*fx+dz*fz)/(d||1)>.3)hurtEnemy(e,P.hitW.dmg,dx/(d||1),dz/(d||1))}}}
   if(w.rod&&!bmode&&!swim)updFishing(dt,press);else if(fishing)endFish();
   if(bmode){if(inp.actEdge)placeBuild()}else if((inp.act||inp.actEdge)&&!P.auto&&!swim)interact();
   if(a.lock<=0){if(swim)a.play('T-Pose',{fade:.3});else if(fishing)a.play('1H_Ranged_Aiming',{fade:.2});
