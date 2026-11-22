@@ -141,6 +141,7 @@ devInit=async function(){
   for(const [t,b] of Object.entries(BUILDS)){
     if(!b.indoor&&b.n&&GEO[b.g])catalog.set(t,b.n);
   }
+  for(const [t,d] of Object.entries(DECO))if(d.cat&&GEO[d.g])catalog.set(t,d.cat);   // 52차(디자인): 배치용 새 구조물(js/props.js, 이름 앞 🪜 계단·높이 / 🌿 자연 / 🏠 건축물)
   function spawn(id,t,origin){
     const [x,z,r]=origin;
     const port=PORTS.reduce((best,p)=>!best||dist(x,z,p.x,p.z)<dist(x,z,best.x,best.z)?p:best,null);
