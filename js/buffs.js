@@ -75,7 +75,7 @@ function bufUi(dt){BUF.ui-=dt;if(BUF.ui>0)return;BUF.ui=.25;let e=document.getEl
  const ho=hatOn();if(ho&&HATFX[ho].sp)h.push(`<b style="background:#e07a2c">🎃 +${Math.round(HATFX[ho].sp*100)}%</b>`);
  const html=h.join('');if(e.innerHTML!==html)e.innerHTML=html}
 /* ---------- 모자 쓰기(머리에 보이게): 고른 캐릭터마다 머리 가운데·크기를 맞춰요 ---------- */
-const HAT_FIT={dog:{y:.38,z:-.03,s:1},dog2:{y:.38,z:-.03,s:1},cat:{y:.40,z:-.04,s:1.03},hero:{y:.56,z:.04,s:.9}};
+const HAT_FIT={dog:{y:.38,z:-.03,s:1},plat:{y:.40,z:-.05,s:1.02},hero:{y:.56,z:.04,s:.9}};   /* 58차: 고양이·긴 다리 리트리버 빼고 오리너구리 */
 function hatSync(){const a=P&&P.a;if(!a)return;const id=hatOn(),v=a.dog&&a.dog.v||'hero',key=id?id+'|'+v:'';if(a._hatK===key&&a._hatDog===a.dog&&(!id||a._hat&&a._hat.parent))return;
  if(a._hat){a._hat.parent&&a._hat.parent.remove(a._hat);a._hat=null}a._hatK=key;a._hatDog=a.dog;
  if(!a.dog&&a.head)for(const m of a.head.children)if(m.geometry===GEO.helmet)m.visible=!id;   /* 탐험가는 원래 쓰던 철모를 벗고 모자를 써요 */

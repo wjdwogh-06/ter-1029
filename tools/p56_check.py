@@ -41,7 +41,7 @@ async def steps(pg):
       r.woodPlunder=chop();eq('hat_lumber');r.woodLumber=chop();
       return JSON.stringify(r)}"""))
     # 모자 쓴 모습(캐릭터마다)
-    for ch in ['dog','cat','hero']:
+    for ch in ['dog','plat','hero']:
         await ev(f"""()=>{{DOG.sel='{ch}';S.time=.42;P.x=VIL.x;P.z=VIL.z;P.rot=0.45;try{{ZOOM.t=.74}}catch(e){{}};zoomK=.74;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}}""");await pg.wait_for_timeout(1500)
         for i,h in enumerate(['hat_plunder','hat_lumber','hat_combat','hat_pumpkin']):
             await ev(f"()=>{{S.inv['{h}']=1;bagTap('{h}');P.a._hatK=null}}");await pg.wait_for_timeout(700)
