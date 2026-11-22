@@ -288,7 +288,19 @@ const ECON={sell:.2};
 function sellPrice(id){return Math.max(1,Math.floor(ITEMS[id].p*ECON.sell))}
 /* 랜덤 자판기: 항구마다 하나. 실제 시간으로 1시간마다(정각 기준) 모든 아이템 중 무작위 5개로 바뀌어요. 시간·항구 번호로만 정해서 누구에게나 같아요 */
 const VEND={n:5,per:3600e3,free:0,pack:{ammoS:12}};
-const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p||it.nov)return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
+// 본섬 보급과 무작위 자판기가 공유하는 제한. 총기 제작용 부품 키트·석궁·광석은 별개다.
+const restrictedSupplyIds=new Set(['rod2','rod3','att_laser','att_supp','pick_adv','pick_elec',
+  'kit_bench2','charm','pcb2','kit_turret','vodka']);
+function restrictedSupplyItem(id){
+  const item=ITEMS[id];
+  return restrictedSupplyIds.has(id)||item?.eq==='hat'||id.startsWith('bar_')||
+    /^plastic(?:_|$)/.test(id)||/^(?:kit_)?boat(?:_|[0-9]|$)/.test(item?.b||id)||
+    (item?.ty==='gun'&&id!=='pistol'&&id!=='crossbow');
+}
+function mainlandSupply(s){
+  return (sdef(s).loot===1||sdef(s).loot===2||sdef(s).loot===4)&&islAt(s.x,s.z)===ISL[0];
+}
+const vendPool=()=>Object.keys(ITEMS).filter(k=>{const it=ITEMS[k];if(!it.p||it.nov||restrictedSupplyItem(k))return false;if(/^c?f_/.test(k)){const f=FISH.find(q=>q.id===k.replace(/^c/,''));return f&&!f.old}return true});
 function vendItems(pi,now){const hr=Math.floor((now||Date.now())/VEND.per),pool=vendPool(),out=[];let k=0;
  while(out.length<Math.min(VEND.n,pool.length)){const id=pool[Math.floor(hash(hr,pi*131+k++,77)*pool.length)];if(!out.includes(id))out.push(id)}return out}
 const vendLeft=now=>VEND.per-((now||Date.now())%VEND.per);

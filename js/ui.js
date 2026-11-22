@@ -534,7 +534,9 @@ function creOff(){CRV.on=false;creEnd();creBarUpd();devHud()}
    남은 것은 상자에 그대로(S.box[li] = {d:연 날, c:20칸}, 저장됨) → 다시 열면 그대로. 다 비우면 창이 닫히고, 예전처럼 며칠 뒤(보급 3일·벙커 5일·특수 5일) 새로 채워져요. */
 const BOX={s:null,msg:''};
 const boxCd=s=>{const d=sdef(s);return d.loot===3?5:(d.cd||3)};
-function boxGet(s){if(!S.box)S.box={};const b=S.box[s.li];if(b&&S.day-b.d>=boxCd(s)){delete S.box[s.li];return null}return b||null}
+function boxGet(s){if(!S.box)S.box={};const b=S.box[s.li];if(b&&S.day-b.d>=boxCd(s)){delete S.box[s.li];return null}if(b&&mainlandSupply(s)){
+ for(let i=0;i<b.c.length;i++)if(b.c[i]&&restrictedSupplyItem(b.c[i][0]))b.c[i]=null;
+ }return b||null}
 const boxLeft=b=>b?b.c.filter(Boolean).length:0;
 const boxName=s=>({supply:'📦 보급 상자',chest:'🧰 보물 상자',bunker:'🛡 벙커',spsupply:'⭐ 특수 보급 상자'})[s.t]||'📦 상자';
 function boxOpen(s){const d=sdef(s);let b=boxGet(s);

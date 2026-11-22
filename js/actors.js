@@ -193,6 +193,7 @@ function lootGen(s){const df=sdef(s),got={};const add=(k,n)=>got[k]=(got[k]||0)+
  else if(df.loot===3){add('coin',80+(Math.random()*60|0));add('ammoS',70);add('powder',8);add('scrap',14);add('can',3);add('bandage',2);add(pick(['rifle','shotgun','smg']),1)}
  else if(df.loot===2){add('coin',200+(Math.random()*400|0));add('powder',4);add('ammoS',12);add('scrap',6);if(Math.random()<.35)add(pick(['rifle','shotgun']),1)}
  else{add('scrap',3+(Math.random()*4|0));for(let i=0;i<2;i++){const l=pick(LOOT);add(l[0],l[1]+(Math.random()*(l[2]-l[1]+1)|0))}}
+ if(mainlandSupply(s))for(const k in got)if(restrictedSupplyItem(k))delete got[k];
  for(const k in got)if(k!=='coin'&&ITEMS[k]&&ITEMS[k].one&&invN(k)){delete got[k];add('scrap',df.loot===3?12:df.loot===4?8:6)}
  return got}
 function interact(){const t=target;if(!t)return;

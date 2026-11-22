@@ -444,7 +444,7 @@ const SPLOOT=()=>{const g={};const add=(k,n)=>g[k]=(g[k]||0)+n;add('coin',400+(M
 {const _ia=interact;interact=function(){const t=target;if(t&&t.k==='s'){const s=t.s,d=sdef(s);
   if(s.t==='cgate'){if(inp.actEdge)openGate(s);return}
   if(s.t==='fstall'){if(inp.actEdge)fisherTalk();return}
-  if(d.loot===4){if(!inp.actEdge)return;if(S.looted[s.li]&&S.day-S.looted[s.li]<d.cd)return;S.looted[s.li]=S.day;P.a.play('PickUp',{once:1,lock:.5,force:1});const got=SPLOOT();let i=0;
+  if(d.loot===4){if(!inp.actEdge)return;if(S.looted[s.li]&&S.day-S.looted[s.li]<d.cd)return;S.looted[s.li]=S.day;P.a.play('PickUp',{once:1,lock:.5,force:1});const got=lootGen(s);let i=0;
    for(const k in got){if(ITEMS[k]&&ITEMS[k].one&&invN(k)){give('scrap',8);ftext(s.x,groundY(s.x,s.z)+2.4+i++*.6,s.z,'+8 고철','#ffe08a');continue}give(k,got[k]);ftext(s.x,groundY(s.x,s.z)+2.4+i++*.6,s.z,`+${got[k]} ${k==='coin'?'동전':ITEMS[k].n}`,'#ffd27a')}
    if(s.m&&s.m.children[0])s.m.children[0].geometry=GEO[d.og];if(s.lk&&s.lk.parts.glow)s.lk.parts.glow.visible=false;jingle([659,880,1175]);toast('⭐ 특수 보급을 열었어요!');hudDirty=true;return}}
  return _ia()}}
