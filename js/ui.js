@@ -776,5 +776,12 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('[data-a="fsell
  for(const q of FBUY.L){const d=dist(P.x,P.z,q.s.x,q.s.z),near=d<FBUY.far&&!INT.on;if(near&&!q.a&&CMAT.merchant){q.a=new Actor('merchant');q.a.play('Idle',{force:1});q.a.set(q.s.x,q.s.z,0)}
   if(q.a){q.a.root.visible=near;if(near)q.a.mixer.update(dt)}}}}
 {const _df=drawFx;drawFx=function(dt){_df(dt);if(mode!=='play'||INT.on)return;const c=fctx,k=Math.max(.8,UIS*1.25);for(const q of FBUY.L){if(!q.a||dist(P.x,P.z,q.s.x,q.s.z)>14)continue;const p=scr(q.s.x,groundY(q.s.x,q.s.z)+3.0,q.s.z);uiPill(c,'🐟 생선 상인',p[0],p[1],12.5*k,UIC.grn,'#fff')}}}
+/* 59차(규칙): 섬으로 만든 테두리 블록을 한 번 지워요(기획자 11-22: '다 만들었으면 블럭은 없애야 해').
+   59차 섬들(core.js NEWISLES)의 그린 선 3m 안 블록만 지우고 다른 블록은 그대로(거북섬 블록은 57차 tidy.js가 지워요). 이 폰에서 한 번만('frontisle_blocks_isl'='59'), ↩로 한 번 되돌릴 수 있어요. */
+function crvIsleClean(){let v='';try{v=localStorage.getItem('frontisle_blocks_isl')||''}catch(e){}if(v==='59'||!CRV.map.size)return 0;const L=NEWISLES.map(N=>N.pg),st={ops:[]};
+ for(const [key,c] of CRV.map){const p=key.split(',').map(Number);if(L.some(pg=>pgSD(pg,p[0]+.5,p[1]+.5)<3))st.ops.push({key,prev:c,c:null})}
+ for(const o of st.ops)CRV.map.delete(o.key);const n=st.ops.length;
+ try{localStorage.setItem('frontisle_blocks_isl','59')}catch(e){}if(n){CRV.undo.push(st);crvRebuild();creSave();toast('🧱 새 섬들을 그릴 때 쓴 블록 '+n+'개를 지웠어요 (크리에이티브 ↩로 되돌릴 수 있어요)')}return n}
+{const _ci=creInit;creInit=function(){const was=CRV.inited;_ci();if(!was)crvIsleClean()}}
 boot();
 window.__g={PORTS,DEV,ISL,POI,VIL,OUT,hAt,devTp,addMark,get S(){return S},P,inp,get enemies(){return enemies},get structs(){return structs},get target(){return target},walk,give,spawnEnemy,get raid(){return raid},get mode(){return mode},objs};
