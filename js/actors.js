@@ -252,18 +252,24 @@ const BPIN={on:0,x:0,z:0};   /* 33차(기획자: '들고 왔다 갔다 하다가
 function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=BPIN.on?BPIN.x:P.x+Math.sin(P.rot)*d,z=BPIN.on?BPIN.z:P.z+Math.cos(P.rot)*d,r=placementAngle();if(b.grid){x=Math.round(x);z=Math.round(z)}   /* 48차(기획자: '360도 말고 원래 각도·왼쪽·오른쪽 사선 세 가지만'): 정면(+z)·왼쪽 사선·오른쪽 사선 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
  /* 실내 설치(14차): 작업대(b.indoor)는 텐트 안에서만, 텐트 안에는 실내 설치물만. 방 안으로 끌어당기고 앞쪽 1.2m(나가는 길)는 비워요 */
- if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const E=rotExt(b.bx,b.bz,r),ax=INT.hw-E[0]-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+E[1]+.1,INT.z+INT.hd-1.3-E[1]);pr.r=r;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
-   if(!canBuild(bmode))why='재료가 부족해요';else if(Math.abs(P.x-pr.x)<E[0]+.45&&Math.abs(P.z-pr.z)<E[1]+.45)why='너무 가까워요. 조금 물러나요';else for(const s of structs){if(!s.in||s.hk!==curHK())continue;const q=sdef(s),F=rotExt(q.bx,q.bz,s.r||0);if(Math.abs(s.x-pr.x)<F[0]+E[0]+.1&&Math.abs(s.z-pr.z)<F[1]+E[1]+.1){why='다른 물건과 겹쳐요';break}}}
+ if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const E=rotExt(b.bx,b.bz,r),ax=INT.hw-E[0]-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+E[1]+(b.wall?0:.1),INT.z+INT.hd-1.3-E[1]);pr.r=r;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
+   if(!canBuild(bmode))why='재료가 부족해요';else if(Math.abs(P.x-pr.x)<E[0]+.45&&Math.abs(P.z-pr.z)<E[1]+.45)why='너무 가까워요. 조금 물러나요';else for(const s of structs){if(!s.in||s.hk!==curHK())continue;if(bldHit(b,pr.x,pr.z,pr.r,s)){why='다른 물건과 겹쳐요';break}}}
   pr.why=why;pr.ok=!why;return pr}
  if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(nobAt(x,z,R0)){const n=nobAt(x,z,R0);why=`${NOB_N[n.k]} 주변은 설치 금지 구역이에요`}else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';else if(BPIN.on&&dist(x,z,P.x,P.z)>16+R0)why='너무 멀어요. 조금 더 가까이 가요';
  if(!why&&b.water)why=waterSpotWhy(x,z,r,b);   /* 25차: 보트처럼 물 위에만 놓는 것 */
  if(!why&&!b.water){let lo=9,hi=-9;const c=Math.cos(r),sn=Math.sin(r),fx=b.foot?b.foot[0]:b.bx,fz=b.foot?b.foot[1]:b.bz,st=b.foot?.25:1;   /* ground sheets (b.foot) are checked over their whole area */
   for(let ax=-1;ax<=1.001;ax+=st)for(let az=-1;az<=1.001;az+=st){const lx=ax*fx,lz=az*fz,h=b.foot?gridH(x+lx*c+lz*sn,z-lx*sn+lz*c):hAt(x+lx*c+lz*sn,z-lx*sn+lz*c);if(h<lo)lo=h;if(h>hi)hi=h}
   if(lo<.35)why='물가에는 놓을 수 없어요';else if(hi-lo>(b.tilt||(b.grid?.4:.16+R0*.07)))why='땅이 기울어서 놓을 수 없어요'}
- if(!why)for(const s of structs){if(dist(s.x,s.z,x,z)<.9||(!b.grid||!sdef(s).grid)&&inStruct(s,x,z,R0+.12)){why='다른 구조물과 겹쳐요';break}}
+ if(!why)for(const s of structs){if(s.in)continue;if(bldHit(b,x,z,r,s)){why='다른 구조물과 겹쳐요';break}}
  if(!why){const n=Math.ceil((R0+2.2)/CELL),cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-n;j<=n&&!why;j++)for(let i=-n;i<=n;i++){const o=objs.get((cz+j)*CN+cx+i);if(!o||o.re>0)continue;const cl=o.t<3?(R0<.9?.75:1.35)+(o.t===2?.7:0):o.t===3?OBJT[3].r*o.sc/5.6+.3:.6;if(dist(o.x,o.z,x,z)<cl+R0){why=o.t<3?'나무와 겹쳐요':o.t===3?'바위와 겹쳐요':'덤불과 겹쳐요';break}}}
  if(!why)why=zoneWhy(bmode,x,z,r,R0);   /* 39차: 텐트 구역 */
  pr.why=why;pr.ok=!why;return pr}
+/* 62차(기획자 11-22 23:29: '모든 가구 및 설치형 구조물은 중첩이 안 되고 딱 붙이는 건 돼야'): 플레이어가 지은 것끼리는 돌린 충돌 상자끼리 겹치는지로 재요
+   (맞닿는 건 돼요, 0.01m씩 줄여 잼). 카페트(floor:1)는 가구 밑에 깔 수 있고 카페트끼리만 겹침을 봐요. 월드 구조물·울타리끼리(grid)는 예전 그대로 */
+function bldHit(b,x,z,r,s){const q=sdef(s);
+ if(BUILDS[s.t]&&!(b.grid&&q.grid)){if(!!b.floor!==!!q.floor&&!isZoneT(s.t)&&!isZoneT(bmode))return false;
+  return zoneOverlap({x,z,r:r||0,hw:b.bx-.01,b:b.bz-.01,f:b.bz-.01},{x:s.x,z:s.z,r:s.r||0,hw:q.bx-.01,b:q.bz-.01,f:q.bz-.01})}
+ return dist(s.x,s.z,x,z)<.9||(!b.grid||!q.grid)&&inStruct(s,x,z,Math.max(b.bx,b.bz)+.12)}
 /* 물 위 설치(25차, 보트 2인승): 배 밑 9점이 모두 물(깊이 0.25 넘게, 배 바닥이 0.22)·부두 아님, 7m 안에 땅이 있어야 해요(바닷가 가까운 물) */
 function waterSpotWhy(x,z,r,b){const c=Math.cos(r),sn=Math.sin(r);for(let ax=-1;ax<=1;ax++)for(let az=-1;az<=1;az++){const lx=ax*(b.bx+.15),lz=az*(b.bz+.15),px=x+lx*c+lz*sn,pz=z-lx*sn+lz*c;
   if(onDock(px,pz))return'부두와 겹쳐요';if(hAt(px,pz)>-.25)return'물이 얕거나 땅에 걸려요. 조금 더 물 쪽에 놓아요'}

@@ -291,7 +291,7 @@ async function boot(){const L=t=>$('loadTx').textContent=t;try{initRenderer();in
    가방: 아이템 한 종류 = 한 칸(개수는 한 칸에 얼마든지), 모두 20칸. 꽉 찼을 때 새 종류가 들어오면 발밑에 자루로 내려놓고(5분 뒤 사라짐),
    칸이 비면 그 자루를 다시 주워요. 상점·자판기·보관 상자 꺼내기·제작·굽기는 꽉 차 있으면 막혀요. 버리기 = 발 앞에 자루(멀어졌다 오면 다시 주움).
    에너지: 왼쪽 위에 ⚡ 10칸(S.hp 10 = 1칸). 배고픔·체온 줄은 숨겼어요(actors.js updStats). */
-const BAG_N=20;
+let BAG_N=20;   /* 62차: 여행용 가방을 끼면 30칸(deco.js) */
 const bagList=()=>Object.keys(S.inv).filter(k=>S.inv[k]>0&&ITEMS[k]&&!(typeof eqHas==='function'&&eqHas(k)));   /* 48차: 장비 칸에 낀 것은 가방 칸에서 빠져요(gear.js) */
 const bagHas=id=>id==='coin'||(S.inv[id]||0)>0||bagList().length<BAG_N;
 const bagFits=items=>{let need=0;for(const k in items)if(k!=='coin'&&items[k]>0&&!(S.inv[k]>0))need++;return bagList().length+need<=BAG_N};

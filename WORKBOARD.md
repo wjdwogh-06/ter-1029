@@ -8,7 +8,6 @@
 
 <!-- 한 줄 형식: - [역할] 차수 · 하는 일 · 고치는 파일 · 시작 시각(한국 시간) · 상태 -->
 <!-- 예: - [디자인] 16차 · 텐트 그림자 다듬기 · look.js · 11-18 18:40 · 진행 중 -->
-- [디자인] 62차 · 가구 묶음(덤불·카페트 3종·나무 의자/테이블·눈사람·트리·나무상자 3종(계단식)·액자 8종·랜덤상자·정원의자, 딱 붙여 놓기) + 새 식물 5종(야생·씨앗·도감) + 설탕 + 여행용 가방(+10칸) · 새 파일 js/deco.js + index.html, core.js 맨 끝 새 줄, 꼭 필요하면 actors.js·ui.js 한두 줄 · 11-22 23:45 · 진행 중
 
 ## 다음 차수 번호
 
@@ -21,6 +20,7 @@
 
 ## 서로에게 남기는 말
 
+- [디자인 62차 → 규칙·기획자] **기획자 요청(11-22 23:29)**: 새 파일 **`js/deco.js`**(shoes.js 다음): 가구 21종(키트 `kit_<id>`, inok) + 랜덤 상자 `rbox` + 설탕 `sugar` + 여행용 가방 `bag_travel`(eq bag → 30칸) + 새 식물 5종(PLANTS·PLANT_SITES·FARM.ids에 push, plants.js `PLD`에도 넣음). ⚠ **규칙 파일을 조금 고쳤어요**: ⓐ actors.js `ghostPos`의 겹침 두 줄을 새 함수 `bldHit`로(기획자: '모든 가구·설치형 구조물은 겹치면 안 되고 딱 붙이는 건 돼야' → 플레이어가 지은 것끼리 돌린 상자 겹침 `zoneOverlap`, 카페트 `floor:1`은 가구 밑에 깔기, 월드 구조물·울타리끼리는 예전 그대로), 실내 뒤 벽 여유 `+.1`은 `b.wall`(액자)이면 0. ⓑ ui.js `const BAG_N=20` → `let`(한 단어). ⓒ 랜덤 상자는 무엇이든 나와서 기획자님 '고급 품목' 규칙처럼 `restrictedSupplyIds.add('rbox')`(자판기·본섬 보급 제외 — 얻는 곳은 기획자에게). ⓓ 식물 도감이 17종이 되어 **식물섬 문이 17/17**, `plant_check`도 17로 나와요(poppy~port 겹침·popback은 원래 결과). 부탁(서버 마무리 때): 서버 설치 검사·계단 높이·가방 30칸·랜덤 상자. AGENTS §6-0-0-27. **게임 링크에 올려 주세요**(index.html·js/deco.js·js/actors.js·js/ui.js + 61차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [디자인 61차 → 규칙·기획자] **기획자 요청(11-22 22:09)**: ⓐ **총 7종**: core.js 맨 끝 61차 덩어리(ITEMS·WEAP 새 줄만). 옛 id `pistol rifle smg shotgun`을 그대로 다시 써서 이름·숫자·모양만 바꿨고 새 id `ar`(현대 소총·연사)·`burst`(점사 소총·3발)·`sniper`(저격총)를 더했어요. WEAP에 새 값 `fm`(semi/auto/burst)·`bn`·`bp`·`use`(기관단총 2발)·`slow`(.5)·`cam`·`shk`. 키트도 7종 `gkit_<id>`. 쏘는 방식·느려짐·저격 시야는 새 파일 **`js/guns.js`**(buffs.js 다음, updPlayer·attack·moveEnt·updCamera·shotSfx·rjHint 감싸기). 기획자님 `restrictedSupplyItem`(권총·석궁 말고 총은 자판기·본섬 보급 제외)은 그대로 새 총에도 적용돼요. places.js `SPLOOT`만 6종 중 하나로. ⓑ **신발 4종**: 새 파일 **`js/shoes.js`**(guns.js 다음, 아이템 정의도 이 파일 맨 위 — core.js로 옮겨도 돼요), `eq:'shoes'`, 효과는 bufSpeed·hurtPlayer·attack·updStats 감싸기, 발뼈에 신겨요. look.js `lkCatOf` 한 줄(신발도 보라 원판). ⓒ 부탁(서버 마무리 때): 서버는 점사 쉬는 시간·기관단총 탄알 2발·신발 빠르기·피해·치명타·공격력을 몰라요. 다른 사람 발 신발도 아직 안 보여요. AGENTS §6-0-0-26. **게임 링크에 올려 주세요**(index.html·js/core.js·js/guns.js·js/shoes.js·js/look.js·js/places.js + 56~58차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [규칙 59차 → 디자인] **기획자 요청(11-22 20:58)**: 블록으로 그린 **새 섬 27개**를 만들었어요(→ 60차에 징검 바위섬 18개는 기획자 요청으로 없앰, 남은 건 9개)(core.js `NEWISLES`, 이름 임시: 수달섬·반달섬·반달 바위섬 5·해달섬·띠섬·징검 바위섬 18). 땅 색·나무·풀은 저절로(world.js 안 고침). 그 섬들 그린 블록은 ui.js `crvIsleClean`이 한 번 지워요(tidy.js 거북섬 정리와 따로, 둘 다 creInit 감싸기). 자세한 건 AGENTS §6-0-0-25. 읽었으면 이 줄 지워 주세요.
 - [디자인 58차 → 규칙·기획자] **기획자 결정(11-22 19:54)**: 고를 수 있는 캐릭터 = 탐험가 `hero`·골든 리트리버 `dog`·**오리너구리 `plat`**(새로). 긴 다리 리트리버 `dog2`·치즈 고양이 `cat`은 지웠어요(js/dog.js). `localStorage 'frontisle_char'` 값이 `dog2`면 `dog`, `cat`이면 `hero`로 읽어요. 멀티에서 다른 사람 캐릭터를 보여 줄 때(net.js, 서버 마무리 때) 값은 `hero|dog|plat`만 오도록 해 주세요. buffs.js `HAT_FIT`도 `plat`으로 바꿨고, `tools/p56_check.py` 모자 사진 줄도 cat → plat. AGENTS §7-1. **게임 링크에 올려 주세요** — 56·57·58차 함께(index.html·js/buffs.js·js/tidy.js·js/roads.js·js/look.js·js/world.js·js/dog.js). 읽었으면 이 줄 지워 주세요.
