@@ -78,61 +78,105 @@ function caveRoom(){
   }
   function lamp(x,z){
     const halo=glow(0xffb46c,2.7,.40);halo.position.set(x,2.52,z);C.add(halo);
-    lamps.push([x,z]);prop(unit,0x493c36,x,1.25,z,.22,2.5,.22);
-    prop(unit,0xffbf63,x,2.5,z,.55,.7,.55);prop(unit,0x644f40,x,2.94,z,.72,.16,.72);
+    lamps.push([x,z]);
+    prop(unit,0x66503d,x,1.18,z,.15,2.36,.15);
+    prop(cyl(.23,.17,.12,10),0x63594b,x,2.24,z,1,1,1);
+    prop(cyl(.16,.14,.40,10),0xffcf84,x,2.48,z,1,1,1);
+    prop(cyl(.12,.30,.18,10),0x536366,x,2.76,z,1,1,1);
+    for(const dx of [-.15,.15])prop(unit,0x655646,x+dx,2.49,z,.032,.42,.032);
   }
   function track(a,b){
     const [x,z]=a,dx=b[0]-x,dz=b[1]-z,len=Math.hypot(dx,dz),r=Math.atan2(dx,dz);
-    for(const side of [-.78,.78])prop(unit,0x919496,x+dx/2+side*Math.cos(r),.12,z+dz/2-side*Math.sin(r),.12,.14,len,r);
+    for(const side of [-.78,.78])prop(unit,0x919496,x+dx/2+side*Math.cos(r),.12,z+dz/2-side*Math.sin(r),.12,.14,len+.035,r);
     for(let d=0;d<len;d+=2.4)prop(unit,0x71553e,x+dx*d/len,.055,z+dz*d/len,2.25,.12,.34,r);
   }
-  for(const [i,j] of MINE.routes){
-    const a=MINE.halls[i],b=MINE.halls[j],x=(a[0]+b[0])/2,z=(a[1]+b[1])/2,r=Math.atan2(b[0]-a[0],b[1]-a[1]);
-    timber(x,z,r);lamp(x+3*Math.cos(r),z-3*Math.sin(r));
-    if(i<9&&j===i+1)track(a,b);
-  }
-  // The entrance opens onto a rail cutting, with a loading bay visible from spawn.
-  track([0,126],[0,112]);
-  for(const z of [116,105,92]){
-    timber(0,z,0);
-    for(const side of [-1,1]){
-      prop(unit,0xa58057,side*2.85,3.06,z,.27,1.65,.38,0,-side*.7);
-      prop(unit,0x495158,side*3.4,.48,z,.63,.24,.66);
+  // Join the lines inside the wide chambers, leaving the narrow tunnels straight.
+  function railway(points){
+    const curve=new THREE.CatmullRomCurve3(points.map(([x,z])=>new THREE.Vector3(x,0,z)));
+    const length=curve.getLength(),count=Math.ceil(length/2);
+    let previous=curve.getPointAt(0);
+    for(let i=1;i<=count;i++){
+      const next=curve.getPointAt(i/count);
+      track([previous.x,previous.z],[next.x,next.z]);
+      previous=next;
     }
-    lamp(-3.9,z-.5);
+    return curve;
   }
-  for(const side of [-1,1])for(let n=0;n<8;n++){
-    const x=side*(7+2.3*Math.sin(n*.83)),z=122-n*2.6;
-    prop(stone,0x44475a,x,1.25,z,2.8,2.9,3.5,n);
-    prop(stone,0x6b6570,x+side*.9,2.6,z,2.9,1.35,3.3,n+.35);
-    if(n%3===0)prop(crystal,0x59b8c8,x-side*1.5,.95,z,.35,1.8,.5,n,.3*side);
-    MINE.solids.push([x,z,1.9]);
-  }
-  function cart(x,z){
-    prop(unit,0x353941,x,.78,z,2.25,.35,3.4);
-    for(const side of [-1,1]){
-      prop(unit,0x93745a,x+side,1.26,z,.22,.95,3.35);
-      prop(unit,0x806049,x,1.26,z+side*1.58,2,.95,.22);
-      for(const end of [-1,1])prop(stone,0x3d4147,x+side*1.03,.48,z+end,.42,.45,.45);
+  const mainLine=railway([[0,126],[0,115],[-1,103],[0,78],[0,68],[-5,61],
+    [-52,55],[-64,53],[-76,43],[-106,15],[-115,4],[-111,-13],[-95,-52],[-90,-60],[-75,-68],[-32,-90]]);
+  const siding=railway([[-1,103],[0,106],[2.4,109],[4.2,113],[4.6,119]]);
+  const oreLine=railway([[-32,-90],[-18,-92],[33,-101],[46,-96],[90,-66],[96,-55],[116,-9]]);
+  function cart(line,fraction,loaded){
+    const pos=line.getPointAt(fraction),tangent=line.getTangentAt(fraction),yaw=Math.atan2(tangent.x,tangent.z);
+    const parts=[],wheel=cyl(.31,.31,.16,12),iron=0x454b51,paint=0x426666;
+    for(const end of [-.76,.76])for(const side of [-1,1]){
+      parts.push(pt(wheel,iron,[side*.78,.49,end],[0,0,Math.PI/2]));
+      parts.push(pt(cyl(.13,.13,.06,8),0xab9170,[side*.89,.49,end],[0,0,Math.PI/2]));
     }
-    for(let n=0;n<7;n++)prop(stone,0x525461,x+hash(n,4,1)-.5,1.53,z+2*hash(n,7,3)-1,.65,.52,.72,n);
-    MINE.solids.push([x,z,1.55]);
+    parts.push(pt(lkRb(1.55,.22,2.42,.06,.035),iron,[0,.73,0]));
+    for(let row=0;row<3;row++){
+      const half=.72+row*.095,y=.93+row*.24;
+      for(const side of [-1,1]){
+        parts.push(pt(box(.12,.25,2.38),row===2?0x608782:paint,[side*half,y,0],[0,0,-side*.28]));
+        parts.push(pt(box(2*half,.24,.12),paint,[0,y,side*1.14]));
+      }
+    }
+    for(const side of [-1,1]){
+      parts.push(pt(box(.16,.11,2.55),0xb4a583,[side*.98,1.61,0]));
+      for(const end of [-.83,.83])parts.push(pt(box(.06,.83,.13),iron,[side*.87,1.18,end],[0,0,-side*.28]));
+    }
+    if(loaded)for(let n=0;n<10;n++)parts.push(pt(stone,n%3?0x676571:0xa58962,[(n%3-1)*.46,1.35+hash(n,2,4)*.22,(Math.floor(n/3)-1.4)*.47],[.4,n,.3],[.43,.33,.48]));
+    prop(mg(parts),null,pos.x,0,pos.z,1,1,1,yaw);
+    MINE.solids.push([pos.x,pos.z,1.35]);
   }
-  cart(3.8,112);cart(-68,56);cart(-84,-58);cart(90,-60);
-  for(const [i,[x,z]] of MINE.halls.entries()){
-    lamp(x+5,z+3);
-    if([3,5,7,8].includes(i)){
-      for(let n=0;n<22;n++){
-        const a=hash(n,i,5)*6.28,l=hash(n,i,7)*7,h=.9+hash(n,i,2)*3;
-        prop(crystal,i%2?0x56c4c3:0xa68adc,x+11+Math.cos(a)*l,h/2,z+Math.sin(a)*l,.5,h,.7,n,.16*Math.sin(n));
-      }
-    }else if(i!==0){
-      for(let n=0;n<5;n++){
-        const cx=x-8+n%3*1.9,cz=z+6+Math.floor(n/3)*2;
-        prop(unit,0x866344,cx,.8,cz,1.7,1.6,1.7);
-        for(const offset of [-.55,.55])prop(unit,0x474544,cx+offset,.82,cz,.12,1.65,1.74);
-        MINE.solids.push([cx,cz,.9]);
-      }
+  cart(siding,.78,true);cart(mainLine,.55,false);cart(oreLine,.83,true);
+  // Loading dock between the siding and the east wall. The planks face the cart.
+  function landing(x,z,boards){
+    for(let n=0;n<boards;n++)
+      prop(unit,n%3===0?0xa57850:0x926a49,x,.23,z+n*.54,3.2,.30,.51);
+    for(const side of [-1,1])prop(unit,0x55483d,x+side*1.15,.08,z+(boards-1)*.27,.28,.16,boards*.54);
+  }
+  landing(7.45,113,12);
+  function cargo(name,x,y,z,scale,angle,radius){
+    prop(GEO[name],null,x,y,z,scale,scale,scale,angle);
+    if(radius)MINE.solids.push([x,z,radius]);
+  }
+  // Retaining boards hold the cut behind the deck; the short awning covers the far end.
+  const cedar=0x946844,ironBlue=0x4e6267;
+  for(const z of [112.7,115.9,119.1]){
+    prop(unit,cedar,9.35,1.55,z,.26,3.1,.28);
+    prop(unit,ironBlue,9.35,.33,z,.31,.35,.33);
+  }
+  for(let row=0;row<4;row++)
+    prop(unit,row%2?0x795740:0x8c654a,9.48,.48+row*.36,115.9,.20,.32,6.65);
+  for(const z of [112.7,115.9]){
+    prop(unit,cedar,6.12,1.77,z,.22,2.86,.24);
+    prop(unit,0xb0885e,7.78,3.04,z,3.7,.17,.25,0,-.11);
+  }
+  for(let n=0;n<7;n++)
+    prop(unit,n%2?0x506f70:0x607f7d,7.76,3.23,112.51+n*.6,3.95,.105,.61,0,-.11);
+  // Open buffer stop at the end of the siding.
+  prop(unit,0x9e7754,4.6,.68,119.45,2.35,.30,.33);
+  for(const x of [3.83,5.37])prop(unit,ironBlue,x,.40,119.52,.21,.8,.24);
+  cargo('crate_A_big',7.6,.38,117.45,4.6,.06,.82);
+  cargo('crate_B_small',7.9,.38,115.55,4.3,-.18,.57);
+  cargo('sack',6.7,.38,118.6,5.4,.36,.4);
+  cargo('barrel',-57,0,58,4.6,.24,.65);
+  cargo('crate_A_big',-55.4,0,58.5,4.6,-.16,.85);
+  cargo('sack',-56,0,60,5.5,-.7,.45);
+  for(const [x,z,r] of [[0,103,0],[0,91,0],[-33,57,1.42],[-85,34,.81],[-104,-26,-.33],[63,-84,1.0]]){
+    timber(x,z,r);
+    lamp(x-3.05*Math.cos(r),z+3.05*Math.sin(r));
+  }
+  lamp(8.7,118.7);lamp(-57,60.8);
+  // Veins run through exposed shelves along the wall, tapering at either end.
+  for(const [x,z,r,color] of [[-138,6,.12,0x7eb7b4],[-32,-112,1.28,0xb799b5],[110,-78,.91,0x8bb6b6]]){
+    for(let n=-4;n<=4;n++){
+      const cx=x+n*1.65*Math.cos(r),cz=z+n*1.65*Math.sin(r)+Math.sin(n*.8)*.62;
+      const size=1.15+(4-Math.abs(n))*.37;
+      prop(stone,0x535461,cx,size*.35,cz,size*1.3,size*.93,size,n*.48);
+      for(let k=0;k<3;k++)prop(crystal,color,cx+.35*k,size*.62+.17*k,cz+.23*k,.24,size*(.48+.16*k),.28,n+k,.28-.23*k);
+      MINE.solids.push([cx,cz,size*.65]);
     }
   }
   // Abandoned hoist at the central junction, with a hanging bucket and cable drum.
@@ -144,7 +188,10 @@ function caveRoom(){
   for(const dz of [-2,2])prop(unit,0x967657,hx,6.25,hz+dz,6.7,.65,.65);
   prop(unit,0x544c4c,hx,6.7,hz,.7,.45,5.6);
   prop(unit,0x6c706f,hx,4.8,hz,.09,3.5,.09);
-  prop(stone,0x8b7663,hx,2.65,hz,1.05,.9,1.05,1);
+  prop(cyl(.72,.52,.85,10),0x526565,hx,2.7,hz,1,1,1);
+  prop(cyl(.76,.76,.10,10),0xb59c78,hx,3.12,hz,1,1,1);
+  prop(cyl(.62,.62,.04,10),0x363539,hx,3.18,hz,1,1,1);
+  lamp(hx-3.2,hz+2.3);
   prop(unit,0x5c5147,hx-4,1.2,hz,2.3,2.4,1.8);
   // A flooded sump and a broken pipe identify the western pump chamber.
   const wx=-105,wz=-58;
@@ -152,16 +199,19 @@ function caveRoom(){
   for(let n=0;n<7;n++){
     const a=n*.9;prop(stone,0x53646a,wx+5.8*Math.cos(a),.25,wz+4.2*Math.sin(a),1.3,.65,.85,a);
   }
-  prop(unit,0x695746,wx-5,1.05,wz-3.6,5,.55,.6);
+  const pipe=cyl(.26,.26,1,10);
+  prop(pipe,0x628181,wx-6,1.05,wz-3.6,1,6,1,0,Math.PI/2);
+  for(const dx of [-8.5,-6,-3.5])prop(cyl(.36,.36,.13,10),0xba9c78,wx+dx,1.05,wz-3.6,1,1,1,0,Math.PI/2);
+  prop(lkRb(1.7,1.15,1.32,.12,.055),0x527775,wx-9,.68,wz-3.6,1,1,1);
+  lamp(wx-10,wz-2.4);
   prop(unit,0x84745f,wx-2.7,.7,wz-3.6,.7,1.1,.7);
   MINE.solids.push([wx,wz,4.5]);
-  // Tall freestanding columns break up the silhouettes in the larger chambers.
-  for(const i of [2,3,4,7,8,10]){
-    const [x,z]=MINE.halls[i];for(const side of [-1,1]){
-      const cx=x+side*16,cz=z-9;
-      prop(stone,0x505362,cx,2.4,cz,3.8,6.3,3.5,i);
-      prop(stone,0x63636d,cx+.8,.75,cz+1.1,3.7,2.4,3,i+.5);MINE.solids.push([cx,cz,3.3]);
-    }
+  // Asymmetric buttresses sit at the rock face, clear of the haul roads.
+  for(const [cx,cz,r,h] of [[-18,116,.31,2.4],[-15,111,.6,1.5],[22,65,-.6,3.6],[-136,-3,.51,3.2],
+    [-119,-60,.42,4.1],[18,-120,.8,2.7],[118,-76,.3,2.2],[142,-4,-.3,3.7],[36,4,.52,3.4]]){
+    for(let k=0;k<3;k++)prop(stone,[0x565565,0x676473,0x777077][k],cx+k*.46,h*(.19+k*.30),cz-k*.26,
+      4.2-k*.5,h*(.56-k*.10),2.9-k*.16,r+k*.14);
+    MINE.solids.push([cx,cz,2.5]);
   }
   // Broken shale and spoil banks along chamber margins keep paths clear.
   for(const [idx,[cx,cz,rx,rz]] of MINE.halls.entries()){
@@ -199,7 +249,7 @@ function caveRoom(){
   }
   for(let i=-40;i<40;i++)for(let j=-35;j<35;j++){
     if(!mineTile(i,j))continue;
-    const x=4*i,z=4*j,v=.88+.25*hash(i,j,18);
+    const x=4*i,z=4*j,v=1;
     for(const [a,b] of [[0,0],[0,4],[4,4],[0,0],[4,4],[4,0]])vertex(x+a,z+b,v);
     for(const [di,dj] of [[0,-1],[0,1],[-1,0],[1,0]]){
       if(mineTile(i+di,j+dj))continue;
