@@ -114,7 +114,7 @@ function nearestEnemy(x,z,r){let b=null,bd=r;for(const e of enemies){if(e.dead)c
 function hitscan(ox,oz,dx,dz,range,dmg){let best=null,bt=range;for(const e of enemies){if(e.dead)continue;const rx=e.x-ox,rz=e.z-oz,t=rx*dx+rz*dz;if(t<0||t>bt)continue;if(Math.abs(rx*dz-rz*dx)<(e.big?1.05:.78)){bt=t;best=e}}
  if(best)hurtEnemy(best,dmg,dx,dz);return bt}
 function hurtEnemy(e,d,dx,dz){if(e.dead)return;if(e.litT>0)d*=1.3;e.hp-=d;e.agg=1;e.hpT=3;const y=groundY(e.x,e.z);ftext(e.x,y+2.9,e.z,String(Math.round(d)),'#ffe08a');puff(e.x,y+1.4,e.z,ENEMY[e.kind].blood||0xb3352b,3,.7);
- if(!e.big&&!ENEMY[e.kind].root){const kx=e.x+dx*.35,kz=e.z+dz*.35;if(walk(kx,kz,.42,e)===null){e.x=kx;e.z=kz}if(e.a.lock<=0)e.a.play('Hit_A',{once:1,lock:.22,force:1})}
+ if(!e.big&&!ENEMY[e.kind].root){const kx=e.x+dx*.35,kz=e.z+dz*.35;if((!e.snow||snowLand(kx,kz))&&walk(kx,kz,.42,e)===null){e.x=kx;e.z=kz}if(e.a.lock<=0)e.a.play('Hit_A',{once:1,lock:.22,force:1})}
  if(e.camp!==undefined)enemies.forEach(o=>{if(o.camp===e.camp)o.agg=1});if(e.hp<=0)killEnemy(e)}
 function killEnemy(e){e.dead=true;e.deadT=3.2;e.a.play('Death_A',{once:1,lock:9,force:1});S.st.kills++;sfx(160,.2,'sawtooth',.05,.5);const it={};ENEMY[e.kind].loot.forEach(([id,n,p])=>{if(Math.random()<p)it[id]=Math.ceil(n*rand(.6,1.2))});addDrop(e.x,e.z,it);
  if(e.kind==='brute')S.st.boss++;if(e.camp!==undefined&&!enemies.some(o=>!o.dead&&o.camp===e.camp)){S.st.camps++;S.campDay[e.camp]=S.day;toast('🏴 야영지를 소탕했어요! 상자를 열어보세요');jingle([523,659,784,1047])}}
@@ -276,7 +276,7 @@ function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of struct
  const g=ghostPos(),b=BUILDS[bmode];if(!g.ok){toast(g.why||'여기엔 놓을 수 없어요');sfx(160,.1,'square',.04);return}const kit=payBuild(bmode);const s=addStruct({t:bmode,x:g.x,z:g.z,r:g.r,own:1,fresh:1,kit,in:g.in,yo:g.yo});const k='b_'+bmode;if(S.st[k]!==undefined)S.st[k]++;if(b.tur){S.st.b_tur++;sfx(180,.25,'sawtooth',.04,2.2);if(DEV.on)s.ammo=b.tur.cap}
  if(b.home){S.home={x:g.x,z:g.z+b.bz+1.1};toast('텐트를 쳤어요. 여기가 내 기지예요')}puff(g.x,groundY(g.x,g.z)+.6,g.z,0xffffff,8);sfx(300,.08,'square',.05);P.a.play('Interact',{once:1,lock:.3,force:1,speed:1.5});hudDirty=true;if(!canBuild(bmode)){toast(kit?'키트를 다 썼어요':'재료를 다 썼어요');setBuild(null)}}
 /* ---- enemies ---- */
-function spawnEnemy(kind,x,z,o={}){const T=ENEMY[kind],a=T.proc?new Creature(T.proc):new Actor(kind==='gunner'?'gunner':kind==='brute'?'brute':'bandit');a.weapon(T.w);if(T.helmet)a.helmet();const e=Object.assign({a,kind,x,z,rot:rand(0,6),hp:T.hp,max:T.hp,cd:rand(.3,1),agg:0,ax:x,az:z,wt:0,wx:x,wz:z,dead:false,aimT:0,hitT:0,side:Math.random()<.5?1:-1,big:!!T.big,hpT:0,sT:null,scan:0},o);enemies.push(e);return e}
+function spawnEnemy(kind,x,z,o={}){const T=ENEMY[kind],a=T.actor?T.actor():T.proc?new Creature(T.proc):new Actor(kind==='gunner'?'gunner':kind==='brute'?'brute':'bandit');a.weapon(T.w);if(T.helmet)a.helmet();const e=Object.assign({a,kind,x,z,rot:rand(0,6),hp:T.hp,max:T.hp,cd:rand(.3,1),agg:0,ax:x,az:z,wt:0,wx:x,wz:z,dead:false,aimT:0,hitT:0,side:Math.random()<.5?1:-1,big:!!T.big,hpT:0,sT:null,scan:0},o);enemies.push(e);return e}
 function spawnCamps(force){POI.camps.forEach((c,i)=>{if(dist(P.x,P.z,c.x,c.z)>130||enemies.some(e=>e.camp===i))return;if(S.campDay[i]&&S.day-S.campDay[i]<3&&!force)return;if(S.campDay[i]){delete S.campDay[i];for(const k of['a','b','c'])delete S.looted['c'+i+k]}
   const mk=(k,dx,dz)=>spawnEnemy(k,c.x+dx,c.z+dz,{camp:i});mk('bandit',3,-1);mk('bandit',-3,1);mk('gunner',-6,4);mk('gunner',5,4);if(i%3===2||S.day>6)mk('brute',0,-3);else mk('bandit',1,5)})}
 function steer(e,tx,tz,sp,dt){const an=Math.atan2(tx-e.x,tz-e.z);for(const off of[0,.6,-.6,1.2,-1.2,1.9,-1.9]){const a=an+off*e.side,nx=e.x+Math.sin(a)*sp*dt,nz=e.z+Math.cos(a)*sp*dt,b=canStep(e,nx,nz,Math.sin(a),Math.cos(a))?walk(nx,nz,.42,e):true;
@@ -401,3 +401,186 @@ function objPockets(keys,wins){let cut=0;const free=(x,z)=>{if(hAt(x,z)<.12)retu
    let n=0,sx=0,sz=0;{const sn=new Uint8Array(N*N);for(let k0=0;k0<N*N&&n<2;k0++){if(G[k0]!==1||sn[k0])continue;n=0;sx=sz=0;const s2=[k0];sn[k0]=1;while(s2.length){const c2=s2.pop(),i=c2%N,j=(c2/N)|0;n++;sx+=x0+i*st;sz+=z0+j*st;for(const[di,dj]of[[1,0],[-1,0],[0,1],[0,-1]]){const a=i+di,b=j+dj;if(a<0||b<0||a>=N||b>=N)continue;const m=b*N+a;if(G[m]===1&&!sn[m]){sn[m]=1;s2.push(m)}}}}}if(n<2)break;   /* 갇힌 칸 덩어리 하나씩 */
    const px=sx/n,pz=sz/n;let bk=null,bd=1e9;objs.forEach((o,kk)=>{if(o.t>2||Math.abs(o.x-px)>4||Math.abs(o.z-pz)>4)return;const d=dist(o.x,o.z,px,pz);if(d<bd){bd=d;bk=kk}});if(bk===null)break;objs.delete(bk);cut++}}return cut}
 {const _go=genObjects;genObjects=function(sd){_go(sd);const keys=[];objs.forEach((o,k)=>{if(o.t===2)keys.push(k)});genObjects.split=splitClusters(sd);genObjects.split.opened=objPockets(keys,[...PORT_SAFE.map(q=>[q[0],q[1],q[2]+6,12]),...SUPS.map(q=>[q.x,q.z,20,6])])}}   /* 항구·보급지 둘레(갇힌 칸 검사 자리)도 한 번 더 */
+
+// Northeastern island wildlife. Uses ordinary enemy damage, disposal and hunting records.
+const snowAnimalModels={};
+function snowAnimalModel(bear){
+  const key=bear?'bear':'bird';
+  if(snowAnimalModels[key])return snowAnimalModels[key];
+  const fur=0xe6e2d4,cream=0xf6f1de,shade=0xbfc4bd,ink=0x353333;
+  const shape=ico(1,1),parts=[];
+  const oval=(color,x,y,z,w,h,d,tilt=0)=>parts.push(pt(shape,color,[x,y,z],[tilt,0,0],[w,h,d]));
+  if(bear){
+    oval(fur,0,1.04,-.13,.65,.66,1.14);
+    oval(cream,0,1.36,.49,.58,.63,.73);
+    oval(cream,0,1.60,1.09,.43,.41,.53);
+    oval(fur,0,1.48,1.51,.29,.21,.34);
+    oval(ink,0,1.55,1.78,.16,.115,.10);
+    for(const side of [-1,1]){
+      oval(fur,side*.30,1.93,.98,.13,.14,.11);
+      oval(ink,side*.255,1.69,1.44,.053,.052,.054);
+    }
+    oval(fur,0,1.20,-1.17,.17,.16,.19);
+  }else{
+    oval(fur,0,.45,0,.30,.33,.49);
+    oval(cream,0,.72,.32,.23,.24,.24);
+    oval(ink,0,.71,.54,.095,.065,.13);
+    for(const side of [-1,1]){
+      oval(ink,side*.17,.78,.45,.044,.047,.043);
+      oval(0xa97057,side*.175,.83,.435,.047,.023,.05);
+      oval(shade,side*.24,.48,-.09,.105,.18,.34,-.18);
+    }
+    oval(ink,0,.43,-.43,.18,.065,.24,-.32);
+  }
+  const body=mg(parts);
+  const leg=bear?mg([pt(shape,fur,[0,-.22,0],0,[.24,.40,.26]),pt(shape,shade,[0,-.50,.08],0,[.225,.15,.32])]):
+    mg([pt(shape,shade,[0,-.06,0],0,[.052,.12,.06]),pt(shape,fur,[0,-.155,.055],0,[.075,.043,.12])]);
+  return snowAnimalModels[key]={body,leg};
+}
+class SnowAnimal{
+  constructor(bear){
+    const g=snowAnimalModel(bear);
+    this.root=new THREE.Group();this.body=mesh(g.body);this.root.add(this.body);this.legs=[];
+    for(const z of bear?[-.64,.61]:[0])for(const side of [-1,1]){
+      const leg=mesh(g.leg);leg.position.set(side*(bear?.36:.13),bear?.65:.20,z);this.root.add(leg);this.legs.push(leg);
+    }
+    this.phase=Math.random()*6;this.lock=0;this.cur='Idle';
+    this.mixer={update:dt=>{
+      const run=this.cur==='Running_A',move=run||this.cur==='Walking_A';
+      this.phase+=dt*(move?(bear?8:20)*(run?1:.55):2);
+      this.legs.forEach((leg,i)=>leg.rotation.x=move?Math.sin(this.phase+(i===0||i===3?0:Math.PI))*.48:0);
+      this.body.position.y=move?Math.abs(Math.sin(this.phase))*(bear?.047:.068):0;
+      this.body.rotation.x=this.cur==='swipe'?-.19:0;
+      if(this.cur==='Death_A')this.root.rotation.z=Math.min(1.42,this.root.rotation.z+dt*4);
+    }};
+    scene.add(this.root);
+  }
+  weapon(){}
+  play(n,o={}){if(!this.lock||o.force){this.cur=n;this.lock=o.lock||0}}
+  set(x,z,r){this.root.position.set(x,groundY(x,z),z);this.root.rotation.y=r}
+  dispose(){scene.remove(this.root)}
+}
+
+class SnowHunter extends Actor{
+  constructor(){
+    super('gunner');
+    if(!GEO.snowHunterCap)GEO.snowHunterCap=mg([
+      pt(ico(1,1),0xbac7c0,[0,.54,0],0,[.32,.22,.30]),
+      pt(ico(1,1),0x65736e,[0,.47,.18],0,[.33,.055,.26])
+    ]);
+    this.head.add(mesh(GEO.snowHunterCap));
+  }
+  weapon(id){
+    super.weapon(id);
+    if(id!=='rifle'||!this.holder.children.length)return;
+    if(!GEO.snowScope)GEO.snowScope=mg([
+      pt(cyl(.08,.08,.46,10),0x40494b,[0,.27,.10],[Math.PI/2,0,0]),
+      pt(cyl(.09,.09,.04,10),0x789f9e,[0,.27,.34],[Math.PI/2,0,0]),
+      pt(box(.06,.14,.15),0x535757,[0,.19,.08])
+    ]);
+    this.holder.children[0].add(mesh(GEO.snowScope));
+  }
+}
+Object.assign(ENEMY,{
+  polarBear:{n:'북극곰',hp:155,sp:4.65,dmg:22,reach:2.45,big:true,w:'fist',loot:[],actor:()=>new SnowAnimal(true)},
+  ptarmigan:{n:'뇌조',hp:16,sp:6.8,dmg:0,reach:0,root:true,w:'fist',loot:[],actor:()=>new SnowAnimal(false)},
+  snowHunter:{n:'설원 사냥꾼',hp:112,sp:4.8,dmg:36,reach:0,w:'rifle',loot:[],actor:()=>new SnowHunter()}
+});
+const snowSlots=['snowHunter','polarBear','polarBear','ptarmigan','ptarmigan','ptarmigan','ptarmigan']
+  .map(kind=>({kind,wait:0,e:null}));
+let snowWorld=null;
+function snowLand(x,z){
+  const island=wntIsl();
+  return !!island&&islAt(x,z)===island&&hAt(x,z)>.65&&!inSafe(x,z)&&!onDock(x,z);
+}
+function snowSpawns(dt){
+  if(snowWorld!==S){
+    for(const slot of snowSlots){if(slot.e&&enemies.includes(slot.e))dropEnemy(slot.e);slot.e=null;slot.wait=0}
+    snowWorld=S;
+  }
+  const island=wntIsl();if(!island)return;
+  for(const slot of snowSlots){
+    if(slot.e){
+      if(enemies.includes(slot.e))continue;
+      slot.e=null;slot.wait=slot.kind==='snowHunter'?150:70;
+    }
+    slot.wait-=dt;if(slot.wait>0)continue;
+    slot.wait=2;
+    for(let i=0;i<50;i++){
+      const patch=island.sp[Math.floor(Math.random()*island.sp.length)],angle=rand(0,Math.PI*2),r=Math.sqrt(Math.random())*patch[2]*.88;
+      const x=patch[0]+r*Math.cos(angle),z=patch[1]+r*Math.sin(angle);
+      if(!snowLand(x,z)||blocked(x,z,.8)||dist(x,z,P.x,P.z)<20||snowSlots.some(s=>s.e&&dist(x,z,s.e.x,s.e.z)<9))continue;
+      slot.e=spawnEnemy(slot.kind,x,z,{snow:true,strafe:2,shot:null});
+      slot.e.a.set(x,z,slot.e.rot);break;
+    }
+  }
+}
+function snowStep(e,angle,speed,dt){
+  const step=speed*dt,r=e.big?.63:.34;
+  for(const offset of [0,.55,-.55,1.12,-1.12,1.62,-1.62]){
+    const a=angle+offset*e.side,dx=Math.sin(a),dz=Math.cos(a),x=e.x+dx*step,z=e.z+dz*step;
+    if(!snowLand(x,z)||walk(x,z,r,e)!==null||!canStep(e,x,z,dx,dz))continue;
+    e.x=x;e.z=z;e.rot=turn(e.rot,a,dt*12);return true;
+  }
+  e.side=-e.side;return false;
+}
+function snowClear(e,x,z){
+  const d=dist(e.x,e.z,x,z),steps=Math.ceil(d/.8);
+  for(let k=1;k<steps;k++){
+    const u=k/steps;
+    if(blocked(lerp(e.x,x,u),lerp(e.z,z,u),.09,2))return false;
+  }
+  return true;
+}
+function snowFight(e,dt){
+  const t=ENEMY[e.kind],a=e.a,d=dist(e.x,e.z,P.x,P.z);
+  const visible=!INT.on&&d<100;
+  a.root.visible=visible;
+  const canSee=visible&&!P.dead&&!DEV.on&&snowLand(P.x,P.z);
+  const hunter=e.kind==='snowHunter',bird=e.kind==='ptarmigan',range=hunter?68:bird?15:23;
+  if(!canSee||d>range+12){e.agg=0;e.shot=null;e.hitT=0}
+  else if(d<range)e.agg=1;
+  if(!visible)return;
+  e.cd-=dt;e.hpT-=dt;a.lock=Math.max(0,a.lock-dt);if(e.litT>0)e.litT-=dt;
+  const angle=Math.atan2(P.x-e.x,P.z-e.z);
+  let moving=false;
+  if(!e.agg){
+    e.wt-=dt;
+    if(e.wt<=0){e.wt=rand(3,8);e.wx=e.ax+rand(-8,8);e.wz=e.az+rand(-8,8)}
+    if(dist(e.x,e.z,e.wx,e.wz)>1)moving=snowStep(e,Math.atan2(e.wx-e.x,e.wz-e.z),t.sp*.25,dt);
+  }else if(bird){
+    moving=snowStep(e,angle+Math.PI+.24*Math.sin(e.a.phase*.15),t.sp,dt);
+  }else if(!hunter){
+    if(e.hitT>0){
+      e.hitT-=dt;if(e.hitT<=0&&d<t.reach+.35)hurtPlayer(t.dmg);
+    }else if(d>t.reach)moving=snowStep(e,angle,t.sp,dt);
+    else if(e.cd<=0){e.rot=angle;e.cd=1.7;e.hitT=.36;a.play('swipe',{force:true,lock:.51})}
+  }else{
+    e.strafe-=dt;if(e.strafe<=0){e.side=-e.side;e.strafe=rand(1.3,3)}
+    if(e.shot){
+      const q=e.shot;q.time-=dt;e.rot=Math.atan2(q.x-e.x,q.z-e.z);
+      if(q.time<=0){
+        if(snowClear(e,q.x,q.z)){
+          tracer(e.x,groundY(e.x,e.z)+1.4,e.z,q.x,groundY(q.x,q.z)+1,q.z);
+          shotSfx('rifle');a.play('2H_Ranged_Shoot',{force:true,once:true,lock:.34});
+          if(dist(P.x,P.z,q.x,q.z)<1.15)hurtPlayer(t.dmg);
+        }
+        e.shot=null;e.cd=rand(2.3,3.1);
+      }
+    }else{
+      const direction=d>26?angle:d<16?angle+Math.PI+e.side*.35:angle+e.side*Math.PI/2;
+      moving=snowStep(e,direction,t.sp*(d<16?1:.86),dt);e.rot=angle;
+      if(d<=32&&e.cd<=0){
+        e.cd=.35;
+        if(snowClear(e,P.x,P.z)){
+          e.shot={x:P.x,z:P.z,time:.62};
+          ftext(P.x,groundY(P.x,P.z)+2.8,P.z,'조준됨','#ff985e');
+        }
+      }
+    }
+  }
+  if(a.lock<=0)a.play(e.shot?'2H_Ranged_Aiming':moving?(e.agg?'Running_A':'Walking_A'):'Idle');
+  a.set(e.x,e.z,e.rot);a.mixer.update(dt);
+}
+{const previous=updWorld;updWorld=function(dt){previous(dt);snowSpawns(dt)}}
+{const previous=updEnemy;updEnemy=function(e,dt){if(e.snow&&!e.dead)snowFight(e,dt);else previous(e,dt)}}
