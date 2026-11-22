@@ -208,7 +208,7 @@ const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:
  if(INT.on&&INT.kind==='cave'){
    if(d.y>=0)return null;
    const t=(INT.y-o.y)/d.y,x=o.x+d.x*t,z=o.z+d.z*t;
-   return t>=0&&mineTile(Math.floor((x-INT.x-MINE.ox)/4),Math.floor((z-INT.z-MINE.oz)/4))?[x,z]:null;
+   return t>=0&&mineFloorAt(x-INT.x-MINE.ox,z-INT.z-MINE.oz)?[x,z]:null;
  }
  for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z))){let a=t-.4,b=t;for(let i=0;i<7;i++){const m=(a+b)/2,mx=o.x+d.x*m,mz=o.z+d.z*m;if(o.y+d.y*m<=Math.max(0,groundY(mx,mz)))b=m;else a=m}return[o.x+d.x*b,o.z+d.z*b]}}return null}   /* 33차: 마지막 칸은 반씩 나눠 정확하게(누른 곳 설치) */
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
@@ -368,7 +368,7 @@ $('bZoom').style.display='none';
   const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;ZOOM.t=clamp(ZOOM.z0*ZOOM.d0/d,ZOOM.min,ZOOM.max)});   /* 32차: 조이스틱 손가락은 따로라 걷기는 그대로 */
  const up=e=>{delete ZOOM.pts[e.pointerId];if(!two().length)ZOOM.on=0;else if(ZOOM.on)stopOthers()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
  cv.addEventListener('wheel',e=>{if(mode!=='play')return;e.preventDefault();const z=ZOOM.t==null?zoomK:ZOOM.t;ZOOM.t=clamp(z*(1+Math.sign(e.deltaY)*Math.min(.25,Math.abs(e.deltaY)*.0015)),ZOOM.min,ZOOM.max)},{passive:false});
- const _uc=updCamera;updCamera=function(dt,px,py,pz,snap){if(ZOOM.t!=null&&!INT.on){const d=ZOOM.t-zoomK;zoomK=Math.abs(d)<.002?ZOOM.t:zoomK+d*Math.min(1,dt*12)}return _uc(dt,px,py,pz,snap)}}
+ const _uc=updCamera;updCamera=function(dt,px,py,pz,snap){if(ZOOM.t!=null&&(!INT.on||INT.kind==='cave')){const d=ZOOM.t-zoomK;zoomK=Math.abs(d)<.002?ZOOM.t:zoomK+d*Math.min(1,dt*12)}return _uc(dt,px,py,pz,snap)}}
 /* ④ 텐트 12시간 */
 const TENT_LIFE=12*3600e3;
 {const _as=addStruct;addStruct=function(s){const r=_as(s);if(r&&r.t==='ptent'&&r.own&&!r.at)r.at=Date.now();

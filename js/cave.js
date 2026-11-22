@@ -26,7 +26,7 @@ function caveGeo(){const R=[0x8f8e86,0x7a7972,0x6a6964,0x858479],DK=0x0b0a09,p=[
  const g=mg(p);g.computeBoundingSphere();return g}
 // Metres in mine-local coordinates. A lower haulage loop meets an upper ore loop.
 const MINE={
-  ox:1250,oz:155,cell:4,tiles:new Set(),solids:[],
+  ox:1250,oz:155,cell:4,samples:new Float32Array(81*71),solids:[],
   halls:[[0,112,19,20],[0,63,32,25],[-63,54,36,26],[-115,6,34,31],
     [-92,-59,34,30],[-32,-90,31,28],[36,-101,32,30],[93,-64,38,27],
     [116,-9,36,31],[64,42,31,26],[5,-8,47,40]],
@@ -42,10 +42,18 @@ function mineField(x,z){
   }
   return f+2*Math.sin(x*.15+z*.09)+1.6*Math.cos(z*.21-x*.055);
 }
-function mineTile(i,j){return MINE.tiles.has((i+64)*128+j+64)}
+function mineSample(i,j){return MINE.samples[(i+40)*71+j+35]}
+// Use the same two triangles per cell for the floor, walls, collision and taps.
+function mineFloorAt(x,z){
+  const u=x/4,v=z/4,i=Math.floor(u),j=Math.floor(v);
+  if(i < -40||i>=40||j < -35||j>=35)return false;
+  const dx=u-i,dz=v-j,a=mineSample(i,j),c=mineSample(i+1,j+1);
+  return (dx<dz?a*(1-dz)+mineSample(i,j+1)*(dz-dx)+c*dx:
+    a*(1-dx)+mineSample(i+1,j)*(dx-dz)+c*dz)>0;
+}
 function mineOpen(x,z,r){
   for(const [dx,dz] of [[-r,-r],[r,-r],[-r,r],[r,r]])
-    if(!mineTile(Math.floor((x+dx)/4),Math.floor((z+dz)/4)))return false;
+    if(!mineFloorAt(x+dx,z+dz))return false;
   return !MINE.solids.some(([cx,cz,rad])=>Math.hypot(x-cx,z-cz)<rad+r);
 }
 function mineShale(){
@@ -226,12 +234,14 @@ function caveRoom(){
   prop(wheel,0xa18566,hx,6.4,hz,.95,.95,.95);
   prop(wheel,0x626773,hx-4,2.1,hz+.95,.85,.85,.85);
   for(let n=0;n<4;n++)prop(unit,0x82766a,hx-4,2.1,hz+1,.09,1.45,.09,0,n*Math.PI/4);
-  for(let i=-40;i<40;i++)for(let j=-35;j<35;j++)if(mineField(i*4+2,j*4+2)>0)MINE.tiles.add((i+64)*128+j+64);
+  for(let i=-40;i<=40;i++)for(let j=-35;j<=35;j++)
+    MINE.samples[(i+40)*71+j+35]=mineField(i*4,j*4);
+  lamp(-3,124);lamp(3,124);
   // Build continuous, irregular cliff faces. Adjacent segments share endpoints.
   const wallPos=[],wallColor=[];
   const seams=[0x353342,0x534554,0x78635e,0x494756,0x666777];
   function ridge(x,z,k){
-    const noise=hash(x,z,11+k);
+    const noise=.5+.5*Math.sin(x*.13+z*.06+k*.42);
     const heightScale=z>=122&&Math.abs(x)<16?.16:1;
     return [x+.9*(hash(x,z,21+k)-.5),[0,.85,1.16,2.65,4.4,5.2][k]*heightScale*(.76+.48*noise)-.16,z+.9*(hash(x,z,31+k)-.5)];
   }
@@ -242,27 +252,34 @@ function caveRoom(){
       for(const v of [a,c,b,b,c,d]){wallPos.push(...v);wallColor.push(col.r,col.g,col.b)}
     }
   }
-  function vertex(x,z,v){
+  function vertex(x,z){
     let light=0;for(const [lx,lz] of lamps)light=Math.max(light,Math.max(0,1-Math.hypot(x-lx,z-lz)/10));
     const grain=.78+.18*Math.sin(x*.21+z*.13)+.16*hash(x,z,3);
-    floor.push(x,0,z);colors.push(.051*v*grain+.26*light,.055*v*grain+.146*light,.075*v*grain+.053*light);
+    const daylight=Math.max(0,1-Math.hypot(x*.16,(z-128)*.071));
+    floor.push(x,0,z);colors.push(.044*grain+.20*light+.09*daylight,.052*grain+.115*light+.15*daylight,.068*grain+.042*light+.18*daylight);
+  }
+  function cutFloor(triangle){
+    const polygon=[],edge=[];
+    for(let n=0;n<3;n++){
+      const a=triangle[n],b=triangle[(n+1)%3];
+      if(a[2]>0)polygon.push(a);
+      if((a[2]>0)===(b[2]>0))continue;
+      const t=a[2]/(a[2]-b[2]);
+      const point=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+      polygon.push(point);edge.push(point);
+    }
+    for(let n=2;n<polygon.length;n++)
+      for(const point of [polygon[0],polygon[n-1],polygon[n]])vertex(point[0],point[1]);
+    if(edge.length===2)cliff(...edge[0],...edge[1]);
   }
   for(let i=-40;i<40;i++)for(let j=-35;j<35;j++){
-    if(!mineTile(i,j))continue;
-    const x=4*i,z=4*j,v=1;
-    for(const [a,b] of [[0,0],[0,4],[4,4],[0,0],[4,4],[4,0]])vertex(x+a,z+b,v);
-    for(const [di,dj] of [[0,-1],[0,1],[-1,0],[1,0]]){
-      if(mineTile(i+di,j+dj))continue;
-      if(di)cliff(x+(di>0?4:0),z,x+(di>0?4:0),z+4);
-      else cliff(x,z+(dj>0?4:0),x+4,z+(dj>0?4:0));
-      if(z>=122&&Math.abs(x)<16)continue;
-      const h=1.2+hash(i,j,19)*1.8;
-      prop(stone,hash(i,j,8)>.5?0x525665:0x676273,x+2+di*3.4,.7,z+2+dj*3.4,3,h,3,hash(i,j,9)*3);
-    }
+    const x=i*4,z=j*4;
+    const a=[x,z,mineSample(i,j)],b=[x,z+4,mineSample(i,j+1)];
+    const c=[x+4,z+4,mineSample(i+1,j+1)],d=[x+4,z,mineSample(i+1,j)];
+    cutFloor([a,b,c]);cutFloor([a,c,d]);
   }
   // Daylight, paired posts and a pale threshold distinguish the return tunnel.
-  lamp(-3,124);lamp(3,124);
-  prop(unit,0xc2dfe5,0,.035,127,4,.07,1.6);
+  for(let i=0;i<5;i++)prop(unit,i%2?0x91775f:0xa08a6e,0,.055,126.25+i*.37,3.8,.11,.34);
   for(const side of [-1,1]){
     for(let n=0;n<2;n++)prop(stone,0x69616a,side*(2.9+.07*n),.65+n*.94,128,1.3,1.05,1.3,n*.8);
     prop(unit,0xb99c70,side*3.1,2.05,128,.7,.19,.8);
@@ -297,7 +314,7 @@ intWalk=function(x,z,r){
 };
 intCam=function(ct){
   if(INT.kind!=='cave')return oldMineCam(ct);
-  const d=cam.aspect<1?28:30;
+  const d=(cam.aspect<1?28:30)*zoomK;
   cam.position.set(P.x,INT.y+d,P.z+d*.9);cam.lookAt(P.x,INT.y+.6,P.z);
 };
 intLight=function(dk){
