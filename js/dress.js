@@ -86,13 +86,15 @@ function dressItems(r,ri){const out=[],x0=r.cx-REG/2,z0=r.cz-REG/2,SL=structs.fi
    else if(rd<rw+7){t=k<.3?'reed':k<.46?'peb':k<.6?'tuft':k<.68?'rk'+((k2*4)|0):k<.72?'wplant':null}
    else if(h>.3){t=k<.1?'peb':k<.19?'bgrass':k<.24?'shell':k<.265?'star':k<.3?'drift':k<.33?'rk'+((k2*2)|0):null;if(t==='shell'||t==='star')s*=1.5}
    if(!t)continue}
-  else{if(lhD(x,z)<8)continue;const sd2=supD(x,z);if(sd2<6.5||sd2<10.5&&k3<.6)continue;if(CLEARS.some(c=>dist(x,z,c[0],c[1])<c[2]))continue;if(PORTS.some(p=>{const d=dist(x,z,p.x-p.dx*p.R*.4,p.z-p.dz*p.R*.4);return p.town?d<34:d<12&&k3<.8}))continue;
+  else{if(lhD(x,z)<8)continue;const rdD=PATHS.length?pathD(x,z):99;if(rdD<1.7&&k3<.93)continue;   /* 54차: 길 위는 비우고(가끔 자갈), 길가는 풀 포기 */
+   const sd2=supD(x,z);if(sd2<6.5||sd2<10.5&&k3<.6)continue;if(CLEARS.some(c=>dist(x,z,c[0],c[1])<c[2]))continue;if(PORTS.some(p=>{const d=dist(x,z,p.x-p.dx*p.R*.4,p.z-p.dz*p.R*.4);return p.town?d<34:d<12&&k3<.8}))continue;
+   if(rdD<1.7){t='peb';s=.55+k3*.4}else if(rdD<3.4&&k<.62){t=k<.42?'tuft':'tuftL';s*=1.1}else{
    const f=noise(x*.035+100,z*.035+100,SEED+4),fl=noise(x*.06+7,z*.06+3,SEED+9),tp=tundraAt(x,z,h);
    if(h>7)t=k<.3?'rk'+((k2*4)|0):k<.5?'peb':k<.72?'tuft':k<.76?'rockS':null;
    else if(tp>.35&&k<.55)t=k<.38?'wheat':'tuftL';
    else if(f>.5)t=k<.2?'fern':k<.25?'mush':k<.275?'log':k<.29?'stump':k<.33?'shrub':k<.72?'tuft':k<.78?'flw'+((k2*6)|0):k<.83?'peb':k<.87?'rk'+((k2*4)|0):k<.89?'rockS':null;
    else{const fb=sm(.55,.75,fl);t=k<.12+fb*.32?'flw'+((k2*6)|0):k<.2+fb*.32?'tuftL':k<.74?'tuft':k<.79?'peb':k<.82?'shrub':k<.865?'rk'+((k2*4)|0):k<.875?'stump':k<.89?'rockS':null}
-   if(!t)continue;if(t==='log'||t==='rockS'||t==='stump')s=.9+k3*.5}
+   if(!t)continue;if(t==='log'||t==='rockS'||t==='stump')s=.9+k3*.5}}
   if(SL.length&&SL.some(q=>inStruct(q,x,z,.3*s)))continue;
   out.push(t,x,y,z,k2*6.283,s,.88+hash(i,ri,67)*.22)}return out}
 function dressBuild(r,ri){const it=dressItems(r,ri),n=it.length/7;if(!n){r.dn=1;return}let tot=0;for(let i=0;i<n;i++)tot+=DT[it[i*7]].cnt;const pos=new Float32Array(tot*3),col=new Float32Array(tot*3),nr=new Float32Array(tot*3);let o=0;

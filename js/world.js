@@ -146,7 +146,7 @@ function buildTerrain(){const st=2,n=REG/st+1,C4=new THREE.Color();tchunks=[];
    if(typeof plWornAt==='function'&&h>.75){const wn=plWornAt(x,z);if(wn>0)C1.lerp(C2.setHex(0x9a7246).lerp(C3.setHex(0xb08758),noise(x*.5,z*.5,3)),Math.min(1,wn*1.1))}   /* 낚시 캠프 닳은 흙길 */
    let dv=dist(x,z,VIL.px,VIL.pz);if(dv<27)C1.lerp(C2.setHex(0xb39a72),(1-sm(15,27,dv))*.8);
    {const sd2=supD(x,z);if(sd2<8.5)C1.lerp(C2.setHex(0xb39a72),(1-sm(3,8.5,sd2))*.75)}
-   if(h>.6){const pd=pathD(x,z);if(pd<3.4)C1.lerp(C2.setHex(0xc4a878),(1-sm(1.1,3.4,pd))*.9)}
+   if(h>.6){const pd=pathD(x,z);if(pd<3.2)C1.lerp(C2.setHex(0xb3ad6f),(1-sm(1.2,3.2,pd))*.4)}   /* 54차: 길가는 살짝 마른 풀빛(길 띠는 roads.js) */
    const ld=lhD(x,z);if(ld<19){C1.setHex(0x8b8a82).lerp(C2.setHex(0x6c6b66),noise(x*.45,z*.45,9));if(h>1.3&&ld<6.5)C1.lerp(C2.setHex(0x74a04a),sm(.45,.7,noise(x*.3+4,z*.3,5))*.7);if(h<.25)C1.lerp(C2.setHex(0x55564f),sm(.25,-.6,h))}else if(h<.95)C1.lerp(C2.setHex(vol?0x8d8672:0xe8d49c),sm(.95,.5,h));if(h<-.1)C1.lerp(C2.setHex(0x3b5560),sm(-.1,-1.6,h));C1.convertSRGBToLinear();const v=.96+hash(x,z,5)*.08;col[k*3]=C1.r*v;col[k*3+1]=C1.g*v;col[k*3+2]=C1.b*v}
   let q=0;for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){const a=j*n+i,b=a+1,c=a+n,d=c+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=d}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('normal',new THREE.BufferAttribute(nrm,3));g.setIndex(new THREE.BufferAttribute(idx,1));g.computeBoundingSphere();
