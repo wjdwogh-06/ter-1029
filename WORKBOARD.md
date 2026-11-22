@@ -8,7 +8,6 @@
 
 <!-- 한 줄 형식: - [역할] 차수 · 하는 일 · 고치는 파일 · 시작 시각(한국 시간) · 상태 -->
 <!-- 예: - [디자인] 16차 · 텐트 그림자 다듬기 · look.js · 11-18 18:40 · 진행 중 -->
-- [규칙] 60차 · 징검 바위섬 18개 없애기 · core.js · 11-22 21:29 · 진행 중
 
 ## 다음 차수 번호
 
@@ -21,7 +20,7 @@
 
 ## 서로에게 남기는 말
 
-- [규칙 59차 → 디자인] **기획자 요청(11-22 20:58)**: 블록으로 그린 **새 섬 27개**를 만들었어요(core.js `NEWISLES`, 이름 임시: 수달섬·반달섬·반달 바위섬 5·해달섬·띠섬·징검 바위섬 18). 땅 색·나무·풀은 저절로(world.js 안 고침). 그 섬들 그린 블록은 ui.js `crvIsleClean`이 한 번 지워요(tidy.js 거북섬 정리와 따로, 둘 다 creInit 감싸기). 자세한 건 AGENTS §6-0-0-25. 읽었으면 이 줄 지워 주세요.
+- [규칙 59차 → 디자인] **기획자 요청(11-22 20:58)**: 블록으로 그린 **새 섬 27개**를 만들었어요(→ 60차에 징검 바위섬 18개는 기획자 요청으로 없앰, 남은 건 9개)(core.js `NEWISLES`, 이름 임시: 수달섬·반달섬·반달 바위섬 5·해달섬·띠섬·징검 바위섬 18). 땅 색·나무·풀은 저절로(world.js 안 고침). 그 섬들 그린 블록은 ui.js `crvIsleClean`이 한 번 지워요(tidy.js 거북섬 정리와 따로, 둘 다 creInit 감싸기). 자세한 건 AGENTS §6-0-0-25. 읽었으면 이 줄 지워 주세요.
 - [디자인 58차 → 규칙·기획자] **기획자 결정(11-22 19:54)**: 고를 수 있는 캐릭터 = 탐험가 `hero`·골든 리트리버 `dog`·**오리너구리 `plat`**(새로). 긴 다리 리트리버 `dog2`·치즈 고양이 `cat`은 지웠어요(js/dog.js). `localStorage 'frontisle_char'` 값이 `dog2`면 `dog`, `cat`이면 `hero`로 읽어요. 멀티에서 다른 사람 캐릭터를 보여 줄 때(net.js, 서버 마무리 때) 값은 `hero|dog|plat`만 오도록 해 주세요. buffs.js `HAT_FIT`도 `plat`으로 바꿨고, `tools/p56_check.py` 모자 사진 줄도 cat → plat. AGENTS §7-1. **게임 링크에 올려 주세요** — 56·57·58차 함께(index.html·js/buffs.js·js/tidy.js·js/roads.js·js/look.js·js/world.js·js/dog.js). 읽었으면 이 줄 지워 주세요.
 - [디자인 57차 → 규칙·기획자] **기획자 요청(11-22 18:50)**: ⓐ 길 안 진한 두 줄(바퀴 자국)·가운데 띠를 없앴어요(roads.js `ROADC`만, 길 모양·설치 금지 그대로). ⓑ 새 파일 `js/tidy.js`(buffs.js 다음): ui.js `creInit`을 감싸서 **처음 블록을 불러올 때 한 번** 거북섬(NEWISLE 키운 테두리 + 4m) 안의 크리에이티브 블록만 지우고 다시 저장해요(기획자가 섬을 그릴 때 쓴 블록, '없애버려'). `localStorage 'frontisle_tidy57'` 표시로 한 번만. ui.js는 안 고쳤어요. AGENTS §6-0-0-24. **게임 링크에 올려 주세요** — 56차·57차 함께(index.html·js/buffs.js·js/tidy.js·js/roads.js·js/look.js·js/world.js). 읽었으면 이 줄 지워 주세요.
 - [디자인 56차 → 규칙·기획자] **기획자 요청(11-22 17:15)**: 새 파일 `js/buffs.js`(supply.js 다음·layout.js 앞). ⓐ **아이템 7종 정의는 buffs.js 맨 위**(`drink_mild drink_strong vodka` ty food·food 0·`buff`, `hat_plunder hat_lumber hat_combat hat_pumpkin` ty res·`eq:'hat'`·one, 가격 임시 → 자판기에 저절로) — core.js로 옮기고 싶으면 옮겨도 돼요. ⓑ 효과는 감싸기로만: `useItem`·`bagTap`(마시기), `moveEnt`(플레이어 빠르기 = 1 + 효과 합, 최소 10%), `hurtPlayer`(전투 −10%·호박 +10%), `attack`(강탈 5% 치명타 = 피해 2배·전투 모자는 쏘는 동안 `w.spread=0`), `updPlayer`(근접 치명타 프레임), `hurtEnemy`('치명타!'), `interact`+`give`(나무꾼 나무 ×2), `updStats`(시간·5초마다 에너지), `die`(효과 지움). 저장 `S.buffs`(SAVE 키는 그대로, 없으면 빈 목록). ⓒ 부탁(서버 마무리 때): **강탈 모자 '쓰러뜨린 사람 돈 10% 빼앗기'는 서버 PvP 판정이 필요해서 아직 없어요**(`HATFX.hat_plunder.steal=.1`만 적어 둠), 서버 이동 속도 검사가 드링크·호박 모자 빠르기(최대 +45%)를 모르고, PvP 피해·치명타도 몰라요. 다른 사람 머리 위 모자도 아직 안 보여요(`hatSync`는 내 캐릭터만). 호박 모자 '사람과 안 부딪힘'은 지금도 플레이어끼리 안 부딪혀서 표시만(`HATFX.hat_pumpkin.ghost`). 보드카 '추위 안 탐'은 추위가 생기면 `bufNoCold()`를 보면 돼요. ⓓ roads.js: 길 가운데 3m(`ROAD_NB`) 안 설치 금지(`ghostPos` 감싸기, 설치 모드에서만 빨간 띠), 길 가장자리 색·흐림을 부드럽게, world.js 길 둘레 땅 색 칠하기 없앰(그 한 줄만). `tools/nobuild_check.py`의 '원 밖 금지 메시지'는 길 메시지를 빼고 세도록 한 줄 고쳤어요. 자세한 건 AGENTS §6-0-0-23. **게임 링크에 올려 주세요**(index.html·js/buffs.js·js/roads.js·js/look.js·js/world.js, 디자인 대화에서는 못 올려요). 읽었으면 이 줄 지워 주세요.
