@@ -4,7 +4,7 @@ const NET={on:false,ws:null,id:0,name:'',players:new Map(),names:{},n:1,sendT:0,
  send(o){if(this.ws&&this.ws.readyState===1)this.ws.send(JSON.stringify(o))},
  init(){if(!window.MP)return;let tok=null;try{tok=localStorage.getItem('fi_tok');this.name=localStorage.getItem('fi_name')||''}catch(e){}
   /* name box on the title screen + chat log (the chat box itself is js/chat.js) */
-  const ni=document.createElement('input');ni.id='nameIn';ni.maxLength=12;ni.placeholder='이름 (12자까지)';ni.value=this.name;ni.style.cssText='width:min(70vw,270px);padding:12px;border-radius:14px;border:2.5px solid #E2CDA8;background:#FBF4E6;color:#5B3D2B;font-family:inherit;font-size:17px;font-weight:800;text-align:center;box-sizing:border-box;box-shadow:0 4px 0 rgba(120,86,52,.25)';$('title').insertBefore(ni,$('tCont'));
+  const ni=document.createElement('input');ni.id='nameIn';ni.maxLength=12;ni.placeholder='이름 (12자까지)';ni.value=this.name;ni.style.cssText='width:min(70vw,270px);padding:12px;border-radius:14px;border:2.5px solid #E2CDA8;background:#FBF4E6;color:#5B3D2B;font-family:inherit;font-size:17px;font-weight:800;text-align:center;box-sizing:border-box;box-shadow:0 4px 0 rgba(120,86,52,.25)';$('survivor').prepend(ni);
   const cb=document.createElement('div');cb.id='chat';cb.style.cssText='position:absolute;left:12px;bottom:92px;width:340px;pointer-events:none;font-size:13.5px;font-weight:800;line-height:1.35';$('ui').insertBefore(cb,$('shade'));
   this.connect(tok)},
  connect(tok){const ws=this.ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');

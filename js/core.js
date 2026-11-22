@@ -333,7 +333,16 @@ const DEV={on:false,sp:3,type:0,marks:[],mapMark:false,qty:1,q:''};
 function devLoad(){try{const d=JSON.parse(localStorage.getItem('frontisle_dev'));if(d){DEV.on=!!d.on;DEV.marks=d.marks||[];DEV.sp=d.sp||3}}catch(e){}}
 function devSave(){try{localStorage.setItem('frontisle_dev',JSON.stringify({on:DEV.on,marks:DEV.marks,sp:DEV.sp}))}catch(e){}}
 /* ===== state ===== */
-let S=null,opt={snd:true,gfx:1};
+let S=null,opt={snd:true,gfx:1,leftHand:false,volume:100};
+const PREF_KEY='frontisle-preferences-v1';
+function readPreferences(){
+ let prefs={};try{prefs=JSON.parse(localStorage.getItem(PREF_KEY))||{}}catch{}
+ const v={...opt,...prefs};
+ opt={...opt,snd:v.snd!==false,gfx:[0,1,2].includes(v.gfx)?v.gfx:1,leftHand:v.leftHand===true,
+  volume:Number.isFinite(v.volume)?clamp(v.volume,0,100):100};
+}
+function storePreferences(){try{localStorage.setItem(PREF_KEY,JSON.stringify(opt))}catch{}}
+
 function freshState(seed){return{seed,px:null,pz:null,hp:100,hunger:100,warm:100,time:.3,day:1,coins:100,cx:1,inv:{rod:1},quick:[null,null,null,null,null,null],sel:0,
  home:null,q:0,qv:1,st:{wood:0,stone:0,scrap:0,kills:0,raids:0,camps:0,boss:0,c_ammoS:0,c_ammoL:0,b_fire:0,b_ptent:0,b_sandbag:0,b_mg:0,b_tur:0,b_slight:0,bunk:0,fish:0,cook:0},caught:{},best:{},
  built:[],dep:{},looted:{},lh:{},campDay:{},bag:null,raidDone:0,stash:{}}}
@@ -345,9 +354,15 @@ const pay=c=>{if(!DEV.on)Object.keys(c).forEach(k=>take(k,c[k]))};
 /* 상점에서 산 설치 키트가 있으면 재료 대신 키트를 써요 */
 const hasKit=k=>!!(BUILDS[k]&&BUILDS[k].kit&&invN(BUILDS[k].kit)>0),canBuild=k=>hasKit(k)||canPay(BUILDS[k].c),payBuild=k=>{if(hasKit(k)){if(!DEV.on)take(BUILDS[k].kit,1);return 1}pay(BUILDS[k].c);return 0};
 const dark=()=>S?clamp((Math.cos(S.time*Math.PI*2)-.12)/.55,0,1):0;
-let AC=null;function sfx(f,d=.09,ty='triangle',v=.06,slide=0){if(!opt.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.value=f;if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide),AC.currentTime+d);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
-function shotSfx(k){if(!opt.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*.12,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2);const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=k==='rifle'?900:k==='shotgun'?650:1600;const g=AC.createGain();g.gain.value=k==='smg'?.16:.28;s.connect(f);f.connect(g);g.connect(AC.destination);s.start()}catch(e){}}
-let windG=null;function windInit(){if(windG)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*3,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let v=0;for(let i=0;i<n;i++){v=v*.985+(Math.random()*2-1)*.015;d[i]=v*7*Math.min(1,i/2000,(n-i)/2000)}const s=AC.createBufferSource();s.buffer=b;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=380;f.Q.value=.5;windG=AC.createGain();windG.gain.value=0;s.connect(f);f.connect(windG);windG.connect(AC.destination);s.start()}catch(e){}}
+let AC=null,masterGain=null;
+function syncVolume(){if(masterGain)masterGain.gain.value=opt.snd?opt.volume/100:0}
+function audioOutput(){
+ if(!masterGain){masterGain=AC.createGain();masterGain.connect(AC.destination);syncVolume()}
+ return masterGain;
+}
+function sfx(f,d=.09,ty='triangle',v=.06,slide=0){if(!opt.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.value=f;if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide),AC.currentTime+d);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(audioOutput());o.start();o.stop(AC.currentTime+d)}catch(e){}}
+function shotSfx(k){if(!opt.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*.12,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2);const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=k==='rifle'?900:k==='shotgun'?650:1600;const g=AC.createGain();g.gain.value=k==='smg'?.16:.28;s.connect(f);f.connect(g);g.connect(audioOutput());s.start()}catch(e){}}
+let windG=null;function windInit(){if(windG)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*3,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let v=0;for(let i=0;i<n;i++){v=v*.985+(Math.random()*2-1)*.015;d[i]=v*7*Math.min(1,i/2000,(n-i)/2000)}const s=AC.createBufferSource();s.buffer=b;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=380;f.Q.value=.5;windG=AC.createGain();windG.gain.value=0;s.connect(f);f.connect(windG);windG.connect(audioOutput());s.start()}catch(e){}}
 function windVol(v){if(windG)windG.gain.value=opt.snd?v:0}
 const WX={b:0,on:false,t:200+Math.random()*200};
 const jingle=a=>a.forEach((f,i)=>setTimeout(()=>sfx(f,.14),i*90));

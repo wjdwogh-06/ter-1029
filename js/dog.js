@@ -320,7 +320,7 @@ function dgSet(v){if(DOG.sel===v)return;DOG.sel=v;try{localStorage.setItem('fron
 function dgUI(){if(DOG.ui)return;const t=$('title');if(!t||t.classList.contains('hide')||typeof CH==='undefined'||!CH.hero)return;DOG.ui=1;
  const im=$('ava')&&$('ava').querySelector('img');if(im&&!DOG.heroImg)DOG.heroImg=im.src;
  const box=document.createElement('div');box.id='chSel';box.innerHTML='<div class="chT">캐릭터 고르기</div><div class="chRow">'+DGCH.map(c=>`<button class="chC" data-c="${c.id}"><span class="chI"></span><b>${c.n}</b></button>`).join('')+'</div>';
- t.insertBefore(box,$('tCont'));box.addEventListener('click',e=>{const b=e.target.closest('.chC');if(b){e.stopPropagation();dgSet(b.dataset.c)}});dgMark();
+ $('survivor').append(box);box.addEventListener('click',e=>{const b=e.target.closest('.chC');if(b){e.stopPropagation();dgSet(b.dataset.c)}});dgMark();
  DOG.img={hero:DOG.heroImg};const hi=box.querySelector('[data-c="hero"] .chI');if(DOG.heroImg)hi.style.backgroundImage=`url(${DOG.heroImg})`;
  const order=['dog','plat'].sort((x,y)=>(y===DOG.sel)-(x===DOG.sel));let k=0;
  const next=()=>{const v=order[k++];if(!v){dgAva();return}try{const u=dgPortrait(v);DOG.img[v]=u;const el=box.querySelector(`[data-c="${v}"] .chI`);el.style.backgroundImage=`url(${u})`;el.classList.add('ok')}catch(err){console.warn(err)}dgAva();setTimeout(next,30)};setTimeout(next,80)}
