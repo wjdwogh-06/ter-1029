@@ -80,33 +80,79 @@ function caveRoom(){
     if(!chunks.has(key))chunks.set(key,[]);
     chunks.get(key).push(pt(shape,color,[x,y,z],[0,ry,rz],[sx,sy,sz]));
   }
+  // Hewn pit props retain a few bark faces and a pale cut at the end of the cap.
+  const timberParts=[],post=cyl(.25,.32,3.55,9),cap=cyl(.32,.35,7.55,10);
+  for(const side of [-1,1]){
+    const tilt=-side*.055;
+    timberParts.push(pt(post,side<0?0x916748:0xa57a53,[side*3.38,1.77,0],[0,.13,tilt]));
+    timberParts.push(pt(cyl(.33,.34,.19,10),0x57575a,[side*3.44,.38,0]));
+    timberParts.push(pt(cyl(.25,.24,1.34,8),0x896344,[side*2.99,3.04,0],[0,0,-side*.79]));
+    timberParts.push(pt(cyl(.275,.275,.055,10),0xc69564,[side*3.79,3.61,0],[0,0,Math.PI/2]));
+    timberParts.push(pt(cyl(.17,.17,.06,9),0xa97c55,[side*3.80,3.61,0],[0,0,Math.PI/2]));
+    for(const offset of [-.08,.08])
+      timberParts.push(pt(cyl(.355,.355,.085,10),0x514d47,[side*3.36+offset,3.61,0],[0,0,Math.PI/2]));
+  }
+  timberParts.push(pt(cap,0x96704c,[0,3.61,0],[0,0,Math.PI/2]));
+  const frame=mg(timberParts);
   function timber(x,z,r){
-    for(const side of [-1,1])prop(unit,0x68513e,x+3.4*side*Math.cos(r),1.8,z-3.4*side*Math.sin(r),.5,3.6,.55,r);
-    prop(unit,0x85644a,x,3.65,z,7.6,.55,.65,r);
+    prop(frame,null,x,0,z,1,1,1,r);
+    for(const side of [-1,1])MINE.solids.push([x+side*3.38*Math.cos(r),z-side*3.38*Math.sin(r),.30]);
   }
-  function lamp(x,z){
-    const halo=glow(0xffb46c,2.7,.40);halo.position.set(x,2.52,z);C.add(halo);
+  // One reusable oil lantern: rolled base, bulged chimney, guard wires and bail.
+  function turned(points){
+    return new THREE.LatheGeometry(points.map(([radius,height])=>new THREE.Vector2(radius,height)),12);
+  }
+  const lanternParts=[
+    pt(turned([[.01,0],[.26,0],[.30,.045],[.28,.11],[.21,.16],[.16,.22]]),0x59696a),
+    pt(turned([[.15,.18],[.19,.23],[.225,.39],[.205,.51],[.14,.62]]),0xffce78),
+    pt(turned([[.15,.58],[.27,.61],[.29,.65],[.21,.69],[.14,.76],[.13,.82],[.01,.84]]),0x4c6569),
+    pt(new THREE.TorusGeometry(.24,.025,4,12,Math.PI),0xa68a61,[0,.82,0])
+  ];
+  for(let i=0;i<4;i++){
+    const a=Math.PI*i/2+.55;
+    const path=new THREE.CatmullRomCurve3([[.16,.14],[.255,.34],[.235,.52],[.17,.64]].map(([r,h])=>new THREE.Vector3(r*Math.cos(a),h,r*Math.sin(a))));
+    lanternParts.push(pt(new THREE.TubeGeometry(path,4,.019,4,false),0x6f604d));
+  }
+  const lantern=mg(lanternParts);
+  function lamp(x,z,r=0){
+    // The hanger bends out over the path, with the bail resting in its hook.
+    const px=x+.49*Math.cos(r),pz=z-.49*Math.sin(r);
+    prop(cyl(.082,.115,3.0,8),0x755a43,px,1.50,pz,1,1,1);
+    prop(unit,0x565c5b,(px+x)/2,3.01,(pz+z)/2,.62,.078,.082,r);
+    prop(cyl(.034,.034,.23,8),0x625b4e,x,2.92,z,1,1,1);
+    prop(lantern,null,x,1.76,z,1,1,1,r);
+    const halo=glow(0xffb15a,2.35,.40);halo.position.set(x,2.19,z);C.add(halo);
     lamps.push([x,z]);
-    prop(unit,0x66503d,x,1.18,z,.15,2.36,.15);
-    prop(cyl(.23,.17,.12,10),0x63594b,x,2.24,z,1,1,1);
-    prop(cyl(.16,.14,.40,10),0xffcf84,x,2.48,z,1,1,1);
-    prop(cyl(.12,.30,.18,10),0x536366,x,2.76,z,1,1,1);
-    for(const dx of [-.15,.15])prop(unit,0x655646,x+dx,2.49,z,.032,.42,.032);
   }
-  function track(a,b){
-    const [x,z]=a,dx=b[0]-x,dz=b[1]-z,len=Math.hypot(dx,dz),r=Math.atan2(dx,dz);
-    for(const side of [-.78,.78])prop(unit,0x919496,x+dx/2+side*Math.cos(r),.12,z+dz/2-side*Math.sin(r),.12,.14,len+.035,r);
-    for(let d=0;d<len;d+=2.4)prop(unit,0x71553e,x+dx*d/len,.055,z+dz*d/len,2.25,.12,.34,r);
-  }
-  // Join the lines inside the wide chambers, leaving the narrow tunnels straight.
+  // Sweep the ballast and rail sections through shared cross sections on bends.
   function railway(points){
     const curve=new THREE.CatmullRomCurve3(points.map(([x,z])=>new THREE.Vector3(x,0,z)));
-    const length=curve.getLength(),count=Math.ceil(length/2);
-    let previous=curve.getPointAt(0);
-    for(let i=1;i<=count;i++){
-      const next=curve.getPointAt(i/count);
-      track([previous.x,previous.z],[next.x,next.z]);
-      previous=next;
+    const length=curve.getLength(),count=Math.ceil(length/1.55);
+    const cross=[[ -1.42,.012],[-1.12,.066],[1.12,.066],[1.42,.012]];
+    const rail=[[-.095,.135],[-.095,.157],[-.033,.165],[-.033,.22],[-.063,.23],[-.063,.257],[.063,.257],[.063,.23],[.033,.22],[.033,.165],[.095,.157],[.095,.135]];
+    const steel=[0x6a5145,0x765a4e,0x6e554b,0x715949,0x786653,0xb5afa0,0x817361,0x655347,0x654b40,0x775e4d,0x644f45];
+    let prev;
+    for(let k=0;k<=count;k++){
+      const t=k/count,p=curve.getPointAt(t),v=curve.getTangentAt(t);
+      const offset=(d,h)=>[p.x+d*v.z,h,p.z-d*v.x];
+      const row=[cross.map(([d,h])=>offset(d,h)),...[-.78,.78].map(side=>rail.map(([d,h])=>offset(side+d,h)))];
+      if(prev){
+        const positions=[],colors=[];
+        for(let strip=0;strip<row.length;strip++)for(let n=1;n<row[strip].length;n++){
+          const col=new THREE.Color(strip?steel[n-1]:[0x514b4a,0x645a55,0x534b49][n-1]).convertSRGBToLinear();
+          for(const vertex of [prev[strip][n-1],row[strip][n-1],row[strip][n],prev[strip][n-1],row[strip][n],prev[strip][n]]){
+            positions.push(...vertex);colors.push(col.r,col.g,col.b);
+          }
+        }
+        const g=new THREE.BufferGeometry();
+        g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+        const key=Math.floor(p.x/32)+','+Math.floor(p.z/32);
+        if(!chunks.has(key))chunks.set(key,[]);
+        chunks.get(key).push(g);
+      }
+      prev=row;
+      const yaw=Math.atan2(v.x,v.z)+(hash(k,4,9)-.5)*.055;
+      prop(unit,k%3?0x755a49:0x95745a,p.x,.098,p.z,2.06+.17*hash(k,6,2),.09,.24+.055*hash(k,8,2),yaw);
     }
     return curve;
   }
@@ -134,9 +180,19 @@ function caveRoom(){
       for(const end of [-.83,.83])parts.push(pt(box(.06,.83,.13),iron,[side*.87,1.18,end],[0,0,-side*.28]));
     }
     if(loaded)for(let n=0;n<10;n++)parts.push(pt(stone,n%3?0x676571:0xa58962,[(n%3-1)*.46,1.35+hash(n,2,4)*.22,(Math.floor(n/3)-1.4)*.47],[.4,n,.3],[.43,.33,.48]));
-    prop(mg(parts),null,pos.x,0,pos.z,1,1,1,yaw);
+    prop(mg(parts),null,pos.x,.076,pos.z,1,1,1,yaw);
     MINE.solids.push([pos.x,pos.z,1.35]);
   }
+  // A hand throw stands beside the points where the loading spur leaves the main line.
+  prop(lkRb(.70,.16,.91,.07,.035),0x54585a,1.32,.16,104.1,1,1,1);
+  prop(cyl(.16,.18,.42,10),0x676456,1.32,.43,104.1,1,1,1);
+  prop(cyl(.046,.055,.86,8),0x685b4c,1.53,.94,104.1,1,1,1,0,-.52);
+  prop(cyl(.086,.086,.23,9),0xc29555,1.76,1.34,104.1,1,1,1,0,-.52);
+  const coil=new THREE.CatmullRomCurve3(Array.from({length:53},(_,i)=>{
+    const a=i*Math.PI/6,r=.38+.003*i;
+    return new THREE.Vector3(r*Math.cos(a),.06+.032*(i/12),r*Math.sin(a));
+  }));
+  prop(new THREE.TubeGeometry(coil,52,.041,5,false),0x987956,6.6,.38,115.4,1,1,1);
   cart(siding,.78,true);cart(mainLine,.55,false);cart(oreLine,.83,true);
   // Loading dock between the siding and the east wall. The planks face the cart.
   function landing(x,z,boards){
@@ -174,7 +230,7 @@ function caveRoom(){
   cargo('sack',-56,0,60,5.5,-.7,.45);
   for(const [x,z,r] of [[0,103,0],[0,91,0],[-33,57,1.42],[-85,34,.81],[-104,-26,-.33],[63,-84,1.0]]){
     timber(x,z,r);
-    lamp(x-3.05*Math.cos(r),z+3.05*Math.sin(r));
+    lamp(x-3.87*Math.cos(r),z+3.87*Math.sin(r),r);
   }
   lamp(8.7,118.7);lamp(-57,60.8);
   // Veins run through exposed shelves along the wall, tapering at either end.
