@@ -27,7 +27,8 @@ const ROADS=ROAD_PTS.map(([k,s])=>({k,a:k.split('-')[0],b:k.split('-')[1],p:s.sp
 /* 화면에 그려진 땅 높이(2m 격자 삼각형 그대로) */
 function roadTriH(x,z){const i=Math.floor(x/2),j=Math.floor(z/2),fx=x/2-i,fz=z/2-j,X=i*2,Z=j*2,a=hAt(X,Z),b=hAt(X+2,Z),c=hAt(X,Z+2),d=hAt(X+2,Z+2);return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz)}
 let roadMeshObj=null;
-const ROADC={edge:0xb4a274,base:0xbb9c6e,tr:0xa98a5f,mid:0x9fb067,mid2:0xb0a46e};   /* 56차(기획자: '길 테두리 진한 선들 연하게, 자연스러운 길로'): 밝은 테두리 띠·땅 색 둘레를 없애고 가장자리를 넓게 흐리게, 바퀴 자국은 옅게 */
+const ROADC={edge:0xb4a274,base:0xbb9c6e,mid:0xb5a46f};   /* 56차(기획자: '길 테두리 진한 선들 연하게, 자연스러운 길로'): 밝은 테두리 띠·땅 색 둘레를 없애고 가장자리를 넓게 흐리게
+   57차(기획자: '저 찐한 부분 없애, 너무 부자연스러워' — 길 안 두 줄): 바퀴 자국 두 줄·가운데 풀 띠를 없애고, 한 가지 흙색에 큰 얼룩만 아주 옅게 */
 function roadMesh(){if(roadMeshObj){scene.remove(roadMeshObj);roadMeshObj.geometry.dispose()}
  const pos=[],col=[],nrm=[],idx=[],C=new THREE.Color(),CC={};for(const k in ROADC)CC[k]=new THREE.Color(ROADC[k]).convertSRGBToLinear();
  const others=(ri,x,z)=>{for(let q=0;q<ROADS.length;q++){if(q===ri)continue;for(const p of ROADS[q].p){const dx=p[0]-x,dz=p[1]-z;if(dx*dx+dz*dz<16)return true}}return false};
@@ -37,8 +38,8 @@ function roadMesh(){if(roadMeshObj){scene.remove(roadMeshObj);roadMeshObj.geomet
    // 끝: 이어지지 않은 끝(항구·보급지 문 안)은 8m에 걸쳐 좁아지며 흐려져요
    const ea=ja?1:Math.min(1,i/4),eb=jb?1:Math.min(1,(n-1-i)/4),e=Math.min(ea,eb),wk=.45+.55*e,fade=.25+.75*e;
    const wl=(1.38+(noise(x*.09+3,z*.09,77)-.5)*.42)*wk,wr=(1.38+(noise(x*.09,z*.09+5,78)-.5)*.42)*wk,mixed=others(ri,x,z);
-   const M2=mixed?'base':'mid2',M1=mixed?'base':'mid',prof=[[-wl-1.05,'edge',0],[-wl-.4,'edge',.32],[-wl+.15,'base',.82],[-1.0*wk,'base',1],[-.72*wk,'tr',1],[-.42*wk,M2,1],[0,M1,1],[.42*wk,M2,1],[.72*wk,'tr',1],[1.0*wk,'base',1],[wr-.15,'base',.82],[wr+.4,'edge',.32],[wr+1.05,'edge',0]];
-   for(const [o,ck,al] of prof){const X=x+nx*o,Z=z+nz*o;pos.push(X,roadTriH(X,Z)+.035,Z);nrm.push(0,1,0);C.copy(CC[ck]).multiplyScalar(.93+hash(X*3|0,Z*3|0,91)*.13);col.push(C.r,C.g,C.b,al*fade)}}
+   const M1=mixed?'base':'mid',prof=[[-wl-1.05,'edge',0],[-wl-.4,'edge',.32],[-wl+.15,'base',.82],[-1.0*wk,'base',1],[-.72*wk,'base',1],[-.42*wk,'base',1],[0,M1,1],[.42*wk,'base',1],[.72*wk,'base',1],[1.0*wk,'base',1],[wr-.15,'base',.82],[wr+.4,'edge',.32],[wr+1.05,'edge',0]];
+   for(const [o,ck,al] of prof){const X=x+nx*o,Z=z+nz*o;pos.push(X,roadTriH(X,Z)+.035,Z);nrm.push(0,1,0);C.copy(CC[ck]).multiplyScalar(.95+hash(X*3|0,Z*3|0,91)*.06+(noise(X*.045,Z*.045,93)-.5)*.1);col.push(C.r,C.g,C.b,al*fade)}}
   const W=13;for(let i=0;i<n-1;i++)for(let k=0;k<W-1;k++){const A=base+i*W+k,B=A+1,Cc=A+W,D=Cc+1;idx.push(A,B,Cc,B,D,Cc)}});
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nrm,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,4));g.setIndex(idx);g.computeBoundingSphere();
  const mat=new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
