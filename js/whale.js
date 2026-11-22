@@ -8,21 +8,21 @@
      떠오를 때 3초 동안 올라오며 물을 뿜고, 들어갈 때 4초 동안 꼬리를 들며 잠겨요. 숨어 있을 땐 안 보여요. 가까이(70m) 떠오르면 알림.
    - 잡기는 아직 없어요(그물망 = 디자인 47차 '고기잡이 그물' kit_fnet·BUILDS.fnet). 부딪히지 않고 보기만 해요. 지도에도 안 나와요. */
 const WH={sp:2.6,cyc:150,hide:120,rise:3,dive:4,path:null,len:0,m:null,tail:null,was:false,note:0,depth:-2.2};
-function whGrid(){const C=8,N=Math.ceil(WS/C),ok=new Uint8Array(N*N),land=new Float32Array(N*N).fill(1e9);const q=[];
+function whGrid(minD=8){const C=8,N=Math.ceil(WS/C),ok=new Uint8Array(N*N),land=new Float32Array(N*N).fill(1e9);const q=[];
  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=(i+.5)*C,z=(j+.5)*C;if(hAt(x,z)>WH.depth||PORT_SAFE.some(p=>dist(x,z,p[0],p[1])<p[2]+12)){land[j*N+i]=0;q.push(j*N+i)}}   /* 항구(부두·배) 둘레도 피해요 */
  for(let h=0;h<q.length;h++){const c=q[h],i=c%N,j=(c/N)|0,d=land[c]+C;for(const[di,dj]of[[1,0],[-1,0],[0,1],[0,-1]]){const a=i+di,b=j+dj;if(a<0||b<0||a>=N||b>=N)continue;const k=b*N+a;if(land[k]>d){land[k]=d;q.push(k)}}}   /* 땅에서 거리(대충) */
- for(let k=0;k<N*N;k++)ok[k]=land[k]>=8?1:0;return{C,N,ok,land}}   /* 얕은 물·땅 칸에서 한 칸(8m) 넘게 */
+ for(let k=0;k<N*N;k++)ok[k]=land[k]>=minD?1:0;return{C,N,ok,land}}   /* 얕은 물·땅 칸에서 한 칸(8m) 넘게 */
 function whAstar(G,x0,z0,x1,z1){const{C,N,ok}=G,id=(x,z)=>clamp((z/C)|0,0,N-1)*N+clamp((x/C)|0,0,N-1),s=id(x0,z0),t=id(x1,z1),g=new Float32Array(N*N).fill(1e9),from=new Int32Array(N*N).fill(-1),open=[[0,s]];g[s]=0;
  const tx=t%N,tz=(t/N)|0;while(open.length){let bi=0;for(let i=1;i<open.length;i++)if(open[i][0]<open[bi][0])bi=i;const[,c]=open.splice(bi,1)[0];if(c===t)break;const ci=c%N,cj=(c/N)|0;
   for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=N||b>=N)continue;const k=b*N+a;if(!ok[k]&&k!==t)continue;const ng=g[c]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;from[k]=c;open.push([ng+Math.hypot(a-tx,b-tz),k])}}}
  const out=[];for(let c=t;c>=0&&c!==s;c=from[c])out.push([(c%N+.5)*C,((c/N|0)+.5)*C]);out.reverse();return from[t]<0&&t!==s?null:out}
 function whClear(G,x0,z0,x1,z1){const n=Math.ceil(dist(x0,z0,x1,z1)/4);for(let i=0;i<=n;i++){const u=i/n,x=lerp(x0,x1,u),z=lerp(z0,z1,u),{C,N}=G,k=clamp((z/C)|0,0,N-1)*N+clamp((x/C)|0,0,N-1);if(!G.ok[k])return false}return true}
-function whBuild(){const G=whGrid(),L=LHS.filter((l,i)=>!LH_GONE.includes(i)).map(l=>({x:l.x,z:l.z,a:Math.atan2(l.z-500,l.x-500)})).sort((a,b)=>a.a-b.a),pts=[];
+function whBuild(){const G8=whGrid(8),G16=whGrid(16),L=LHS.filter((l,i)=>!LH_GONE.includes(i)).map(l=>({x:l.x,z:l.z,a:Math.atan2(l.z-500,l.x-500)})).sort((a,b)=>a.a-b.a),pts=[];
  const ring=l=>{let R=26;for(;R<60;R+=2){let good=true;for(let k=0;k<24&&good;k++){const a=k/24*Math.PI*2,x=l.x+Math.cos(a)*R,z=l.z+Math.sin(a)*R;if(hAt(x,z)>WH.depth-.6)good=false}if(good)break}return R};
  const E=L.map((l,i)=>{const pv=L[(i-1+L.length)%L.length],nx=L[(i+1)%L.length];return{R:ring(l),ain:Math.atan2(pv.z-l.z,pv.x-l.x),aout:Math.atan2(nx.z-l.z,nx.x-l.x)}}),T=Math.PI*2;
  for(let i=0;i<L.length;i++){const l=L[i],e=E[i],sp=T+((e.aout-e.ain)%T+T)%T,ns=Math.ceil(sp/(T/28));
   for(let k=0;k<=ns;k++){const a=e.ain+sp*k/ns;pts.push([l.x+Math.cos(a)*e.R,l.z+Math.sin(a)*e.R])}   /* 들어온 쪽에서 바위섬을 한 바퀴 돌고 다음 등대 쪽으로 나가요 */
-  const n=L[(i+1)%L.length],en=E[(i+1)%L.length],ex=[n.x+Math.cos(en.ain)*en.R,n.z+Math.sin(en.ain)*en.R],st=pts[pts.length-1],mid=whAstar(G,st[0],st[1],ex[0],ex[1]);
+  const n=L[(i+1)%L.length],en=E[(i+1)%L.length],ex=[n.x+Math.cos(en.ain)*en.R,n.z+Math.sin(en.ain)*en.R],st=pts[pts.length-1];let G=G16,mid=whAstar(G,st[0],st[1],ex[0],ex[1]);if(!mid){G=G8;mid=whAstar(G,st[0],st[1],ex[0],ex[1])}
   if(mid){const raw=[st,...mid,ex],sm=[raw[0]];let k=0;while(k<raw.length-1){let j=raw.length-1;while(j>k+1&&!whClear(G,raw[k][0],raw[k][1],raw[j][0],raw[j][1]))j--;sm.push(raw[j]);k=j}pts.push(...sm.slice(1,-1))}}
  /* 4m마다 고르게 + 모서리 둥글게 */
  const P0=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],n=Math.max(1,Math.ceil(dist(a[0],a[1],b[0],b[1])/4));for(let k=0;k<n;k++)P0.push([lerp(a[0],b[0],k/n),lerp(a[1],b[1],k/n)])}

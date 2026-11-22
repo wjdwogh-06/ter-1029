@@ -14,6 +14,9 @@ function mkRiver(ax,az,bx,bz,amp,s,sd,w0=1,w1=5.5){const L=dist(ax,az,bx,bz),n=M
  for(let i=0;i<=n;i++){const t=i/n,e=Math.sin(Math.min(1,t*1.15)*Math.PI),o=(noise(t*3.2+s,s*.7,sd+20)-.5)*2*amp*e+(noise(t*9+s,s,sd+21)-.5)*amp*.5*e+(noise(t*22+s,s,sd+24)-.5)*amp*.16;
   const wn=noise(t*7,s,sd+22),pool=sm(.62,.9,noise(t*10+s,3,sd+23)),w=lerp(w0,w1,Math.pow(t,.8))*(.7+wn*.7)+pool*2.2*t;
   const p={x:lerp(ax,bx,t)+px*o,z:lerp(az,bz,t)+pz*o,w,b:-(.12+.3*t+pool*(.4+t))};out.push(p);RIV.push(p)}return out}
+/* 55차(규칙, 기획자 11-22): 크리에이티브 블록으로 그린 자리(맨 아래 가운데, 옛 '남쪽 바다 등대' 바위섬 둘레)에 새 섬. pg = 그린 선(블록 바깥 테두리를 매끈하게), k = 그 선보다 조금 크게.
+   땅 모양은 그 선까지의 거리(pgSD)로 정해요 → 북쪽의 작은 만 두 곳도 그대로. 이름은 임시 */
+const NEWISLE={n:'거북섬',x:487.8,z:894.2,k:1.16,fo:1,ro:0,pg:[[484,933.5],[478,933.5],[471,930.5],[463,924.5],[448.5,909],[446.5,905],[446.5,895],[453.5,874],[457,869.5],[470,865.5],[479,855.5],[485,854.5],[488.5,856],[484.5,870],[481.5,874],[481.5,877],[485,880.5],[490.5,874],[494.5,863],[501,857.5],[506.5,858],[506.5,874],[512,877.5],[518.5,873],[516.5,859],[518,857.5],[524,858.5],[529.5,865],[531.5,874],[529.5,876],[530.5,881],[528.5,883],[528.5,893],[526.5,895],[527.5,896],[523.5,905],[510,920.5]]};
 function layout(sd){ISL.length=0;RIV.length=0;
  const add=(n,ty,sp,o)=>{let cx=0,cz=0;sp.forEach(p=>{cx+=p[0]/sp.length;cz+=p[1]/sp.length});let br=0;sp.forEach(p=>br=Math.max(br,dist(cx,cz,p[0],p[1])+p[2]*1.4));ISL.push(Object.assign({n,x:cx,z:cz,r:60,br,sp,ax:1,az:1,ty,fo:1,ro:0,mx:0,mz:0,mr:30,mh:3,tint:0},o))};
  /* main crescent island, open to the east */
@@ -21,6 +24,7 @@ function layout(sd){ISL.length=0;RIV.length=0;
  add('동북섬',3,[[690,160,92],[760,212,112],[822,272,88]],{fo:.6,ro:.05,mr:55,mh:8,tint:1});
  add('까마귀섬',4,[[150,140,46],[185,160,40]],{fo:1.1});add('조약돌섬',4,[[325,138,24],[345,145,22]],{fo:.4,ro:.08});add('갈매기섬',4,[[462,120,26],[488,128,28]],{fo:.7});
  add('안개섬',4,[[852,405,28],[872,420,26]],{fo:.5,ro:.06});add('이끼섬',4,[[885,690,48],[864,752,54]],{fo:1});add('물개섬',4,[[680,830,40],[712,838,42]],{fo:.4,ro:.07,tint:1});add('바람섬',4,[[92,675,44],[116,770,52]],{fo:.8});
+ {const N=NEWISLE,pg=N.pg.map(p=>[N.x+(p[0]-N.x)*N.k,N.z+(p[1]-N.z)*N.k]);let br=0;pg.forEach(p=>br=Math.max(br,dist(N.x,N.z,p[0],p[1])));ISL.push({n:N.n,x:N.x,z:N.z,r:60,br:br+20,pg,ax:1,az:1,ty:4,fo:N.fo,ro:N.ro,mx:0,mz:0,mr:30,mh:3,tint:0})}   /* 55차 새 섬 */
  /* rivers: born inland, widen toward the sea, never cut the island in two */
  const r1=mkRiver(262,418,300,775,34,1.3,sd,.9,7),j=r1[(r1.length*.5)|0];mkRiver(165,545,j.x,j.z,16,4.1,sd,.8,3.2);
  mkRiver(292,400,452,470,22,6.6,sd,.9,5.5);mkRiver(372,335,352,170,18,2.7,sd,.8,4.6);const r4=mkRiver(205,395,95,470,14,9.2,sd,.8,4);
@@ -62,7 +66,10 @@ function mkPaths(sd){PG=[];for(let i=0;i<RGN*RGN;i++)PG.push(null);PATHS.length=
 function pathD(x,z){const cx=(x/RCELL)|0,cz=(z/RCELL)|0;let bd=1e9;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const X=cx+i,Z=cz+j;if(X<0||Z<0||X>=RGN||Z>=RGN)continue;const L=PG[Z*RGN+X];if(!L)continue;for(const p of L){const d=(p.x-x)*(p.x-x)+(p.z-z)*(p.z-z);if(d<bd)bd=d}}return Math.sqrt(bd)}
 let _rp=null;function riverD(x,z){const cx=(x/RCELL)|0,cz=(z/RCELL)|0;let bd=1e9;_rp=null;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const X=cx+i,Z=cz+j;if(X<0||Z<0||X>=RGN||Z>=RGN)continue;const L=RG[Z*RGN+X];if(!L)continue;for(const p of L){const d=(p.x-x)*(p.x-x)+(p.z-z)*(p.z-z);if(d<bd){bd=d;_rp=p}}}return Math.sqrt(bd)}
 function spineD(I,x,z){let b=1e9;const s=I.sp;for(let i=0;i<s.length-1;i++){const ax=s[i][0],az=s[i][1],ex=s[i+1][0]-ax,ez=s[i+1][1]-az,t=clamp(((x-ax)*ex+(z-az)*ez)/(ex*ex+ez*ez),0,1),d=Math.hypot(x-ax-ex*t,z-az-ez*t)/(s[i][2]+(s[i+1][2]-s[i][2])*t);if(d<b)b=d}return b}
-function islK(I,x,z,sd){if(I.sp){const d=spineD(I,x,z);if(d>1.32)return 0;const f=I.ty===4?.045:.017;return sm(1,.6,d+(fbm(x*f+3+I.x,z*f+7,sd)-.5)*.46+(fbm(x*.05,z*.05+I.z,sd+7)-.5)*.16)}
+/* 55차: 다각형 섬 — 선까지 거리(밖 +, 안 −) */
+function pgSD(pg,x,z){let d=1e9,inn=false;for(let i=0,j=pg.length-1;i<pg.length;j=i++){const a=pg[j],b=pg[i],ex=b[0]-a[0],ez=b[1]-a[1],t=clamp(((x-a[0])*ex+(z-a[1])*ez)/(ex*ex+ez*ez),0,1),dd=Math.hypot(x-a[0]-ex*t,z-a[1]-ez*t);if(dd<d)d=dd;if((a[1]>z)!==(b[1]>z)&&x<a[0]+(z-a[1])*ex/ez)inn=!inn}return inn?-d:d}
+function pgK(I,x,z,sd){const s=pgSD(I.pg,x,z);if(s>18)return 0;return sm(9,-5,s+(fbm(x*.045+3+I.x,z*.045+7,sd)-.5)*7+(fbm(x*.12,z*.12+I.z,sd+7)-.5)*2.5)}
+function islK(I,x,z,sd){if(I.pg)return pgK(I,x,z,sd);if(I.sp){const d=spineD(I,x,z);if(d>1.32)return 0;const f=I.ty===4?.045:.017;return sm(1,.6,d+(fbm(x*f+3+I.x,z*f+7,sd)-.5)*.46+(fbm(x*.05,z*.05+I.z,sd+7)-.5)*.16)}
  const dx=(x-I.x)/(I.r*I.ax),dz=(z-I.z)/(I.r*I.az),t=I.ty;let d0=Math.hypot(dx,dz);if(d0>(t===0?1.5:1.36))return 0;
  if(t<2){const an=Math.atan2(dz,dx);d0*=1+.11*Math.sin(an*3+I.x)+.07*Math.sin(an*5+I.z*.7)+.04*Math.sin(an*9+I.r);if(d0>1.3)return 0}
  const w=fbm(x*(t===2?.09:t===1?.022:.0085)+3+I.x,z*(t===2?.09:t===1?.022:.0085)+7,sd)+(t===0?(fbm(x*.028,z*.028+I.z,sd+7)-.5)*.34:0);
@@ -71,7 +78,8 @@ function islK(I,x,z,sd){if(I.sp){const d=spineD(I,x,z);if(d>1.32)return 0;const 
 const FLAT=.25,UH=h=>{if(h<=1)return h;const u=(h-1)/FLAT;return u>=.998?20:1-3*Math.log(1-u)};
 /* sea lighthouses stand on rock islets raised from the seabed at the user's memo marks */
 const LH_SITES=[[491,898,'남쪽 바다 등대'],[250,892,'남서 등대'],[86,274,'서쪽 바다 등대'],[80,909,'땅끝 등대'],[563,453,'안쪽만 등대'],[563,68,'북쪽 바다 등대'],[928,527,'동쪽 바다 등대'],[836,889,'남동 등대']],LHS=LH_SITES.map(q=>({x:q[0],z:q[1],n:q[2]})),LH_TOP=1.5;
-const lhD=(x,z)=>{let b=1e9;for(const q of LH_SITES){const ex=x-q[0],ez=z-q[1];if(ex>20||ex<-20||ez>20||ez<-20)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};
+const LH_ISLE=[0];   /* 55차: 바위섬 대신 새 섬(NEWISLE)이 된 등대 자리 — 바위섬 땅·바위·설치 금지 원·'등대 둘레' 규칙을 빼요 */
+const lhD=(x,z)=>{let b=1e9;for(const q of LH_SITES){if(LH_ISLE.some(i=>LH_SITES[i]===q))continue;const ex=x-q[0],ez=z-q[1];if(ex>20||ex<-20||ez>20||ez<-20)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};
 /* 기획자가 찍은 낚시 포인트. A=등대 앞바다(좋은 물고기), B=해안. 등대 한가운데(땅 위)에 찍힌 점은 water.js가 그 등대섬 바로 앞 물로 옮겨요 */
 const FISH_PTS_A=[[250,892,'메모2'],[80,909,'메모4'],[928,527,'메모7'],[836,889,'메모8'],[239,892,'메모17'],[255,904,'메모19'],
  [85,922,'항구2'],[91,910,'항구3'],[841,899,'항구5'],[914,524,'항구7'],[937,538,'항구9'],[76,281,'항구12'],[84,288,'항구13'],[575,74,'항구14'],[554,77,'항구15'],
@@ -80,7 +88,7 @@ const FISH_PTS_B=[[677,672],[681,669],[685,666],[727,641],[729,622],[760,622],[7
  [580,590],[586,587],[513,581],[465,557],[457,574],[445,615],[457,522],[427,478],[418,455],[404,450],[402,447],[421,438],[442,375],[534,324],[537,322],[540,319],
  [545,242],[509,197],[505,195],[456,189],[451,191],[363,218],[345,231],[345,236],[313,227],[318,227],[244,293],[217,302],[160,376],[157,379],[115,457],[127,493],
  [182,582],[181,578],[207,656],[212,660],[219,664],[279,688],[273,690],[307,707],[359,753],[393,753],[431,775],[478,785],[516,766],[514,761],[597,728],[650,695]];
-function lhRock(x,z,h,sd){for(let i=0;i<LH_SITES.length;i++){const q=LH_SITES[i],ex=x-q[0],ez=z-q[1];if(ex>18||ex<-18||ez>18||ez<-18)continue;const d=Math.hypot(ex,ez),an=Math.atan2(ez,ex),w=1+.12*Math.sin(an*3+i*1.7)+.07*Math.sin(an*5+i)+(noise(x*.3+i*9,z*.3,sd+70)-.5)*.2,e=d/w;
+function lhRock(x,z,h,sd){for(let i=0;i<LH_SITES.length;i++){if(LH_ISLE.includes(i))continue;const q=LH_SITES[i],ex=x-q[0],ez=z-q[1];if(ex>18||ex<-18||ez>18||ez<-18)continue;const d=Math.hypot(ex,ez),an=Math.atan2(ez,ex),w=1+.12*Math.sin(an*3+i*1.7)+.07*Math.sin(an*5+i)+(noise(x*.3+i*9,z*.3,sd+70)-.5)*.2,e=d/w;
   if(e>15)continue;const t=sm(6.6,14,e),pr=LH_TOP-5*Math.pow(t,.85)+(e>6.6?(noise(x*.6,z*.6+i*5,sd+71)-.5)*.5*(1-t):0);if(pr>h)h=pr}return h}
 function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const I=ISL[i],m=I.br||I.r*1.45;if(x-I.x>m||I.x-x>m||z-I.z>m||I.z-z>m)continue;const k=islK(I,x,z,sd);if(k>land){land=k;bi=i}}
  _bi=bi;if(bi<0)return lhRock(x,z,-3.5,sd);const I=ISL[bi];let h=-3.5+land*4.6;

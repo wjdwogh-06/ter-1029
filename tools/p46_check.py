@@ -13,7 +13,7 @@ async def steps(pg):
     r=json.loads(await ev("""()=>{const lh=structs.filter(s=>s.t==='lighthouse').map(s=>s.li).sort();S.lh=[1,1,1,1,1,1,1,1];openPanel('lh');const rows=document.querySelectorAll('#pbody [data-a=lhgo]').length;closePanel();
       const L=LHS[LH_CAVE],c=CAVE.s;const nk=LHS.map(q=>{const n=NOB.find(n=>Math.abs(n.x-q.x)<.01&&Math.abs(n.z-q.z)<.01);return n&&n.k});
       return JSON.stringify({lh,rows,cave:c&&[c.x,c.z],at:[L.x,L.z],nk,gone:LH_GONE,isle0:hAt(LHS[0].x,LHS[0].z)>0,isle4:hAt(L.x,L.z)>0})}"""))
-    r['ok']=r['lh']==[1,2,3,5,6,7] and r['rows']==6 and r['cave']==r['at'] and r['nk'][0]=='isle' and r['nk'][4]=='cave' and r['nk'].count('lh')==6 and r['isle0'] and r['isle4'];res['lighthouses']=r;print('lighthouses',json.dumps(r,ensure_ascii=False)[:500])
+    r['ok']=r['lh']==[1,2,3,5,6,7] and r['rows']==6 and r['cave']==r['at'] and r['nk'][0] is None and r['nk'][4]=='cave' and r['nk'].count('lh')==6 and r['isle0'] and r['isle4'];res['lighthouses']=r;print('lighthouses',json.dumps(r,ensure_ascii=False)[:500])
     # 3. 동굴: 앞에 서서 [동굴 들어가기] → 동굴 방(내 기지 그대로·설치 안 됨·에너지는 밖과 같은 속도) → [나가기] → 입구 앞
     await ev("()=>{const c=CAVE.s,d=sdef(c);P.x=c.x;P.z=c.z+d.bz+.7;P.rot=Math.PI;P.yv=undefined;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(700)
@@ -54,7 +54,7 @@ async def steps(pg):
       o.bad=bad;o.gapBad=gapBad;o.minGap=Math.round(md);o.groups=HZ.G.map(g=>({n:g.n,comp:g.comp.join(','),zone:hzZone(g.a.x,g.a.z)}));return JSON.stringify(o)}"""))
     r['ok']=all(n>200 for n in r['zones']) and r['bad']==0 and r['gapBad']==0 and r['minGap']>=24 and len(r['groups'])==3 and all(5<=g['n']<=10 and g['zone']==i for i,g in enumerate(r['groups']));res['zones']=r;print('zones',json.dumps(r,ensure_ascii=False)[:500])
     r=json.loads(await ev("""()=>{P.x=VIL.x;P.z=VIL.z;S.time=.85;S.raidDone=0;raid.on=false;const n0=enemies.length;for(let i=0;i<40;i++){updRaid(.5);updSpawns(.5)}
-      const o={raid:raid.on,nonGrp:enemies.filter(e=>!e.grp).length,en:enemies.length,n0};S.time=.42;return JSON.stringify(o)}"""))
+      const o={raid:raid.on,nonGrp:enemies.filter(e=>!e.grp&&!e.snow).length,snow:enemies.filter(e=>e.snow).length,en:enemies.length,n0};S.time=.42;return JSON.stringify(o)}"""))
     r['ok']=r['raid'] is False and r['nonGrp']==0;res['oldOff']=r;print('oldOff',json.dumps(r,ensure_ascii=False)[:500])
     # 4-1. 멀리서도 앵커가 돌아다니고 자기 구역을 안 벗어남(오래 흉내: 30분), 무리끼리 가까워진 최소 거리
     r=json.loads(await ev("""()=>{P.x=VIL.x;P.z=VIL.z;const st=HZ.G.map(g=>[g.a.x,g.a.z]);let out=0,md=1e9,moved=HZ.G.map(()=>0),last=HZ.G.map(g=>[g.a.x,g.a.z]);

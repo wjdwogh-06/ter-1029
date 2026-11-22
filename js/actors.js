@@ -219,7 +219,7 @@ function setBuild(m){if(!bmode&&m){brot=0;adminBuildDegrees=0}bmode=m;if(ghost){
    새 게임 시작 때 한 번(buildNoBuild), 플레이어가 지은 건 빼고 월드 구조물만 봐요 */
 const NOB=[],NOB_PAD={lh:3,sup:3.5,port:4},NOB_N={lh:'등대',sup:'보급지',port:'항구'};let nobG=null;
 function buildNoBuild(){NOB.length=0;
- for(const L of LHS){let e=0;for(let a=0;a<48;a++){const an=a/48*Math.PI*2;for(let r=0;r<26;r+=.5)if(hAt(L.x+Math.cos(an)*r,L.z+Math.sin(an)*r)>0)e=Math.max(e,r)}NOB.push({k:'lh',x:L.x,z:L.z,r:Math.max(12,e+NOB_PAD.lh)})}
+ for(const L of LHS){if(LH_ISLE.includes(LHS.indexOf(L)))continue;let e=0;for(let a=0;a<48;a++){const an=a/48*Math.PI*2;for(let r=0;r<26;r+=.5)if(hAt(L.x+Math.cos(an)*r,L.z+Math.sin(an)*r)>0)e=Math.max(e,r)}NOB.push({k:'lh',x:L.x,z:L.z,r:Math.max(12,e+NOB_PAD.lh)})}
  const supT={supply:1,chest:1,blk:1,suplamp:1,cfence:1};
  for(const s of SUPS){let e=6;for(const q of structs)if(!q.own&&supT[q.t]){const d=dist(q.x,q.z,s.x,s.z);if(d<14)e=Math.max(e,d+Math.max(sdef(q).bx,sdef(q).bz))}NOB.push({k:'sup',x:s.x,z:s.z,r:e+NOB_PAD.sup})}
  for(const p of PORTS){const pts=[];if(p.g)p.g.children.forEach(m=>{if(!m.geometry)return;if(!m.geometry.boundingSphere)m.geometry.computeBoundingSphere();const bs=m.geometry.boundingSphere,sc=m.scale.x;pts.push([m.position.x,m.position.z,Math.min(bs.radius*sc,14)])});
@@ -584,3 +584,5 @@ function snowFight(e,dt){
 }
 {const previous=updWorld;updWorld=function(dt){previous(dt);snowSpawns(dt)}}
 {const previous=updEnemy;updEnemy=function(e,dt){if(e.snow&&!e.dead)snowFight(e,dt);else previous(e,dt)}}
+/* 55차(규칙): 새 섬이 된 등대 자리(LH_ISLE, core.js)는 바위섬 바위·이끼(lhIslet)를 놓지 않아요 */
+{const _li=lhIslet;lhIslet=function(c,i){if(LH_ISLE.includes(i))return;return _li(c,i)}}
