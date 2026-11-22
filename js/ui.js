@@ -204,7 +204,13 @@ const cvUp=e=>{joyEnd(e);if(e.pointerId===RJ.id){rjUp(e);return}if(touchHook(e.t
  if(ACT.pend&&up){ACT.pend=0;actApply();ACT.id=null;ACT.go=0;ACT.rel=1;return}   /* 90ms 안에 뗀 톡: 한 번만 쓰고 다음 장면에서 놓아요 */
  actCancel()};cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 function holdAim(){const now=performance.now();for(const id in taps){const tp=taps[id];if(tp.right&&aimP.id===null&&!bmode&&tp.mv<=12&&now-tp.t>320){aimP.id=+id;aimAt({clientX:tp.lx||tp.x,clientY:tp.ly||tp.y})}}}
-const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z))){let a=t-.4,b=t;for(let i=0;i<7;i++){const m=(a+b)/2,mx=o.x+d.x*m,mz=o.z+d.z*m;if(o.y+d.y*m<=Math.max(0,groundY(mx,mz)))b=m;else a=m}return[o.x+d.x*b,o.z+d.z*b]}}return null}   /* 33차: 마지막 칸은 반씩 나눠 정확하게(누른 곳 설치) */
+const _ray=new THREE.Raycaster();function groundAt(cx,cy){_ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},cam);const o=_ray.ray.origin,d=_ray.ray.direction;
+ if(INT.on&&INT.kind==='cave'){
+   if(d.y>=0)return null;
+   const t=(INT.y-o.y)/d.y,x=o.x+d.x*t,z=o.z+d.z*t;
+   return t>=0&&mineTile(Math.floor((x-INT.x-MINE.ox)/4),Math.floor((z-INT.z-MINE.oz)/4))?[x,z]:null;
+ }
+ for(let t=4;t<140;t+=.4){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(x<0||z<0||x>WS||z>WS)continue;if(y<=Math.max(0,groundY(x,z))){let a=t-.4,b=t;for(let i=0;i<7;i++){const m=(a+b)/2,mx=o.x+d.x*m,mz=o.z+d.z*m;if(o.y+d.y*m<=Math.max(0,groundY(mx,mz)))b=m;else a=m}return[o.x+d.x*b,o.z+d.z*b]}}return null}   /* 33차: 마지막 칸은 반씩 나눠 정확하게(누른 곳 설치) */
 /* 버튼 하나(기획자 요청: 가방 + 상호작용 버튼만): 설치 모드면 설치, 가까운 대상(베기·열기·거래·들어가기…)이 있으면 상호작용,
    아니면(또는 적이 가까우면) 손에 든 것 쓰기(공격·던지기·감기). 누른 채 끌면 그쪽으로 조준 */
 function actMode(){if(bmode)return'build';const id=curId(),w=WEAP[id]||{};if(fishing)return'fire';if(!w.rod&&nearestEnemy(P.x,P.z,w.melee||id==='fist'?3.4:Math.min(w.range||3.4,12)))return'fire';return target&&target.lab?'act':'fire'}

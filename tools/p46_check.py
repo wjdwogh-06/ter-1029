@@ -27,9 +27,21 @@ async def steps(pg):
     await pg.wait_for_timeout(800)
     await pg.screenshot(path=O('p46_cave_in.jpg'),type='jpeg',quality=85)
     r=json.loads(await ev("""()=>{const o={on:INT.on,kind:INT.kind,home:JSON.stringify(S.home)};give('kit_bench',1);setBuild('bench');const g=ghostPos();o.build=[g.ok,g.why];setBuild(null);
-      o.vis=INT.gr.cave&&INT.gr.cave.visible;o.tent=INT.gr.tent.visible;S.hp=50;P.lastHurt=9;const h0=S.hp;updStats(1);o.regen=+(S.hp-h0).toFixed(2);P.z=INT.z+INT.door-.85;P.x=INT.x;target=findTarget();o.exitLab=target&&target.lab;return JSON.stringify(o)}"""))
+      o.vis=INT.gr.cave&&INT.gr.cave.visible;o.tent=INT.gr.tent.visible;S.hp=50;P.lastHurt=9;const h0=S.hp;updStats(1);o.regen=+(S.hp-h0).toFixed(2);P.z=INT.it[0].z-.85;P.x=INT.it[0].x;target=findTarget();o.exitLab=target&&target.lab;return JSON.stringify(o)}"""))
     r['lab']=lab;r['home0']=home0
-    await ev("()=>{P.z=INT.z+INT.door-.85;P.x=INT.x;target=findTarget();inp.actEdge=true;interact();inp.actEdge=false}")
+    start_z, camera_z = await ev("()=>[P.z,cam.position.z]")
+    await pg.keyboard.down('ArrowUp')
+    try:
+        await pg.wait_for_function("z=>P.z<z-5", arg=start_z)
+    finally:
+        await pg.keyboard.up('ArrowUp')
+    assert await ev(f"()=>cam.position.z<{camera_z}-4")
+    await pg.keyboard.down('ArrowDown')
+    try:
+        await pg.get_by_role('button', name='지상으로').wait_for(state='visible')
+    finally:
+        await pg.keyboard.up('ArrowDown')
+    await pg.get_by_role('button', name='지상으로').click()
     for i in range(40):
         if await ev("()=>!INT.on&&!busy"): break
         await pg.wait_for_timeout(200)

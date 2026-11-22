@@ -48,6 +48,20 @@ function mineOpen(x,z,r){
     if(!mineTile(Math.floor((x+dx)/4),Math.floor((z+dz)/4)))return false;
   return !MINE.solids.some(([cx,cz,rad])=>Math.hypot(x-cx,z-cz)<rad+r);
 }
+function mineShale(){
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=192;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#d7d4d0';ctx.fillRect(0,0,192,192);
+  for(let i=0;i<1700;i++){
+    const x=hash(i,1,81)*192,y=hash(i,2,81)*192,w=1+hash(i,3,81)*5;
+    ctx.fillStyle=i%4?'rgba(60,53,65,.16)':'rgba(255,252,239,.52)';
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y-w*.22);
+    ctx.lineTo(x+w*.58,y+1+w*.16);ctx.fill();
+  }
+  const tex=new THREE.CanvasTexture(canvas);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  return tex;
+}
 function caveRoom(){
   if(INT.gr.cave)return;
   const C=INT.gr.cave=new THREE.Group();C.position.set(MINE.ox,0,MINE.oz);C.visible=false;INT.g.add(C);
@@ -63,6 +77,7 @@ function caveRoom(){
     prop(unit,0x85644a,x,3.65,z,7.6,.55,.65,r);
   }
   function lamp(x,z){
+    const halo=glow(0xffb46c,2.7,.40);halo.position.set(x,2.52,z);C.add(halo);
     lamps.push([x,z]);prop(unit,0x493c36,x,1.25,z,.22,2.5,.22);
     prop(unit,0xffbf63,x,2.5,z,.55,.7,.55);prop(unit,0x644f40,x,2.94,z,.72,.16,.72);
   }
@@ -76,6 +91,23 @@ function caveRoom(){
     timber(x,z,r);lamp(x+3*Math.cos(r),z-3*Math.sin(r));
     if(i<9&&j===i+1)track(a,b);
   }
+  // The entrance opens onto a rail cutting, with a loading bay visible from spawn.
+  track([0,126],[0,112]);
+  for(const z of [116,105,92]){
+    timber(0,z,0);
+    for(const side of [-1,1]){
+      prop(unit,0xa58057,side*2.85,3.06,z,.27,1.65,.38,0,-side*.7);
+      prop(unit,0x495158,side*3.4,.48,z,.63,.24,.66);
+    }
+    lamp(-3.9,z-.5);
+  }
+  for(const side of [-1,1])for(let n=0;n<8;n++){
+    const x=side*(7+2.3*Math.sin(n*.83)),z=122-n*2.6;
+    prop(stone,0x44475a,x,1.25,z,2.8,2.9,3.5,n);
+    prop(stone,0x6b6570,x+side*.9,2.6,z,2.9,1.35,3.3,n+.35);
+    if(n%3===0)prop(crystal,0x59b8c8,x-side*1.5,.95,z,.35,1.8,.5,n,.3*side);
+    MINE.solids.push([x,z,1.9]);
+  }
   function cart(x,z){
     prop(unit,0x353941,x,.78,z,2.25,.35,3.4);
     for(const side of [-1,1]){
@@ -86,7 +118,7 @@ function caveRoom(){
     for(let n=0;n<7;n++)prop(stone,0x525461,x+hash(n,4,1)-.5,1.53,z+2*hash(n,7,3)-1,.65,.52,.72,n);
     MINE.solids.push([x,z,1.55]);
   }
-  cart(-68,56);cart(-84,-58);cart(90,-60);
+  cart(3.8,112);cart(-68,56);cart(-84,-58);cart(90,-60);
   for(const [i,[x,z]] of MINE.halls.entries()){
     lamp(x+5,z+3);
     if([3,5,7,8].includes(i)){
@@ -131,10 +163,39 @@ function caveRoom(){
       prop(stone,0x63636d,cx+.8,.75,cz+1.1,3.7,2.4,3,i+.5);MINE.solids.push([cx,cz,3.3]);
     }
   }
+  // Broken shale and spoil banks along chamber margins keep paths clear.
+  for(const [idx,[cx,cz,rx,rz]] of MINE.halls.entries()){
+    for(let n=0;n<26;n++){
+      const a=hash(idx,n,41)*Math.PI*2;
+      const r=.52+.32*hash(idx,n,43),x=cx+rx*r*Math.cos(a),z=cz+rz*r*Math.sin(a);
+      const size=.24+.68*hash(idx,n,47);
+      for(let k=0;k<3;k++)prop(stone,k===0?0x66616c:0x4b4a56,x+hash(n,k,31)*1.5,.09,z+hash(n,k,13),size,.18+k*.09,size*.76,a+k);
+    }
+  }
+  const wheel=new THREE.TorusGeometry(.82,.13,5,16);
+  prop(wheel,0xa18566,hx,6.4,hz,.95,.95,.95);
+  prop(wheel,0x626773,hx-4,2.1,hz+.95,.85,.85,.85);
+  for(let n=0;n<4;n++)prop(unit,0x82766a,hx-4,2.1,hz+1,.09,1.45,.09,0,n*Math.PI/4);
   for(let i=-40;i<40;i++)for(let j=-35;j<35;j++)if(mineField(i*4+2,j*4+2)>0)MINE.tiles.add((i+64)*128+j+64);
+  // Build continuous, irregular cliff faces. Adjacent segments share endpoints.
+  const wallPos=[],wallColor=[];
+  const seams=[0x353342,0x534554,0x78635e,0x494756,0x666777];
+  function ridge(x,z,k){
+    const noise=hash(x,z,11+k);
+    const heightScale=z>=122&&Math.abs(x)<16?.16:1;
+    return [x+.9*(hash(x,z,21+k)-.5),[0,.85,1.16,2.65,4.4,5.2][k]*heightScale*(.76+.48*noise)-.16,z+.9*(hash(x,z,31+k)-.5)];
+  }
+  function cliff(ax,az,bx,bz){
+    for(let k=0;k<5;k++){
+      const a=ridge(ax,az,k),b=ridge(bx,bz,k),c=ridge(ax,az,k+1),d=ridge(bx,bz,k+1);
+      const col=new THREE.Color(seams[k]).convertSRGBToLinear().multiplyScalar(.78+.4*hash(ax,bz,k));
+      for(const v of [a,c,b,b,c,d]){wallPos.push(...v);wallColor.push(col.r,col.g,col.b)}
+    }
+  }
   function vertex(x,z,v){
     let light=0;for(const [lx,lz] of lamps)light=Math.max(light,Math.max(0,1-Math.hypot(x-lx,z-lz)/10));
-    floor.push(x,0,z);colors.push(.065*v+.22*light,.073*v+.12*light,.089*v+.048*light);
+    const grain=.78+.18*Math.sin(x*.21+z*.13)+.16*hash(x,z,3);
+    floor.push(x,0,z);colors.push(.051*v*grain+.26*light,.055*v*grain+.146*light,.075*v*grain+.053*light);
   }
   for(let i=-40;i<40;i++)for(let j=-35;j<35;j++){
     if(!mineTile(i,j))continue;
@@ -142,22 +203,37 @@ function caveRoom(){
     for(const [a,b] of [[0,0],[0,4],[4,4],[0,0],[4,4],[4,0]])vertex(x+a,z+b,v);
     for(const [di,dj] of [[0,-1],[0,1],[-1,0],[1,0]]){
       if(mineTile(i+di,j+dj))continue;
-      const h=2+hash(i,j,19)*2;
+      if(di)cliff(x+(di>0?4:0),z,x+(di>0?4:0),z+4);
+      else cliff(x,z+(dj>0?4:0),x+4,z+(dj>0?4:0));
+      if(z>=122&&Math.abs(x)<16)continue;
+      const h=1.2+hash(i,j,19)*1.8;
       prop(stone,hash(i,j,8)>.5?0x525665:0x676273,x+2+di*3.4,.7,z+2+dj*3.4,3,h,3,hash(i,j,9)*3);
     }
   }
   // Daylight, paired posts and a pale threshold distinguish the return tunnel.
-  timber(0,127,0);lamp(-3,124);lamp(3,124);
+  lamp(-3,124);lamp(3,124);
   prop(unit,0xc2dfe5,0,.035,127,4,.07,1.6);
+  for(const side of [-1,1]){
+    for(let n=0;n<2;n++)prop(stone,0x69616a,side*(2.9+.07*n),.65+n*.94,128,1.3,1.05,1.3,n*.8);
+    prop(unit,0xb99c70,side*3.1,2.05,128,.7,.19,.8);
+  }
+  const walls=new THREE.BufferGeometry();
+  walls.setAttribute('position',new THREE.Float32BufferAttribute(wallPos,3));
+  walls.setAttribute('color',new THREE.Float32BufferAttribute(wallColor,3));
+  walls.computeVertexNormals();
+  C.add(new THREE.Mesh(walls,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide})));
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(floor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  C.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true})));
+  const uv=[];
+  for(let n=0;n<floor.length;n+=3)uv.push(floor[n]/7,floor[n+2]/7);
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  C.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,map:mineShale()})));
   const material=new THREE.MeshLambertMaterial({vertexColors:true,emissive:0x201c22});
   for(const parts of chunks.values())C.add(new THREE.Mesh(mg(parts),material));
   const backing=new THREE.Mesh(new THREE.PlaneGeometry(420,370),new THREE.MeshBasicMaterial({color:0x101019}));
   backing.rotation.x=-Math.PI/2;backing.position.y=-.16;C.add(backing);
 }
-// Isolate the underground coordinates from outdoor resources, enemies and water.
+// Isolate the underground floor from surface resources and actors.
 const mineFloorDock={y:INT.y};
 const outsideDock=onDock;
 onDock=function(x,z){
@@ -171,8 +247,8 @@ intWalk=function(x,z,r){
 };
 intCam=function(ct){
   if(INT.kind!=='cave')return oldMineCam(ct);
-  const d=cam.aspect<1?24:19;
-  cam.position.set(ct.x,INT.y+d,ct.z+d*.9);cam.lookAt(ct.x,INT.y+.6,ct.z);
+  const d=cam.aspect<1?28:30;
+  cam.position.set(P.x,INT.y+d,P.z+d*.9);cam.lookAt(P.x,INT.y+.6,P.z);
 };
 intLight=function(dk){
   oldMineLight(dk);
@@ -188,11 +264,31 @@ intRoom=function(kind){
   oldMineRoom(kind);INT.L.position.set(0,2.5,.5);
 };
 
+// The mine doorway has a touch target independent of equipped tools.
+const mineExitButton=document.createElement('button');
+mineExitButton.className='btn';
+mineExitButton.textContent='↗ 지상으로';
+mineExitButton.style.cssText='position:absolute;left:50%;top:18%;transform:translateX(-50%);pointer-events:auto;z-index:8';
+mineExitButton.hidden=true;
+$('ui').appendChild(mineExitButton);
+function nearMineExit(){
+  const door=INT.it[0];
+  return INT.on&&INT.kind==='cave'&&door&&Math.hypot(P.x-door.x,P.z-door.z)<=4;
+}
+mineExitButton.onclick=()=>{if(nearMineExit()&&!busy)intLeave()};
+const beforeMineUpdate=intUpd;
+intUpd=function(){
+  beforeMineUpdate();
+  mineExitButton.hidden=!nearMineExit()||busy||!!panel;
+};
+const beforeMineOut=intOut;
+intOut=function(){mineExitButton.hidden=true;beforeMineOut()};
+
 /* 들어가기: 텐트(intEnter)와 같지만 내 기지(S.home)를 바꾸지 않아요 */
 function caveEnter(s){if(P.dead||busy||INT.on)return;const df=sdef(s);
  fadeDo('동굴 안으로…',()=>{intRoom('cave');setBuild(null);if(fishing)endFish();INT.ret={x:s.x+Math.sin(s.r||0)*(df.bz+1.1),z:s.z+Math.cos(s.r||0)*(df.bz+1.1)};INT.s=s;INT.on=true;INT.dock.hw=INT.full;INT.g.visible=true;intShow(true);
   INT.it=[addStruct({t:'int_exit',x:INT.x+MINE.ox,z:INT.z+MINE.oz+127,yo:INT.y-hAt(INT.x+MINE.ox,INT.z+MINE.oz+127),hp:1e9})];
-  P.x=INT.x+MINE.ox;P.z=INT.z+MINE.oz+125.6;camT.set(P.x,INT.y,P.z);P.rot=Math.PI;P.auto=null;enemies.forEach(e=>{if(!e.raid)e.agg=0});sfx(170,.2,'sine',.05,.6);sfx(120,.3,'sine',.03,.5)})}
+  P.x=INT.x+MINE.ox;P.z=INT.z+MINE.oz+124;camT.set(P.x,INT.y,P.z);P.rot=Math.PI;P.auto=null;enemies.forEach(e=>{if(!e.raid)e.agg=0});sfx(170,.2,'sine',.05,.6);sfx(120,.3,'sine',.03,.5)})}
 {const _sl=sLabel;sLabel=function(s){if(s.t==='cave')return INT.on?null:'동굴 들어가기';return _sl(s)}}
 {const _it=interact;interact=function(){const t=target;if(t&&t.k==='s'&&t.s.t==='cave'){if(inp.actEdge)caveEnter(t.s);return}_it()}}
 {const _gp=ghostPos;ghostPos=function(){const pr=_gp();if(INT.on&&INT.kind==='cave'){pr.ok=false;pr.why='동굴 안에는 아무것도 놓을 수 없어요'}return pr}}
