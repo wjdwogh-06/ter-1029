@@ -10,7 +10,7 @@ async def steps(pg):
     print('place',await ev("""()=>{give('kit_tent',3);setBuild('ptent');const b=BUILDS.ptent,d=Math.max(b.bx,b.bz)+1.6;const res={inBlocked:0,inN:0,outZoneMsg:0,outN:0,water:''};
       const at=(x,z,rot)=>{P.rot=rot;P.x=x-Math.sin(rot)*d;P.z=z-Math.cos(rot)*d;return ghostPos()};
       for(const n of NOB){for(let a=0;a<8;a++){const an=a/8*6.283;const xi=n.x+Math.cos(an)*(n.r*.6),zi=n.z+Math.sin(an)*(n.r*.6);if(hAt(xi,zi)>.5){const g=at(xi,zi,an);res.inN++;if(!g.ok&&/금지/.test(g.why))res.inBlocked++}
-        const xo=n.x+Math.cos(an)*(n.r+3.5),zo=n.z+Math.sin(an)*(n.r+3.5);if(hAt(xo,zo)>.5&&!NOB.some(m=>m!==n&&dist(m.x,m.z,xo,zo)<m.r+3)){const g=at(xo,zo,an);res.outN++;if(/금지/.test(g.why))res.outZoneMsg++}}}
+        const xo=n.x+Math.cos(an)*(n.r+3.5),zo=n.z+Math.sin(an)*(n.r+3.5);if(hAt(xo,zo)>.5&&!NOB.some(m=>m!==n&&dist(m.x,m.z,xo,zo)<m.r+3)){const g=at(xo,zo,an);res.outN++;if(/금지/.test(g.why)&&!/길 주변/.test(g.why))res.outZoneMsg++}}}
       let w=null;for(let x=100;x<900&&!w;x+=7)for(let z=100;z<900;z+=7)if(hAt(x,z)<-1.2&&!nobAt(x,z,3)){w=[x,z];break}const g=at(w[0],w[1],0);res.water=g.why;setBuild(null);return JSON.stringify(res)}"""))
     # 화면: 설치 모드가 아닐 때 안 보이고, 설치 모드일 때 보임
     await ev("()=>{const n=NOB.find(z=>z.k==='lh');P.x=n.x;P.z=n.z+n.r+3;P.rot=Math.PI}");await pg.wait_for_timeout(1200)

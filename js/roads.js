@@ -27,7 +27,7 @@ const ROADS=ROAD_PTS.map(([k,s])=>({k,a:k.split('-')[0],b:k.split('-')[1],p:s.sp
 /* 화면에 그려진 땅 높이(2m 격자 삼각형 그대로) */
 function roadTriH(x,z){const i=Math.floor(x/2),j=Math.floor(z/2),fx=x/2-i,fz=z/2-j,X=i*2,Z=j*2,a=hAt(X,Z),b=hAt(X+2,Z),c=hAt(X,Z+2),d=hAt(X+2,Z+2);return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz)}
 let roadMeshObj=null;
-const ROADC={edge:0xc9b07f,sh:0xc4a674,tr:0x9e7a50,tr2:0xb08f63,mid:0x9db463,mid2:0xb1a56c};
+const ROADC={edge:0xb4a274,base:0xbb9c6e,tr:0xa98a5f,mid:0x9fb067,mid2:0xb0a46e};   /* 56차(기획자: '길 테두리 진한 선들 연하게, 자연스러운 길로'): 밝은 테두리 띠·땅 색 둘레를 없애고 가장자리를 넓게 흐리게, 바퀴 자국은 옅게 */
 function roadMesh(){if(roadMeshObj){scene.remove(roadMeshObj);roadMeshObj.geometry.dispose()}
  const pos=[],col=[],nrm=[],idx=[],C=new THREE.Color(),CC={};for(const k in ROADC)CC[k]=new THREE.Color(ROADC[k]).convertSRGBToLinear();
  const others=(ri,x,z)=>{for(let q=0;q<ROADS.length;q++){if(q===ri)continue;for(const p of ROADS[q].p){const dx=p[0]-x,dz=p[1]-z;if(dx*dx+dz*dz<16)return true}}return false};
@@ -37,9 +37,9 @@ function roadMesh(){if(roadMeshObj){scene.remove(roadMeshObj);roadMeshObj.geomet
    // 끝: 이어지지 않은 끝(항구·보급지 문 안)은 8m에 걸쳐 좁아지며 흐려져요
    const ea=ja?1:Math.min(1,i/4),eb=jb?1:Math.min(1,(n-1-i)/4),e=Math.min(ea,eb),wk=.45+.55*e,fade=.25+.75*e;
    const wl=(1.38+(noise(x*.09+3,z*.09,77)-.5)*.42)*wk,wr=(1.38+(noise(x*.09,z*.09+5,78)-.5)*.42)*wk,mixed=others(ri,x,z);
-   const prof=[[-wl-.75,'edge',0],[-wl,'sh',.92],[-1.02*wk,'tr2',1],[-.72*wk,'tr',1],[-.4*wk,mixed?'tr2':'mid2',1],[0,mixed?'tr2':'mid',1],[.4*wk,mixed?'tr2':'mid2',1],[.72*wk,'tr',1],[1.02*wk,'tr2',1],[wr,'sh',.92],[wr+.75,'edge',0]];
+   const M2=mixed?'base':'mid2',M1=mixed?'base':'mid',prof=[[-wl-1.05,'edge',0],[-wl-.4,'edge',.32],[-wl+.15,'base',.82],[-1.0*wk,'base',1],[-.72*wk,'tr',1],[-.42*wk,M2,1],[0,M1,1],[.42*wk,M2,1],[.72*wk,'tr',1],[1.0*wk,'base',1],[wr-.15,'base',.82],[wr+.4,'edge',.32],[wr+1.05,'edge',0]];
    for(const [o,ck,al] of prof){const X=x+nx*o,Z=z+nz*o;pos.push(X,roadTriH(X,Z)+.035,Z);nrm.push(0,1,0);C.copy(CC[ck]).multiplyScalar(.93+hash(X*3|0,Z*3|0,91)*.13);col.push(C.r,C.g,C.b,al*fade)}}
-  const W=11;for(let i=0;i<n-1;i++)for(let k=0;k<W-1;k++){const A=base+i*W+k,B=A+1,Cc=A+W,D=Cc+1;idx.push(A,B,Cc,B,D,Cc)}});
+  const W=13;for(let i=0;i<n-1;i++)for(let k=0;k<W-1;k++){const A=base+i*W+k,B=A+1,Cc=A+W,D=Cc+1;idx.push(A,B,Cc,B,D,Cc)}});
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nrm,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,4));g.setIndex(idx);g.computeBoundingSphere();
  const mat=new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
  const m=new THREE.Mesh(g,mat);m.receiveShadow=true;m.renderOrder=-1;m.matrixAutoUpdate=false;m.userData.road=1;scene.add(m);roadMeshObj=m;return m}
@@ -58,3 +58,28 @@ function roadSigns(){const out=[];for(const [k,[nx,nz]] of Object.entries(ROAD_N
   const m=mesh(roadSignGeo(dirs),MATT);m.position.set(sx,hAt(sx,sz)-.03,sz);m.castShadow=true;m.userData.layoutName='길 표지판';scene.add(m);out.push(m)}return out}   /* 가는 기둥이라 부딪힘은 없어요(설치 금지 원·항구 원 크기에 안 섞이게) */
 {const _bt=buildTerrain;buildTerrain=function(){_bt.apply(this,arguments);try{roadMesh()}catch(e){console.warn('roads: 길 띠',e)}}}
 {const _bp=buildPorts;buildPorts=function(){_bp.apply(this,arguments);try{roadSigns()}catch(e){console.warn('roads: 표지판',e)}}}
+
+/* 56차(기획자: '보급이랑 항구 잇는 길들은 보급·항구처럼 길보다 약간만 크게 빨간 설치 금지 구역으로'): 길 가운데에서 ROAD_NB(3m) 안은 설치 금지.
+   설치 모드일 때만 길을 따라 빨간 띠(설치 금지 원과 같은 무늬·테두리)가 보이고, 가까운 길 가장자리에 '길 주변 설치 금지' 알약이 떠요. 검사는 원과 같은 방식(가운데 + 설치물 반지름). */
+const ROAD_NB=3.0;
+{const _gp=ghostPos;ghostPos=function(){const pr=_gp.apply(this,arguments);if(!pr||!pr.ok||pr.in||!bmode||bmode==='demo'||!PATHS.length)return pr;const b=BUILDS[bmode];if(!b||b.water)return pr;
+  if(pathD(pr.x,pr.z)<ROAD_NB+Math.max(b.bx,b.bz)){pr.ok=false;pr.why='길 주변은 설치 금지 구역이에요'}return pr}}
+let roadNbG=null;
+function roadNbMeshes(){if(roadNbG)return roadNbG;roadNbG=new THREE.Group();roadNbG.visible=false;scene.add(roadNbG);
+ const fm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,uniforms:{uT:{value:0},uA:{value:1},uC:{value:new THREE.Color(0xff4438)}},
+  vertexShader:'attribute float aR;varying float vR;varying vec3 vW;void main(){vR=aR;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+  fragmentShader:'uniform float uT,uA;uniform vec3 uC;varying float vR;varying vec3 vW;void main(){float e=smoothstep(.45,1.,vR);float st=smoothstep(.42,.5,abs(fract((vW.x-vW.z)*.28+uT*.06)-.5))*(1.-e*.7);float a=(.035+e*e*.26+st*.045)*uA;gl_FragColor=vec4(uC,a);}'}),
+  em=new THREE.MeshBasicMaterial({color:0xff3b30,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+ const y=(x,z)=>Math.max(hAt(x,z),0)+.09,F=[-1,-.9,-.6,0,.6,.9,1];
+ for(const r of ROADS){const P=r.p,n=P.length,pos=[],ar=[],idx=[],E=[],EI=[];
+  for(let i=0;i<n;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(n-1,i+1)];let tx=b[0]-a[0],tz=b[1]-a[1];const tl=Math.hypot(tx,tz)||1,nx=-tz/tl,nz=tx/tl,[x,z]=P[i];
+   for(const f of F){const X=x+nx*f*ROAD_NB,Z=z+nz*f*ROAD_NB;pos.push(X,y(X,Z),Z);ar.push(Math.abs(f))}
+   for(const s of[-1,1])for(const rr of[ROAD_NB-.13,ROAD_NB]){const X=x+nx*s*rr,Z=z+nz*s*rr;E.push(X,y(X,Z)+.025,Z)}}
+  const W=F.length;for(let i=0;i<n-1;i++){for(let k=0;k<W-1;k++){const A=i*W+k,B=A+1,C=A+W,D=C+1;idx.push(A,B,C,B,D,C)}for(const o of[0,2]){const A=i*4+o,B=A+1,C=A+4,D=C+1;EI.push(A,B,C,B,D,C)}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('aR',new THREE.Float32BufferAttribute(ar,1));g.setIndex(idx);g.computeBoundingSphere();const m=new THREE.Mesh(g,fm);m.renderOrder=3;
+  const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(E,3));ge.setIndex(EI);ge.computeBoundingSphere();const me=new THREE.Mesh(ge,em);me.renderOrder=3;roadNbG.add(m,me)}
+ roadNbG.userData={fm,em};return roadNbG}
+{const _un=updNoBuild;updNoBuild=function(){const r=_un.apply(this,arguments);const on=!!bmode&&bmode!=='demo'&&!INT.on&&PATHS.length>0;if(on)roadNbMeshes();if(roadNbG){roadNbG.visible=on;if(on){const k=.5+.5*Math.sin(gt*3);roadNbG.userData.fm.uniforms.uT.value=gt;roadNbG.userData.fm.uniforms.uA.value=.85+.25*k;roadNbG.userData.em.opacity=.75+.2*k}}return r}}
+{const _dn=drawNoBuild;drawNoBuild=function(c,k){const r=_dn.apply(this,arguments);if(!roadNbG||!roadNbG.visible)return r;let best=null,bd=1e9;for(const p of PATHS){const d=(p.x-P.x)**2+(p.z-P.z)**2;if(d<bd){bd=d;best=p}}
+  bd=Math.sqrt(bd);if(!best||bd>ROAD_NB+22||bd<=ROAD_NB)return r;const g=ghost&&ghost.userData.g,t=ROAD_NB/bd,x=best.x+(P.x-best.x)*t,z=best.z+(P.z-best.z)*t;if(g&&!g.ok&&dist(x,z,g.x,g.z)<6)return r;
+  const q=scr(x,Math.max(hAt(x,z),0)+.4,z);if(q[2])uiPill(c,'길 주변 설치 금지',q[0],q[1],10.5*k,'rgba(229,83,75,.9)','#fff','rgba(255,255,255,.3)');return r}}
