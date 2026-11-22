@@ -403,82 +403,142 @@ function objPockets(keys,wins){let cut=0;const free=(x,z)=>{if(hAt(x,z)<.12)retu
 {const _go=genObjects;genObjects=function(sd){_go(sd);const keys=[];objs.forEach((o,k)=>{if(o.t===2)keys.push(k)});genObjects.split=splitClusters(sd);genObjects.split.opened=objPockets(keys,[...PORT_SAFE.map(q=>[q[0],q[1],q[2]+6,12]),...SUPS.map(q=>[q.x,q.z,20,6])])}}   /* 항구·보급지 둘레(갇힌 칸 검사 자리)도 한 번 더 */
 
 // Northeastern island wildlife. Uses ordinary enemy damage, disposal and hunting records.
-const snowAnimalModels={};
-function snowAnimalModel(bear){
-  const key=bear?'bear':'bird';
-  if(snowAnimalModels[key])return snowAnimalModels[key];
-  const fur=0xe6e2d4,cream=0xf6f1de,shade=0xbfc4bd,ink=0x353333;
-  const shape=ico(1,1),parts=[];
-  const oval=(color,x,y,z,w,h,d,tilt=0)=>parts.push(pt(shape,color,[x,y,z],[tilt,0,0],[w,h,d]));
-  if(bear){
-    oval(fur,0,1.04,-.13,.65,.66,1.14);
-    oval(cream,0,1.36,.49,.58,.63,.73);
-    oval(cream,0,1.60,1.09,.43,.41,.53);
-    oval(fur,0,1.48,1.51,.29,.21,.34);
-    oval(ink,0,1.55,1.78,.16,.115,.10);
-    for(const side of [-1,1]){
-      oval(fur,side*.30,1.93,.98,.13,.14,.11);
-      oval(ink,side*.255,1.69,1.44,.053,.052,.054);
-    }
-    oval(fur,0,1.20,-1.17,.17,.16,.19);
-  }else{
-    oval(fur,0,.45,0,.30,.33,.49);
-    oval(cream,0,.72,.32,.23,.24,.24);
-    oval(ink,0,.71,.54,.095,.065,.13);
-    for(const side of [-1,1]){
-      oval(ink,side*.17,.78,.45,.044,.047,.043);
-      oval(0xa97057,side*.175,.83,.435,.047,.023,.05);
-      oval(shade,side*.24,.48,-.09,.105,.18,.34,-.18);
-    }
-    oval(ink,0,.43,-.43,.18,.065,.24,-.32);
-  }
-  const body=mg(parts);
-  const leg=bear?mg([pt(shape,fur,[0,-.22,0],0,[.24,.40,.26]),pt(shape,shade,[0,-.50,.08],0,[.225,.15,.32])]):
-    mg([pt(shape,shade,[0,-.06,0],0,[.052,.12,.06]),pt(shape,fur,[0,-.155,.055],0,[.075,.043,.12])]);
-  return snowAnimalModels[key]={body,leg};
+const snowMeshes=new Map();
+const fur=0xede8d9,whiteCoat=0xf8f5e9,shadowFur=0xc9ccc4,coal=0x34373a;
+function snowEll(color,x,y,z,w,h,d,rx=0,ry=0,rz=0){
+  return pt(ico(1,1),color,[x,y,z],[rx,ry,rz],[w,h,d]);
 }
-class SnowAnimal{
-  constructor(bear){
-    const g=snowAnimalModel(bear);
-    this.root=new THREE.Group();this.body=mesh(g.body);this.root.add(this.body);this.legs=[];
-    for(const z of bear?[-.64,.61]:[0])for(const side of [-1,1]){
-      const leg=mesh(g.leg);leg.position.set(side*(bear?.36:.13),bear?.65:.20,z);this.root.add(leg);this.legs.push(leg);
-    }
-    this.phase=Math.random()*6;this.lock=0;this.cur='Idle';
+class SnowRig{
+  constructor(type){
+    this.type=type;this.root=new THREE.Group();scene.add(this.root);
+    this.cur='Idle';this.lock=0;this.age=0;this.phase=Math.random()*6;this.stride=0;
+    this.forward=1;this.side=0;this.legs=[];
     this.mixer={update:dt=>{
-      const run=this.cur==='Running_A',move=run||this.cur==='Walking_A';
-      this.phase+=dt*(move?(bear?8:20)*(run?1:.55):2);
-      this.legs.forEach((leg,i)=>leg.rotation.x=move?Math.sin(this.phase+(i===0||i===3?0:Math.PI))*.48:0);
-      this.body.position.y=move?Math.abs(Math.sin(this.phase))*(bear?.047:.068):0;
-      this.body.rotation.x=this.cur==='swipe'?-.19:0;
-      if(this.cur==='Death_A')this.root.rotation.z=Math.min(1.42,this.root.rotation.z+dt*4);
+      this.age+=dt;
+      const target=this.cur==='Running_A'?1:this.cur==='Walking_A'?.48:0;
+      this.stride+=(target-this.stride)*(1-Math.exp(-14*dt));
+      this.phase+=dt*(2+this.stride*(type==='bird'?15:8));
+      this.pose(dt);
+      if(this.cur==='Hit_A')this.body.rotation.z+=.22*Math.sin(Math.PI*Math.min(1,this.age/.22));
+      if(this.cur==='Death_A')this.root.rotation.z=1.48*(1-Math.exp(-6*this.age));
     }};
-    scene.add(this.root);
+  }
+  joint(parent,name,pos,build){
+    const key=this.type+name;
+    if(!snowMeshes.has(key))snowMeshes.set(key,mg(build()));
+    const m=mesh(snowMeshes.get(key));m.position.set(...pos);parent.add(m);return m;
   }
   weapon(){}
-  play(n,o={}){if(!this.lock||o.force){this.cur=n;this.lock=o.lock||0}}
-  set(x,z,r){this.root.position.set(x,groundY(x,z),z);this.root.rotation.y=r}
+  play(n,o={}){if(this.lock&&!o.force)return;if(this.cur!==n||o.force)this.age=0;this.cur=n;this.lock=o.lock||0}
+  set(x,z,r){
+    const p=this.root.position,dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);
+    if(d>.0001&&d<2){this.forward=(dx*Math.sin(r)+dz*Math.cos(r))/d;this.side=(dx*Math.cos(r)-dz*Math.sin(r))/d}
+    p.set(x,groundY(x,z),z);this.root.rotation.y=r;
+  }
   dispose(){scene.remove(this.root)}
 }
-
-class SnowHunter extends Actor{
-  constructor(){
-    super('gunner');
-    if(!GEO.snowHunterCap)GEO.snowHunterCap=mg([
-      pt(ico(1,1),0xbac7c0,[0,.54,0],0,[.32,.22,.30]),
-      pt(ico(1,1),0x65736e,[0,.47,.18],0,[.33,.055,.26])
-    ]);
-    this.head.add(mesh(GEO.snowHunterCap));
+// A continuous outline through transverse sections keeps the back, shoulders and muzzle connected.
+function snowHide(color,rings){
+  const vertices=[],sides=12;
+  const vertex=([z,y,w,h],i)=>[w*Math.cos(i*Math.PI/6),y+h*Math.sin(i*Math.PI/6),z];
+  for(let j=1;j<rings.length;j++)for(let i=0;i<sides;i++){
+    const a=vertex(rings[j-1],i),b=vertex(rings[j-1],i+1),c=vertex(rings[j],i+1),d=vertex(rings[j],i);
+    vertices.push(...a,...b,...c,...a,...c,...d);
   }
-  weapon(id){
-    super.weapon(id);
-    if(id!=='rifle'||!this.holder.children.length)return;
-    if(!GEO.snowScope)GEO.snowScope=mg([
-      pt(cyl(.08,.08,.46,10),0x40494b,[0,.27,.10],[Math.PI/2,0,0]),
-      pt(cyl(.09,.09,.04,10),0x789f9e,[0,.27,.34],[Math.PI/2,0,0]),
-      pt(box(.06,.14,.15),0x535757,[0,.19,.08])
-    ]);
-    this.holder.children[0].add(mesh(GEO.snowScope));
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));return pt(geo,color);
+}
+class SnowAnimal extends SnowRig{
+  constructor(bear){
+    super(bear?'bear':'bird');const o=snowEll;
+    if(bear){
+      this.body=this.joint(this.root,'trunk',[0,1,0],()=>[
+        snowHide(fur,[[-1.2,.09,0,0],[-1.03,.08,.45,.50],[-.64,.08,.63,.63],[-.10,.10,.59,.57],[.48,.22,.58,.70],[.78,.32,.46,.53],[1.14,.40,0,0]]),
+        o(whiteCoat,0,.19,-1.13,.15,.15,.22)]);
+      this.head=this.joint(this.body,'head',[0,.40,.75],()=>[
+        snowHide(whiteCoat,[[-.31,.03,0,0],[-.11,.09,.33,.33],[.2,.14,.4,.37],[.48,.09,.31,.25],[.69,.02,.23,.17],[.92,.07,0,0]]),
+        o(coal,0,.08,.84,.15,.105,.12),
+        ...[-1,1].flatMap(s=>[o(fur,s*.29,.43,.08,.12,.135,.10),o(0xa39788,s*.29,.45,.15,.073,.069,.037),
+          o(coal,s*.267,.21,.52,.05,.047,.055)])]);
+      this.jaw=this.joint(this.head,'jaw',[0,-.09,.43],()=>[o(0x665855,0,0,.21,.19,.066,.23),o(fur,0,-.047,.20,.19,.08,.24)]);
+      for(const z of [-.7,.61])for(const s of [-1,1]){
+        const hip=this.joint(this.body,'upper'+(z>0),[s*.39,-.05,z],()=>[o(fur,0,-.16,0,.25,.44,z>0?.27:.35)]);
+        const paw=this.joint(hip,'paw',[0,-.44,0],()=>[o(fur,0,-.18,0,.18,.28,.19),o(shadowFur,0,-.37,.08,.20,.12,.29),
+          ...[-1,0,1].map(i=>o(0x8a8172,i*.09,-.41,.29,.027,.029,.07))]);this.legs.push({hip,paw});
+      }
+    }else{
+      this.body=this.joint(this.root,'trunk',[0,.41,0],()=>[snowHide(whiteCoat,[[-.54,.06,0,0],[-.35,.06,.21,.20],[0,.04,.31,.30],[.23,.08,.28,.32],[.43,.19,0,0]])]);
+      this.head=this.joint(this.body,'head',[0,.24,.23],()=>[o(whiteCoat,0,.06,.06,.20,.22,.21),o(coal,0,.05,.26,.07,.05,.12),
+        ...[-1,1].flatMap(s=>[o(coal,s*.15,.095,.16,.055,.042,.085),o(0xc05040,s*.15,.146,.157,.051,.025,.07)])]);
+      this.tail=this.joint(this.body,'tail',[0,.06,-.32],()=>[-2,-1,0,1,2].map(i=>o(Math.abs(i)===2?whiteCoat:coal,i*.048,0,-.18,.063,.04,.23,-.18,i*.11)));
+      this.wings=[];
+      for(const s of [-1,1]){
+        this.wings.push(this.joint(this.body,'wing'+s,[s*.20,.15,.12],()=>[o(shadowFur,s*.065,-.035,-.13,.13,.17,.265,-.27),
+          ...[0,1,2,3,4].map(i=>o(i%2?whiteCoat:0xe0e1d6,s*(.04+i*.034),-.08+i*.019,-.27-i*.021,.065,.062,.23,-.20,s*.12))]));
+        const hip=this.joint(this.body,'leg',[s*.12,-.15,0],()=>[o(shadowFur,0,-.10,0,.055,.13,.06),
+          ...[-1,0,1].map(i=>o(0x998e80,i*.028,-.205,.043,.022,.021,.083,0,i*.28))]);this.legs.push({hip});
+      }
+    }
+  }
+  pose(){
+    const p=this.phase,m=this.stride,w=Math.sin(p);
+    if(this.type==='bear'){
+      const t=this.cur==='swipe'?Math.min(1,this.age/.51):0,lift=Math.sin(Math.PI*Math.min(1,t/.72)),swing=Math.sin(Math.PI*Math.max(0,(t-.42)/.58));
+      this.body.position.y=1+.02*Math.sin(2*p)+m*.044*Math.cos(2*p);
+      this.body.rotation.set(-.12*lift,.22*lift-.32*swing,.045*w*m+.15*lift);
+      this.head.rotation.set(.10*Math.sin(p*.7)*(1-m)-.15*lift+.16*swing,.17*Math.sin(p*.49)*(1-m),0);
+      this.jaw.rotation.x=.09+.44*(lift+.5*swing);
+      this.legs.forEach(({hip,paw},i)=>{
+        const beat=p+(i===1||i===2?Math.PI:0)+(i>1?.42:0);
+        hip.rotation.set(.56*m*Math.sin(beat)-(i===2?1.34*lift+.62*swing:0),0,i===2?-.55*lift+.37*swing:0);
+        paw.rotation.x=.36*m*Math.max(0,Math.cos(beat))+(i===2?.52*lift:0);
+      });
+    }else{
+      const bound=this.cur==='Running_A'?Math.abs(Math.sin(p*.38)):0;
+      this.body.position.y=.41+.032*Math.abs(w)*m+.32*bound;this.body.rotation.set(.16*m-.14*bound,0,.04*m*w);
+      this.head.rotation.set(.42*(1-m)*Math.pow(Math.max(0,Math.sin(p*.71)),6)-.11*m*w,.37*(1-m)*Math.sin(p*.47),0);
+      this.tail.rotation.x=-.10+.19*m*Math.cos(p);
+      this.wings.forEach((wing,i)=>wing.rotation.set(-.04+bound*(.12+.85*Math.sin(p*1.4)),(i?-1:1)*(.035+m*bound*1.3),0));
+      this.legs.forEach(({hip},i)=>hip.rotation.x=(i?1:-1)*.74*m*w+.64*bound);
+    }
+  }
+}
+class SnowHunter extends SnowRig{
+  constructor(){
+    super('tracker');this.aim=0;
+    const o=snowEll,coat=0x466761,trim=0xc2ad89,leather=0x73523c,boot=0x353e41;
+    this.body=this.joint(this.root,'coat',[0,.86,0],()=>[
+      pt(cyl(.30,.39,.56,10),coat,[0,.28,0],0,[1.14,1,.79]),o(coat,0,.54,0,.42,.24,.28),
+      pt(cyl(.38,.39,.07,10),0x314e49,[0,.04,0],0,[1.14,1,.80]),o(leather,0,.38,-.29,.29,.34,.17),
+      pt(cyl(.10,.10,.68,10),trim,[0,.65,-.32],[0,0,1.57]),
+      ...[-1,1].flatMap(s=>[pt(box(.07,.56,.065),leather,[s*.19,.38,.215],[0,0,-s*.12]),pt(box(.14,.14,.08),trim,[s*.22,.19,.23])])]);
+    this.head=this.joint(this.body,'hood',[0,.72,0],()=>[o(0x39554f,0,.14,-.044,.314,.34,.32),o(trim,0,.15,.094,.299,.303,.24),
+      o(0x514941,0,.14,.17,.234,.237,.19),o(0xb58b6b,0,.15,.21,.198,.195,.16),o(coal,0,.185,.326,.19,.072,.055),
+      ...[-1,1].map(s=>o(0x88aaad,s*.087,.19,.358,.073,.042,.032)),o(0xa55236,0,.012,.237,.221,.102,.142)]);
+    this.arms=this.joint(this.body,'arms',[0,.54,.02],()=>[o(coat,-.31,-.10,.11,.126,.147,.23,-.6),o(coat,-.22,-.16,.32,.12,.12,.235,-.11,-.52),
+      o(boot,-.10,-.14,.48,.086,.078,.099),o(coat,.32,-.12,-.025,.139,.194,.132),o(coat,.275,-.19,.12,.115,.12,.196,-.26,-.42),o(boot,.18,-.12,.24,.086,.08,.095),
+      pt(box(.102,.13,.74),leather,[.12,-.069,.275]),pt(box(.082,.087,.49),boot,[.12,.014,.38]),pt(cyl(.031,.031,.67,8),0x455053,[.12,.016,.88],[Math.PI/2,0,0]),
+      pt(box(.048,.09,.12),boot,[.12,.079,.34]),pt(cyl(.054,.061,.338,10),coal,[.12,.143,.35],[Math.PI/2,0,0]),
+      pt(cyl(.049,.049,.012,10),0x8ebcc1,[.12,.143,.521],[Math.PI/2,0,0])]);
+    for(const s of [-1,1]){
+      const hip=this.joint(this.root,'thigh',[s*.179,.86,0],()=>[o(0x59625f,0,-.19,0,.146,.26,.155)]);
+      const knee=this.joint(hip,'boot',[0,-.395,0],()=>[o(0x87897a,0,-.16,-.01,.132,.22,.137),o(boot,0,-.35,.065,.142,.12,.222),
+        pt(cyl(.139,.133,.053,9),leather,[0,-.17,-.008])]);this.legs.push({hip,knee});
+    }
+  }
+  pose(dt){
+    const m=this.stride,p=this.phase,shot=this.cur==='2H_Ranged_Shoot';
+    this.aim+=(((this.cur==='2H_Ranged_Aiming'||shot)?1:0)-this.aim)*(1-Math.exp(-dt*10));
+    const a=this.aim,kick=shot?Math.exp(-this.age*14):0;
+    this.body.position.y=.86+.032*m*Math.cos(2*p)-.09*a;
+    this.body.rotation.set(.10*m+.12*a-.13*kick,.09*m*Math.sin(p)-.16*a,.06*this.side*m);
+    this.head.rotation.set(-.08*m+.13*a,.24*Math.sin(p*.43)*(1-a)*(1-m)+.14*a,.16*a);
+    this.arms.rotation.set(.46*(1-a)-.22*a-.22*kick,-.23*(1-a)+.14*a,.05*Math.sin(p)*m);
+    this.arms.position.y=.54+.12*a;this.arms.position.z=.02-.12*kick;
+    this.legs.forEach(({hip,knee},i)=>{
+      const beat=p+i*Math.PI,swing=Math.sin(beat)*m;
+      hip.rotation.set(-.70*swing*this.forward-.22*a,0,.56*swing*this.side);
+      knee.rotation.x=.60*m*Math.max(0,Math.cos(beat))+.35*a;
+    });
   }
 }
 Object.assign(ENEMY,{

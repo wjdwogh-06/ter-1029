@@ -110,7 +110,7 @@ function spFence(s,T,th,m){const h1=hash(s.i,3,71),h2=hash(s.i,5,72),hx=7.7+h1*.
    leaf.push(lkBeam([0,.12,0],[0,.12+fh,0],.07,.07,col),lkBeam([-sd*fw,.12,0],[-sd*fw,.12+fh,0],.07,.07,col),lkBeam([0,.15,0],[-sd*fw,.15,0],.07,.07,col),lkBeam([0,.12+fh-.03,0],[-sd*fw,.12+fh-.03,0],.07,.07,col),lkBeam([0,.2,0],[-sd*fw,.1+fh-.08,0],.06,.06,col));
    for(const y of[.55,.95])leaf.push(lkRod([0,y,0],[-sd*fw,y,0],.014,WIRE,4));
    const g=mg(leaf);g.rotateY(-sd*1.75);const [gx,gz]=W(lx,hz);g.rotateY(th);g.translate(gx-s.x,hAt(gx,gz)-.03,gz-s.z);parts.push(g)}}
- const geo=mg(parts),mesh_=mesh(geo,MATT);mesh_.position.set(s.x,0,s.z);mesh_.castShadow=true;mesh_.receiveShadow=true;mesh_.userData.spFence=s.i;scene.add(mesh_);
+ const geo=mg(parts),mesh_=mesh(geo,MATT);mesh_.position.set(s.x,0,s.z);mesh_.castShadow=true;mesh_.receiveShadow=true;mesh_.userData.spFence=s.i;mesh_.userData.layoutName='보급지 철조망';mesh_.userData.layoutBlocks=cols;scene.add(mesh_);
  return{hx,hz,posts,mesh:mesh_,cols,W}}
 /* ---------- 보급지 만들기(dress.js buildSupply 바꿔 끼우기) ---------- */
 function spBuild(s){const i=s.i,T=SPT[SP_THEME[i]%SPT.length],m=i%2?-1:1,th=spGateDir(s),c=Math.cos(th),sn=Math.sin(th),n=2+i%3,y0=hAt(s.x,s.z);
@@ -121,8 +121,8 @@ function spBuild(s){const i=s.i,T=SPT[SP_THEME[i]%SPT.length],m=i%2?-1:1,th=spGa
  for(const [t,lx,lz,rot] of T.st||[]){const [x,z]=W(lx,lz);addStruct({t,x,z,r:R(rot)})}
  for(const [lx,lz,rot] of T.sb||[]){const g=add3('sbagArc',lx,lz,rot),r=g.rotation.y;g.userData.layoutBlock=addStruct({t:'blk',x:g.position.x+Math.sin(r)*.27,z:g.position.z+Math.cos(r)*.27,r})}
  if(T.tw){const [x,z]=W(T.tw[0],T.tw[1]),tm=mesh(plTowerGeo(),MATT);tm.position.set(x,hAt(x,z)-.03,z);tm.rotation.y=th;tm.userData.layoutName='감시탑';scene.add(tm);
-  for(const a of[-.8,.8])for(const b of[-.8,.8]){const px=x+a*c+b*sn,pz=z-a*sn+b*c;addStruct({t:'swpost',x:px,z:pz,r:0})}}
- if(T.cable){const [a,b]=T.cable.map(q=>W(q[0],q[1]));const g=mg([lkRod([a[0]-s.x,hAt(a[0],a[1])+.04,a[1]-s.z],[b[0]-s.x,hAt(b[0],b[1])+.04,b[1]-s.z],.025,0x2b2b2b,5)]),cm=mesh(g,MATT,false);cm.position.set(s.x,0,s.z);scene.add(cm)}
+  for(const a of[-.8,.8])for(const b of[-.8,.8]){const px=x+a*c+b*sn,pz=z-a*sn+b*c;(tm.userData.layoutBlocks??=[]).push(addStruct({t:'swpost',x:px,z:pz,r:0}))}}
+ if(T.cable){const [a,b]=T.cable.map(q=>W(q[0],q[1]));const g=mg([lkRod([a[0]-s.x,hAt(a[0],a[1])+.04,a[1]-s.z],[b[0]-s.x,hAt(b[0],b[1])+.04,b[1]-s.z],.025,0x2b2b2b,5)]),cm=mesh(g,MATT,false);cm.position.set(s.x,0,s.z);cm.userData.layoutName='무전 케이블';scene.add(cm)}
  if(T.sign){const [x,z]=W(T.sign[0],T.sign[1]);const sg=mesh(GEO.supsign,MATT);sg.position.set(x,hAt(x,z)-.03,z);sg.rotation.y=R(T.sign[2]);sg.userData.layoutName='supsign';scene.add(sg)}
  const [fx,fz]=W(T.smoke[0],T.smoke[1]),flare=mesh(GEO.flarecan,MATT);flare.userData.layoutName='신호탄';flare.position.set(fx,hAt(fx,fz)-.03,fz);scene.add(flare);
  {const [lx,lz]=W(T.lamp[0],T.lamp[1]);addStruct({t:'suplamp',x:lx,z:lz,r:R(.4)})}

@@ -10,6 +10,21 @@ devInit=async function(){
   button.className='btn';button.textContent='구조물 배치';devBar.append(button,panel);
   panel.innerHTML='<small>꾹 눌러 끌기 · 짧게 눌러 회전</small><br><label>방향 <input type="range" min="0" max="360" step="1" style="width:95px"><output></output></label> <button>적용</button> <button>취소</button> <button>항구 전체</button><div></div>';
   panel.hidden=true;
+  panel.className='layout-controls';
+  const style=document.createElement('style');
+  style.textContent=`
+    #devbar{box-sizing:border-box;max-height:calc(100% - 194px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+    @media(max-height:540px){#devbar{top:8px!important;max-height:calc(100% - 16px)}}
+    #devbar.layout-open{top:8px!important;left:8px!important;width:min(295px,53%);max-height:calc(100% - 16px)}
+    #devbar.layout-open>div:not(.layout-controls){display:none!important}
+    #devbar .layout-controls:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 0}
+    .layout-controls [hidden],.layout-controls br{display:none!important}
+    .layout-controls button,.layout-controls select{min-height:34px;max-width:100%;font:inherit}
+    .layout-controls label,.layout-controls small,.layout-controls output{max-width:100%}
+    .layout-controls>div,.layout-controls>small{width:100%}
+    .layout-controls .layout-delete{color:#8c2720;font-weight:800}
+  `;
+  document.head.append(style);
   const angle=panel.querySelector('input'),status=panel.lastElementChild;
   const [apply,cancel,whole]=panel.querySelectorAll('button');
   const history=[];
@@ -50,7 +65,7 @@ devInit=async function(){
     record(anchor,p.n,{anchor:p,p});
   }
   function registerStruct(s){
-    if(s.in||s.t==='ferry'||owners.has(s.m))return;
+    if(s.in||s.t==='ferry'||s.li?.startsWith?.('add:')||owners.has(s.m)||sdef(s)?.g==='nil')return;
     const p=PORTS.find(p=>s.pi===p.i || dist(p.x,p.z,s.x,s.z)<(p.town?32:21));
     record(s.m,sdef(s).n||s.t,{s,p});
   }
@@ -58,7 +73,7 @@ devInit=async function(){
   for(const m of scene.children)if(m.userData.layoutName){
     const {x,z}=m.position;
     const block=m.userData.layoutBlock||structs.find(s=>dist(x,z,s.x,s.z)<.02 && sdef(s).g==='nil');
-    record(m,m.userData.layoutName,{block,dock:DOCKS.find(d=>dist(d.x,d.z,x,z)<.01)});
+    record(m,m.userData.layoutName,{blocks:m.userData.layoutBlocks||(block?[block]:[]),dock:DOCKS.find(d=>dist(d.x,d.z,x,z)<.01)});
   }
   function move(e,x,z,r){
     const {m,s,p}=e,dr=r-m.rotation.y,ox=m.position.x,oz=m.position.z;
@@ -74,8 +89,8 @@ devInit=async function(){
     }
     if(e.lamp){const l=e.lamp.position,a=l.x-ox,b=l.z-oz;l.x=x+a*Math.cos(dr)+b*Math.sin(dr);l.z=z-a*Math.sin(dr)+b*Math.cos(dr)}
     if(s){if(s.own&&isZoneT(s.t))homeKey(s);Object.assign(s,{x,z,r});s.m.position.x=x;s.m.position.z=z;s.m.rotation.y=r}
-    if(e.block){
-      const b=e.block,a=b.x-ox,h=b.z-oz;
+    for(const b of e.blocks||[]){
+      const a=b.x-ox,h=b.z-oz;
       b.x=x+a*Math.cos(dr)+h*Math.sin(dr);b.z=z-a*Math.sin(dr)+h*Math.cos(dr);b.r=(b.r||0)+dr;
       b.m.position.set(b.x,hAt(b.x,b.z),b.z);b.m.rotation.y=b.r;
     }
@@ -110,7 +125,7 @@ devInit=async function(){
       const hk=homeKey(e.s);
       for(const item of structs.filter(q=>q.in&&q.hk===hk))detachStruct(item);
     }
-    detachStruct(e.s);detachStruct(e.block);
+    detachStruct(e.s);for(const b of e.blocks||[])detachStruct(b);
     detach(e.m);detach(e.lamp);drop(PLAMPS,e.lamp);
     drop(PBOATS,e.boat);drop(e.p?.pp,e.prop);
     if(e.dock){
@@ -128,6 +143,20 @@ devInit=async function(){
   const defaults=published.seed==null||published.seed===S.seed?published.objects:{};
   try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{}
   const valid=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
+  const templates=new Map();
+  const modelLabels={rowboat:'노 젓는 배',fboat:'항구 연락선',sailboat:'돛단배',praft:'뗏목',plamp:'항구 가로등',pcrane:'항구 기중기',pnet:'어망',prack:'항구 건조대',pstack:'항구 적재물',
+    ammostack:'탄약 더미',chute:'낙하산',jerry:'연료통',lk_gen:'발전기',lk_pallet:'목재 팔레트',pallet:'팔레트',radio:'무전기',sbagArc:'모래주머니 방벽',
+    supsign:'보급지 표지판',suptent:'보급 천막',tarppile:'방수포 더미',flarecan:'신호탄',lk_drum_0:'드럼통 A',lk_drum_1:'드럼통 B',lk_drum_2:'드럼통 C',flag_blue:'파란 깃발'};
+  for(const e of entries){
+    if(!e.m.isMesh||(!e.m.userData.layoutName&&!e.p))continue;
+    const known=Object.keys(GEO).find(k=>GEO[k]===e.m.geometry)||Object.keys(PGEO).find(k=>PGEO[k]===e.m.geometry);
+    const name=modelLabels[known]||(e.dock?'부두 '+(e.dock.hw*2).toFixed(1)+' × '+(e.dock.hl*2).toFixed(1)+'m':e.name);
+    const type='model:'+ (known||e.id);
+    if(templates.has(type))continue;
+    templates.set(type,{name,geometry:e.m.geometry,material:e.m.material,scale:e.m.scale.clone(),
+      height:e.y-(e.boat||e.dock?0:hAt(e.x,e.z)),angle:e.r,boat:e.boat,dock:e.dock,
+      radius:e.prop?.[2],ferry:e.s?.t==='ferry',blocks:(e.blocks||[]).map(b=>({t:b.t,x:b.x-e.x,z:b.z-e.z,r:b.r||0}))});
+  }
   for(const e of entries){
     const v=saved[e.id]??defaults[e.id];
     if(deletedValue(v)){setDeleted(e,true);continue}
@@ -141,10 +170,26 @@ devInit=async function(){
   for(const [t,b] of Object.entries(BUILDS)){
     if(!b.indoor&&b.n&&GEO[b.g])catalog.set(t,b.n);
   }
-  for(const [t,d] of Object.entries(DECO))if(d.cat&&GEO[d.g])catalog.set(t,d.cat);   // 52차(디자인): 배치용 새 구조물(js/props.js, 이름 앞 🪜 계단·높이 / 🌿 자연 / 🏠 건축물)
+  const labels={blacksmith:'대장간',forge:'대장간 (구형)',windmill:'풍차',tavern:'여관',lumbermill:'제재소',loot:'전리품 상자',target:'과녁',ruin:'폐건물',lighthouse:'등대',bunker:'벙커',lumber:'목재 더미',sackD:'자루',wheel:'손수레',dock:'부두',tent:'천막',sp_cont2:'청록 컨테이너'};
+  for(const [t,d] of Object.entries(DECO)){
+    if(!GEO[d.g]||d.g==='nil'||t==='spring'||catalog.has(t))continue;
+    catalog.set(t,labels[t]||d.cat||d.n||t);
+  }
+  for(const [type,v] of templates)catalog.set(type,v.name);
   function spawn(id,t,origin){
     const [x,z,r]=origin;
     const port=PORTS.reduce((best,p)=>!best||dist(x,z,p.x,p.z)<dist(x,z,best.x,best.z)?p:best,null);
+    const v=templates.get(t);
+    if(v){
+      const m=mesh(v.geometry,v.material),dr=r-v.angle,c=Math.cos(dr),sn=Math.sin(dr);
+      m.scale.copy(v.scale);m.position.set(x,(v.boat||v.dock?0:hAt(x,z))+v.height,z);m.rotation.y=r;scene.add(m);
+      const blocks=v.blocks.map(b=>addStruct({t:b.t,x:x+c*b.x+sn*b.z,z:z-sn*b.x+c*b.z,r:b.r+dr}));
+      const boat=v.boat&&{m,y:v.height,ph:0,p:port};if(boat)PBOATS.push(boat);
+      const dock=v.dock&&addDock(x,z,r,v.dock.hw,v.dock.hl,v.dock.y);
+      const s=v.ferry&&addStruct({t:'ferry',x,z,r,pi:port.i,hp:1e9});
+      const prop=port&&v.radius?[x,z,v.radius]:null;if(prop)(port.pp||=[]).push(prop);
+      return record(m,v.name,{id,added:t,blocks,boat,dock,s,prop,p:port});
+    }
     const s=addStruct({t,x,z,r,li:id,pi:port?.i??0});
     const e=record(s.m,catalog.get(t),{id,s,added:t,p:port&&dist(x,z,port.x,port.z)<(port.town?32:21)?port:null});
     return e;
@@ -155,7 +200,11 @@ devInit=async function(){
   }
   const picker=document.createElement('select'),add=document.createElement('button');
   picker.setAttribute('aria-label','추가할 구조물');
-  for(const [type,name] of catalog)picker.add(new Option(name,type));
+  const variants=new Map();
+  for(const [type,name] of catalog){
+    const number=(variants.get(name)||0)+1;variants.set(name,number);
+    picker.add(new Option(number===1?name:name+' '+number,type));
+  }
   let pending=null;
   function adding(type){
     pending=type;add.textContent=type?'추가 취소':'구조물 추가';
@@ -201,7 +250,7 @@ devInit=async function(){
   resetOne.textContent='선택 원위치';resetAll.textContent='기본 맵 전체 원위치';
   panel.append(resetOne,resetAll);turnButtons.push(resetOne);
   const remove=document.createElement('button');remove.textContent='선택 삭제';
-  panel.append(remove);turnButtons.push(remove);
+  remove.className='layout-delete';remove.disabled=true;panel.prepend(remove,undo);
   remove.onclick=()=>{
     if(!active||!DEV.on||gesture||!selected||selected.anchor)return;
     if(!window.confirm(selected.name+' 삭제할까요?'))return;
@@ -263,12 +312,12 @@ devInit=async function(){
     group=(all?entries.filter(q=>q.p===e.p&&!q.reinstate):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
     angle.value=Math.round((e.m.rotation.y*180/Math.PI%360+360)%360);
     showAngle();turnButtons.forEach(b=>b.hidden=false);rotation.hidden=apply.hidden=cancel.hidden=false;
-    status.textContent=e.name+' 선택';whole.disabled=!e.p;remove.disabled=!!e.anchor;
+    status.textContent=(modelLabels[e.name]||DECO[e.s?.t]?.n||propNames[e.s?.t]||e.name)+' 선택';whole.disabled=!e.p;remove.disabled=!!e.anchor;
   }
   let dest;
-  function clear(){turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
-  function close(){adding(null);abortDrag();resetModels();clear();active=false;panel.hidden=true;button.textContent='구조물 배치'}
-  button.onclick=()=>{if(active)return close();if(!DEV.on)return;structs.forEach(registerStruct);clear();active=true;panel.hidden=false;button.textContent='배치 종료'};
+  function clear(){remove.disabled=true;turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
+  function close(){adding(null);abortDrag();resetModels();clear();active=false;devBar.classList.remove('layout-open');panel.hidden=true;button.textContent='구조물 배치'}
+  button.onclick=()=>{if(active)return close();if(!DEV.on)return;structs.forEach(registerStruct);clear();active=true;devBar.classList.add('layout-open');devBar.scrollTop=0;panel.hidden=false;button.textContent='배치 종료'};
   cancel.onclick=()=>{resetModels();clear()};
   whole.onclick=()=>{if(selected?.p){dest=null;select(entries.find(q=>q.anchor===selected.p),true);status.textContent="항구 시설을 꾹 눌러 함께 이동"}};
   apply.onclick=()=>commit(+angle.value*Math.PI/180);
@@ -330,6 +379,7 @@ devInit=async function(){
   function stop(ev){ev.preventDefault();ev.stopImmediatePropagation()}
   window.addEventListener('pointerdown',ev=>{
     if(!active||!DEV.on||mode!=='play'||ev.target!==cv||gesture)return;
+    structs.forEach(registerStruct);
     if([joyC(),rjC()].some(([x,y,r])=>Math.hypot(ev.clientX-x,ev.clientY-y)<r*1.5))return;
     if(pending){
       stop(ev);
