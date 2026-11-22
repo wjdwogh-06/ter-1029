@@ -446,3 +446,28 @@ const PAINTS=[['red','빨간',0xe0533f],['orange','주황',0xf28c38],['yellow','
 for(const [k,n] of PAINTS)ITEMS['paint_'+k]={n:n+' 페인트',ic:'lk_paint_'+k,ty:'res',p:80,d:`${n} 페인트 한 통. 칠하기는 아직 (임시)`};
 Object.assign(ITEMS,{kit_paintbench:{n:'도색 작업대',ic:'lk_paintbench',ty:'kit',b:'paintbench',p:900,d:'페인트를 섞고 칠하는 작업대. 밖에도, 텐트·집 안에도 놓아요 (도색 기능은 아직, 임시)'}});
 Object.assign(BUILDS,{paintbench:{n:'도색 작업대',g:'lk_paintbench',s:1,bx:.92,bz:.45,hp:150,c:{wood:8,scrap:4},kit:'kit_paintbench',inok:1,fixR:1,d:'페인트를 섞고 칠하는 작업대 (도색 기능은 아직, 임시)'}});
+/* ===== 61차(디자인 담당이 새 줄만 덧붙임 — 기획자 11-22 22:09: '원래 있던 총 종류 없애 버리고 7종류 추가, 키트들도 다 이걸로 바꿔야 해.
+   현대소총·점사소총·반자동소총·기관단총·저격총·쏘오프샷건·반자동권총. 권총을 제외한 모든 총은 쏘거나 조준하면서 이동속도가 50% 느려져야 해') =====
+   옛 권총·볼트액션 소총·산탄총·기관단총은 없어지고 그 id 넷(pistol·rifle·shotgun·smg)을 새 총이 이어받아요 → 예전 저장·보급 상자·적·제작법·서버가 그대로 이어져요.
+   새 id 셋: ar(현대 소총)·burst(점사 소총)·sniper(저격총). 모양·아이콘 GEO 'gn_<id>'(js/guns.js), 쏘는 방식은 js/guns.js가 오른쪽 조이스틱에 붙여요.
+   WEAP 새 칸: fm 쏘는 방식('auto' 조준하는 동안 계속 · 'burst' 조준하는 동안 3발씩 끊어서 · 'semi' 조준하고 떼면 한 발), slow 조준·쏘는 동안 이동 속도 배율(권총 없음),
+   bn·bp 점사 발 수·쉬는 시간, use 한 번에 쓰는 탄알, cam 조준할 때 화면이 밀리는 정도(저격총 크게), shk 화면 흔들림. 숫자·가격은 임시(기획자가 정하면 여기만). 서버도 이 표를 읽어요. */
+Object.assign(ITEMS,{
+ pistol:{n:'반자동 권총',ic:'gn_pistol',hg:'gn_pistol',ty:'gun',p:900,d:'조준하고 떼면 한 발. 들고 쏴도 느려지지 않아요. 피해 16',one:1},
+ rifle:{n:'반자동 소총',ic:'gn_rifle',hg:'gn_rifle',ty:'gun',p:2600,d:'조준하고 떼면 한 발씩 묵직하게. 피해 36 · 조준·쏘는 동안 50% 느려져요',one:1},
+ ar:{n:'현대 소총',ic:'gn_ar',hg:'gn_ar',ty:'gun',p:4200,d:'조준하는 동안 그쪽으로 계속 쏴요(떼면 멈춤). 피해 14 · 조준·쏘는 동안 50% 느려져요',one:1},
+ burst:{n:'점사 소총',ic:'gn_burst',hg:'gn_burst',ty:'gun',p:3800,d:'조준하는 동안 3발씩 끊어서 쏴요(탕탕탕… 탕탕탕). 피해 18×3 · 조준·쏘는 동안 50% 느려져요',one:1},
+ smg:{n:'기관단총',ic:'gn_smg',hg:'gn_smg',ty:'gun',p:4000,d:'조준하는 동안 계속 쏴요. 한 번에 탄알 2발, 피해 22로 세지만 많이 퍼져요 · 조준·쏘는 동안 50% 느려져요',one:1},
+ sniper:{n:'저격총',ic:'gn_sniper',hg:'gn_sniper',ty:'gun',p:5200,d:'조준하고 떼면 한 발. 아주 멀리·아주 세게(피해 95), 조준하면 화면이 멀리까지 넓어져요 · 조준·쏘는 동안 50% 느려져요',one:1},
+ shotgun:{n:'소드오프 샷건',ic:'gn_shotgun',hg:'gn_shotgun',ty:'gun',p:3000,d:'조준하고 떼면 한 발. 가까이에서 산탄 7알(피해 11×7) · 조준·쏘는 동안 50% 느려져요',one:1}});
+Object.assign(WEAP,{
+ pistol:{dmg:16,cd:.3,range:16,ammo:'ammoS',spread:.03,h1:1,fm:'semi',shk:.12},
+ rifle:{dmg:36,cd:.42,range:26,ammo:'ammoS',spread:.012,fm:'semi',slow:.5,cam:1.15,shk:.22},
+ ar:{dmg:14,cd:.12,range:22,ammo:'ammoS',spread:.05,fm:'auto',slow:.5,shk:.07},
+ burst:{dmg:18,cd:.085,bn:3,bp:.55,range:24,ammo:'ammoS',spread:.025,fm:'burst',slow:.5,shk:.08},
+ smg:{dmg:22,cd:.11,range:14,ammo:'ammoS',spread:.11,fm:'auto',use:2,slow:.5,shk:.08},
+ sniper:{dmg:95,cd:1.25,range:44,ammo:'ammoS',spread:.002,fm:'semi',slow:.5,cam:2.2,shk:.42},
+ shotgun:{dmg:11,pel:7,cd:.8,range:8,ammo:'ammoS',spread:.24,fm:'semi',slow:.5,shk:.34}});
+/* 총 키트 7종(35차 키트를 새 총으로): 이름 = 총 이름 + ' 키트', 가격 = 총 값(임시), 열지 않는 제작 재료 */
+for(const k of['pistol','rifle','ar','burst','smg','sniper','shotgun'])ITEMS['gkit_'+k]={n:ITEMS[k].n+' 키트',ic:'lk_gkit_'+k,ty:'res',p:ITEMS[k].p,d:ITEMS[k].n+' 부품이 든 상자. 열지 않고, 나중에 제작할 때 재료로 써요 (임시)'};
+for(const q of QUESTS)if(q.t==='볼트액션 소총 구하기')q.t='반자동 소총 구하기';

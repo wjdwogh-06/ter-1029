@@ -440,7 +440,7 @@ function fisherTalk(){if(!FNPC)return;plHookChat();const s=FNPC_LINES[FNPC.i%FNP
 /* ---------- 라벨·상호작용·특수 보급 ---------- */
 {const _sl=sLabel;sLabel=function(s){if(s.t==='cgate')return s.open?null:'문 열기';if(s.t==='fstall')return'말 걸기';if(/^(iblk|pb_)/.test(s.t)||s.t==='spbeacon')return null;
   const d=sdef(s);if(d.loot===4)return S.looted[s.li]&&S.day-S.looted[s.li]<d.cd?null:'열기';return _sl(s)}}
-const SPLOOT=()=>{const g={};const add=(k,n)=>g[k]=(g[k]||0)+n;add('coin',400+(Math.random()*600|0));add(pick(['rifle','shotgun','smg']),1);add('ammoS',40);add('grenade',1+(Math.random()<.4?1:0));add('powder',6);add('bandage',2);add('can',2);return g};
+const SPLOOT=()=>{const g={};const add=(k,n)=>g[k]=(g[k]||0)+n;add('coin',400+(Math.random()*600|0));add(pick(['rifle','ar','burst','smg','sniper','shotgun']),1);add('ammoS',40);add('grenade',1+(Math.random()<.4?1:0));add('powder',6);add('bandage',2);add('can',2);return g};
 {const _ia=interact;interact=function(){const t=target;if(t&&t.k==='s'){const s=t.s,d=sdef(s);
   if(s.t==='cgate'){if(inp.actEdge)openGate(s);return}
   if(s.t==='fstall'){if(inp.actEdge)fisherTalk();return}
