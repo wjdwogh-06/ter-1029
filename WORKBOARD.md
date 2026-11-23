@@ -8,7 +8,6 @@
 
 <!-- 한 줄 형식: - [역할] 차수 · 하는 일 · 고치는 파일 · 시작 시각(한국 시간) · 상태 -->
 <!-- 예: - [디자인] 16차 · 텐트 그림자 다듬기 · look.js · 11-18 18:40 · 진행 중 -->
-- [디자인] 64차 · 요리 30종 아이템·아이콘(그림만) · 새 파일 js/dishes.js, index.html 한 줄 · 11-23 09:40 · 진행 중
 
 ## 다음 차수 번호
 
@@ -21,6 +20,7 @@
 
 ## 서로에게 남기는 말
 
+- [디자인 64차 → 규칙·기획자] **기획자 요청(11-23 09:35)**: 새 파일 **`js/dishes.js`**(frames.js 다음): 요리 30종 아이템(`dish_*`, `ty:'food'`, 에너지·가격 임시, 자판기에 저절로) + 아이콘 그림만(땅에 놓는 모양 없음). 표 `DISHES`. look.js `lkCatOf`에 `||it.rare` 한 마디(향로 요리 6가지 보라 원판). 요리(제작)법·얻는 곳은 기획자가 정할 때. AGENTS §6-0-0-29. **게임 링크에 올려 주세요**(index.html·js/dishes.js·js/look.js + 61~63차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [디자인 63차 → 규칙·기획자] **기획자 요청(11-23 08:29)**: 새 파일 **`js/frames.js`**(deco.js 다음): 카페트·액자에 **텍스처 판을 자식 메시로** 붙여요(`addStruct` 감싸기). 액자는 진짜 면에 붙고(광선) 밖에서는 **`s.yo`로 높이**를 저장해요(예전엔 실내만 yo를 썼어요) — 붙을 곳 없으면 이젤. 감싼 것: `ghostPos`·`bldHit`(붙는 구조물과 겹침 무시)·`addStruct`·`removeStruct`·`makeMap`(그림 준비)·`dressItems`(카페트 위 풀 안 나게)·`R.render`(미리보기). deco.js의 텐트 벽 붙이기는 없앴어요. 눈사람은 두 덩이. 부탁(서버 마무리 때): 서버가 밖 액자 `yo`를 받아 주세요. AGENTS §6-0-0-28. **게임 링크에 올려 주세요**(index.html·js/frames.js·js/deco.js + 61·62차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [디자인 62차 → 규칙·기획자] **기획자 요청(11-22 23:29)**: 새 파일 **`js/deco.js`**(shoes.js 다음): 가구 21종(키트 `kit_<id>`, inok) + 랜덤 상자 `rbox` + 설탕 `sugar` + 여행용 가방 `bag_travel`(eq bag → 30칸) + 새 식물 5종(PLANTS·PLANT_SITES·FARM.ids에 push, plants.js `PLD`에도 넣음). ⚠ **규칙 파일을 조금 고쳤어요**: ⓐ actors.js `ghostPos`의 겹침 두 줄을 새 함수 `bldHit`로(기획자: '모든 가구·설치형 구조물은 겹치면 안 되고 딱 붙이는 건 돼야' → 플레이어가 지은 것끼리 돌린 상자 겹침 `zoneOverlap`, 카페트 `floor:1`은 가구 밑에 깔기, 월드 구조물·울타리끼리는 예전 그대로), 실내 뒤 벽 여유 `+.1`은 `b.wall`(액자)이면 0. ⓑ ui.js `const BAG_N=20` → `let`(한 단어). ⓒ 랜덤 상자는 무엇이든 나와서 기획자님 '고급 품목' 규칙처럼 `restrictedSupplyIds.add('rbox')`(자판기·본섬 보급 제외 — 얻는 곳은 기획자에게). ⓓ 식물 도감이 17종이 되어 **식물섬 문이 17/17**, `plant_check`도 17로 나와요(poppy~port 겹침·popback은 원래 결과). 부탁(서버 마무리 때): 서버 설치 검사·계단 높이·가방 30칸·랜덤 상자. AGENTS §6-0-0-27. **게임 링크에 올려 주세요**(index.html·js/deco.js·js/actors.js·js/ui.js + 61차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [디자인 61차 → 규칙·기획자] **기획자 요청(11-22 22:09)**: ⓐ **총 7종**: core.js 맨 끝 61차 덩어리(ITEMS·WEAP 새 줄만). 옛 id `pistol rifle smg shotgun`을 그대로 다시 써서 이름·숫자·모양만 바꿨고 새 id `ar`(현대 소총·연사)·`burst`(점사 소총·3발)·`sniper`(저격총)를 더했어요. WEAP에 새 값 `fm`(semi/auto/burst)·`bn`·`bp`·`use`(기관단총 2발)·`slow`(.5)·`cam`·`shk`. 키트도 7종 `gkit_<id>`. 쏘는 방식·느려짐·저격 시야는 새 파일 **`js/guns.js`**(buffs.js 다음, updPlayer·attack·moveEnt·updCamera·shotSfx·rjHint 감싸기). 기획자님 `restrictedSupplyItem`(권총·석궁 말고 총은 자판기·본섬 보급 제외)은 그대로 새 총에도 적용돼요. places.js `SPLOOT`만 6종 중 하나로. ⓑ **신발 4종**: 새 파일 **`js/shoes.js`**(guns.js 다음, 아이템 정의도 이 파일 맨 위 — core.js로 옮겨도 돼요), `eq:'shoes'`, 효과는 bufSpeed·hurtPlayer·attack·updStats 감싸기, 발뼈에 신겨요. look.js `lkCatOf` 한 줄(신발도 보라 원판). ⓒ 부탁(서버 마무리 때): 서버는 점사 쉬는 시간·기관단총 탄알 2발·신발 빠르기·피해·치명타·공격력을 몰라요. 다른 사람 발 신발도 아직 안 보여요. AGENTS §6-0-0-26. **게임 링크에 올려 주세요**(index.html·js/core.js·js/guns.js·js/shoes.js·js/look.js·js/places.js + 56~58차 것 함께). 읽었으면 이 줄 지워 주세요.
