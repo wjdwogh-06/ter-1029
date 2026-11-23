@@ -1,7 +1,7 @@
 /* 64차(디자인): 요리 30종 — 기획자 11-23 09:35: '요리 30종류 추가, 실물은 만들 필요 없고 인벤이나 자판기 같이 보이는 이미지에서만'
    그래서 땅에 놓이는 모양은 없고, 아이템(ITEMS)과 아이콘 그림(GEO 'ds_<id>' → look.js가 아이콘으로 찍음)만 있어요.
    먹으면 에너지가 차는 음식(ty:'food')으로 넣었어요. 에너지(food)·가격(p)은 모두 임시 — 기획자가 정하면 아래 표의 숫자만 고치기.
-   향로버섯이 들어간 신비한 요리 6가지(rare:1)는 아이콘 원판이 보라(look.js lkCatOf 한 줄). 제작(요리)법은 아직 없어요. */
+   향로버섯이 들어간 신비한 요리 6가지(rare:1)는 아이콘 원판이 보라(look.js lkCatOf 한 줄). 모닥불 조합은 아래 DISH_RECIPES를 사용해요. */
 const DISHES=[
  ['dish_saltfish','소금구이 생선',30,120,'굵은 소금을 뿌려 구운 생선'],
  ['dish_jam','달콤한 과일잼',20,90,'딸기·포도를 졸인 달콤한 잼 한 병'],
@@ -160,3 +160,67 @@ function dsModels(){
   for(let i=0;i<14;i++)p.push(SP(.012,i%2?GOLD:0xf7d94a,[-.25+H(i,1)*.5,.81,-.25+H(i,2)*.5],0,0,5,4))};
  for(const [id] of DISHES)try{const p=[];S[id](p);put('ds_'+id,p)}catch(e){console.error('dishes: 그림 실패',id,e)}}
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{dsModels()}catch(e){console.error('dishes: 64차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
+
+// 모닥불의 각 칸은 가방의 재료 한 개를 예약한다. 완성할 때만 차감한다.
+ITEMS.meat??={n:'고기',ty:'res',p:0,nov:1,d:'모닥불 요리에 쓰는 고기'};
+if(!ICON.meat)ICON.meat='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#eed6ae" d="M7 39Q5 25 23 14Q44 3 56 19Q64 31 52 42Q40 55 25 56Q10 57 7 45Z"/><path fill="#ac5147" d="M10 37Q9 25 26 16Q43 8 54 21Q60 30 49 39Q35 53 22 51Q10 51 10 37"/><ellipse cx="39" cy="24" rx="8" ry="6" fill="#f4d7b9"/></svg>');
+const DISH_RECIPES={
+ dish_saltfish:'fish salt', dish_jam:'strawberry sugar', dish_potato:'potato salt pepper',
+ dish_corn:'corn salt sugar', dish_avotoast:'wheat avocado salt', dish_tomtoast:'wheat tomato sugar',
+ dish_onionring:'onion wheat salt', dish_darkchoc:'cacao sugar salt', dish_steak:'meat salt pepper',
+ dish_skewer:'meat chili onion', dish_nachos:'avocado tomato onion corn', dish_chili:'meat tomato chili onion',
+ dish_fishchips:'fish potato wheat salt', dish_fishstew:'fish chili potato pepper', dish_mushsoup:'mush potato onion pepper',
+ dish_truffle:'mush meat salt pepper', dish_taco:'wheat meat tomato chili', dish_chowder:'corn potato onion salt',
+ dish_shortcake:'wheat sugar strawberry', dish_fondue:'cacao sugar strawberry', dish_grapetart:'wheat grape sugar salt',
+ dish_brownie:'cacao wheat sugar salt', dish_avomousse:'avocado cacao sugar strawberry', dish_hotchoc:'cacao sugar chili pepper',
+ dish_censertea:'mush_censer sugar grape', dish_hallushroom:'mush_censer mush chili pepper',
+ dish_purifystew:'mush_censer tomato onion salt', dish_fishercenser:'mush_censer fish avocado salt',
+ dish_feast:'meat fish potato tomato onion mush salt pepper',
+ dish_festcake:'mush_censer wheat cacao sugar strawberry grape avocado corn'
+};
+const cookKey=parts=>parts.slice().sort().join(' ');
+const dishByParts=new Map(Object.entries(DISH_RECIPES).map(([id,parts])=>[cookKey(parts.split(' ')),id]));
+dishByParts.set(cookKey(['grape','sugar']),'dish_jam');
+const cookIngredients=new Set(Object.values(DISH_RECIPES).join(' ').split(' '));
+const cookSlots=Array(8).fill(null);
+function cookResult(slots){
+ const ids=slots.filter(Boolean);
+ if(ids.length===1&&ITEMS[ids[0]]?.ty==='fish'&&ITEMS['c'+ids[0]])return 'c'+ids[0];
+ return dishByParts.get(cookKey(ids.map(id=>ITEMS[id]?.ty==='fish'?'fish':id)));
+}
+function cookCounts(){
+ const counts={};
+ for(const id of cookSlots)if(id)counts[id]=(counts[id]||0)+1;
+ return counts;
+}
+function cookPanelHtml(){
+ const result=cookResult(cookSlots),counts=cookCounts(),full=cookSlots.every(Boolean);
+ const slots=cookSlots.map((id,i)=>id
+  ? `<button class="slot" aria-label="${ITEMS[id].n} 빼기" data-a="cookRemove" data-i="${i}">${invIcon(id)}</button>`
+  : '<div class="slot bxe" aria-label="빈 재료 칸"></div>').join('');
+ const rows=bagList().filter(id=>cookIngredients.has(id)||ITEMS[id].ty==='fish').map(id=>{
+  const left=invN(id)-(counts[id]||0);
+  return `<div class="row">${invIcon(id)}<div class="tx">${ITEMS[id].n} ×${left}</div><button class="btn g" data-a="cookAdd" data-k="${id}" ${left<=0||full?'disabled':''}>넣기</button></div>`;
+ }).join('');
+ return `<div class="sec">조리 재료 · ${cookSlots.filter(Boolean).length}/8</div><div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">${slots}</div>
+ <div class="row"><div class="tx">${result?ITEMS[result].n:full||Object.keys(counts).length?'맞는 요리 조합이 없어요':'가방에서 재료를 골라 주세요'}<small>한 칸에 1개 · 넣은 재료를 누르면 빼요</small></div>
+ <button class="btn" data-a="cookFinish" ${result?'':'disabled'}>요리하기</button></div>${rows||'<div class="sec">가방에 조리 재료가 없어요</div>'}`;
+}
+function cookAction(action,b){
+ if(panel!=='cook')return;
+ if(action==='cookRemove'){cookSlots[Number(b.dataset.i)]=null;return}
+ const counts=cookCounts();
+ if(action==='cookAdd'){
+  const id=b.dataset.k,i=cookSlots.indexOf(null);
+  if(i>=0&&(cookIngredients.has(id)||ITEMS[id]?.ty==='fish')&&invN(id)>(counts[id]||0))cookSlots[i]=id;
+  return;
+ }
+ const result=cookResult(cookSlots);
+ if(!result||Object.entries(counts).some(([id,n])=>invN(id)<n))return;
+ const remaining=bagList().filter(id=>invN(id)>(counts[id]||0));
+ if(!remaining.includes(result)&&remaining.length>=BAG_N){bagFullMsg();return}
+ for(const [id,n] of Object.entries(counts))take(id,n);
+ give(result,1);cookSlots.fill(null);S.st.cook++;
+ S.cdex??={};S.cdex[result]=(S.cdex[result]||0)+1;
+ sfx(420,.18,'sawtooth',.03,.7);toast(ITEMS[result].n+' 완성!');save();
+}
