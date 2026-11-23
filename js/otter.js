@@ -204,13 +204,13 @@ function otFenceLoop(){const N=144,rs=[];for(let i=0;i<N;i++){const a=i/N*Math.P
 function otBuild(){if(typeof lkModel!=='function'||!GEO.ot_cookstall)return;const gh=(x,z)=>hAt(x,z),bl=(x,z,bx,bz,r=0)=>addStruct({t:PLB(bx,bz),x,z,r,hp:1e9}),at=(g,x,z,ry=0,m,dy=0)=>plAdd(g,x,gh(x,z)-.02+dy,z,ry,m);
  CLEARS.push([OTR.x,OTR.z,OTR.R]);
  const b=OTB=otBridgeLine();CLEARS.push([b.S1[0]+b.dx*3.5,b.S1[1]+b.dz*3.5,7.5]);   /* 본섬 쪽 다리 입구 앞 나무·바위 비우기 */
- /* 다리 */
- {const g=otBridgeGeo(b);plAdd(g.wood,0,0,0);if(g.glow){const m=new THREE.MeshBasicMaterial({color:0xffd36a});plAdd(g.glow,0,0,0,0,m)}
+ /* 다리 (다리 벽·입구 기둥은 강어귀 항구 설치 금지 원·안전 구역 셈에서 빼요: nobx) */
+ {const n0=structs.length,g=otBridgeGeo(b);plAdd(g.wood,0,0,0);if(g.glow){const m=new THREE.MeshBasicMaterial({color:0xffd36a});plAdd(g.glow,0,0,0,0,m)}
   const n=Math.ceil(b.len/1.5),r=Math.atan2(b.dx,b.dz);for(let i=0;i<n;i++){const t=(i+.5)/n,x=b.S0[0]+b.dx*b.len*t,z=b.S0[1]+b.dz*b.len*t;addDock(x,z,r,1.16,b.len/n/2+.06,b.yAt(t))}
   for(const o of[-1.3,1.3]){const ax=b.G[0]+b.px*o,az=b.G[1]+b.pz*o,ex=b.S1[0]+b.px*o,ez=b.S1[1]+b.pz*o;plWallSeg(ax,az,ex,ez,.14)}
   /* 본섬 쪽 입구 기둥 + 간판 */
   const ex=b.S1[0]-b.dx*.4,ez=b.S1[1]-b.dz*.4,ry=Math.atan2(-b.dx,-b.dz),arch=at(GEO.ot_arch,ex,ez,ry);const t=plSignText('🍳 수달섬 🏹',2.1,.42);t.position.set(0,2.62,.115);arch.add(t);
-  for(const o of[-1.6,1.6])bl(ex+b.px*o,ez+b.pz*o,.26,.26)}
+  for(const o of[-1.6,1.6])bl(ex+b.px*o,ez+b.pz*o,.26,.26);for(let k=n0;k<structs.length;k++)structs[k].nobx=1}
  /* 철조망 + 문 */
  {const loop=otFenceLoop(),G=b.G;let i0=0,bd=1e9;loop.forEach((q,i)=>{const d=Math.hypot(q[0]-G[0],q[1]-G[1]);if(d<bd){bd=d;i0=i}});
   const N=loop.length,arc=[];for(let k=1;k<N;k++){const q=loop[(i0+k)%N];if(Math.hypot(q[0]-G[0],q[1]-G[1])>2.6)arc.push(q)}
