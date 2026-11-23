@@ -9,13 +9,19 @@ const weaponPose={
  sniper: [[0,-.15,-.22],[0,-.01,.28],[0,.08,1.745],.12,.32],
  shotgun:[[0,-.14,-.24],[0,-.025,.26],[.043,.06,.742],.13,.28],
  crossbow:[[0,-.06,-.32],[0,-.035,.13],[0,.075,.4],.026,.14],
- chainsaw:[[0,.12,-.21],[0,.32,.02],null,0,0]
+ chainsaw:[[0,.26,-.19],[0,.30,.055],null,0,0]
 };
-const rigFit={
- hero:{side:.62,drop:.29,reach:.57,scale:.84},
- dog: {side:.68,drop:.28,reach:.57,scale:.72},
- plat:{side:.74,drop:.32,reach:.62,scale:.70}
+// Radii in the avatar's local coordinates. Hands are intentionally excluded.
+const carryFit={
+ hero:{gripX:.31,forward:.40,scale:.85,body:[['chest',0,1.05,0,.32,.54,.26],['head',0,1.76,0,.38,.39,.32]]},
+ dog:{gripX:.35,forward:.39,scale:.76,body:[['hips',0,.68,0,.48,.52,.43],['chest',0,1.04,.02,.40,.32,.36],['head',0,1.67,.02,.49,.46,.46],['head',0,1.49,.40,.22,.14,.23]]},
+ plat:{gripX:.38,forward:.42,scale:.76,body:[['hips',0,.65,0,.54,.54,.47],['chest',0,1.02,.02,.43,.37,.42],['head',0,1.64,0,.49,.45,.44],['head',0,1.46,.53,.29,.12,.32]]}
 };
+const toolPose={
+ axe:[[0,-.10,0],null],grenade:[[0,.04,0],null],
+ pick_adv:[[0,-.16,0],[0,.13,0]],pick_elec:[[0,.08,0],[0,.33,0]],dhammer:[[0,-.14,0],[0,.16,0]]
+};
+const rodPose=[[0,0,-.12],null];
 const v3=()=>new THREE.Vector3(),quat=()=>new THREE.Quaternion();
 const poseMath={shoulder:v3(),elbow:v3(),hand:v3(),axis:v3(),pole:v3(),bend:v3(),goal:v3(),target:v3(),
  from:v3(),to:v3(),parentQ:quat(),delta:quat(),worldQ:quat(),orient:quat(),euler:new THREE.Euler(0,0,0,'YXZ')};
@@ -43,24 +49,85 @@ function reachGrip(bones,side,target,yaw){
  m.goal.copy(m.shoulder).addScaledVector(m.axis,distance);
  turnArm(lower,end,m.goal);
 }
-// Both palms constrain the same rigid object. Choose a reachable grip before
-// bending either elbow, using the live pose and the lengths of this rig.
-const gripBounds={right:v3(),left:v3(),temp:v3(),offset:v3()};
-function armReach(bones,side,center){
- const t=gripBounds.temp;
- bones['upperarm'+side].getWorldPosition(center);
- bones['lowerarm'+side].getWorldPosition(t);
- const upper=center.distanceTo(t);
- return upper+t.distanceTo(bones['handslot'+side].getWorldPosition(poseMath.elbow))-.002;
-}
-function fitBothPalms(bones,profile,scale,orientation,target){
- const b=gripBounds,right=armReach(bones,'r',b.right),left=armReach(bones,'l',b.left);
- b.offset.fromArray(profile[1]).sub(b.temp.fromArray(profile[0])).multiplyScalar(scale).applyQuaternion(orientation);
- b.left.sub(b.offset);
- for(let i=0;i<10;i++){
-  target.sub(b.left).clampLength(0,left).add(b.left);
-  target.sub(b.right).clampLength(0,right).add(b.right);
+// Cache small boxes covering each mesh. A long stock and a wide crossbow
+// limb then have different clearance without checking every vertex per frame.
+const carryBoxes=new WeakMap();
+function equipmentBounds(geometry){
+ if(!geometry)return [];
+ if(carryBoxes.has(geometry))return carryBoxes.get(geometry);
+ const cells=new Map(),p=v3(),positions=geometry.attributes.position;
+ for(let i=0;i<positions.count;i++){
+  p.fromBufferAttribute(positions,i);
+  const key=[p.x,p.y,p.z].map(n=>Math.floor(n/.14)).join(',');
+  if(!cells.has(key))cells.set(key,new THREE.Box3());
+  cells.get(key).expandByPoint(p);
  }
+ const boxes=Array.from(cells.values(),box=>({center:box.getCenter(v3()),radius:box.getSize(v3()).length()*.5}));
+ carryBoxes.set(geometry,boxes);return boxes;
+}
+const clearPoint=v3(),localRotation=quat(),inverseRoot=quat();
+const carryRootInverse=new THREE.Matrix4(),bodyTransform=new THREE.Matrix4();
+function movingBody(actor,bones,fit){
+ if(actor.carryBody?.fit!==fit){
+  const rest=actor.dog?actor.dog.RIG.W:dgRest();
+  actor.carryBody={fit,parts:fit.body.map(([name,x,y,z,rx,ry,rz])=>({
+   bone:bones[name],inverse:rest[name].clone().invert(),center:v3().set(x,y,z),
+   radii:[rx,ry,rz],position:v3(),extent:v3()
+  }))};
+ }
+ carryRootInverse.copy(actor.root.matrixWorld).invert();
+ for(const part of actor.carryBody.parts){
+  part.bone.updateWorldMatrix(true,false);
+  bodyTransform.multiplyMatrices(carryRootInverse,part.bone.matrixWorld).multiply(part.inverse);
+  part.position.copy(part.center).applyMatrix4(bodyTransform);
+  const e=bodyTransform.elements,[x,y,z]=part.radii;
+  part.extent.set(Math.hypot(e[0]*x,e[4]*y,e[8]*z),Math.hypot(e[1]*x,e[5]*y,e[9]*z),Math.hypot(e[2]*x,e[6]*y,e[10]*z));
+ }
+ return actor.carryBody.parts;
+}
+function clearEquipment(actor,bones,model,fit,profile,scale,orientation,target){
+ const points=equipmentBounds(model.geometry),body=movingBody(actor,bones,fit);
+ actor.root.getWorldQuaternion(inverseRoot).invert();
+ localRotation.copy(inverseRoot).multiply(orientation);
+ let offset=0,forward=0;
+ for(const box of points){
+  const p=clearPoint.copy(box.center);
+  p.x-=profile[0][0];p.y-=profile[0][1];p.z-=profile[0][2];
+  p.multiplyScalar(scale).applyQuaternion(localRotation).add(target);
+  const pad=box.radius*scale+.015;
+  for(const part of body){
+   const {x,y,z}=part.position,{x:rx,y:ry,z:rz}=part.extent;
+   const slice=1-((p.y-y)/(ry+pad))**2-((p.z-z)/(rz+pad))**2;
+   if(slice>0)offset=Math.max(offset,p.x-x+(rx+pad)*Math.sqrt(slice));
+   const frontSlice=1-((p.x-x)/(rx+pad))**2-((p.y-y)/(ry+pad))**2;
+   if(frontSlice>0)forward=Math.max(forward,z-p.z+(rz+pad)*Math.sqrt(frontSlice));
+  }
+ }
+ if(forward<offset)target.z+=forward;else target.x-=offset;
+}
+// The shoulder can roll forward to meet the grip. Restore the animated
+// shoulder positions before the next mixer tick, just like the elbow angles.
+function bringSupportShoulderForward(actor,bones){
+ const shoulder=bones.upperarml,point=poseMath.hand;
+ actor.root.worldToLocal(shoulder.getWorldPosition(point));
+ const pivot=bones.chest.getWorldPosition(poseMath.elbow);
+ actor.root.worldToLocal(pivot);
+ const x=point.x-pivot.x,z=point.z-pivot.z;
+ // Roll the supporting shoulder across the front of the chest; preserve
+ // its radius about the spine and the original two arm segment lengths.
+ const angle=actor.dog?1.10:.62,c=Math.cos(angle),s=Math.sin(angle);
+ point.x=pivot.x+c*x-s*z;point.z=pivot.z+s*x+c*z;
+ shoulder.position.copy(shoulder.parent.worldToLocal(actor.root.localToWorld(point)));
+}
+function leadShoulder(bones,side,target){
+ const upper=bones['upperarm'+side],lower=bones['lowerarm'+side],end=bones['handslot'+side],m=poseMath;
+ upper.getWorldPosition(m.shoulder);lower.getWorldPosition(m.elbow);end.getWorldPosition(m.hand);
+ const length=m.shoulder.distanceTo(m.elbow)+m.elbow.distanceTo(m.hand);
+ m.axis.subVectors(target,m.shoulder);
+ const extra=m.axis.length()-length*.96;
+ if(extra<=0)return;
+ m.shoulder.addScaledVector(m.axis.normalize(),extra);
+ upper.position.copy(upper.parent.worldToLocal(m.shoulder));
 }
 function beginWeaponShot(actor,id,dx,dz){
  const shot={id,yaw:Math.atan2(dx,dz),time:performance.now(),ends:[]};
@@ -76,21 +143,19 @@ function restoreGrip(actor){
   actor.gripHolder=null;
  }
  if(!actor.savedGrip)return;
- for(const [bone,q] of actor.savedGrip)bone.quaternion.copy(q);
+ for(const [bone,q,p] of actor.savedGrip){bone.quaternion.copy(q);bone.position.copy(p)}
  actor.savedGrip=null;
 }
 function saveGrip(actor,bones){
  const tracked=actor.gripCache;
  if(!tracked||tracked[0][0]!==bones.upperarmr)
-  actor.gripCache=[bones.upperarmr,bones.lowerarmr,bones.upperarml,bones.lowerarml].map(b=>[b,quat()]);
- for(const [b,q] of actor.gripCache)q.copy(b.quaternion);
+  actor.gripCache=[bones.upperarmr,bones.lowerarmr,bones.upperarml,bones.lowerarml].map(b=>[b,quat(),v3()]);
+ for(const [b,q,p] of actor.gripCache){q.copy(b.quaternion);p.copy(b.position)}
  actor.savedGrip=actor.gripCache;
 }
-const toolGripY={axe:0,pick_adv:-.16,pick_elec:.13,dhammer:-.14,grenade:.04};
-const rodGrip=[[0,0,-.12],[.10,-.18,.11],null,0,0];
 function placeHeldWeapon(actor,dt){
- const id=actor.wid,rod=isRod(id),profile=weaponPose[id]||(rod&&fishing&&fishing.st!=='cast'?rodGrip:null),model=actor.holder.children[0];
- const fit=rigFit[actor.dog?actor.dog.v:'hero'],bones=actor.dog?actor.dog.B:boneMap(actor);
+ const id=actor.wid,rod=isRod(id),profile=weaponPose[id]||toolPose[id]||(rod?rodPose:null),model=actor.holder.children[0];
+ const fit=carryFit[actor.dog?actor.dog.v:'hero'],bones=actor.dog?actor.dog.B:boneMap(actor);
  if(id==='fist'&&actor.cur.includes('Attack')){
   saveGrip(actor,bones);
   const phase=Math.min(1,(actor.curA.time/actor.curA.timeScale)/.34);
@@ -101,64 +166,52 @@ function placeHeldWeapon(actor,dt){
   reachGrip(bones,side,actor.root.localToWorld(hand),actor.root.rotation.y);
   return;
  }
- if(!model)return;
- const firearm=!!profile&&profile!==rodGrip&&id!=='crossbow'&&id!=='chainsaw';
- const pistol=id==='pistol';
- const gunScale=pistol?1.02:(actor.dog ? .94 : .88);
- const scale=(firearm?gunScale:fit.scale)*(ITEMS[id].hs||1);
- if(!profile){
-  // Keep cast, throw and tool swing clips attached to the actual palm.
- 
-  if(id in toolGripY||isRod(id)){
-   model.scale.setScalar(scale);model.position.set(0,-(toolGripY[id]||0)*scale,0);
-   if((id==='dhammer'||id==='pick_adv')&&actor.cur==='2H_Melee_Attack_Chop'){
-    saveGrip(actor,bones);
-    model.updateWorldMatrix(true,false);
-    reachGrip(bones,'l',model.localToWorld(poseMath.target.set(0,.19,0)),actor.root.rotation.y);
-   }
-  }
-  return;
- }
+ if(!model||!profile)return;
+ const gun=!!weaponPose[id]&&id!=='chainsaw',twoHands=!!profile[1]&&id!=='pistol';
  const shot=actor.lastWeaponShot,age=shot&&shot.id===id?(performance.now()-shot.time)/1000:Infinity;
- const aiming=RJ.aim||inp.aiming||age<.28,saw=id==='chainsaw';
+ const aiming=gun&&(RJ.aim||inp.aiming||age<.28);
  const lift=actor.weaponLift=age<.06?1:THREE.MathUtils.lerp(actor.weaponLift||0,aiming?1:0,1-Math.exp(-dt*15));
- const yaw=rod?actor.root.rotation.y:age<.12?shot.yaw:RJ.aim?Math.atan2(RJ.ax,RJ.az):actor.root.rotation.y;
- const kick=age<profile[4]?profile[3]*Math.sin(Math.min(1,age/.035)*Math.PI/2)*Math.pow(1-age/profile[4],2):0;
- // A diagonal carry clears the chest. Blade the stance when aiming while
- // keeping the barrel aligned with the joystick's world direction.
- const carry=actor.dog ? .88 : .78;
- if(firearm){
-  actor.stanceYaw=actor.root.rotation.y;
-  actor.root.rotation.y+=(pistol?.34:actor.dog?-carry:-.24)*lift;
+ const heading=actor.root.rotation.y;
+ const yaw=age<.12?shot.yaw:aiming&&RJ.aim?Math.atan2(RJ.ax,RJ.az):heading;
+ const inward=twoHands?.52:.23;
+ actor.stanceYaw=heading;
+ const angleToAim=Math.atan2(Math.sin(yaw-heading),Math.cos(yaw-heading));
+ actor.root.rotation.y+=(angleToAim-inward)*lift;
+ const bearing=yaw+inward*(1-lift);
+ const kick=age<profile[4]?profile[3]*Math.sin(Math.min(1,age/.035)*Math.PI/2)*(1-age/profile[4])**2:0;
+ const m=poseMath,scale=fit.scale*(ITEMS[id].hs||1);
+ const swing=actor.cur.includes('Attack')?Math.sin(Math.PI*Math.min(1,(actor.curA.time/actor.curA.timeScale)/.34)):0;
+ let pitch=.06*(1-lift)-kick;
+ if(toolPose[id]&&id!=='grenade')pitch=.32+swing*1.08;
+ if(id==='chainsaw')pitch=.12-swing*.15;
+ if(rod){
+  pitch=-.04;
+  if(typeof fishing!=='undefined'&&fishing){
+   if(fishing.st==='cast')pitch=-.9+1.18*Math.sin(Math.min(1,fishing.t/fishing.T)*Math.PI*.5);
+   if(fishing.st==='reel')pitch=-.2+.08*Math.sin(fishing.t*9);
+   if(fishing.st==='bite')pitch+=.09*Math.sin(fishing.t*22);
+  }
  }
- const bearing=yaw+(firearm?(pistol?.85:carry)*(1-lift):0);
- const m=poseMath,side=fit.side*(id==='pistol'?.48:1);
- const shoulder=bones.upperarmr.getWorldPosition(m.shoulder);
- const center=actor.root.worldToLocal(m.target.copy(shoulder));
- const span=Math.abs(center.x)||.30;
- const cycle=actor.curA?actor.curA.time:0;
- const thrust=saw&&actor.cur.includes('Attack')?Math.sin(Math.min(1,cycle/.35)*Math.PI)*.13:0;
- const target=actor.root.localToWorld(center.set(firearm?-(pistol?1.24:.94)*span:-side*span,center.y-fit.drop*(firearm?.93-.49*lift:1-.72*lift),(firearm?(pistol?.47:.53):fit.reach*span+.12)+thrust-kick));
+ m.orient.setFromEuler(m.euler.set(pitch,bearing,0,'YXZ'));
+ const shoulderHeight=actor.root.worldToLocal(bones.upperarmr.getWorldPosition(m.target)).y;
+ const target=m.target.set(-fit.gripX,shoulderHeight-.20+.08*lift,fit.forward+.05*swing-kick*.45);
+ clearEquipment(actor,bones,model,fit,profile,scale,m.orient,target);
+ actor.root.localToWorld(target);
  saveGrip(actor,bones);
+ leadShoulder(bones,'r',target);
+ reachGrip(bones,'r',target,actor.root.rotation.y);
  const holder=actor.holder;
  const rest=actor.holderRest||(actor.holderRest={q:quat(),p:v3()});
  rest.id=id;rest.q.copy(holder.quaternion);rest.p.copy(holder.position);actor.gripHolder=rest;
- let pitch=(firearm?.04:saw?.11:.32)*(1-lift)-kick*1.2;
- if(rod){
-  const reel=fishing.st==='reel'&&inp.fire;
-  pitch=fishing.st==='bite'?.10*Math.sin(fishing.t*22):reel?-.24+.07*Math.sin(fishing.t*9):-.04;
-  rodGrip[1][1]=-.18+(reel?.045*Math.sin(fishing.t*13):0);
-  rodGrip[1][2]=.11+(reel?.045*Math.cos(fishing.t*13):0);
- }
- m.orient.setFromEuler(m.euler.set(pitch,bearing,0,'YXZ'));
- if(!pistol)fitBothPalms(bones,profile,scale,m.orient,target);
- reachGrip(bones,'r',target,yaw);
  holder.parent.getWorldQuaternion(m.parentQ);
  holder.quaternion.copy(m.parentQ.invert()).multiply(m.orient);holder.position.set(0,0,0);
  model.scale.setScalar(scale);model.position.fromArray(profile[0]).multiplyScalar(-scale);
  model.updateWorldMatrix(true,false);
- model.localToWorld(m.target.fromArray(profile[1]));
- if(!pistol)reachGrip(bones,'l',m.target,yaw);
+ if(twoHands){
+  bringSupportShoulderForward(actor,bones);
+  model.localToWorld(m.target.fromArray(profile[1]));
+  leadShoulder(bones,'l',m.target);reachGrip(bones,'l',m.target,actor.root.rotation.y);
+ }
 }
 
 /* Short travelling streaks and a two-colour flash. Reuse the meshes on mobile. */
@@ -213,7 +266,8 @@ function advanceStreak(s,dt){
  }
  if(!actor||mode!=='play')return;
  const shot=actor.pendingWeaponShot;actor.pendingWeaponShot=null;
- if(P.dead||!actor.holder.visible||(!shot&&/Death|PickUp|Interact|Hit_|Sit_|Throw/.test(actor.cur)))return;
+ if(P.dead||!actor.holder.visible||(!shot&&/Death|PickUp|Interact|Hit_|Sit_/.test(actor.cur)))return;
+ if(actor.cur==='Throw'&&!isRod(actor.wid))return;
  placeHeldWeapon(actor,dt);
  if(shot)showShot(actor,shot);
 }}
