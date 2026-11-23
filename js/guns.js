@@ -30,12 +30,9 @@ const gunGear=k=>typeof gearFx==='function'?gearFx(k):0;   /* 신발·모자 효
  const sh0=shake;const r=_a.apply(this,arguments);const fired=invN(w.ammo)<n0;
  if(fired){GUN.shotT=performance.now();if(use>1)take(w.ammo,Math.min(use-1,invN(w.ammo)));if(w.shk!=null)shake=Math.min(.5,sh0+w.shk);
   if(w.fm==='burst'){if(GUN.bl<=0)GUN.bl=w.bn||3;GUN.bl--;if(GUN.bl>0&&invN(w.ammo)>0)P.cd=w.cd;else{GUN.bl=0;P.cd=w.bp||.5}}
-  if(id==='sniper')sfx(70,.28,'sine',.07,.4)}   /* 저격총은 묵직한 울림 하나 더 */
+  }   /* 저격총은 묵직한 울림 하나 더 */
  else if(w.fm==='burst')GUN.bl=0;
  return r}}
-/* 소리: 새 총도 옛 소리 틀을 빌려요(현대 소총·점사·기관단총 = 가벼운 연사음, 저격총·반자동 소총 = 낮은 소리, 샷건 = 둔한 소리) */
-const GUN_SND={ar:'smg',burst:'smg',smg:'smg',sniper:'rifle',rifle:'rifle',shotgun:'shotgun',pistol:'pistol'};
-{const _s=shotSfx;shotSfx=function(k){return _s.call(this,GUN_SND[k]||k)}}
 /* 안내 글: 연사·점사는 '조준하면 계속 쏴요' */
 {const _h=rjHint;rjHint=function(t){const w=WEAP[curId()]||{};if(gunAuto(w)&&/떼면 쏴요/.test(t))t=w.fm==='burst'?'끌어서 조준하면 3발씩 끊어서 쏴요':'끌어서 조준하면 그쪽으로 계속 쏴요';return _h.call(this,t)}}
 

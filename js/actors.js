@@ -136,10 +136,14 @@ function portSpawn(only){const order=only!=null?[only]:PORTS.map((p,i)=>i).sort(
  return{x:VIL.x,z:VIL.z,p:PORTS[0]}}
 function placeBag(){if(bagM){scene.remove(bagM);bagM=null}if(!S.bag)return;bagM=new THREE.Group();const m=mesh(GEO.sack);m.scale.setScalar(9);bagM.add(m);const g=glow(0x6cb8ff,3,.5);g.position.y=1.2;bagM.add(g);bagM.position.set(S.bag.x,surfY(S.bag.x,S.bag.z)+.1,S.bag.z);scene.add(bagM)}
 function attack(){const id=curId(),w=WEAP[id];if(P.cd>0)return;const y=groundY(P.x,P.z);
- if(w.melee){P.cd=w.cd;P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.36,force:1,speed:1.5});P.hitT=.16;P.hitW=w;sfx(260,.08,'triangle',.03,.6);return}
+ if(w.melee){P.cd=w.cd;if(id==='fist')P.a.punchLeft=!P.a.punchLeft;P.a.play(toolSwing(id),{once:1,lock:.36,force:1,speed:1.5});P.hitT=.16;P.hitW=w;sfx(260,.08,'triangle',.03,.6);return}
  if(invN(w.ammo)<=0){P.cd=.4;sfx(900,.03,'square',.03);toast(ITEMS[w.ammo].n+'이 없어요! 제작하거나 상인에게 사요');return}
- P.cd=w.cd;take(w.ammo,1);shotSfx(id);shake=Math.min(.5,shake+(id==='smg'?.1:id==='pistol'?.14:.32));const mxp=P.x+P.adx*1.3,mzp=P.z+P.adz*1.3;
- for(let i=0;i<(w.pel||1);i++){const a=Math.atan2(P.adx,P.adz)+(Math.random()-.5)*2*w.spread,dx=Math.sin(a),dz=Math.cos(a),t=hitscan(P.x,P.z,dx,dz,w.range,w.dmg);tracer(mxp,y+1.45,mzp,P.x+dx*t,y+1.3,P.z+dz*t)}
+ P.cd=w.cd;take(w.ammo,1);shotSfx(id);shake=Math.min(.5,shake+(id==='smg'?.1:id==='pistol'?.14:.32));const shot=beginWeaponShot(P.a,id,P.adx,P.adz);
+ for(let i=0;i<(w.pel||1);i++){
+  const angle=Math.atan2(P.adx,P.adz)+(Math.random()-.5)*2*w.spread,dx=Math.sin(angle),dz=Math.cos(angle);
+  const distance=hitscan(P.x,P.z,dx,dz,w.range,w.dmg);
+  shot.ends.push(new THREE.Vector3(P.x+dx*distance,y+1.3,P.z+dz*distance));
+ }
  if(!P.moving)P.a.play(w.h1?'1H_Ranged_Shoot':'2H_Ranged_Shoot',{once:1,lock:Math.min(.22,w.cd*.9),force:1,speed:1.6,fade:.04});hudDirty=true}
 function throwNade(){if(!take('grenade',1))return;const e=nearestEnemy(P.x,P.z,16);let dx=Math.sin(P.rot),dz=Math.cos(P.rot),d=9;if(e){d=dist(P.x,P.z,e.x,e.z);dx=(e.x-P.x)/d;dz=(e.z-P.z)/d;P.rot=Math.atan2(dx,dz)}
  P.a.play('Throw',{once:1,lock:.5,force:1,speed:1.4});const m=mesh(GEO.grenade);m.scale.setScalar(.8);scene.add(m);nades.push({m,x:P.x,z:P.z,dx,dz,d,t:0,T:.75,y0:groundY(P.x,P.z)+1.6})}
@@ -199,7 +203,7 @@ function lootGen(s){const df=sdef(s),got={};const add=(k,n)=>got[k]=(got[k]||0)+
 function interact(){const t=target;if(!t)return;
  if(t.k==='o'){if(P.cd>0)return;const o=t.o,T=OBJT[o.t];P.cd=curId()==='chainsaw'?CHOP.sawCd:CHOP.cd;P.rot=Math.atan2(o.x-P.x,o.z-P.z);
   if(isTree(T)&&!canChop()){P.cd=.9;P.auto=null;toast(invN('axe')||invN('chainsaw')?'가방에서 손도끼나 전기톱을 장착해야 나무를 벨 수 있어요':'나무는 손도끼나 전기톱으로만 벨 수 있어요. 상인에게 받거나 제작해요');sfx(240,.06,'square',.03);return}
-  if(T.berry){P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6})}else{P.a.play('1H_Melee_Attack_Chop',{once:1,lock:.34,force:1,speed:1.6});sfx(o.t===3?330:o.t===5?520:170,.06,'square',.04)}
+  if(T.berry){P.a.play('PickUp',{once:1,lock:.4,force:1,speed:1.6})}else{P.a.play(toolSwing(curId()),{once:1,lock:.34,force:1,speed:1.6});sfx(o.t===3?330:o.t===5?520:170,.06,'square',.04)}
   o.hp-=curId()==='chainsaw'?CHOP.saw:CHOP.hit;o.sh=.28;depSet.add(t.key);puff(o.x,groundY(o.x,o.z)+1.2,o.z,o.t===3?0xb9c0c9:o.t===5?0x8a929c:0x6fae5a,4);
   if(o.hp<=0){const n=T.drop[1]+(Math.random()<.4?1:0);give(T.drop[0],n);ftext(o.x,groundY(o.x,o.z)+2.6,o.z,`+${n} ${ITEMS[T.drop[0]].n}`,'#b8f0c0');o.re=T.re;depSet.add(t.key);sfx(520,.1);hudDirty=true}refreshObj(o);return}
  if(!inp.actEdge)return;
