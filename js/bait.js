@@ -62,3 +62,66 @@ function btModels(){
    const g=mg(p);g.userData.tip=A(rl+.28);return g};
   const g=rodG();lkSmooth(g,40);g.computeBoundingSphere();GEO.bt_rod_lucky=g;const gi=rodG(1.2,1.75);lkSmooth(gi,40);gi.computeBoundingSphere();GEO.bt_rod_lucky_i=gi}}
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{btModels()}catch(e){console.error('bait: 65차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
+
+/* 66차(디자인): 설치형 미끼 + 작살 — 기획자 11-23 14:13: '설치형 미끼랑 작살도 추가, 설치형 미끼는 바다에만 설치 가능하고 얇은 물에는 설치 안 돼'
+   · 설치형 미끼 baitbuoy(키트 kit_baitbuoy): 물 위에 띄우는 주황·흰 부표 + 물속에 매단 미끼 철망. 바다의 깊은 물(9점 모두 깊이 BAITBUOY.deep 넘게)에만,
+     강·얕은 물·부두는 안 돼요(waterSpotWhy 감싸기). 바닷가 가까이 7m 규칙은 안 씀(깊은 바다라 멀어도 돼요). 물결 따라 살짝 출렁여요.
+     물고기를 모으는 기능은 아직 — 기획자가 정할 때.
+   · 작살 harpoon: 손에 드는 근접 도구(손도끼와 같은 배치, 자루 y축). 근접 22·사거리 2.8(임시). 고래 잡기 등 쓰는 곳은 기획자가 정할 때.
+   가격·재료 모두 임시, p가 있어서 랜덤 자판기에 저절로 나와요. */
+const BAITBUOY={deep:1.0};
+Object.assign(ITEMS,{
+ kit_baitbuoy:{n:'설치형 미끼',ic:'bt_baitbuoy',ty:'kit',b:'baitbuoy',p:400,d:'바다의 깊은 물에 띄우는 미끼 부표. 얕은 물·강에는 못 놓아요 (임시: 물고기 모으기는 준비 중)'},
+ harpoon:{n:'작살',ic:'bt_harpoon_i',hg:'bt_harpoon',ty:'tool',p:1500,one:1,d:'갈고리 날이 달린 작살. 근접 22 (임시: 쓰는 곳은 준비 중)'}});
+Object.assign(BUILDS,{
+ baitbuoy:{n:'설치형 미끼',g:'bt_baitbuoy',s:1,bx:.5,bz:.5,hp:40,c:{bait_shrimp:2,wood:2},kit:'kit_baitbuoy',water:1,flat:1,seaBait:1,d:'바다의 깊은 물에만 띄워요 (임시)'}});
+WEAP.harpoon={melee:1,dmg:22,cd:.7,range:2.8};
+/* 바다·깊은 물 검사: 9점 모두 부두 아님·강이 아님·깊이 deep 넘게 */
+function baitSeaWhy(x,z,r,b){const c=Math.cos(r),sn=Math.sin(r);for(let ax=-1;ax<=1;ax++)for(let az=-1;az<=1;az++){const lx=ax*(b.bx+.25),lz=az*(b.bz+.25),px=x+lx*c+lz*sn,pz=z-lx*sn+lz*c;
+  if(onDock(px,pz))return'부두와 겹쳐요';const rd=riverD(px,pz);if(_rp&&rd<_rp.w+8)return'설치형 미끼는 바다에만 놓을 수 있어요';
+  const h=hAt(px,pz);if(h>-.05)return'설치형 미끼는 물 위에만 놓을 수 있어요';if(h>-BAITBUOY.deep)return'물이 얕아요. 더 깊은 바다에 놓아요'}return''}
+{const _ws=waterSpotWhy;waterSpotWhy=function(x,z,r,b){if(b&&b.seaBait)return baitSeaWhy(x,z,r,b);return _ws.apply(this,arguments)}}
+/* 물결 따라 살짝 출렁 */
+{const _ue=updEnv;updEnv=function(dt,x,z){_ue(dt,x,z);try{const t=performance.now()/1000;for(const s of structs){if(s.t!=='baitbuoy'||!s.m)continue;if(s._by===undefined)s._by=s.m.position.y;
+  const k=s.x*.37+s.z*.21;s.m.position.y=s._by+Math.sin(t*1.7+k)*.035;s.m.rotation.x=Math.sin(t*1.3+k)*.05;s.m.rotation.z=Math.cos(t*1.1+k)*.05}}catch(e){}}}
+
+function btModels66(){
+ const put=(k,p,sm=40)=>{const g=mg(p);lkSmooth(g,sm);g.computeBoundingSphere();GEO[k]=g;return g};
+ const CY=(rt,rb,h,c,p,r,sc,n=18)=>pt(cyl(rt,rb,h,n),c,p,r,sc);
+ const SP=(rad,c,p,sc,r,a=14,b=10)=>pt(new THREE.SphereGeometry(rad,a,b),c,p,r||0,sc);
+ const TO=(R,t,c,p,r,a=8,b=28)=>pt(new THREE.TorusGeometry(R,t,a,b),c,p,r);
+ const PI=Math.PI,H=(i,j)=>hash(i,j,66);
+ const OR=0xf28c38,WH=0xf7f0e3,RD=0xe0533f,ST=0xc9d2da,ST2=0x8e99a4,RO=0xf0e2c0,WD=0xd6965a,WD2=0xb07848;
+ /* ===== 설치형 미끼: 물 높이 y=0. 주황·흰 부표 + 깃대(빨간 깃발·노란 등) + 물속 철망 미끼 바구니(새우·생선 조각) + 물 위 떠 있는 미끼 조각 ===== */
+ {const p=[];
+  /* 통통한 부표: 주황 몸 + 흰 띠 둘 + 위 검은 받침 */
+  p.push(SP(.36,OR,[0,.06,0],[1,.78,1],0,26,18),TO(.355,.05,WH,[0,.04,0],[PI/2,0,0],10,44),TO(.24,.035,WH,[0,.24,0],[PI/2,0,0],8,34),SP(.2,OR,[0,.27,0],[1,.45,1],0,18,10));
+  p.push(CY(.1,.13,.08,0x3b4148,[0,.33,0]),CY(.026,.026,.56,0x3b4148,[0,.64,0],0,undefined,10),CY(.055,.055,.03,0x3b4148,[0,.93,0]));
+  p.push(SP(.07,0xf7d14a,[0,1.0,0],undefined,0,14,10),CY(.075,.075,.025,0x3b4148,[0,1.06,0]));
+  {const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(.3,-.08);s.lineTo(0,-.18);s.lineTo(0,0);const g=new THREE.ExtrudeGeometry(s,{depth:.016,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:1});p.push(pt(g,RD,[.026,.9,-.008]))}
+  /* 물속: 짧은 밧줄 + 초록 그물 미끼 바구니(위아래 쇠고리) */
+  const NT=0x3aa6b0,cy=-.5;p.push(CY(.014,.014,.2,RO,[0,-.2,0],0,undefined,8));
+  for(const [y,r] of[[.16,.09],[.08,.16],[0,.19],[-.08,.16],[-.16,.09]])p.push(TO(r,.013,NT,[0,cy+y,0],[PI/2,0,0],6,26));
+  for(let i=0;i<8;i++){const a=i/8*PI*2,pts=[[0,.2],[.09,.16],[.16,.08],[.19,0],[.16,-.08],[.09,-.16],[0,-.2]];for(let j=0;j<6;j++){const A=pts[j],B=pts[j+1];p.push(lkBeam([Math.cos(a)*A[0],cy+A[1],Math.sin(a)*A[0]],[Math.cos(a)*B[0],cy+B[1],Math.sin(a)*B[0]],.02,.02,NT))}}
+  p.push(CY(.06,.06,.035,ST2,[0,cy+.2,0]),CY(.05,.05,.035,ST2,[0,cy-.2,0]));
+  for(let i=0;i<9;i++){const a=i*2.4,rr=.04+H(i,1)*.07,y=cy-.1+H(i,2)*.2;p.push(SP(.05+H(i,3)*.025,[0xe58a8a,0xf0a070,0xd36f78,0xf3c9a8][i%4],[Math.cos(a)*rr,y,Math.sin(a)*rr],[1.3,.8,1],[0,a,H(i,4)],10,8))}
+  /* 물 위 떠 있는 미끼 조각 셋 */
+  for(const [x,z,c] of[[.5,.18,0xe58a8a],[-.44,.32,0xf0a070],[.14,-.52,0xd36f78]])p.push(SP(.05,c,[x,.0,z],[1.4,.5,1],[0,x*3,0],10,6));
+  put('bt_baitbuoy',p)}
+ /* ===== 작살: 자루 y축(손 = 원점), 위에 쇠 날 + 갈고리 둘, 놋쇠 고리, 빨간 띠, 뒤에 감긴 밧줄 ===== */
+ {const harp=(L=1.9,K=1)=>{const y0=-.42*K,y1=y0+L,p=[];const c=(a,b,h,n=12)=>cyl(a*K,b*K,h,n);
+   p.push(pt(c(.034,.04,L-.02),WD,[0,(y0+y1)/2-.01,0]),pt(c(.05,.05,.05),0x3b2a1e,[0,y0,0]));
+   for(let k=0;k<6;k++)p.push(pt(new THREE.TorusGeometry(.043*K,.01*K,5,12),0x6b4a30,[0,-.22*K+k*.06*K,0],[PI/2,0,0]));   /* 가죽 감은 손잡이 */
+   p.push(pt(c(.046,.046,.07),RD,[0,y1-.42*K,0]),pt(c(.046,.046,.025),WH,[0,y1-.375*K,0]),pt(c(.046,.046,.025),WH,[0,y1-.465*K,0]));
+   p.push(pt(c(.05,.042,.12),0xd9a440,[0,y1-.02*K,0]),pt(c(.03,.05,.05),0xd9a440,[0,y1+.06*K,0]));   /* 놋쇠 고리 */
+   p.push(pt(c(.026,.03,.2),ST,[0,y1+.18*K,0]));
+   const tip=new THREE.Shape();tip.moveTo(-.07,0);tip.lineTo(0,.3);tip.lineTo(.07,0);tip.lineTo(.03,-.02);tip.lineTo(0,.02);tip.lineTo(-.03,-.02);tip.lineTo(-.07,0);
+   const tg=new THREE.ExtrudeGeometry(tip,{depth:.03,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:2});tg.translate(0,0,-.015);
+   p.push(pt(tg,0xe6ebf0,[0,y1+.28*K,0],0,[K,K,K]));
+   for(const sx of[-1,1]){const b=new THREE.Shape();b.moveTo(0,0);b.lineTo(sx*.1,-.14);b.lineTo(sx*.03,-.06);b.lineTo(0,-.08);b.lineTo(0,0);const bg=new THREE.ExtrudeGeometry(b,{depth:.022,bevelEnabled:true,bevelThickness:.008,bevelSize:.008,bevelSegments:1});bg.translate(0,0,-.011);p.push(pt(bg,ST,[sx*.02*K,y1+.26*K,0],0,[K,K,K]))}
+   /* 뒤쪽 밧줄 타래 + 묶은 매듭 */
+   for(let k=0;k<4;k++)p.push(pt(new THREE.TorusGeometry(.11*K,.016*K,6,20),RO,[.07*K,.12*K-k*.022*K,.0],[PI/2+.15,0,.3]));
+   p.push(pt(c(.05,.05,.04),RO,[0,.2*K,0]));
+   return p};
+  put('bt_harpoon',harp());put('bt_harpoon_i',harp(1.25,1.45))}}
+{const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{btModels66()}catch(e){console.error('bait: 66차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}
