@@ -23,7 +23,7 @@ Object.assign(BUILDS.fence_conc,{c:{cement:3}});Object.assign(BUILDS.gate_conc,{
 const CR_KITS={kit_fence:['fence','나무 울타리'],kit_gwood:['gate_wood','나무 울타리 문'],kit_wall:['wall','돌 울타리'],kit_gate:['gate','돌 울타리 문'],kit_fgarden:['fence_garden','정원 울타리'],
  kit_fire:['fire','모닥불'],kit_torch:['torch','횃불'],kit_sign:['sign','표지판'],kit_lamp:['lamp','가로등'],kit_gen:['gen','발전기'],kit_boat2:['boat2','보트 2인승'],kit_mine:['mine','지뢰'],
  turret_auto:['turret','자동 포탑']};
-for(const k in CR_KITS){const [b,n]=CR_KITS[k];ITEMS[k]={n,ic:'',ty:'kit',b,d:`작업대에서 만든 ${n}. 가방에서 눌러 설치해요`};BUILDS[b].kit=k}
+for(const k in CR_KITS){const [b,n]=CR_KITS[k];ITEMS[k]={n,ic:'',ty:'kit',b,d:`${n}. 가방에서 눌러 설치해요`};BUILDS[b].kit=k}
 ITEMS.kit_turret.ty='res';delete ITEMS.kit_turret.b;ITEMS.kit_turret.d='자동 포탑 부품이 든 상자. 작업대에서 회로기판·반자동 소총·금속부품·티타늄과 합쳐 자동 포탑을 만들어요';
 ITEMS.turret_auto.d='작업대에서 조립한 자동 포탑. 가방에서 눌러 설치해요';
 /* 키트 아이콘 = 그 설치물 그림(look.js가 바꾼 모양으로) */
@@ -46,10 +46,6 @@ const CR_LIST=[
  {g:'울타리',id:'kit_fence',c:{wood:3}},{g:'울타리',id:'kit_gwood',c:{wood:4}},{g:'울타리',id:'kit_wall',c:{stone:3}},{g:'울타리',id:'kit_gate',c:{stone:4}},
  {g:'울타리',id:'kit_fgarden',c:{plank:3}},{g:'울타리',id:'kit_fwhite',c:{plastic:3}},{g:'울타리',id:'kit_fconc',c:{cement:3}},{g:'울타리',id:'kit_gconc',c:{cement:4}},
  {g:'설치물',id:'turret_auto',c:{kit_turret:1,pcb:1,rifle:1,mparts:1,ore_ti:1}},
- {g:'설치물',id:'kit_tent',c:{cloth:4,wood:2}},{g:'설치물',id:'kit_stash',c:{plank:4,nails:1}},{g:'설치물',id:'kit_fire',c:{wood:3,stone:3}},{g:'설치물',id:'kit_torch',c:{wood:1,cloth:1}},
- {g:'설치물',id:'kit_sign',c:{plank:2}},{g:'설치물',id:'kit_lamp',c:{splate:1,bulb:1,mparts:1}},{g:'설치물',id:'kit_lamp2',c:{splate:1,bulb:1,bar_copper:1}},
- {g:'설치물',id:'kit_gen',c:{splate:2,mparts:2,bar_copper:1}},{g:'설치물',id:'kit_boat2',c:{plank:4,nails:1,tarp:1}},{g:'설치물',id:'kit_fnet',c:{cloth:3,wood:2}},
- {g:'설치물',id:'kit_baitbuoy',c:{bait_shrimp:2,wood:2}},{g:'설치물',id:'kit_mine',c:{scrap:2,powder:3}},
  {g:'도구',id:'pick_adv',c:{wood:2,bar_iron:2}},{g:'도구',id:'pick_elec',c:{pick_adv:1,aabatt:2,pcb:1}},{g:'도구',id:'dhammer',c:{wood:1,bar_iron:2}},
  {g:'도구',id:'chainsaw',c:{splate:1,mparts:2,aabatt:1}},{g:'도구',id:'harpoon',c:{wood:2,bar_iron:1}},
  {g:'도구',id:'rod2',c:{rod:1,bar_iron:2}},{g:'도구',id:'rod3',c:{rod2:1,bar_gold:1,bar_silver:1}},{g:'도구',id:'rod_lucky',c:{rod3:1,charm:1}}];
