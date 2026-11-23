@@ -87,6 +87,8 @@ function spSurf(x,z){const S=SPSUP,R=S.rp,T=S.st,ex=x-S.x,ez=z-S.z;if(ex>S.AX+1|
  if(ex>T.x0-.05&&ex<T.x2+.05&&ez>-S.BZ-.6&&ez<-S.BZ+T.w+.05){if(ex<=T.x1)return Hr;if(ez>-S.BZ-.05)return Hb+(Hr-Hb)*(1-clamp((ex-T.x1)/(T.x2-T.x1),0,1))}   /* 뒤 계단 + 꼭대기 마루 */
  return spOut(x,z)<0&&spIn(x,z)>0?Hr:null}   /* 테두리 위 */
 const SUPPLY_SITES=[[103,754],[158,162],[822,266],[684,174],[687,843],[905,682],[486,708],[448,726],[451,703],[236,619],[216,401],[463,263],[402,608],[741,547]],SUPS=[];
+/* 70차(디자인, 기획자 11-23 15:54): 남쪽 가까운 보급지 셋(6·7·8)을 큰 보급지 하나로 — 6번을 셋 가운데로 옮기고 7·8번은 비워요(번호·다른 보급지는 그대로, forEach가 빈 칸을 건너뜀). 모양은 js/supply.js */
+const SUP_BIG={i:6,x:464,z:710,hx:16,hz:10.5,gone:[7,8]};SUPPLY_SITES[6]=[SUP_BIG.x,SUP_BIG.z];for(const k of SUP_BIG.gone)delete SUPPLY_SITES[k];
 function findSupply(sd){SUPS.length=0;SUPPLY_SITES.forEach((q,i)=>{let x=q[0],z=q[1];if(rawH(x,z,sd,1)<1){let ok=false;for(let r=2;r<40&&!ok;r+=2)for(let a=0;a<24;a++){const X=q[0]+Math.cos(a*.262)*r,Z=q[1]+Math.sin(a*.262)*r;if(rawH(X,Z,sd,1)>1.2){x=X;z=Z;ok=true;break}}if(!ok)return}
   let h=0;for(const[ox,oz]of[[0,0],[3,0],[-3,0],[0,3],[0,-3]])h+=rawH(x+ox,z+oz,sd,1)/5;SUPS.push({i,x,z,h:Math.max(1.05,h)})})}
 const supD=(x,z)=>{let b=1e9;for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>30||ex<-30||ez>30||ez<-30)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};

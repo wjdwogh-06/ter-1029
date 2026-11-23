@@ -19,8 +19,10 @@ delete ITEMS.pcb2;REMOVED.n.pcb2='고급 회로기판';
 /* ---- 69차(기획자 11-23 14:54): 통조림·붕대·천·산딸기 아예 없애기 ----
    아이템 정의를 지우고(예전 저장은 dropRemoved가 가방·보관 상자·떨어뜨린 가방에서 치움 + 상자 창·제작 칸도 여기서 치움),
    보급 상자·적 전리품 표에서 빼고, 산딸기 덤불(열매 따는 덤불)은 맵에 안 생겨요. 천이 들어가던 설치물 재료(PC 건설 탭)는 나무로 바꿔요. */
-const CR_GONE={can:'통조림',bandage:'붕대',cloth:'천',berry:'산딸기'};
+const CR_GONE={can:'통조림',bandage:'붕대',cloth:'천',berry:'산딸기',nails:'못'};   /* 70차(기획자 11-23 15:54): 못도 삭제 */
 for(const k in CR_GONE)delete ITEMS[k];Object.assign(REMOVED.n,CR_GONE);
+/* 70차(기획자): 지뢰 아예 없앰 — 짓기 목록에서 숨기고(정의는 멀티·옛 저장 읽기용으로만 남김) 지어 둔 지뢰는 재료로 돌려줘요 */
+if(BUILDS.mine){BUILDS.mine.hide=1;REMOVED.n.mine='지뢰';REMOVED.c.mine=Object.assign({},BUILDS.mine.c)}
 for(let i=LOOT.length-1;i>=0;i--)if(!ITEMS[LOOT[i][0]])LOOT.splice(i,1);
 for(const k in ENEMY)if(ENEMY[k].loot)ENEMY[k].loot=ENEMY[k].loot.filter(l=>l[0]==='coin'||ITEMS[l[0]]);
 for(const k in BUILDS){const c=BUILDS[k].c;if(!c)continue;let w=0;for(const m in c)if(!ITEMS[m]){w+=c[m];delete c[m]}if(w&&!Object.keys(c).length)c.wood=Math.max(2,Math.round(w*.6))}
@@ -37,7 +39,7 @@ Object.assign(BUILDS.wall,{n:'돌 울타리',c:{stone:3}});Object.assign(BUILDS.
 Object.assign(BUILDS.fence,{c:{wood:3}});Object.assign(BUILDS.fence_garden,{c:{plank:3}});Object.assign(BUILDS.fence_white,{c:{plastic:3}});
 Object.assign(BUILDS.fence_conc,{c:{cement:3}});Object.assign(BUILDS.gate_conc,{c:{cement:4}});
 const CR_KITS={kit_fence:['fence','나무 울타리'],kit_gwood:['gate_wood','나무 울타리 문'],kit_wall:['wall','돌 울타리'],kit_gate:['gate','돌 울타리 문'],kit_fgarden:['fence_garden','정원 울타리'],
- kit_fire:['fire','모닥불'],kit_torch:['torch','횃불'],kit_sign:['sign','표지판'],kit_lamp:['lamp','가로등'],kit_gen:['gen','발전기'],kit_boat2:['boat2','보트 2인승'],kit_mine:['mine','지뢰'],
+ kit_fire:['fire','모닥불'],kit_torch:['torch','횃불'],kit_sign:['sign','표지판'],kit_lamp:['lamp','가로등'],kit_gen:['gen','발전기'],kit_boat2:['boat2','보트 2인승'],
  turret_auto:['turret','자동 포탑']};
 for(const k in CR_KITS){const [b,n]=CR_KITS[k];ITEMS[k]={n,ic:'',ty:'kit',b,d:`${n}. 가방에서 눌러 설치해요`};BUILDS[b].kit=k}
 ITEMS.kit_turret.ty='res';delete ITEMS.kit_turret.b;ITEMS.kit_turret.d='자동 포탑 부품이 든 상자. 작업대에서 회로기판·반자동 소총·금속부품·티타늄과 합쳐 자동 포탑을 만들어요';
@@ -51,22 +53,15 @@ const CR_GUN=[['pistol','gp_sstock','gp_sbarrel'],['smg','gp_wstock','gp_sbarrel
 const CR_LIST=[
  /* g = 목록 묶음, adv = 고급 작업대에서만, n = 나오는 개수 */
  ...CR_GUN.map(([id,st,br])=>({g:'총',id,n:1,pat:[[st,'gkit_'+id,br],[null,'mparts',null]]})),
- {g:'총',id:'crossbow',c:{wood:3,cloth:1,mparts:1}},{g:'총',id:'arrow',n:5,c:{wood:1,stone:1}},
- {g:'부착물',id:'att_scope',adv:1,c:{ebottle:1,bar_iron:1,mparts:1}},{g:'부착물',id:'att_laser',adv:1,c:{aabatt:1,pcb:1,mparts:1}},
- {g:'부착물',id:'att_grip',adv:1,c:{plastic:2,mparts:1}},{g:'부착물',id:'att_supp',adv:1,c:{bar_iron:1,mparts:2}},
- {g:'무기·회복',id:'grenade',c:{scrap:2,powder:2}},{g:'무기·회복',id:'bandage',c:{cloth:2}},
- {g:'총 부품',id:'gp_wstock',c:{wood:2,mparts:1}},{g:'총 부품',id:'gp_sstock',c:{bar_iron:2,mparts:1}},{g:'총 부품',id:'gp_rbarrel',c:{bar_iron:3}},{g:'총 부품',id:'gp_sbarrel',c:{bar_iron:2}},
- {g:'총 부품',id:'mparts',c:{scrap:2}},
- {g:'재료',id:'plank',n:2,c:{wood:2}},{g:'재료',id:'nails',n:5,c:{scrap:1}},{g:'재료',id:'splate',c:{scrap:3}},{g:'재료',id:'cement',c:{stone:2,wbottle:1}},
- {g:'재료',id:'tarp',c:{cloth:3}},{g:'재료',id:'pcb',c:{bar_copper:1,plastic:1}},
+ /* 70차(기획자 11-23 15:54): 석궁·화살·부착물·부적·방수포·총 부품(개머리판·포신)·도구류·텐트는 제작법 없음(자판기·보급에서) */
+ {g:'무기',id:'grenade',c:{scrap:2,powder:2}},
+ {g:'재료',id:'mparts',c:{bar_iron:2}},{g:'재료',id:'splate',c:{bar_iron:3}},   /* 70차: 금속부품 = 철 주괴 2, 철판 = 철 주괴 3 */
+ {g:'재료',id:'plank',n:2,c:{wood:2}},{g:'재료',id:'cement',c:{stone:2,wbottle:1}},{g:'재료',id:'pcb',c:{bar_copper:1,plastic:1}},
  {g:'울타리',id:'kit_fence',c:{wood:3}},{g:'울타리',id:'kit_gwood',c:{wood:4}},{g:'울타리',id:'kit_wall',c:{stone:3}},{g:'울타리',id:'kit_gate',c:{stone:4}},
  {g:'울타리',id:'kit_fgarden',c:{plank:3}},{g:'울타리',id:'kit_fwhite',c:{plastic:3}},{g:'울타리',id:'kit_fconc',c:{cement:3}},{g:'울타리',id:'kit_gconc',c:{cement:4}},
  {g:'설치물',id:'turret_auto',c:{kit_turret:1,pcb:1,rifle:1,mparts:1,ore_ti:1}},
  /* 69차(기획자): 씨앗 = 그 작물 4개 → 씨앗 1개(밀 4 → 밀 씨앗), 모든 씨앗 */
- ...PLANTS.filter(q=>ITEMS['seed_'+q.id]).map(q=>({g:'씨앗',id:'seed_'+q.id,c:{[q.id]:4}})),
- {g:'도구',id:'pick_adv',c:{wood:2,bar_iron:2}},{g:'도구',id:'pick_elec',c:{pick_adv:1,aabatt:2,pcb:1}},{g:'도구',id:'dhammer',c:{wood:1,bar_iron:2}},
- {g:'도구',id:'chainsaw',c:{splate:1,mparts:2,aabatt:1}},{g:'도구',id:'harpoon',c:{wood:2,bar_iron:1}},
- {g:'도구',id:'rod2',c:{rod:1,bar_iron:2}},{g:'도구',id:'rod3',c:{rod2:1,bar_gold:1,bar_silver:1}},{g:'도구',id:'rod_lucky',c:{rod3:1,charm:1}}];
+ ...PLANTS.filter(q=>ITEMS['seed_'+q.id]).map(q=>({g:'씨앗',id:'seed_'+q.id,c:{[q.id]:4}}))];
 RECIPES.length=0;
 for(const r of CR_LIST){if(!ITEMS[r.id])continue;r.n=r.n||1;r.bench=1;if(r.pat){const c={};for(const row of r.pat)for(const k of row)if(k)c[k]=(c[k]||0)+1;r.c=c}
  if(Object.keys(r.c).some(k=>!ITEMS[k]))continue;RECIPES.push(r)}

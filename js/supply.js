@@ -72,28 +72,28 @@ const SPF=[];   /* 보급지마다 울타리 정보 {i,x,z,th,m,hx,hz,posts,mesh
 function spGateDir(s){if(typeof ROAD_GATE!=='undefined'&&ROAD_GATE[s.i]!==undefined)return ROAD_GATE[s.i];
  for(const th of[0,-.6,.6,-1.2,1.2,-1.8,1.8,Math.PI]){let ok=true;for(const r of[8,10,12,14])if(hAt(s.x+Math.sin(th)*r,s.z+Math.cos(th)*r)<.95){ok=false;break}if(ok)return th}return 0}
 /* 둥근 네모 둘레(문 오른쪽 끝 → 뒤로 돌아 → 문 왼쪽 끝), 기둥 간격 2.5m 이하 */
-function spLoop(hx,hz,rc,gap){const pts=[],A=(cx,cz,a0,a1)=>{for(let k=0;k<=6;k++){const a=a0+(a1-a0)*k/6;pts.push([cx+Math.cos(a)*rc,cz+Math.sin(a)*rc])}};
- pts.push([gap,hz]);A(hx-rc,hz-rc,Math.PI/2,0);A(hx-rc,-hz+rc,0,-Math.PI/2);A(-hx+rc,-hz+rc,-Math.PI/2,-Math.PI);A(-hx+rc,hz-rc,Math.PI,Math.PI/2);pts.push([-gap,hz]);
- let L=0;const cum=[0];for(let i=1;i<pts.length;i++){L+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);cum.push(L)}
- const n=Math.ceil(L/2.45),out=[];for(let k=0;k<=n;k++){const t=L*k/n;let i=1;while(i<cum.length-1&&cum[i]<t)i++;const f=(t-cum[i-1])/((cum[i]-cum[i-1])||1);out.push([pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f])}return out}
+function spLoop(hx,hz,rc,gap,bg){let pts=[];const parts=[pts],A=(cx,cz,a0,a1)=>{for(let k=0;k<=6;k++){const a=a0+(a1-a0)*k/6;pts.push([cx+Math.cos(a)*rc,cz+Math.sin(a)*rc])}};
+ pts.push([gap,hz]);A(hx-rc,hz-rc,Math.PI/2,0);A(hx-rc,-hz+rc,0,-Math.PI/2);if(bg){pts.push([bg,-hz]);pts=[[-bg,-hz]];parts.push(pts)}A(-hx+rc,-hz+rc,-Math.PI/2,-Math.PI);A(-hx+rc,hz-rc,Math.PI,Math.PI/2);pts.push([-gap,hz]);   /* 70차: bg = 뒤(-z) 가운데 문 반폭(큰 보급지) */
+ const out=[];for(const pp of parts){let L=0;const cum=[0];for(let i=1;i<pp.length;i++){L+=Math.hypot(pp[i][0]-pp[i-1][0],pp[i][1]-pp[i-1][1]);cum.push(L)}
+  const n=Math.ceil(L/2.45);for(let k=0;k<=n;k++){const t=L*k/n;let i=1;while(i<cum.length-1&&cum[i]<t)i++;const f=(t-cum[i-1])/((cum[i]-cum[i-1])||1),q=[pp[i-1][0]+(pp[i][0]-pp[i-1][0])*f,pp[i-1][1]+(pp[i][1]-pp[i-1][1])*f];if(k===0&&out.length)q.brk=1;out.push(q)}}return out}
 function spWarn(){const p=[pt(box(.46,.34,.03),0xf2c230,[0,0,0]),pt(box(.4,.28,.01),0x2b2b2b,[0,0,.017]),pt(box(.35,.23,.01),0xf2c230,[0,0,.021]),pt(box(.05,.13,.01),0x2b2b2b,[0,.035,.027]),pt(box(.05,.045,.01),0x2b2b2b,[0,-.08,.027])];return mg(p)}
 let _spWarnG=null;
 const spWire=(a,b,r,c)=>{const q=lkAim(a,b);return pt(new THREE.CylinderGeometry(r,r,q.L,3,1,true),c,q.pos,q.rot)};   /* 뚜껑 없는 세모 관(삼각형 6개) */
 const _spOct=new THREE.OctahedronGeometry(.045),_spTor=new THREE.TorusGeometry(.22,.012,3,6);
 /* 울타리 한 곳: 기둥·철선·가시·윤형 철조망·문 + 충돌 칸 */
-function spFence(s,T,th,m){const h1=hash(s.i,3,71),h2=hash(s.i,5,72),hx=7.7+h1*.9,hz=7.2+h2*.8,rc=1.8+hash(s.i,7,73)*1.6,gap=1.95,c=Math.cos(th),sn=Math.sin(th);
- const W=(lx,lz)=>[s.x+lx*c+lz*sn,s.z-lx*sn+lz*c],loop=spLoop(hx,hz,rc,gap),parts=[],cols=[],posts=[],steel=T.f==='steel';
+function spFence(s,T,th,m,o){const h1=hash(s.i,3,71),h2=hash(s.i,5,72),hx=o?o.hx:7.7+h1*.9,hz=o?o.hz:7.2+h2*.8,rc=o?o.rc:1.8+hash(s.i,7,73)*1.6,gap=1.95,c=Math.cos(th),sn=Math.sin(th);
+ const W=(lx,lz)=>[s.x+lx*c+lz*sn,s.z-lx*sn+lz*c],loop=spLoop(hx,hz,rc,gap,o&&o.bg),parts=[],cols=[],posts=[],steel=T.f==='steel';
  const wood=[0x8a5a34,0x7a5030,0x96643c],WIRE=0x474b52,BARB=0x3a3d42,POST=0x5b6450;
  const wet=(x,z)=>hAt(x,z)<.95||onDock(x,z);
- const P=loop.map(([lx,lz],k)=>{const j=k>0&&k<loop.length-1?(hash(s.i,k,74)-.5)*.22:0,[x,z]=W(lx+j,lz+j*.5);return{x,z,y:hAt(x,z)-.03,lx,lz,wet:wet(x,z)}});
+ const P=loop.map(([lx,lz],k)=>{const j=k>0&&k<loop.length-1?(hash(s.i,k,74)-.5)*.22:0,[x,z]=W(lx+j,lz+j*.5);return{x,z,y:hAt(x,z)-.03,lx,lz,wet:wet(x,z),brk:!!loop[k].brk}});
  const rel=(q,yy)=>[q.x-s.x,q.y+yy,q.z-s.z];
  const skipBack=T.broken?[Math.floor(loop.length*.42),Math.floor(loop.length*.42)+1]:[];
- for(let k=0;k<P.length;k++){const q=P[k];if(q.wet)continue;posts.push(q);const gateP=k===0||k===P.length-1,lean=(hash(s.i,k,75)-.5)*.08;
+ for(let k=0;k<P.length;k++){const q=P[k];if(q.wet)continue;posts.push(q);const gateP=k===0||k===P.length-1||q.brk||(P[k+1]&&P[k+1].brk),lean=(hash(s.i,k,75)-.5)*.08;
   if(gateP)parts.push(pt(lkRb(.2,2.05,.2,.04,.02),steel?POST:0x6e4527,rel(q,1.02)),pt(lkRb(.26,.08,.26,.03,.015),steel?SPC.dark:0x5a3a20,rel(q,2.07)));
   else if(steel)parts.push(pt(box(.085,1.72,.085),POST,rel(q,.86),[lean,0,0]),pt(cyl(.07,.09,.14,5),SPC.conc,rel(q,.04)));
   else parts.push(pt(cyl(.065,.078,1.5,5),wood[k%3],rel(q,.72),[lean,0,lean*.6]));
 }   /* 문 기둥은 옆 칸 충돌 상자가 덮어요(겹침 검사 0) */
- for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1];if(a.wet||b.wet||skipBack.includes(k))continue;const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz);if(L<.3)continue;
+ for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1];if(a.wet||b.wet||b.brk||skipBack.includes(k))continue;const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz);if(L<.3)continue;
   {const mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,hs=[[-1.3,-.12],[1.3,-.12],[-1.3,.12],[1.3,.12],[0,0]].map(q=>hAt(mx+q[0],mz+q[1]));if(Math.max(...hs)-Math.min(...hs)>.27)continue}   /* 비탈(강둑)에 걸치는 칸은 비워요 */
   // 충돌 칸(보이지 않음): 칸 방향으로 눕힌 1.3 × 0.12 상자
   cols.push(addStruct({t:'swire',x:(a.x+b.x)/2,z:(a.z+b.z)/2,r:Math.atan2(-dz,dx)}));
@@ -101,7 +101,7 @@ function spFence(s,T,th,m){const h1=hash(s.i,3,71),h2=hash(s.i,5,72),hx=7.7+h1*.
   ys.forEach((y,yi)=>{const A=rel(a,y),B=rel(b,y),M=[(A[0]+B[0])/2,(A[1]+B[1])/2-sag,(A[2]+B[2])/2];parts.push(spWire(A,M,.017,WIRE),spWire(M,B,.017,WIRE));if(yi%2===0)return;
    for(let t=.14;t<1;t+=.24){const u=t<.5?t*2:(t-.5)*2,Q=t<.5?A:M,R2=t<.5?M:B;parts.push(pt(_spOct,BARB,[Q[0]+(R2[0]-Q[0])*u,Q[1]+(R2[1]-Q[1])*u,Q[2]+(R2[2]-Q[2])*u],[t*7,t*5,0]))}})
   if(steel){const yaw=Math.atan2(dx,dz),n=Math.max(3,Math.round(L/.33));for(let q=0;q<n;q++){const t=(q+.5)/n,X=a.x+dx*t-s.x,Z=a.z+dz*t-s.z,Y=a.y+(b.y-a.y)*t+1.86;parts.push(pt(_spTor,0x9aa1a8,[X,Y,Z],[0,yaw+(q%2?.18:-.18),0]))}}
-  if(T.warn||k===0||k===P.length-2){if(k===0||k===P.length-2||(T.warn&&k%4===2)){if(!_spWarnG)_spWarnG=spWarn();const g=_spWarnG.clone(),mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,ox=mx-s.x,oz=mz-s.z,ol=Math.hypot(ox,oz)||1;
+  if(T.warn||k===0||k===P.length-2){if(k===0||k===P.length-2||(T.warn&&k%4===2&&!(P[k+2]&&P[k+2].brk)&&!(P[k-1]&&P[k].brk))){if(!_spWarnG)_spWarnG=spWarn();const g=_spWarnG.clone(),mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,ox=mx-s.x,oz=mz-s.z,ol=Math.hypot(ox,oz)||1;
    g.rotateY(Math.atan2(ox,oz));g.translate(ox+ox/ol*.06,(a.y+b.y)/2+.95,oz+oz/ol*.06);parts.push(g)}}}
  // 무너진 칸: 쓰러진 기둥과 바닥에 늘어진 철선
  if(T.broken){const k=skipBack[0],a=P[k],b=P[k+1];if(a&&b&&!a.wet&&!b.wet){const A=rel(a,.07),B=rel(b,.07),M=[(A[0]+B[0])/2+.4,A[1],(A[2]+B[2])/2];parts.push(lkBeam(A,M,.13,.13,wood[0]),lkRod(M,B,.016,WIRE,4))}}
@@ -130,7 +130,44 @@ function spBuild(s){const i=s.i,T=SPT[SP_THEME[i]%SPT.length],m=i%2?-1:1,th=spGa
  // 검문소 차단기: 문 바로 바깥 오른쪽
  const F=spFence(s,T,th,m);if(T.boom){const [bx,bz]=W(2.6,F.hz+1.65);addStruct({t:'sp_boom',x:bx,z:bz,r:th})}
  SPF.push({i,x:s.x,z:s.z,th,m,theme:T.n,hx:F.hx,hz:F.hz,posts:F.posts.map(p=>[p.x,p.z]),mesh:F.mesh,cols:F.cols.length});void y0}
-buildSupply=function(){SPF.length=0;SUPS.forEach(s=>{try{spBuild(s)}catch(e){console.error('supply: 보급지 '+s.i,e)}})};
+buildSupply=function(){SPF.length=0;SUPS.forEach(s=>{try{if(typeof SUP_BIG!=='undefined'&&s.i===SUP_BIG.i)spBigBuild(s);else spBuild(s)}catch(e){console.error('supply: 보급지 '+s.i,e)}})};
 lkSupplyFence=function(){};   /* 예전 뒤 철조망 3+2칸 → 둘레 울타리로 바뀜 */
 /* 설치 금지 원: 울타리 바깥 + 3m */
 {const _bn=buildNoBuild;buildNoBuild=function(){_bn.apply(this,arguments);for(const n of NOB){if(n.k!=='sup')continue;const F=SPF.find(f=>Math.abs(f.x-n.x)<.5&&Math.abs(f.z-n.z)<.5);if(!F)continue;let e=0;for(const [x,z] of F.posts)e=Math.max(e,dist(x,z,n.x,n.z));n.r=Math.max(n.r,e+3)}}}
+/* ---------- 70차(디자인, 기획자 11-23 15:54): 큰 보급 기지 — 남쪽 가까운 보급지 셋(6·7·8)을 하나로 ----------
+   '보급 세 가지 좀 가깝게 붙여져 있는 곳, 그곳을 규모를 하나로 합치자. 좀 크게, 보급 좀 많이 나오고, 좀 더 많이 꾸며 버리자'.
+   · 자리·크기는 core.js SUP_BIG(셋 가운데, 반폭 16 × 10.5m). 문은 둘: 북쪽(길이 들어오는 쪽, 초소 + 차단기)과 남쪽(차단기).
+   · 지역 좌표: lz+ = 북쪽 문 쪽, lx+ = 서쪽(문을 앞으로 놓고 돌림). 가운데 길(|lx|<1.6)은 비워 북문 ↔ 남문이 곧게 이어져요.
+   · 서쪽 = 낙하 지점(큰 팔레트 위 상자·낙하산·바람자루·트럭·감시탑), 동쪽 = 무전 초소 + 연료 저장소(안테나·천막·발전기·탱크·드럼통),
+     남쪽 = 컨테이너 둘, 북문 = 검문소(초소·모래주머니·깃발).
+   · 상자 11개(보물 상자 2 포함, 이름 s6_0~s6_10) — 예전 셋을 합친 9개보다 많고, 상자마다 전리품을 두 번 뽑아 합쳐요(lootGen 감싸기). */
+const SPB={
+ cr:[[4.4,-.3,.2,0,1],[9,2,.1,.37],[7.0,5.0,-.3],[11.6,5.4,.4],[5.0,-3.6,.6],[-5.4,3.0,.2],[-9,1.4,-.3,0,1],[-5.6,-3.4,.5],[-10.4,-1.6,-.2],[-2.9,-4.2,.3],[9.6,-8.3,.7]],
+ st:[['sp_booth',4.3,7.7,0],['sp_mast',-12.6,4.4,0],['well',-12.4,-5.6,Math.PI/2],['sp_drums',-9.8,-8.0,0],['sp_cont',4.8,-7.9,0],['sp_cont2',-4.7,-7.9,Math.PI],['sp_truck',9.3,-3.4,Math.PI/2],['sp_sock',13.4,7.4,0]],
+ de:[['pallet',9,2,.1,4.6],['chute',12.7,1.4,-.4],['jerry',12.3,-.9,.4],['ammostack',6.0,.8,.3],['jerry',-7.2,-8.6,.3],['jerry',-6.5,-8.0,1.1],['tarppile',4.0,-4.8,.3],['tarppile',-2.6,6.2,1.2],
+  ['flag_blue',-5.8,8.9,0,5],['ammostack',6.6,8.6,.5],['ammostack',-7.8,-4.6,-.4],['suptent',-8.6,6.9,0],['radio',-8.6,6.1,.1],['lk_gen',-5.8,8.3,.3],
+  ['lk_drum_0',-10.3,-8.4,0],['lk_drum_1',-9.3,-8.5,.7],['lk_drum_2',-9.8,-7.6,1.4],['lk_pallet',1.2,-8.6,.2,1],['lk_pallet',-1.2,8.7,-.1,1]],
+ sb:[[-3.9,7.6,0],[14.2,-1.5,-Math.PI/2]],tw:[[13.3,-8.1],[-13.3,-1.6]],cable:[[-5.8,8.3],[-7.6,7.2]],
+ lamp:[[2.5,8.7],[-2.5,8.7],[2.5,-8.7],[-2.5,-8.7],[14.3,2.6],[-14.3,2.2]],smoke:[[3.0,3.8],[-7.2,-1.2]],shade:[4.6,-.2,3.6,3.0,2.3],sign:[3.6,13.1,0]};
+function spBigBuild(s){const B=SUP_BIG,i=s.i,th=spGateDir(s),c=Math.cos(th),sn=Math.sin(th),m=1,T={n:'큰 보급 기지',f:'steel',warn:1,boom:1};
+ const W=(lx,lz)=>[s.x+lx*c+lz*sn,s.z-lx*sn+lz*c],R=r=>r+th;s.cr=[];s.theme=T.n;s.big=1;
+ CLEARS.push([s.x,s.z,Math.hypot(B.hx,B.hz)+2.5]);
+ SPB.cr.forEach((q,k)=>{const [x,z]=W(q[0],q[1]),chest=!!q[4],o=addStruct({t:chest?'chest':'supply',x,z,r:R(q[2]),yo:chest?0:q[3]||0});o.li='s'+i+'_'+k;s.cr.push(o)});
+ const add3=(type,lx,lz,rot,scale=1)=>{const [x,z]=W(lx,lz);const m3=mesh(GEO[type],MATT);m3.scale.setScalar(scale);m3.position.set(x,hAt(x,z)-.03,z);m3.rotation.y=R(rot);m3.userData.layoutName=type;scene.add(m3);return m3};
+ for(const d of SPB.de)if(GEO[d[0]])add3(...d);
+ for(const [t,lx,lz,rot] of SPB.st){const [x,z]=W(lx,lz);addStruct({t,x,z,r:R(rot)})}
+ for(const [lx,lz,rot] of SPB.sb){const g=add3('sbagArc',lx,lz,rot),r=g.rotation.y;g.userData.layoutBlock=addStruct({t:'blk',x:g.position.x+Math.sin(r)*.27,z:g.position.z+Math.cos(r)*.27,r})}
+ for(const [tx,tz] of SPB.tw){const [x,z]=W(tx,tz),tm=mesh(plTowerGeo(),MATT);tm.position.set(x,hAt(x,z)-.03,z);tm.rotation.y=th;tm.userData.layoutName='감시탑';scene.add(tm);
+  for(const a of[-.8,.8])for(const b of[-.8,.8]){const px=x+a*c+b*sn,pz=z-a*sn+b*c;(tm.userData.layoutBlocks??=[]).push(addStruct({t:'swpost',x:px,z:pz,r:0}))}}
+ {const [a,b]=SPB.cable.map(q=>W(q[0],q[1]));const cm=mesh(mg([lkRod([a[0]-s.x,hAt(a[0],a[1])+.04,a[1]-s.z],[b[0]-s.x,hAt(b[0],b[1])+.04,b[1]-s.z],.025,0x2b2b2b,5)]),MATT,false);cm.position.set(s.x,0,s.z);cm.userData.layoutName='무전 케이블';scene.add(cm)}
+ {const [x,z]=W(SPB.sign[0],SPB.sign[1]);const sg=mesh(GEO.supsign,MATT);sg.position.set(x,hAt(x,z)-.03,z);sg.rotation.y=0;sg.userData.layoutName='supsign';scene.add(sg)}
+ {const [sx,sz,w,d,h]=SPB.shade,[x,z]=W(sx,sz),sh=plShadeGeo(w,d,h),y=hAt(x,z)-.03;plAdd(sh.poles,x,y,z,th);plAdd(sh.net,x,y,z,th,PLM2()).castShadow=true;   /* 가운데 보물 상자 위 위장망 그늘 */
+  for(const a of[-w/2,w/2])for(const b of[-d/2,d/2]){const [px,pz]=W(sx+a,sz+b);addStruct({t:PLB(.08,.08),x:px,z:pz,r:0})}}
+ for(const [lx,lz] of SPB.lamp){const [x,z]=W(lx,lz);addStruct({t:'suplamp',x,z,r:R(.4)})}
+ for(const [sx,sz] of SPB.smoke){const [fx,fz]=W(sx,sz),flare=mesh(GEO.flarecan,MATT);flare.userData.layoutName='신호탄';flare.position.set(fx,hAt(fx,fz)-.03,fz);scene.add(flare);
+  const G=new THREE.Group();G.position.set(fx,hAt(fx,fz),fz);const sp=[];for(let q=0;q<9;q++){const g=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(),color:q%3?0xf26a1e:0xffa24a,transparent:true,opacity:.5,depthWrite:false}));g.userData.p=q/9;G.add(g);sp.push(g)}scene.add(G);flare.attach(G);SMOKES.push({s,G,sp,t:0})}
+ const F=spFence(s,T,th,m,{hx:B.hx,hz:B.hz,rc:3.2,bg:1.95});
+ {const [bx,bz]=W(2.6,F.hz+1.65);addStruct({t:'sp_boom',x:bx,z:bz,r:th})}{const [bx,bz]=W(-2.6,-F.hz-1.65);addStruct({t:'sp_boom',x:bx,z:bz,r:th+Math.PI})}
+ SPF.push({i,x:s.x,z:s.z,th,m,theme:T.n,hx:F.hx,hz:F.hz,posts:F.posts.map(p=>[p.x,p.z]),mesh:F.mesh,cols:F.cols.length,big:1})}
+/* 큰 보급 기지 상자는 전리품을 두 번 뽑아 합쳐요 */
+{const _lg=lootGen;lootGen=function(s){const g=_lg.apply(this,arguments);if(typeof SUP_BIG!=='undefined'&&s&&s.li&&s.li.indexOf('s'+SUP_BIG.i+'_')===0){const g2=_lg.apply(this,arguments);for(const k in g2)g[k]=(g[k]||0)+g2[k];for(const k in g)if(ITEMS[k]&&ITEMS[k].one)g[k]=Math.min(g[k],1)}return g}}
