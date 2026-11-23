@@ -406,7 +406,11 @@ function bagDrop(k){const n=invN(k);if(!n)return;if(INT.on){toast('밖에서 버
 $('pbody').addEventListener('click',e=>{if(panel!=='bag')return;const b=e.target.closest('[data-a="sel"]');if(!b)return;e.stopPropagation();if(performance.now()-BAGD.end<350)return;bagTap(b.dataset.k)},true);
 $('pbody').addEventListener('pointerdown',e=>{if(panel!=='bag')return;const b=e.target.closest('[data-a="sel"]');if(!b)return;BAGD.k=b.dataset.k;BAGD.x=e.clientX;BAGD.y=e.clientY;BAGD.id=e.pointerId;BAGD.on=0});
 {const outside=(x,y)=>{const r=$('panel').getBoundingClientRect();return x<r.left||x>r.right||y<r.top||y>r.bottom};
- addEventListener('pointermove',e=>{if(BAGD.k==null||e.pointerId!==BAGD.id)return;if(!BAGD.on){if(Math.hypot(e.clientX-BAGD.x,e.clientY-BAGD.y)<12)return;BAGD.on=1;const d=document.createElement('div');d.id='bagDrag';d.innerHTML=`<img src="${ICON[BAGD.k]}"><b>놓으면 버려요</b>`;document.body.appendChild(d);BAGD.el=d}
+ addEventListener('pointermove',e=>{if(BAGD.k==null||e.pointerId!==BAGD.id)return;if(!BAGD.on){const dx=e.clientX-BAGD.x,dy=e.clientY-BAGD.y;
+  if(Math.hypot(dx,dy)<12)return;
+  const grid=$('pbody').querySelector('.grid');
+  if(e.pointerType==='touch'&&grid&&grid.scrollHeight>grid.clientHeight&&Math.abs(dy)>Math.abs(dx)){BAGD.k=null;return}
+  BAGD.on=1;const d=document.createElement('div');d.id='bagDrag';d.innerHTML=`<img src="${ICON[BAGD.k]}"><b>놓으면 버려요</b>`;document.body.appendChild(d);BAGD.el=d}
   e.preventDefault();BAGD.el.style.left=e.clientX+'px';BAGD.el.style.top=e.clientY+'px';BAGD.el.classList.toggle('out',outside(e.clientX,e.clientY))},{passive:false});
  const fin=e=>{if(BAGD.k==null||e.pointerId!==BAGD.id)return;const k=BAGD.k,was=BAGD.on;BAGD.k=null;BAGD.id=null;BAGD.on=0;if(BAGD.el){BAGD.el.remove();BAGD.el=null}
   if(!was)return;BAGD.end=performance.now();if(e.type==='pointerup'&&panel==='bag'&&outside(e.clientX,e.clientY))bagDrop(k)};
@@ -615,13 +619,33 @@ function huntDexHtml(){if(!S.hdex)S.hdex={};const L=Object.keys(ENEMY),n=L.filte
 function bpDexHtml(){return `<div class="sec">설계도</div><div class="row" style="justify-content:center;min-height:120px;color:var(--mut);font-weight:800">📜 설계도는 준비 중이에요</div>`}
 function dexHtml(){const d=BAGT.d;return `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${DEXT.map(([k,l])=>`<button class="btn ${k===d?'':'g'}" data-a="dext" data-k="${k}" style="padding:6px 10px;font-size:12.5px">${l}</button>`).join('')}</div>`+
  (d==='fish'?fishDexHtml():d==='cook'?cookDexHtml():d==='plant'?(typeof plantDexHtml==='function'?plantDexHtml():''):d==='hunt'?huntDexHtml():bpDexHtml())}
-function bagFit(){const B=$('pbody'),g=B.querySelector('.grid');if(!g)return;const cs=getComputedStyle(B),pv=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),ph=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight),n=g.children.length,rows=Math.ceil(n/5),gap=7;
- let extra=0;for(const x of B.children)if(x!==g)extra+=x.offsetHeight;const sz=Math.max(34,Math.floor(Math.min((B.clientWidth-ph-4*gap)/5,(B.clientHeight-pv-extra-(rows-1)*gap-2)/rows,90)));
- g.style.gridTemplateColumns=`repeat(5,${sz}px)`;g.style.justifyContent='center';for(const c of g.children){c.style.width=sz+'px';c.style.height=sz+'px';c.style.aspectRatio=''}}
-{const _rp=renderPanel;renderPanel=function(){_rp();if(panel!=='bag'){$('pbody').style.overflowY='';return}const B=$('pbody');
+function bagFit(){
+ if(panel!=='bag'||BAGT.t!=='inv')return;
+ const body=$('pbody'),grid=body.querySelector('.grid');
+ if(!grid||!body.clientHeight)return;
+ const columns=5,gap=7,rows=Math.ceil(grid.children.length/columns),visible=Math.min(rows,5);
+ const css=getComputedStyle(body);
+ const width=body.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
+ const height=body.clientHeight-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom);
+ const size=Math.max(1,Math.floor(Math.min((width-(columns-1)*gap)/columns,
+  (height-(visible-1)*gap-2)/visible,90)));
+ grid.style.gridTemplateColumns=`repeat(5,${size}px)`;
+ grid.style.justifyContent='center';
+ grid.style.maxHeight=(visible*size+(visible-1)*gap)+'px';
+ grid.style.overflowY=rows>visible?'auto':'visible';
+ grid.style.touchAction='pan-y';
+ for(const cell of grid.children){
+  cell.style.width=size+'px';cell.style.height=size+'px';
+  if(rows>visible)cell.style.touchAction='pan-y';
+ }
+}
+{const _rp=renderPanel;renderPanel=function(){
+ const previous=panel==='bag'&&BAGT.t==='inv'?$('pbody').querySelector('.grid'):null;
+ const scrollTop=previous?previous.scrollTop:0;
+ _rp();if(panel!=='bag'){$('pbody').style.overflowY='';return}const B=$('pbody');
   $('ptabs').innerHTML=`<div class="tab ${BAGT.t==='inv'?'on':''}" data-a="btab" data-k="inv">🎒 인벤토리 ${bagList().length}/${BAG_N}</div><div class="tab ${BAGT.t==='dex'?'on':''}" data-a="btab" data-k="dex">📖 도감</div>`;
   if(BAGT.t==='dex'){B.innerHTML=dexHtml();B.style.overflowY='auto';return}
-  const g=B.querySelector('.grid');for(const x of [...B.children])if(x!==g&&!(x.textContent||'').includes('넘쳤어요'))x.remove();B.style.overflowY='hidden';bagFit()}}
+  const g=B.querySelector('.grid');for(const x of [...B.children])if(x!==g&&!(x.textContent||'').includes('넘쳤어요'))x.remove();B.style.overflowY='hidden';bagFit();if(g)g.scrollTop=scrollTop}}
 {const _c=closePanel;closePanel=function(){_c();$('pbody').style.overflowY=''}}
 $('ptabs').addEventListener('click',e=>{const t=e.target.closest('[data-a="btab"]');if(!t||panel!=='bag')return;BAGT.t=t.dataset.k;selItem=null;sfx(600,.03);renderPanel()});
 $('pbody').addEventListener('click',e=>{const t=e.target.closest('[data-a="dext"]');if(!t||panel!=='bag')return;BAGT.d=t.dataset.k;sfx(600,.03);renderPanel()});
