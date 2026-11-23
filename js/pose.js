@@ -57,7 +57,7 @@ function fitBothPalms(bones,profile,scale,orientation,target){
  const b=gripBounds,right=armReach(bones,'r',b.right),left=armReach(bones,'l',b.left);
  b.offset.fromArray(profile[1]).sub(b.temp.fromArray(profile[0])).multiplyScalar(scale).applyQuaternion(orientation);
  b.left.sub(b.offset);
- for(let i=0;i<6;i++){
+ for(let i=0;i<10;i++){
   target.sub(b.left).clampLength(0,left).add(b.left);
   target.sub(b.right).clampLength(0,right).add(b.right);
  }
@@ -68,6 +68,7 @@ function beginWeaponShot(actor,id,dx,dz){
 }
 function restoreGrip(actor){
  if(!actor)return;
+ if(actor.stanceYaw!==undefined){actor.root.rotation.y=actor.stanceYaw;actor.stanceYaw=undefined}
  if(actor.gripHolder){
   if(actor.gripHolder.id===actor.wid){
    actor.holder.quaternion.copy(actor.gripHolder.q);actor.holder.position.copy(actor.gripHolder.p);
@@ -101,7 +102,10 @@ function placeHeldWeapon(actor,dt){
   return;
  }
  if(!model)return;
- const scale=fit.scale*(ITEMS[id].hs||1);
+ const firearm=!!profile&&profile!==rodGrip&&id!=='crossbow'&&id!=='chainsaw';
+ const pistol=id==='pistol';
+ const gunScale=pistol?1.02:(actor.dog ? .94 : .88);
+ const scale=(firearm?gunScale:fit.scale)*(ITEMS[id].hs||1);
  if(!profile){
   // Keep cast, throw and tool swing clips attached to the actual palm.
  
@@ -120,33 +124,41 @@ function placeHeldWeapon(actor,dt){
  const lift=actor.weaponLift=age<.06?1:THREE.MathUtils.lerp(actor.weaponLift||0,aiming?1:0,1-Math.exp(-dt*15));
  const yaw=rod?actor.root.rotation.y:age<.12?shot.yaw:RJ.aim?Math.atan2(RJ.ax,RJ.az):actor.root.rotation.y;
  const kick=age<profile[4]?profile[3]*Math.sin(Math.min(1,age/.035)*Math.PI/2)*Math.pow(1-age/profile[4],2):0;
+ // A diagonal carry clears the chest. Blade the stance when aiming while
+ // keeping the barrel aligned with the joystick's world direction.
+ const carry=actor.dog ? .88 : .78;
+ if(firearm){
+  actor.stanceYaw=actor.root.rotation.y;
+  actor.root.rotation.y+=(pistol?.34:actor.dog?-carry:-.24)*lift;
+ }
+ const bearing=yaw+(firearm?(pistol?.85:carry)*(1-lift):0);
  const m=poseMath,side=fit.side*(id==='pistol'?.48:1);
  const shoulder=bones.upperarmr.getWorldPosition(m.shoulder);
  const center=actor.root.worldToLocal(m.target.copy(shoulder));
  const span=Math.abs(center.x)||.30;
  const cycle=actor.curA?actor.curA.time:0;
  const thrust=saw&&actor.cur.includes('Attack')?Math.sin(Math.min(1,cycle/.35)*Math.PI)*.13:0;
- const target=actor.root.localToWorld(center.set(-side*span,center.y-fit.drop*(1-.72*lift),fit.reach*span+.12+thrust-kick));
+ const target=actor.root.localToWorld(center.set(firearm?-(pistol?1.24:.94)*span:-side*span,center.y-fit.drop*(firearm?.93-.49*lift:1-.72*lift),(firearm?(pistol?.47:.53):fit.reach*span+.12)+thrust-kick));
  saveGrip(actor,bones);
  const holder=actor.holder;
  const rest=actor.holderRest||(actor.holderRest={q:quat(),p:v3()});
  rest.id=id;rest.q.copy(holder.quaternion);rest.p.copy(holder.position);actor.gripHolder=rest;
- let pitch=(saw?.11:.32)*(1-lift)-kick*1.2;
+ let pitch=(firearm?.04:saw?.11:.32)*(1-lift)-kick*1.2;
  if(rod){
   const reel=fishing.st==='reel'&&inp.fire;
   pitch=fishing.st==='bite'?.10*Math.sin(fishing.t*22):reel?-.24+.07*Math.sin(fishing.t*9):-.04;
   rodGrip[1][1]=-.18+(reel?.045*Math.sin(fishing.t*13):0);
   rodGrip[1][2]=.11+(reel?.045*Math.cos(fishing.t*13):0);
  }
- m.orient.setFromEuler(m.euler.set(pitch,yaw,0,'YXZ'));
- fitBothPalms(bones,profile,scale,m.orient,target);
+ m.orient.setFromEuler(m.euler.set(pitch,bearing,0,'YXZ'));
+ if(!pistol)fitBothPalms(bones,profile,scale,m.orient,target);
  reachGrip(bones,'r',target,yaw);
  holder.parent.getWorldQuaternion(m.parentQ);
  holder.quaternion.copy(m.parentQ.invert()).multiply(m.orient);holder.position.set(0,0,0);
  model.scale.setScalar(scale);model.position.fromArray(profile[0]).multiplyScalar(-scale);
  model.updateWorldMatrix(true,false);
  model.localToWorld(m.target.fromArray(profile[1]));
- reachGrip(bones,'l',m.target,yaw);
+ if(!pistol)reachGrip(bones,'l',m.target,yaw);
 }
 
 /* Short travelling streaks and a two-colour flash. Reuse the meshes on mobile. */
