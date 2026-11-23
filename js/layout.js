@@ -97,6 +97,7 @@ devInit=async function(){
     if(e.prop){e.prop[0]=x;e.prop[1]=z}
     if(!e.dock&&!e.boat&&!e.anchor)m.position.y=e.y+hAt(x,z)-hAt(e.x,e.z);
     m.position.x=x;m.position.z=z;m.rotation.y=r;
+    try{dressDirty(ox,oz,7);dressDirty(x,z,7)}catch{}   // 71차: 풀·꽃 장식도 바로 다시(옮긴 자리·원래 자리)
     if(p && m.parent===p.g)scene.attach(m);
   }
   // Keep the exact objects for undo, including their gameplay registrations.
@@ -222,7 +223,19 @@ devInit=async function(){
   upload.textContent='GitHub에 배치 올리기';
   upload.href='https://github.com/wjdwogh-06/ter-1029/upload/main/assets';
   upload.target='_blank';upload.rel='noopener';
-  panel.append(output,document.createTextNode(' '),upload);
+  const copyBtn=document.createElement('button');copyBtn.textContent='📋 배치 복사';
+  panel.append(output,document.createTextNode(' '),copyBtn,document.createTextNode(' '),upload);
+  /* 71차: 배치 글 만들기(내보내기·복사가 같이 씀). 📋 배치 복사 → Claude에게 붙여 넣으면 assets/world-layout.json에 넣어 정식 게임에 올려요 */
+  const layoutJson=(pretty=true)=>{const objects={};
+    for(const e of entries){const v=saved[e.id]??defaults[e.id];if(e.added){if(!e.reinstate&&v?.type)objects[e.id]=v}else if(!e.s?.own&&(valid(v)||deletedValue(v)))objects[e.id]=v}
+    return JSON.stringify({version:1,seed:S.seed,objects},null,pretty?2:0)};
+  copyBtn.onclick=async()=>{
+    if(!active||!DEV.on)return;
+    if(gesture){toast('선택한 구조물을 먼저 적용하거나 취소하세요');return}
+    const n=Object.keys(JSON.parse(layoutJson(false)).objects).length,t='LAYOUT1:'+layoutJson(false);
+    try{await navigator.clipboard.writeText(t);toast('배치 '+n+'개를 복사했어요 — Claude에게 붙여 넣어 보내면 정식 게임에 넣어 드려요')}
+    catch{if(typeof creCopyBox==='function')creCopyBox(t);else prompt('이 글을 길게 눌러 복사하세요',t)}
+  };
   output.onclick=()=>{
     if(!active||!DEV.on)return;
     if(gesture){toast('선택한 구조물을 먼저 적용하거나 취소하세요');return}
@@ -307,12 +320,44 @@ devInit=async function(){
       q.e.m.position.x=p.x+dx*c+dz*sn;q.e.m.position.z=p.z-dx*sn+dz*c;q.e.m.rotation.y=q.r+dr;
     }
   };
+  /* 71차(디자인, 기획자 요청): 구조물 하나씩 알아보기 — 이름 '지역 · 종류 번호'(원래 자리로 정해서 옮겨도 그대로, 위 상태 줄),
+     배치 중 가까운 구조물 위에 '종류 번호' 이름표, 고른 것은 주황 이름표(지역까지) + 바닥 주황 고리, [🏷 이름표] 켜기·끄기 */
+  const kindOf=e=>modelLabels[e.name]||DECO[e.s?.t]?.n||propNames[e.s?.t]||catalog.get(e.added)||e.name;
+  const PLACES71=[['수달섬',typeof OTR!=='undefined'?OTR.x:0,typeof OTR!=='undefined'?OTR.z:0,50],['낚시 캠프',137,135,34],['식물섬',88.5,665.5,48],['특수 보급지',718,845,30]];
+  const areaOf=(x,z)=>{let b=null,bd=1e9;for(const p of PORTS){const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}if(b&&bd<48)return b.n;
+    for(const [n,px,pz,r] of PLACES71)if(Math.hypot(px-x,pz-z)<r)return n;
+    if(typeof SUPS!=='undefined')for(const q of SUPS)if(q&&Math.hypot(q.x-x,q.z-z)<26)return '보급지 S'+q.i;
+    return Math.round(x)+'·'+Math.round(z)};
+  let tagN=-1;
+  function retag(){tagN=entries.length;const g=new Map();
+    for(const e of entries){const a=areaOf(e.x,e.z),k=kindOf(e),key=a+'|'+k;e._a=a;e._k=k;if(!g.has(key))g.set(key,[]);g.get(key).push(e)}
+    for(const L of g.values()){L.sort((p,q)=>p.z-q.z||p.x-q.x);L.forEach((e,i)=>{e.tagS=e._k+(L.length>1?' '+(i+1):'');e.tag=e._a+' · '+e.tagS})}}
+  const tagOf=e=>{if(tagN!==entries.length)retag();return e.tag||kindOf(e)};
+  let tagsOn=true;try{tagsOn=localStorage.getItem('layout-tags')!=='0'}catch{}
+  const tagBtn=document.createElement('button');const tagTx=()=>tagBtn.textContent=tagsOn?'🏷 이름표 끄기':'🏷 이름표 켜기';tagTx();
+  tagBtn.onclick=()=>{tagsOn=!tagsOn;tagTx();try{localStorage.setItem('layout-tags',tagsOn?'1':'0')}catch{}};
+  panel.insertBefore(tagBtn,status);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.86,1,40),new THREE.MeshBasicMaterial({color:0xff8a2a,transparent:true,opacity:.9,depthTest:false,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2;ring.renderOrder=9;ring.visible=false;scene.add(ring);
+  const sizeOf=e=>{if(e._r)return e._r;let r=.8,h=1.4;const sd=e.s&&sdef(e.s);if(sd&&sd.bx)r=Math.max(sd.bx,sd.bz);
+    const g=e.m.geometry;if(g){if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox,sc=e.m.scale.x||1;if(!sd||!sd.bx)r=Math.max(b.max.x-b.min.x,b.max.z-b.min.z)/2*sc;h=b.max.y*sc}
+    e._r=Math.max(.45,Math.min(r,9));e._h=Math.max(.6,Math.min(h,8));return e._r};
+  {const _df=drawFx;drawFx=function(dt){_df(dt);try{
+    const on=active&&DEV.on&&mode==='play';ring.visible=!!(on&&selected&&selected.m.parent);
+    if(ring.visible){const m=selected.m,r=sizeOf(selected)+.35;ring.position.set(m.position.x,groundY(m.position.x,m.position.z)+.06,m.position.z);ring.scale.setScalar(r)}
+    if(!on||!tagsOn)return;const c=fctx,k=Math.max(.8,UIS*1.1),near=[];
+    for(const e of entries){const m=e.m;if(!m.parent||!m.visible)continue;const d=Math.hypot(m.position.x-P.x,m.position.z-P.z);if(d<26||e===selected)near.push([d,e])}
+    near.sort((a,b)=>a[0]-b[0]);const used=[];let n=0;
+    for(const [d,e] of near){if(n>=34&&e!==selected)continue;const m=e.m;sizeOf(e);const p=scr(m.position.x,m.position.y+e._h+.35,m.position.z);if(!p[2]||p[0]<-40||p[0]>innerWidth+40||p[1]<-20||p[1]>innerHeight+20)continue;
+      const sel=e===selected;if(!sel&&used.some(q=>Math.abs(q[0]-p[0])<70*k&&Math.abs(q[1]-p[1])<17*k))continue;used.push(p);n++;
+      tagOf(e);uiPill(c,sel?e.tag:e.tagS,p[0],p[1],(sel?12.5:10)*k,sel?'#e8742c':'rgba(91,61,43,.82)',sel?'#fff':'#fbf4e6')}
+  }catch(e){}}}
   function select(e,all=false){
     resetModels();selected=e;
     group=(all?entries.filter(q=>q.p===e.p&&!q.reinstate):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
     angle.value=Math.round((e.m.rotation.y*180/Math.PI%360+360)%360);
     showAngle();turnButtons.forEach(b=>b.hidden=false);rotation.hidden=apply.hidden=cancel.hidden=false;
-    status.textContent=(modelLabels[e.name]||DECO[e.s?.t]?.n||propNames[e.s?.t]||e.name)+' 선택';whole.disabled=!e.p;remove.disabled=!!e.anchor;
+    status.textContent=tagOf(e)+' 선택 · '+Math.round(e.m.position.x)+', '+Math.round(e.m.position.z);whole.disabled=!e.p;remove.disabled=!!e.anchor;
   }
   let dest;
   function clear(){remove.disabled=true;turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
@@ -403,7 +448,7 @@ devInit=async function(){
       resetModels();turnButtons.forEach(b=>b.hidden=true);
       g.baseX=selected.m.position.x;g.baseZ=selected.m.position.z;
       g.drag=true;rotation.hidden=apply.hidden=cancel.hidden=true;
-      status.textContent=selected.name+' 이동 중';
+      status.textContent=tagOf(selected)+' 이동 중';
     },360);
   },true);
   window.addEventListener('pointermove',ev=>{

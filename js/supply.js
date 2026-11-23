@@ -65,8 +65,9 @@ const SPT=[
  {n:'컨테이너 야적장',f:'steel',cr:[[-1.4,-1.5,.15],[1.9,-.5,-.2],[-.2,1.7,.4],[3.9,2.3,-.5]],st:[['sp_cont',-1.0,-4.5,0]],de:[['lk_pallet',4.5,-3.4,.2,1],['lk_pallet',4.6,-2.2,-.1,1],['jerry',-4.7,1.0,.6],['tarppile',-5.0,-1.4,1.2]],lamp:[4.8,4.2],smoke:[-4.2,3.0],sign:[-3.4,4.8,.2]},
  {n:'감시탑',f:'wood',cr:[[-.6,.6,.1],[2.4,1.9,.4],[-2.8,2.2,-.3],[1.2,-3.0,.7]],tw:[-4.3,-3.7],sb:[[3.6,-4.4,-.35]],de:[['ammostack',4.8,-1.6,.6],['jerry',-1.2,-4.8,.2]],lamp:[4.8,3.6],smoke:[-1.6,-2.2],sign:[-3.4,4.8,.2]},
  {n:'연료 저장소',f:'steel',warn:1,cr:[[-1.4,.4,.15],[1.8,.8,-.25],[0,-2.4,.5],[-4.3,1.9,-.5]],st:[['well',-4.0,-3.8,Math.PI/2],['sp_drums',3.85,-4.1,0]],de:[['lk_drum_0',3.4,-4.4,0],['lk_drum_1',4.3,-4.5,.7],['lk_drum_2',3.85,-3.65,1.4],['jerry',5.2,-2.4,.3],['jerry',5.5,-1.7,1.2]],lamp:[4.6,3.6],smoke:[1.6,-4.8],sign:[-3.2,4.8,.2]},
- {n:'버려진 트럭',f:'wood',broken:1,cr:[[.6,-.4,.2],[3.1,1.2,-.3],[-.2,2.4,.4],[3.3,-2.4,.6]],st:[['sp_truck',-3.7,-1.5,.32]],de:[['tarppile',3.0,-4.6,.3],['jerry',-1.2,-4.6,1.0],['ammostack',1.3,-4.2,-.4]],lamp:[4.8,3.8],smoke:[-1.4,2.2],sign:[-3.8,4.8,.2]}];
-const SP_THEME=[0,4,2,6,5,3,5,0,1,4,6,2,1,3];   /* 보급지 번호 → 테마(가까운 S6·S7·S8은 서로 다르게) */
+ {n:'버려진 트럭',f:'wood',broken:1,cr:[[.6,-.4,.2],[3.1,1.2,-.3],[-.2,2.4,.4],[3.3,-2.4,.6]],st:[['sp_truck',-3.7,-1.5,.32]],de:[['tarppile',3.0,-4.6,.3],['jerry',-1.2,-4.6,1.0],['ammostack',1.3,-4.2,-.4]],lamp:[4.8,3.8],smoke:[-1.4,2.2],sign:[-3.8,4.8,.2]},
+ {n:'보급 창고',f:'steel',wh:1,cr:[[-2.9,-3.4,.1],[2.9,-3.3,-.15],[-2.9,-.4,.3],[2.9,-.2,-.25]],de:[['pallet',-5.7,2.6,.3,1],['jerry',5.5,2.4,.4],['tarppile',5.6,-1.2,1.5]],lamp:[-5.4,4.6],smoke:[4.4,4.6],sign:[2.6,5.6,-.15]}];
+const SP_THEME=[0,4,2,6,5,7,5,0,1,4,7,2,1,7];   /* 71차: S5·S10·S13은 보급 창고(테마 7), 예전(54차) = [0,4,2,6,5,3,5,0,1,4,6,2,1,3] */   /* 보급지 번호 → 테마(가까운 S6·S7·S8은 서로 다르게) */
 const SPF=[];   /* 보급지마다 울타리 정보 {i,x,z,th,m,hx,hz,posts,mesh,cols} — 검사·설치 금지 원이 써요 */
 /* 문 방향: 길이 있으면 그 방향, 없으면 앞(+z)부터 돌려 보며 문 앞 8~14m가 땅인 쪽 */
 function spGateDir(s){if(typeof ROAD_GATE!=='undefined'&&ROAD_GATE[s.i]!==undefined)return ROAD_GATE[s.i];
@@ -116,6 +117,7 @@ function spFence(s,T,th,m,o){const h1=hash(s.i,3,71),h2=hash(s.i,5,72),hx=o?o.hx
 function spBuild(s){const i=s.i,T=SPT[SP_THEME[i]%SPT.length],m=i%2?-1:1,th=spGateDir(s),c=Math.cos(th),sn=Math.sin(th),n=2+i%3,y0=hAt(s.x,s.z);
  const W=(lx,lz)=>{lx*=m;return[s.x+lx*c+lz*sn,s.z-lx*sn+lz*c]},R=r=>r*m+th;s.cr=[];s.theme=T.n;
  for(let k=0;k<n;k++){const q=T.cr[k],[x,z]=W(q[0],q[1]),chest=k===0&&i%4===2,o=addStruct({t:chest?'chest':'supply',x,z,r:R(q[2]),yo:chest?0:q[3]||0});o.li='s'+i+'_'+k;s.cr.push(o)}
+ if(T.wh)try{spWarehouse(s,W,th)}catch(e){console.error('보급 창고',e)}
  const add3=(type,lx,lz,rot,scale=1)=>{const [x,z]=W(lx,lz);const m3=mesh(GEO[type],MATT);m3.scale.setScalar(scale);m3.position.set(x,hAt(x,z)-.03,z);m3.rotation.y=R(rot)+(type==='chute'&&m<0?Math.PI:0);m3.userData.layoutName=type;scene.add(m3);return m3};
  for(const d of T.de||[])if(GEO[d[0]]&&!(d[0]==='pallet'&&n<1))add3(...d);
  for(const [t,lx,lz,rot] of T.st||[]){const [x,z]=W(lx,lz);addStruct({t,x,z,r:R(rot)})}
@@ -171,3 +173,46 @@ function spBigBuild(s){const B=SUP_BIG,i=s.i,th=spGateDir(s),c=Math.cos(th),sn=M
  SPF.push({i,x:s.x,z:s.z,th,m,theme:T.n,hx:F.hx,hz:F.hz,posts:F.posts.map(p=>[p.x,p.z]),mesh:F.mesh,cols:F.cols.length,big:1})}
 /* 큰 보급 기지 상자는 전리품을 두 번 뽑아 합쳐요 */
 {const _lg=lootGen;lootGen=function(s){const g=_lg.apply(this,arguments);if(typeof SUP_BIG!=='undefined'&&s&&s.li&&s.li.indexOf('s'+SUP_BIG.i+'_')===0){const g2=_lg.apply(this,arguments);for(const k in g2)g[k]=(g[k]||0)+g2[k];for(const k in g)if(ITEMS[k]&&ITEMS[k].one)g[k]=Math.min(g[k],1)}return g}}
+
+/* 71차(디자인, 기획자 11-23): 보급 창고 — S5·S10·S13은 보급 상자가 창고 안에 있어요.
+   창고 = 8.4×6.2m 골함석 창고(앞 가운데 큰 문, 말아 올린 셔터), 안 뒤쪽에 선반 둘. 벽은 보이지 않는 막이(PLB)라 문으로만 드나들어요.
+   들어가면(문턱 포함) 지붕이 사라지고 앞벽·간판이 반투명해져서 안이 다 보여요(spWhUpd, 매 장면 부드럽게). 관리자 [구조물 배치]로 통째로 옮길 수 있어요. */
+const SPWH=[],SPWH_C={wall:0xd9d4c7,rib:0xc5bfb1,nav:0x3b4a6b,roof:0x3f8f9a,roof2:0x4fa3ad,conc:0xb9b5ab,yel:0xf2c230,dk:0x2b2f36,or:0xf28c38,shelf:0x8f9aa6,box:0xc89a5a,bl:0x3f7fd0};
+function spWhGeo(){const C=SPWH_C,HX=4.2,HZ=3.1,EV=3.0,RG=4.0,base=[],roof=[],front=[],B=(w,h,d)=>box(w,h,d);
+ base.push(pt(lkRb(8.5,.1,6.3,.04,.02),C.conc,[0,-.01,0]));
+ base.push(pt(B(8.4,EV,.14),C.wall,[0,EV/2,-HZ+.07]));for(let x=-4.0;x<=4.01;x+=.42)base.push(pt(B(.08,EV-.04,.05),C.rib,[x,EV/2,-HZ+.16]));
+ for(const sx of[-1,1]){base.push(pt(B(.14,EV,6.2),C.wall,[sx*(HX-.07),EV/2,0]));for(let z=-2.9;z<=2.91;z+=.42)base.push(pt(B(.05,EV-.04,.08),C.rib,[sx*(HX+.02),EV/2,z]),pt(B(.05,EV-.04,.08),C.rib,[sx*(HX-.16),EV/2,z]));
+  base.push(pt(B(.18,.42,6.24),C.nav,[sx*HX,.21,0]));
+  for(const sz of[-1,1])base.push(pt(B(.26,EV+.1,.26),C.nav,[sx*HX,(EV+.1)/2,sz*HZ]));
+  base.push(pt(B(2.55,.5,.16),C.nav,[sx*2.925,.25,HZ-.06]));                                   // 앞 아래 띠(늘 보임)
+  for(let k=0;k<6;k++)base.push(pt(B(.16,.44,.17),k%2?C.dk:C.yel,[sx*1.66,.22+k*.44,HZ-.02]))}   // 문틀 노랑·검정 줄
+ base.push(pt(B(8.44,.42,.18),C.nav,[0,.21,-HZ]));
+ // 안: 뒤쪽 선반 둘(주황 기둥·회청 판·상자) + 팔레트 위 자루
+ for(const cx of[-1.0,1.0]){for(const a of[-.85,.85])for(const b of[-.27,.27])base.push(pt(B(.07,2.2,.07),C.or,[cx+a,1.1,-2.6+b]));
+  for(const y of[.3,1.05,1.8,2.18])base.push(pt(B(1.82,.05,.62),C.shelf,[cx,y,-2.6]));
+  for(const [y,k] of [[.33,0],[1.08,1],[1.83,2]])for(let i=0;i<3;i++){const w=.42+hbH(cx+i,k)*.12,h=.3+hbH(i,k+cx)*.18,c=(i+k)%3?C.box:C.bl;base.push(pt(lkRb(w,h,.46,.03,.015),c,[cx-.55+i*.55,y+h/2,-2.6]))}}
+ base.push(pt(lkRb(1.1,.14,.9,.02,.01),0xd6965a,[0,.07,-1.6]),pt(lkRb(.9,.5,.7,.05,.02),0x9fa86a,[0,.39,-1.6]));
+ // 지붕(사라짐): 두 비탈 + 골 줄 + 용마루 + 양옆 박공
+ {const a=Math.atan2(RG-EV,HZ),L=Math.hypot(HZ+.4,RG-EV+.13);
+  for(const sz of[-1,1]){const parts=[pt(B(8.9,.14,L),C.roof,[0,0,0])];for(let x=-4.25;x<=4.26;x+=.5)parts.push(pt(B(.07,.06,L),C.roof2,[x,.09,0]));const s1=mg(parts);s1.rotateX(sz*a);s1.translate(0,(EV+RG)/2+.07,sz*(HZ/2+.1));roof.push(s1)}
+  roof.push(pt(B(9.0,.18,.38),C.roof2,[0,RG+.09,0]));
+  for(const sx of[-1,1]){const sh=new THREE.Shape([new THREE.Vector2(-HZ,EV),new THREE.Vector2(HZ,EV),new THREE.Vector2(0,RG)]);const g=new THREE.ExtrudeGeometry(sh,{depth:.14,bevelEnabled:false});g.rotateY(Math.PI/2);g.translate(sx*HX-.07,0,0);roof.push(pt(g,C.wall,[0,0,0]))}}
+ // 앞벽(반투명): 문 양옆 판 + 문 위 인방 + 말아 올린 셔터 + 문 위 등
+ for(const sx of[-1,1]){front.push(pt(B(2.55,EV-.5,.14),C.wall,[sx*2.925,.5+(EV-.5)/2,HZ-.07]));for(let x=1.9;x<=4.0;x+=.42)front.push(pt(B(.08,EV-.54,.05),C.rib,[sx*x,.5+(EV-.5)/2,HZ+.02]))}
+ front.push(pt(B(3.3,EV-2.65,.16),C.nav,[0,(EV+2.65)/2,HZ-.06]));
+ {const d=cyl(.19,.19,3.2,12);d.rotateZ(Math.PI/2);front.push(pt(d,0x9aa3ad,[0,2.5,HZ-.28]),pt(B(3.2,.12,.05),0x7f8892,[0,2.33,HZ-.24]))}
+ front.push(pt(B(.5,.12,.3),C.dk,[0,EV+.02,HZ+.12]),pt(new THREE.SphereGeometry(.09,8,6),0xfff1b0,[0,EV-.06,HZ+.2]));
+ return {base:mg(base),roof:mg(roof),front:mg(front)}}
+function spWarehouse(s,W,th){if(!GEO.spwh_base){const g=spWhGeo();GEO.spwh_base=g.base;GEO.spwh_roof=g.roof;GEO.spwh_front=g.front;try{lkAO(GEO.spwh_base,.5,1);lkAO(GEO.spwh_front,.5,1)}catch(e){}}
+ const [x,z]=W(0,-1.5),y=hAt(x,z)-.03,b=mesh(GEO.spwh_base,MATT);b.position.set(x,y,z);b.rotation.y=th;b.userData.layoutName='보급 창고';scene.add(b);
+ const mk=g=>{const mt=MATT.clone();const m=mesh(g,mt);b.add(m);m.userData.mt=mt;return m},roof=mk(GEO.spwh_roof),front=mk(GEO.spwh_front);
+ let sign=null;try{sign=plSignText('📦 보급 창고',1.9,.38);sign.position.set(-2.95,2.05,3.24);b.add(sign);sign.material.transparent=true}catch(e){}
+ const bl=[];for(const [lx,lz,hx,hz] of [[0,-4.6,4.3,.16],[-4.2,-1.5,.16,3.2],[4.2,-1.5,.16,3.2],[-2.93,1.6,1.3,.16],[2.93,1.6,1.3,.16],[0,-4.1,1.95,.36]]){const [px,pz]=W(lx,lz);bl.push(addStruct({t:PLB(hx,hz),x:px,z:pz,r:th}))}
+ b.userData.layoutBlocks=bl;SPWH.push({s,b,roof,front,sign,op:1})}
+function spWhUpd(dt){if(!SPWH.length||typeof P==='undefined'||!P)return;const ins=typeof INT!=='undefined'&&INT.on;
+ for(const w of SPWH){const b=w.b;if(!b.parent)continue;const dx=P.x-b.position.x,dz=P.z-b.position.z;if(dx*dx+dz*dz>120&&w.op===1)continue;
+  const r=b.rotation.y,c=Math.cos(r),sn=Math.sin(r),lx=dx*c-dz*sn,lz=dx*sn+dz*c,inside=!ins&&Math.abs(lx)<4.4&&lz>-3.3&&lz<3.7,tgt=inside?0:1;
+  w.op+=(tgt-w.op)*Math.min(1,dt*7);if(Math.abs(w.op-tgt)<.01)w.op=tgt;
+  const fo=.16+.84*w.op;for(const [m,o] of [[w.front,fo],[w.roof,w.op]]){const mt=m.userData.mt;mt.opacity=o;mt.transparent=o<.995;mt.depthWrite=o>.6;m.visible=o>.02;m.castShadow=o>.6}
+  if(w.sign){w.sign.material.opacity=fo;w.sign.visible=fo>.02}}}
+{const _ud=updDress;updDress=function(dt,px,pz){_ud(dt,px,pz);try{spWhUpd(dt)}catch(e){}}}

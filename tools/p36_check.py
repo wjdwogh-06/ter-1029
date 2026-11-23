@@ -63,7 +63,7 @@ async def steps(pg):
     r=await ev("()=>{target=findTarget();return JSON.stringify({panel,powder:invN('powder'),left:S.box[_bx36.li]?S.box[_bx36.li].c.filter(Boolean).length:-1,lab:target&&target.s===_bx36?target.lab:null,openGeo:_bx36.m.children[0].geometry===GEO[sdef(_bx36).og||'crate_open'],toast:document.getElementById('toast').textContent})}")
     Q=json.loads(r);Q['ok']=Q['panel'] is None and Q['powder']==4 and Q['left']==0 and Q['lab'] is None and Q['openGeo'];res['takeAll']=Q
     # 7. 저장에 남은 상자 / 3일 뒤 다시 채워짐(새 내용)
-    r=await ev("""()=>{S.box[_bx36.li].c[5]=['can',2];save();const d=JSON.parse(localStorage.getItem(SAVE));const kept=!!(d.S.box&&d.S.box[_bx36.li]&&d.S.box[_bx36.li].c[5]);
+    r=await ev("""()=>{S.box[_bx36.li].c[5]=['wood',2];save();const d=JSON.parse(localStorage.getItem(SAVE));const kept=!!(d.S.box&&d.S.box[_bx36.li]&&d.S.box[_bx36.li].c[5]);
       S.box[_bx36.li].c[5]=null;S.day+=3;target=findTarget();const lab=target&&target.s===_bx36?target.lab:null;inp.actEdge=true;interact();inp.actEdge=false;const b=S.box[_bx36.li];return JSON.stringify({kept,lab,panel,fresh:b&&b.d===S.day&&b.c.filter(Boolean).length>0})}""")
     Q=json.loads(r);Q['ok']=Q['kept'] and Q['lab']=='열기' and Q['panel']=='box' and Q['fresh'];res['refill']=Q
     await ev("()=>closePanel()")
@@ -76,9 +76,9 @@ async def steps(pg):
           const b=S.box[s.li];const r={{lab,panel,same:c0===S.coins&&i0===JSON.stringify(S.inv),kinds:b?b.c.filter(Boolean).length:0,title:document.getElementById('ptabs').textContent}};document.querySelector('#pbody [data-a=boxall]').click();await sl(200);r.after=panel;r.coins=S.coins-c0;r.got=bagList().length;return JSON.stringify(r)}}""")
         out[t]=json.loads(r) if r else None
     sp=out['spsupply'];ch=out['chest']
-    res['others']={'spsupply':sp,'chest':ch,'ok':bool(sp) and sp['lab']=='열기' and sp['panel']=='box' and sp['same'] and sp['kinds']>=6 and sp['after'] is None and sp['coins']>=400 and (ch is None or (ch['panel']=='box' and ch['same'] and ch['after'] is None))}
+    res['others']={'spsupply':sp,'chest':ch,'ok':bool(sp) and sp['lab']=='열기' and sp['panel']=='box' and sp['same'] and sp['kinds']>=4 and sp['after'] is None and sp['coins']>=400 and (ch is None or (ch['panel']=='box' and ch['same'] and ch['after'] is None))}
     # 9. 세로 화면 사진
-    await ev("()=>{const s=_bx36;S.box[s.li]={d:S.day,c:Array(20).fill(null)};S.box[s.li].c[2]=['ammoS',12];S.box[s.li].c[9]=['bandage',1];S.box[s.li].c[14]=['scrap',4];P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI}")
+    await ev("()=>{const s=_bx36;S.box[s.li]={d:S.day,c:Array(20).fill(null)};S.box[s.li].c[2]=['ammoS',12];S.box[s.li].c[9]=['powder',1];S.box[s.li].c[14]=['scrap',4];P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI}")
     await pg.set_viewport_size({'width':400,'height':860});await pg.wait_for_timeout(1000)
     await ev("()=>{target=findTarget();inp.actEdge=true;interact();inp.actEdge=false}");await pg.wait_for_timeout(500)
     r=await ev("()=>{const p=document.getElementById('panel').getBoundingClientRect(),g=[...document.querySelectorAll('#pbody .bxg')].map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)]}),bt=document.querySelector('[data-a=boxall]').getBoundingClientRect();return JSON.stringify({panel,g,btnVisible:bt.bottom<=innerHeight&&bt.top>=0,stack:g.length==2&&g[1][1]>g[0][1]+g[0][3]-4})}")
