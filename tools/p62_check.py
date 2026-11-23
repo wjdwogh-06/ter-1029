@@ -78,13 +78,13 @@ async def steps(pg):
     R2.update(json.loads(await ev("""()=>{const r={};const cs=CS;
       const s=cs.find(q=>q.t==='crop_corn');if(!s)return JSON.stringify(r);P.cd=0;r.geo=s&&s.m.children[0].geometry===GEO.pc_corn_2;P.x=s.x;P.z=s.z+1.2;P.rot=Math.PI;const t=findTarget();r.lab=t&&t.lab;const c0=invN('corn');target=t;inp.actEdge=true;interact();inp.actEdge=false;r.harvest=invN('corn')-c0;r.gone=!structs.includes(s);return JSON.stringify(r)}""")))
     R['farm']=R2;R['ok']=('gone' in R2) and R['wild']==[11]*5 and R['dex1']>R['dex0'] and R['got']>=1 and R2['crops']==[True]*5 and R2['n']==5 and R2['geo'] and R2['harvest']==2 and R2['gone'];res['plants']=R
-    # 7. 텐트 안: 가구 딱 붙이기 + 액자는 뒤 벽에 딱
+    # 7. 텐트 안: 가구 딱 붙이기 + 액자는 뒤 벽에 딱(63차부터 둥근 벽 면에 붙어서 바닥 벽선보다 조금 앞)
     print('tentA',await ev("""()=>{S.inv.kit_tent=(S.inv.kit_tent||0)+1;setBuild('ptent');let g=null;for(let i=0;i<1600&&!g;i++){P.x=SP.x-60+(i%40)*2.3;P.z=SP.z+40+((i/40)|0)*2.4;P.rot=0;const q=ghostPos();if(q.ok)g=q}if(!g)return 'no spot';placeBuild();setBuild(null);const tn=structs.find(q=>q.own&&q.t==='ptent');intEnter(tn);return 'in'}"""))
     await pg.wait_for_timeout(2500)
     R=json.loads(await ev("""()=>{const r={inside:INT.on};const T=(k,x,z,pl)=>{S.inv['kit_'+k]=(S.inv['kit_'+k]||0)+1;setBuild(k);brot=0;BPIN.on=true;BPIN.x=x;BPIN.z=z;P.x=INT.x+2.4;P.z=INT.z+1.6;const g=ghostPos();if(g.ok&&pl)placeBuild();BPIN.on=false;setBuild(null);return g};
       const a=T('table_wsq',INT.x,INT.z,1);r.t=a.ok;const b=T('stool_wood',INT.x+.85,INT.z,1);r.s=[b.ok,+(b.x-INT.x).toFixed(3)];const sv=DC.snap;DC.snap=0;r.over=T('stool_wood',INT.x+.8,INT.z,0).why;DC.snap=sv;
       const f=T('frame_dog',INT.x-1.5,INT.z-INT.hd+.4,1);r.frame=[f.ok,+(f.z-(INT.z-INT.hd)).toFixed(3)];const f2=T('frame_lh',INT.x+1.6,INT.z-INT.hd-.6,1);r.frame2=[f2.ok,+(f2.z-(INT.z-INT.hd)).toFixed(3)];const rug=T('rug_round',INT.x-1.6,INT.z+.4,1);r.rug=rug.ok;return JSON.stringify(r)}"""))
-    R['ok']=R['inside'] and R['t'] and R['s'][0] and abs(R['s'][1]-.84)<.002 and R['over']=='다른 물건과 겹쳐요' and R['frame'][0] and abs(R['frame'][1]-.05)<.002 and R['frame2'][0] and abs(R['frame2'][1]-.05)<.002 and R['rug'];res['tent']=R
+    R['ok']=R['inside'] and R['t'] and R['s'][0] and abs(R['s'][1]-.84)<.002 and R['over']=='다른 물건과 겹쳐요' and R['frame'][0] and R['frame'][1]>=.049 and R['frame2'][0] and R['frame2'][1]>=.049 and R['rug'];res['tent']=R
     await pg.wait_for_timeout(800);await pg.screenshot(path=O('p62_tent.jpg'),type='jpeg',quality=86)
     await ev("()=>{intOut()}");await pg.wait_for_timeout(800)
     # 8. 저장 → 이어하기: 놓은 가구·계단·여행용 가방 그대로
