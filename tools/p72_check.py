@@ -27,12 +27,17 @@ async def steps(pg):
     pos=lambda: ev("()=>{const s=window.__s;return JSON.stringify([+s.x.toFixed(2),+s.z.toFixed(2),!!s.m.parent,structs.includes(s)])}")
     stat="()=>{const sp=[...document.querySelectorAll('.layout-controls *')].filter(e=>e.children.length===0&&/선택|이동|옮|저장|삭제했/.test(e.textContent));return sp.map(e=>e.textContent).slice(-2)}"
     await pg.wait_for_timeout(2500)
+    AIM="()=>{const s=window.__s,m=s.m,r=new THREE.Raycaster();m.updateMatrixWorld(true);for(const [ox,oy] of [[0,.6],[.45,.6],[-.45,.6],[.45,1],[-.45,1],[.3,.3],[-.3,.3]]){const p=scr(m.position.x+ox,m.position.y+oy,m.position.z);r.setFromCamera({x:p[0]/innerWidth*2-1,y:1-p[1]/innerHeight*2},cam);const h=r.intersectObjects(structs.filter(q=>q.m&&q.m.parent).map(q=>q.m),true)[0];let o=h&&h.object;while(o&&o!==m)o=o.parent;if(o===m)return JSON.stringify(p)}return JSON.stringify(scr(m.position.x,m.position.y+.6,m.position.z))}"
     p0=json.loads(await pos())
     sc=json.loads(await ev("()=>{const s=window.__s,m=s.m,r=new THREE.Raycaster();m.updateMatrixWorld(true);for(const [ox,oy] of [[0,.6],[.45,.6],[-.45,.6],[.45,1],[-.45,1],[.3,.3],[-.3,.3]]){const p=scr(m.position.x+ox,m.position.y+oy,m.position.z);r.setFromCamera({x:p[0]/innerWidth*2-1,y:1-p[1]/innerHeight*2},cam);const h=r.intersectObjects(structs.filter(q=>q.m&&q.m.parent).map(q=>q.m),true)[0];let o=h&&h.object;while(o&&o!==m)o=o.parent;if(o===m)return JSON.stringify(p)}return JSON.stringify(scr(m.position.x,m.position.y+.6,m.position.z))}"));x,y=sc[0],sc[1]
-    await pg.mouse.move(x,y);await pg.mouse.down()
-    for k in range(1,9):await pg.mouse.move(x+9*k,y+2*k);await pg.wait_for_timeout(25)
-    await pg.wait_for_timeout(150);await pg.mouse.up();await pg.wait_for_timeout(500)
-    p1=json.loads(await pos());st1=await ev(stat);selAfter=await ev("()=>!document.querySelector('.layout-delete').disabled")
+    for _try in range(3):   # 헤드리스 화면이 느려 카메라가 아직 움직이는 중이면 한 번 더
+        await pg.mouse.move(x,y);await pg.mouse.down()
+        for k in range(1,9):await pg.mouse.move(x+9*k,y+2*k);await pg.wait_for_timeout(25)
+        await pg.wait_for_timeout(150);await pg.mouse.up();await pg.wait_for_timeout(500)
+        p1=json.loads(await pos())
+        if abs(p1[0]-p0[0])>.8:break
+        await pg.wait_for_timeout(1500);sc=json.loads(await ev(AIM));x,y=sc[0],sc[1]
+    st1=await ev(stat);selAfter=await ev("()=>!document.querySelector('.layout-delete').disabled")
     # 다시 눌러 고르고 화살표 ▶ 두 번(간격 0.5m → 1m)
     sc=json.loads(await ev("()=>{const s=window.__s,m=s.m,r=new THREE.Raycaster();m.updateMatrixWorld(true);for(const [ox,oy] of [[0,.6],[.45,.6],[-.45,.6],[.45,1],[-.45,1],[.3,.3],[-.3,.3]]){const p=scr(m.position.x+ox,m.position.y+oy,m.position.z);r.setFromCamera({x:p[0]/innerWidth*2-1,y:1-p[1]/innerHeight*2},cam);const h=r.intersectObjects(structs.filter(q=>q.m&&q.m.parent).map(q=>q.m),true)[0];let o=h&&h.object;while(o&&o!==m)o=o.parent;if(o===m)return JSON.stringify(p)}return JSON.stringify(scr(m.position.x,m.position.y+.6,m.position.z))}"));x,y=sc[0],sc[1]
     await pg.wait_for_timeout(800)

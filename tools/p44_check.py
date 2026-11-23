@@ -40,7 +40,7 @@ async def steps(pg):
       await _enter(h);const vis=bn.m.visible,dbg={on:INT.on,isH:INT.s===h,k:curHK(),bk:bn.hk,busy,L};await _leave();return JSON.stringify({same,still,vis,dbg})}""")
     R=json.loads(r);R['ok']=R['same'] and R['still'] and R['vis'];res['upgrade']=R
     # 8. 동북섬 겨울: 나무·바위 모두 '_w', 다른 섬은 그대로, 땅이 하얗고, 얼음판·조각, 항구 안 얼음 없음, 눈은 동북섬 위에서만
-    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const I=ISL.find(i=>i.n==='동북섬');let on=0,onW=0,offW=0;objs.forEach(o=>{const T=OBJT[o.t];if(T.berry)return;const isl=islAt(o.x,o.z)===I;if(isl){on++;if(o.gk.endsWith('_w'))onW++}else if(o.gk.endsWith('_w'))offW++});
+    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const I=ISL.find(i=>i.n==='동북섬');let on=0,onW=0,offW=0;objs.forEach(o=>{const T=OBJT[o.t];if(T.berry)return;const isl=islAt(o.x,o.z)===I,ow=typeof wntIsls==='function'&&wntIsls().includes(islAt(o.x,o.z));if(ow&&!isl)return;if(isl){on++;if(o.gk.endsWith('_w'))onW++}else if(o.gk.endsWith('_w'))offW++});
       const col=(x,z)=>{for(const t of tchunks){const g=t.m.geometry,P2=g.attributes.position.array,L=g.attributes.color.array;for(let k=0;k<P2.length;k+=3)if(Math.abs(P2[k]-x)<1.01&&Math.abs(P2[k+2]-z)<1.01)return (L[k]+L[k+1]+L[k+2])/3}return -1};
       const a=WNT.ice.geometry.attributes.position.array,q=PORT_SAFE[2];let inPort=0;for(let k=0;k<a.length;k+=3)if(Math.hypot(a[k]-q[0],a[k+2]-q[1])<q[2])inPort++;
       P.x=760;P.z=212;unstuck();P.yv=undefined;updCamera(0,P.x,groundY(P.x,P.z),P.z,true);for(let t=0;t<40&&!(WNT.snow.visible&&WNT.k>.3);t++)await sl(200);const snowOn=WNT.snow.visible&&WNT.k>.3;
