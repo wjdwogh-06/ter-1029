@@ -135,6 +135,17 @@ button,input{font-family:var(--f)}
 #ui.left-handed #bBag{right:auto;left:74px}#ui.port.left-handed #bBag{left:62px}
 @media(max-width:600px) and (orientation:portrait){.landing{grid-template-columns:1fr;align-content:space-between;gap:40px}.harbor-menu{width:100%;max-width:400px;justify-self:center}#title h1{font-size:clamp(46px,12vw,72px)}}
 @media(max-height:470px) and (orientation:landscape){.landing{padding-top:10px;padding-bottom:12px}.harbor-menu{padding:10px;gap:5px}#title #chSel .chI{height:32px}}
+/* Compact workbench; the housing card moves below crafting on narrow screens. */
+.bench-craft .sec{margin:4px 0 6px}
+.bench-mix,.bench-actions,.bench-bag{display:flex;align-items:center;gap:6px}
+.bench-inputs{display:grid;grid-template-columns:repeat(3,44px);gap:4px}
+.bench-craft .slot{width:44px;height:44px;border-radius:10px}
+.bench-result{display:flex;align-items:center;gap:6px;font-size:13px}
+.bench-actions,.bench-bag{flex-wrap:wrap}.bench-actions{margin:7px 0 10px}
+.bench-actions .btn,.bench .upc .btn{padding:5px 8px;min-height:32px;font-size:13px}
+.cols.bench>.grow{flex:1 1 270px;min-width:0}.cols.bench>.upw{flex:1 1 190px;max-width:250px;position:static;order:0}
+.bench .uphd img{width:42px;height:42px}.bench .upc{padding:8px}.bench .upr{margin-top:6px}.bench .uphd .upe{font-size:28px;line-height:42px}
+@media(max-width:520px){.cols.bench{display:grid;grid-template-columns:minmax(0,1fr)}.cols.bench>.upw{max-width:none}}
 </style>
 </head>
 <body>

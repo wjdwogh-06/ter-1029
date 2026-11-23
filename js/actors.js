@@ -255,9 +255,9 @@ function drawNoBuild(c,k){if(!bmode||bmode==='demo')return;const g=ghost&&ghost.
 const BPIN={on:0,x:0,z:0};   /* 33차(기획자: '들고 왔다 갔다 하다가 놓고 싶은 곳을 누르면 거기에'): 화면을 누르는 동안 미리보기가 누른 곳으로 (ui.js bldTouch) */
 function ghostPos(){const b=BUILDS[bmode],d=Math.max(b.bx,b.bz)+1.6;let x=BPIN.on?BPIN.x:P.x+Math.sin(P.rot)*d,z=BPIN.on?BPIN.z:P.z+Math.cos(P.rot)*d,r=placementAngle();if(b.grid){x=Math.round(x);z=Math.round(z)}   /* 48차(기획자: '360도 말고 원래 각도·왼쪽·오른쪽 사선 세 가지만'): 정면(+z)·왼쪽 사선·오른쪽 사선 */
  const pr={t:bmode,x,z,r},R0=Math.max(b.bx,b.bz);let why='';
- /* 실내 설치(14차): 작업대(b.indoor)는 텐트 안에서만, 텐트 안에는 실내 설치물만. 방 안으로 끌어당기고 앞쪽 1.2m(나가는 길)는 비워요 */
- if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const E=rotExt(b.bx,b.bz,r),ax=INT.hw-E[0]-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+E[1]+(b.wall?0:.1),INT.z+INT.hd-1.3-E[1]);pr.r=r;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
-   if(!canBuild(bmode))why='재료가 부족해요';else if(Math.abs(P.x-pr.x)<E[0]+.45&&Math.abs(P.z-pr.z)<E[1]+.45)why='너무 가까워요. 조금 물러나요';else for(const s of structs){if(!s.in||s.hk!==curHK())continue;if(bldHit(b,pr.x,pr.z,pr.r,s)){why='다른 물건과 겹쳐요';break}}}
+ /* 실내 설치(14차): 작업대(b.indoor)는 텐트 안에서만, 텐트 안에는 실내 설치물만. 방 안으로 끌어당기고 문과 입장 지점 사이만 비워요 */
+ if(INT.on||b.indoor){if(!INT.on)why='작업대는 텐트 안에서만 놓을 수 있어요';else if(!b.indoor&&!b.inok)why='텐트 안에는 작업대와 가구만 놓을 수 있어요';else{const E=rotExt(b.bx,b.bz,r),ax=INT.hw-E[0]-.1;pr.x=clamp(x,INT.x-ax,INT.x+ax);pr.z=clamp(z,INT.z-INT.hd+E[1]+(b.wall?0:.1),INT.z+INT.hd-.1-E[1]);pr.r=r;pr.in=1;pr.yo=INT.y-hAt(pr.x,pr.z);
+   if(!canBuild(bmode))why='재료가 부족해요';else if(zoneOverlap({x:pr.x,z:pr.z,r,hw:b.bx,b:b.bz,f:b.bz},{x:INT.x,z:INT.z+INT.door,r:0,hw:INT.cw||.70,b:2.2,f:.1}))why='출입구는 비워 주세요';else if(Math.abs(P.x-pr.x)<E[0]+.45&&Math.abs(P.z-pr.z)<E[1]+.45)why='너무 가까워요. 조금 물러나요';else for(const s of structs){if(!s.in||s.hk!==curHK())continue;if(bldHit(b,pr.x,pr.z,pr.r,s)){why='다른 물건과 겹쳐요';break}}}
   pr.why=why;pr.ok=!why;return pr}
  if(INT.on)why='텐트 안에서는 설치할 수 없어요';else if(!canBuild(bmode))why='재료가 부족해요';else if(nobAt(x,z,R0)){const n=nobAt(x,z,R0);why=`${NOB_N[n.k]} 주변은 설치 금지 구역이에요`}else if(onDock(x,z))why='부두 위에는 놓을 수 없어요';else if(dist(x,z,P.x,P.z)<=R0+.5)why='너무 가까워요';else if(BPIN.on&&dist(x,z,P.x,P.z)>16+R0)why='너무 멀어요. 조금 더 가까이 가요';
  if(!why&&b.water)why=waterSpotWhy(x,z,r,b);   /* 25차: 보트처럼 물 위에만 놓는 것 */
