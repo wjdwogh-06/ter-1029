@@ -461,7 +461,7 @@ function lkBuildGeo(){const _before=Object.assign({},GEO);
  LK_COT.forEach((c,i)=>{GEO['lk_cotA_'+i]=lkCottage(2.9,3.0,2.15,1.3,c[0],c[1],c[2]);GEO['lk_cotB_'+i]=lkCottage(3.3,4.0,2.35,1.45,c[0],c[1],c[2])});
  Object.assign(DECO.home_A,{g:'lk_cotA_0',s:1});Object.assign(DECO.home_B,{g:'lk_cotB_1',s:1});Object.assign(BUILDS.home,{g:'lk_cotA_3',s:1});
  GEO.mtent=lkTent();GEO.lk_logs=lkLogs();GEO.lk_stones=lkStones();GEO.lk_berry=lkBerry();GEO.can=lkCan();GEO.axe_m=lkAxe();
- ITEMS.wood.ic='lk_logs';ITEMS.stone.ic='lk_stones';ITEMS.berry.ic='lk_berry';
+ ITEMS.wood.ic='lk_logs';ITEMS.stone.ic='lk_stones';if(ITEMS.berry)ITEMS.berry.ic='lk_berry';
  lkBuildStage1();if(LK_MOOD){lkBuildTown();lkFenceGeo()}lkBuildStage2();if(ITEMS.kit_bench&&GEO.lk_bench)ITEMS.kit_bench.ic='lk_bench';if(LK_MOOD)try{lkBuildStage3()}catch(e){console.error('look: 3단계 모델 실패',e)}try{lkVendGeo()}catch(e){console.error('look: 자판기 모델 실패',e)}
  if(LK_MOOD)for(const k in GEO)if(/^lk_/.test(k)||k==='mtent'||k==='can'||k==='axe_m')lkSmooth(GEO[k],50);
  lkAOnew(_before);

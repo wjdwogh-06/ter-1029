@@ -1,4 +1,4 @@
-/* 67차: 제작법 전부 — 기획자 11-23 14:30~14:42
+/* 67·69차: 제작법 전부 — 기획자 11-23 14:30~14:42
    · 일반·고급 작업대 모두 3×2 = 6칸, 한 칸에 물건 하나씩만(쌓기 없음) → 제작법 하나에 재료는 6개까지.
    · 총 = 키트 + 개머리판 + 포신 + 금속부품, 모양을 맞춰요(왼쪽부터 개머리판 → 키트 → 포신, 아래 가운데 금속부품; 좌우 뒤집어도 됨).
      현대식(현대 소총·점사 소총·저격총)·권총 = 강철 개머리판, 소드오프·기관단총·반자동 소총 = 나무 개머리판.
@@ -14,6 +14,22 @@
 
 /* ---- 고급 회로기판 없애기 ---- */
 delete ITEMS.pcb2;REMOVED.n.pcb2='고급 회로기판';
+
+
+/* ---- 69차(기획자 11-23 14:54): 통조림·붕대·천·산딸기 아예 없애기 ----
+   아이템 정의를 지우고(예전 저장은 dropRemoved가 가방·보관 상자·떨어뜨린 가방에서 치움 + 상자 창·제작 칸도 여기서 치움),
+   보급 상자·적 전리품 표에서 빼고, 산딸기 덤불(열매 따는 덤불)은 맵에 안 생겨요. 천이 들어가던 설치물 재료(PC 건설 탭)는 나무로 바꿔요. */
+const CR_GONE={can:'통조림',bandage:'붕대',cloth:'천',berry:'산딸기'};
+for(const k in CR_GONE)delete ITEMS[k];Object.assign(REMOVED.n,CR_GONE);
+for(let i=LOOT.length-1;i>=0;i--)if(!ITEMS[LOOT[i][0]])LOOT.splice(i,1);
+for(const k in ENEMY)if(ENEMY[k].loot)ENEMY[k].loot=ENEMY[k].loot.filter(l=>l[0]==='coin'||ITEMS[l[0]]);
+for(const k in BUILDS){const c=BUILDS[k].c;if(!c)continue;let w=0;for(const m in c)if(!ITEMS[m]){w+=c[m];delete c[m]}if(w&&!Object.keys(c).length)c.wood=Math.max(2,Math.round(w*.6))}
+for(const k in REMOVED.c){const c=REMOVED.c[k];for(const m in c)if(!ITEMS[m])delete c[m]}
+{const _lg=lootGen;lootGen=function(s){const g=_lg.apply(this,arguments);for(const k in g)if(k!=='coin'&&!ITEMS[k])delete g[k];return g}}
+{const _g=give;give=function(id,n){if(id!=='coin'&&!ITEMS[id])return;return _g.apply(this,arguments)}}
+{const _dr=dropRemoved;dropRemoved=function(){const r=_dr.apply(this,arguments);try{if(S.box)for(const k in S.box){const b=S.box[k];if(b&&Array.isArray(b.c))b.c=b.c.map(q=>q&&(q[0]==='coin'||ITEMS[q[0]])?q:null)}
+  if(Array.isArray(S.cg))S.cg=S.cg.map(q=>q&&ITEMS[q.id]?q:null)}catch(e){}return r}}
+{const _go=genObjects;genObjects=function(){const r=_go.apply(this,arguments);const del=[];objs.forEach((o,k)=>{if(OBJT[o.t]&&OBJT[o.t].berry)del.push(k)});for(const k of del)objs.delete(k);return r}}
 
 /* ---- 설치물 키트(작업대에서 만들어 가방에서 설치) ---- */
 BUILDS.gate_wood=Object.assign(lkDefOf('gate_wood'),{c:{wood:4},kit:'kit_gwood'});
@@ -46,6 +62,8 @@ const CR_LIST=[
  {g:'울타리',id:'kit_fence',c:{wood:3}},{g:'울타리',id:'kit_gwood',c:{wood:4}},{g:'울타리',id:'kit_wall',c:{stone:3}},{g:'울타리',id:'kit_gate',c:{stone:4}},
  {g:'울타리',id:'kit_fgarden',c:{plank:3}},{g:'울타리',id:'kit_fwhite',c:{plastic:3}},{g:'울타리',id:'kit_fconc',c:{cement:3}},{g:'울타리',id:'kit_gconc',c:{cement:4}},
  {g:'설치물',id:'turret_auto',c:{kit_turret:1,pcb:1,rifle:1,mparts:1,ore_ti:1}},
+ /* 69차(기획자): 씨앗 = 그 작물 4개 → 씨앗 1개(밀 4 → 밀 씨앗), 모든 씨앗 */
+ ...PLANTS.filter(q=>ITEMS['seed_'+q.id]).map(q=>({g:'씨앗',id:'seed_'+q.id,c:{[q.id]:4}})),
  {g:'도구',id:'pick_adv',c:{wood:2,bar_iron:2}},{g:'도구',id:'pick_elec',c:{pick_adv:1,aabatt:2,pcb:1}},{g:'도구',id:'dhammer',c:{wood:1,bar_iron:2}},
  {g:'도구',id:'chainsaw',c:{splate:1,mparts:2,aabatt:1}},{g:'도구',id:'harpoon',c:{wood:2,bar_iron:1}},
  {g:'도구',id:'rod2',c:{rod:1,bar_iron:2}},{g:'도구',id:'rod3',c:{rod2:1,bar_gold:1,bar_silver:1}},{g:'도구',id:'rod_lucky',c:{rod3:1,charm:1}}];

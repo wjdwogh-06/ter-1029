@@ -8,7 +8,6 @@
 
 <!-- 한 줄 형식: - [역할] 차수 · 하는 일 · 고치는 파일 · 시작 시각(한국 시간) · 상태 -->
 <!-- 예: - [디자인] 16차 · 텐트 그림자 다듬기 · look.js · 11-18 18:40 · 진행 중 -->
-- [디자인] 69차 · 수달섬 요리·사냥 상인 섬(철조망·문·안전 구역·나무 다리) + 씨앗 제작법 + 통조림·붕대·천·산딸기 삭제 · 새 파일 js/otter.js, js/craft.js, core.js PORT_SAFE 뒤 한 줄 · 11-23 14:58 · 진행 중
 
 
 ## 다음 차수 번호
@@ -22,6 +21,7 @@
 
 ## 서로에게 남기는 말
 
+- [디자인 69차 → 규칙·기획자] **기획자 요청(11-23 14:54)**: ⓐ 새 파일 **`js/otter.js`**(craft.js 다음): 수달섬 = 요리 상인·사냥꾼 상인 섬(반반 테마, 둘레 철조망 + 문 `cgate`, 본섬과 나무 다리 = 보이지 않는 부두 `addDock` + 양옆 벽, 상인 둘은 [말 걸기]만). ⚠ **규칙 파일 한 줄**: core.js `PORT_SAFE` 바로 아래 `PORT_SAFE.push([262.4,782.4,46])`(섬 안전 구역, 서버도 같은 판정; 0~7번 항구 표는 그대로). 설치 금지 원은 `buildNoBuild` 감싸기(NOB k:'otter'). ⓑ js/craft.js: 씨앗 제작법(작물 4 → 씨앗 1, 14종) + **`can`·`bandage`·`cloth`·`berry` 삭제**(ITEMS·LOOT·적 loot·lootGen·give·BUILDS 재료에서, REMOVED.n에 넣음, 맵 산딸기 덤불도 안 생김, 예전 저장 `S.box`·`S.cg`도 정리) — core.js로 옮겨도 돼요. 이 넷을 쓰는 옛 검사(bag·shop 등)는 안 맞을 수 있어요. look.js `ITEMS.berry.ic`는 `if(ITEMS.berry)`로. 천이 들어가던 석궁·방수포는 지금 제작법 없음. 기획자님 9068604(설치물 키트 제작법 제거) 위에 합쳤어요. AGENTS §6-0-0-33. **게임 링크에 올려 주세요**(index.html·js/otter.js·js/craft.js·js/core.js·js/look.js + 61~67차 것). 읽었으면 이 줄 지워 주세요.
 - [디자인 67차 → 규칙·기획자] **기획자 요청(11-23 14:30~14:42) 제작법 전부**: 새 파일 **`js/craft.js`**(bait.js 다음)가 ui.js 28차 `cgMatch·cgPut·cgMake·cgFill·cgHtml`을 바꿔 끼우고 `RECIPES`를 `CR_LIST`로 갈아요(ui.js·core.js 줄은 안 고침 — 규칙 쪽에서 가져가 합쳐도 돼요). 한 칸 하나, 총 = 모양 조립, 부착물은 고급 작업대만(붙이기 기능·효과는 아직), 설치물 키트 12종 새로(`kit_fence` 등), 새 설치물 `gate_wood`, **포탑 키트는 이제 재료 → `turret_auto`가 설치 아이템**, **`pcb2` 삭제**(REMOVED). `craft_check.py`·`p49_check`의 포탑 키트 설치 부분은 이제 안 맞아요. AGENTS §6-0-0-32. **게임 링크에 올려 주세요**(index.html·js/craft.js·js/bait.js·js/look.js + 61~66차 것). 읽었으면 이 줄 지워 주세요.
 - [디자인 66차 → 규칙·기획자] **기획자 요청(11-23 14:13)**: `js/bait.js` 66차 덩어리 — 설치형 미끼 `BUILDS.baitbuoy`(키트 `kit_baitbuoy`, `water`·`flat`·새 표시 `seaBait`)는 **바다의 깊은 물(9점 깊이 1.0m 넘게)에만**, 강(강폭+8m 안)·얕은 물·부두 안 돼요. actors.js `waterSpotWhy`를 감쌌어요(`seaBait`만 `baitSeaWhy`, 나머지는 그대로). 작살 `harpoon`(WEAP melee 22). 물고기 모으기·작살 쓰는 곳은 기획자가 정할 때. 멀티 서버 검사는 서버 마무리 때. AGENTS §6-0-0-31. **게임 링크에 올려 주세요**(index.html·js/bait.js·js/look.js + 61~65차 것 함께). 읽었으면 이 줄 지워 주세요.
 - [디자인 65차 → 규칙·기획자] **기획자 요청(11-23 10:35)**: 새 파일 **`js/bait.js`**(dishes.js 다음): 지렁이 미끼 `bait_worm`·새우 미끼 `bait_shrimp`(ty res, 그림만 — 미끼 끼우는 법·효과는 기획자가 정할 때 규칙 쪽에서) + 행운의 낚싯대 `rod_lucky`(`WEAP.rod_lucky` rod:1·bite [4,8], 실제로 낚임, '행운' 효과는 아직). 가격 임시(30·60·3000). look.js `lkRotOf` 한 마디. AGENTS §6-0-0-30. **게임 링크에 올려 주세요**(index.html·js/bait.js·js/look.js + 61~64차 것 함께). 읽었으면 이 줄 지워 주세요.
