@@ -17,21 +17,10 @@ async def steps(pg):
       const html=$('pbody').innerHTML;closePanel();S.quick[S.sel]=null;
       return JSON.stringify({n:L.length,npc:structs.filter(q=>q.t==='fbuy_npc').length,actors:(typeof FBUY!=='undefined'&&FBUY.L)?FBUY.L.length:0,bad,dv:L.map(q=>q._dv),labRod:lab,tab,hasTrout:/송어/.test(html),model:DECO.fbuy.g})}""")
     R=json.loads(r);R['ok']=R['n']==8 and R['npc']==0 and R['actors']==0 and not R['bad'] and R['labRod']=='생선 자판기' and '생선 자판기' in R['tab'] and R['hasTrout'] and R['model']=='hb_fvend' and all(0<d<9 for d in R['dv']);res['fvend']=R
-    # 2. 지형지물: 16개(빠진 것 0), 부두·부활 길 비킴, 풀 둔덕 계단 오르기·옆 막힘, 풀 언덕 오르기, 바위 언덕·해안 바위 막힘, 설치 금지 원 = PORT_SAFE
-    r=await ev("""()=>{const L=HB.list,o={n:L.length,miss:HB.miss,types:{}};for(const s of L)o.types[s.t]=(o.types[s.t]||0)+1;
-      const tr=L.find(s=>/hb_terrace/.test(s.t)),kn=L.find(s=>/hb_knoll/.test(s.t)),bl=L.find(s=>/hb_bluff/.test(s.t)),sh=L.find(s=>/hb_shore/.test(s.t)),b=s=>s.m.position.y+.04;
-      const rel=(w,s)=>({...w,rel:+(w.y-b(s)).toFixed(2)});
-      o.terUp=rel(walkPath([LW(tr,1.65,4.2),LW(tr,1.65,.3),LW(tr,-1,-.5)]),tr);
-      o.terSide=rel(walkPath([LW(tr,-4.6,-.6),LW(tr,0,-.6)]),tr);
-      o.knoll=rel(walkPath([LW(kn,-5.4,.6),LW(kn,0,.4)]),kn);
-      o.bluff=walkPath([LW(bl,0,4.2),LW(bl,0,0)]);o.shore=walkPath([LW(sh,0,3.6),LW(sh,0,0)]);
-      o.nob=NOB.filter(n=>n.k==='port').map((n,i)=>+(n.r-PORT_SAFE[i][2]).toFixed(2));
-      o.spawnOk=PORTS.map(p=>{let ok=0;for(let k=0;k<20;k++){const q=portSpawn(p.i);if(q&&!L.some(s=>Math.abs(q.x-s.x)<HB_T[s.t.replace('_w','')].fx+.3&&Math.abs(q.z-s.z)<HB_T[s.t.replace('_w','')].fz+.3))ok++}return ok});
-      return JSON.stringify(o)}""")
-    R=json.loads(r)
-    R['ok']=R['n']==16 and not R['miss'] and R['terUp']['blocked'] is None and R['terUp']['rel']>.9 and R['terUp']['maxRise']<=.55 and R['terSide']['blocked'] is not None and abs(R['terSide']['rel'])<.3 \
-      and R['knoll']['blocked'] is None and R['knoll']['rel']>1.2 and R['bluff']['blocked'] is not None and R['shore']['blocked'] is not None and all(abs(d)<.05 for d in R['nob']) and all(k>=18 for k in R['spawnOk'])
-    res['harbor']=R
+    # 2. 지형지물: 72차부터 자동 배치 없음(기획자가 자리를 정함) → 0개, 종류는 배치 목록에 그대로, 설치 금지 원 = PORT_SAFE
+    r=await ev("""()=>JSON.stringify({n:HB.list.length,inWorld:structs.filter(s=>s.hb||/^hb_(bluff|terrace|knoll|shore)/.test(s.t)).length,types:Object.keys(HB_T).every(t=>DECO[t]&&DECO[t+'_w']&&GEO[t]&&GEO[t+'_w']&&DECO[t].cat),
+      nob:NOB.filter(n=>n.k==='port').map((n,i)=>+(n.r-PORT_SAFE[i][2]).toFixed(2))})""")
+    R=json.loads(r);R['ok']=R['n']==0 and R['inWorld']==0 and R['types'] and all(abs(d)<.05 for d in R['nob']);res['harbor']=R
     # 3. 보급 창고: S5·S10·S13, 상자가 안에, 문 밖에서 걸어서 모든 상자에 닿음(0.25m 칸 채우기), 벽으로는 못 들어감, 들어가면 지붕 사라지고 앞벽 반투명
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const out=[];
       for(const w of SPWH){const b=w.b,r0=b.rotation.y,c=Math.cos(r0),sn=Math.sin(r0),WL=(lx,lz)=>[b.position.x+lx*c+lz*sn,b.position.z-lx*sn+lz*c],q={i:w.s.i,cr:w.s.cr.length};
@@ -54,9 +43,8 @@ async def steps(pg):
     await shot('p71_wh_in.jpg',[w[0],w[2]+13,w[1]+17,w[0],w[2]+1,w[1]],w[0],w[1]+.5)
     f=json.loads(await ev("()=>{const s=structs.find(q=>q.t==='fbuy');return JSON.stringify([s.x,s.z,s.m.position.y])}"))
     await shot('p71_fvend.jpg',[f[0]+.6,f[2]+3.2,f[1]+7.5,f[0]-.6,f[2]+1,f[1]],f[0],f[1]+2.5)
-    for i in [0,2,3,5]:
-        c=json.loads(await ev(f"()=>{{const p=PORTS[{i}],L=HB.list.filter(s=>s.pi==={i});let x=p.x,z=p.z;for(const s of L){{x+=s.x;z+=s.z}}return JSON.stringify([x/(L.length+1),z/(L.length+1),p.x,p.z])}}"))
-        await shot(f'p71_port{i}.jpg',[c[0],44,c[1]+30,c[0],0,c[1]],c[2],c[3])
+    # 72차: 자동 배치가 없어서, 풀 둔덕 하나를 직접 놓아(기획자가 배치 도구로 놓는 것과 같은 모양) 올라서기만 봐요
+    await ev("()=>{HB_PLAN[3]=['hb_terrace'];hbPlace();delete HB_PLAN[3]}")
     t=json.loads(await ev("()=>{const s=HB.list.find(q=>/hb_terrace/.test(q.t));const [x,z]=LW(s,0,-.6);return JSON.stringify([x,z,s.m.position.y])}"))
     await ev("()=>{window.__cam=null}")
     await ev(f"()=>{{P.x={t[0]};P.z={t[1]}}}");await pg.wait_for_timeout(2500);await pg.screenshot(path=os.path.join(OUT,'p71_terrace_top.jpg'),type='jpeg',quality=80)

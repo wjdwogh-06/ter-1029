@@ -8,7 +8,7 @@ devInit=async function(){
   let active=false,selected=null,group=[],saved={};
   const panel=document.createElement('div'),button=document.createElement('button');
   button.className='btn';button.textContent='구조물 배치';devBar.append(button,panel);
-  panel.innerHTML='<small>꾹 눌러 끌기 · 짧게 눌러 회전</small><br><label>방향 <input type="range" min="0" max="360" step="1" style="width:95px"><output></output></label> <button>적용</button> <button>취소</button> <button>항구 전체</button><div></div>';
+  panel.innerHTML='<small>눌러 고르기 · 끌거나 빈 땅 톡으로 옮기기</small><br><label>방향 <input type="range" min="0" max="360" step="1" style="width:95px"><output></output></label> <button>적용</button> <button>취소</button> <button>항구 전체</button><div></div>';
   panel.hidden=true;
   panel.className='layout-controls';
   const style=document.createElement('style');
@@ -259,6 +259,11 @@ devInit=async function(){
     rotation.after(b);turnButtons.push(b);
     b.onclick=()=>{angle.value=(+angle.value+sign*(fine?1:+turnStep.value)+360)%360;angle.oninput()};
   }
+  /* 72차: 화살표로 한 칸씩 옮기기(이동 간격만큼, '자유'면 0.5m). 화면 위 = 북쪽(−z) */
+  const nudgeRow=document.createElement('div');nudgeRow.className='layout-nudge';
+  for(const [label,dx,dz] of [['◀',-1,0],['▲',0,-1],['▼',0,1],['▶',1,0]]){const b=document.createElement('button');b.textContent=label;b.title='한 칸 옮기기';nudgeRow.append(b);
+    b.onclick=()=>{if(!active||!DEV.on||gesture||!selected)return;const e=selected,all=group.length>1,st=+spacing.value||.5,p=e.m.position;dest=[p.x+dx*st,p.z+dz*st];commit(e.m.rotation.y);select(e,all);status.textContent=tagOf(e)+' 옮겼어요 · '+Math.round(e.m.position.x*10)/10+', '+Math.round(e.m.position.z*10)/10}}
+  rotation.before(nudgeRow);turnButtons.push(nudgeRow);
   const resetOne=document.createElement('button'),resetAll=document.createElement('button');
   resetOne.textContent='선택 원위치';resetAll.textContent='기본 맵 전체 원위치';
   panel.append(resetOne,resetAll);turnButtons.push(resetOne);
@@ -266,7 +271,9 @@ devInit=async function(){
   remove.className='layout-delete';remove.disabled=true;panel.prepend(remove,undo);
   remove.onclick=()=>{
     if(!active||!DEV.on||gesture||!selected||selected.anchor)return;
-    if(!window.confirm(selected.name+' 삭제할까요?'))return;
+    // 72차: 게임 링크(claude.ai) 안에서는 window.confirm 창이 막혀서 삭제가 안 됐어요 → 두 번 누르기로 확인
+    if(remove.dataset.arm!==selected.id){remove.dataset.arm=selected.id;remove.textContent='한 번 더 누르면 삭제';clearTimeout(remove._t);remove._t=setTimeout(()=>{delete remove.dataset.arm;remove.textContent='선택 삭제'},2600);return}
+    delete remove.dataset.arm;clearTimeout(remove._t);remove.textContent='선택 삭제';
     resetModels();
     const e=selected;
     remember([{e,x:e.m.position.x,z:e.m.position.z,r:e.m.rotation.y,deleted:false,override:saved[e.id]}]);
@@ -276,8 +283,10 @@ devInit=async function(){
   };
   resetOne.onclick=()=>restoreOriginal(group.map(q=>q.e));
   resetAll.onclick=()=>{
-    if(active&&DEV.on&&!gesture&&window.confirm('기본 맵 구조물 전체를 최초 위치와 방향으로 되돌릴까요?'))
-      restoreOriginal(entries.filter(e=>!e.s?.own),true);
+    if(!active||!DEV.on||gesture)return;   // 72차: confirm 창 대신 두 번 누르기
+    if(!resetAll.dataset.arm){resetAll.dataset.arm=1;resetAll.textContent='한 번 더 누르면 전체 원위치';clearTimeout(resetAll._t);resetAll._t=setTimeout(()=>{delete resetAll.dataset.arm;resetAll.textContent='기본 맵 전체 원위치'},2600);return}
+    delete resetAll.dataset.arm;clearTimeout(resetAll._t);resetAll.textContent='기본 맵 전체 원위치';
+    restoreOriginal(entries.filter(e=>!e.s?.own),true);
   };
   function restoreOriginal(targets,all=false){
     if(!active||!DEV.on||gesture)return;
@@ -357,7 +366,7 @@ devInit=async function(){
     group=(all?entries.filter(q=>q.p===e.p&&!q.reinstate):[e]).map(q=>({e:q,x:q.m.position.x,z:q.m.position.z,r:q.m.rotation.y}));
     angle.value=Math.round((e.m.rotation.y*180/Math.PI%360+360)%360);
     showAngle();turnButtons.forEach(b=>b.hidden=false);rotation.hidden=apply.hidden=cancel.hidden=false;
-    status.textContent=tagOf(e)+' 선택 · '+Math.round(e.m.position.x)+', '+Math.round(e.m.position.z);whole.disabled=!e.p;remove.disabled=!!e.anchor;
+    status.textContent=tagOf(e)+' 선택 · '+Math.round(e.m.position.x)+', '+Math.round(e.m.position.z)+(e.anchor?'':' · 끌거나 빈 땅을 눌러 옮기기');whole.disabled=!e.p;remove.disabled=!!e.anchor;
   }
   let dest;
   function clear(){remove.disabled=true;turnButtons.forEach(b=>b.hidden=true);rotation.hidden=apply.hidden=cancel.hidden=true;selected=null;group=[];dest=null;status.textContent='구조물 선택';whole.disabled=true}
@@ -422,6 +431,26 @@ devInit=async function(){
     dest=[g.baseX+dx,g.baseZ+dz];
   }
   function stop(ev){ev.preventDefault();ev.stopImmediatePropagation()}
+  // 72차: 꾹 누르기(0.36초)뿐 아니라 누르자마자 끌어도 옮겨져요(휴대폰에서 바로 끌면 안 움직이던 것)
+  const startDrag=g=>{
+    if(gesture!==g||!DEV.on||!active||g.drag)return false;
+    g.origin=groundAt(g.x,g.y);if(!g.origin)return false;
+    const hit=g.hit;if(!(selected?.anchor&&selected.p===hit.p))select(hit);
+    resetModels();turnButtons.forEach(b=>b.hidden=true);
+    g.baseX=selected.m.position.x;g.baseZ=selected.m.position.z;
+    g.drag=true;rotation.hidden=apply.hidden=cancel.hidden=true;
+    status.textContent=tagOf(selected)+' 이동 중';return true;
+  };
+  let tapGo=null;
+  window.addEventListener('pointerdown',ev=>{if(tapGo&&ev.pointerId!==tapGo.id)tapGo.multi=true},true);
+  window.addEventListener('pointerup',ev=>{
+    const t=tapGo;if(!t||t.id!==ev.pointerId)return;tapGo=null;
+    if(t.multi||!active||!DEV.on||gesture||selected!==t.sel||performance.now()-t.t>600||Math.hypot(ev.clientX-t.x,ev.clientY-t.y)>12)return;
+    const at=groundAt(ev.clientX,ev.clientY);if(!at)return;
+    const step=+spacing.value,snap=v=>step?Math.round(v/step)*step:v,e=selected;
+    if(Math.hypot(at[0]-e.m.position.x,at[1]-e.m.position.z)>40){status.textContent='너무 멀어요 · 40m 안을 눌러요';return}
+    dest=[snap(at[0]),snap(at[1])];commit(e.m.rotation.y);select(e);status.textContent=tagOf(e)+' 옮겼어요 · '+Math.round(e.m.position.x)+', '+Math.round(e.m.position.z);
+  },true);
   window.addEventListener('pointerdown',ev=>{
     if(!active||!DEV.on||mode!=='play'||ev.target!==cv||gesture)return;
     structs.forEach(registerStruct);
@@ -438,23 +467,19 @@ devInit=async function(){
     _ray.setFromCamera({x:ev.clientX/innerWidth*2-1,y:1-ev.clientY/innerHeight*2},cam);
     const hits=_ray.intersectObjects(entries.filter(e=>!e.anchor&&e.m.parent&&e.m.visible).map(e=>e.m),true);
     let hit;for(const h of hits){let m=h.object;while(m&&!owners.has(m))m=m.parent;if(m){hit=owners.get(m);break}}
-    if(!hit)return;
+    if(!hit){
+      // 72차: 고른 채로 빈 땅을 톡 누르면 그 자리로 옮겨요(휴대폰에서 끌기가 어려울 때). 두 손가락 확대와 헷갈리지 않게 손을 뗄 때 정해요
+      if(selected&&!selected.anchor)tapGo={id:ev.pointerId,x:ev.clientX,y:ev.clientY,t:performance.now(),sel:selected};
+      else if(tapGo)tapGo.multi=true;
+      return}
     stop(ev);cv.setPointerCapture(ev.pointerId);
     const g=gesture={id:ev.pointerId,x:ev.clientX,y:ev.clientY,mx:ev.clientX,my:ev.clientY,hit};
-    g.timer=setTimeout(()=>{
-      if(gesture!==g||!DEV.on||!active)return;
-      g.origin=groundAt(g.x,g.y);if(!g.origin)return;
-      if(!(selected?.anchor&&selected.p===hit.p))select(hit);
-      resetModels();turnButtons.forEach(b=>b.hidden=true);
-      g.baseX=selected.m.position.x;g.baseZ=selected.m.position.z;
-      g.drag=true;rotation.hidden=apply.hidden=cancel.hidden=true;
-      status.textContent=tagOf(selected)+' 이동 중';
-    },360);
+    g.timer=setTimeout(()=>startDrag(g),360);
   },true);
   window.addEventListener('pointermove',ev=>{
     const g=gesture;if(g?.id!==ev.pointerId)return;stop(ev);
     g.mx=ev.clientX;g.my=ev.clientY;
-    if(!g.drag && Math.hypot(g.mx-g.x,g.my-g.y)>10){clearTimeout(g.timer);g.slipped=true}
+    if(!g.drag && Math.hypot(g.mx-g.x,g.my-g.y)>10){clearTimeout(g.timer);if(!startDrag(g))g.slipped=true}
     if(g.drag&&!frame)frame=requestAnimationFrame(preview);
   },true);
   window.addEventListener('pointerup',ev=>{
@@ -463,8 +488,8 @@ devInit=async function(){
     if(g.drag){
       g.mx=ev.clientX;g.my=ev.clientY;cancelAnimationFrame(frame);preview();abortDrag();
       // Moving never rounds the object's existing angle.
-      const old=selected.m.rotation.y;
-      commit(old);
+      const old=selected.m.rotation.y,e=selected,all=group.length>1;
+      commit(old);if(e.m.parent){select(e,all);status.textContent=tagOf(e)+' 옮겼어요 · '+Math.round(e.m.position.x)+', '+Math.round(e.m.position.z)}   // 72차: 옮긴 뒤에도 고른 채로(이어서 삭제·화살표)
     }else{abortDrag();if(!g.slipped){dest=null;select(g.hit)}}
   },true);
   for(const type of ['pointercancel','lostpointercapture'])window.addEventListener(type,ev=>{

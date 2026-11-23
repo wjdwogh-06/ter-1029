@@ -40,11 +40,11 @@ const ROADC={edge:0xb4a274,base:0xbb9c6e,mid:0xb5a46f};   /* 56차(기획자: '�
 function roadMesh(){if(roadMeshObj){scene.remove(roadMeshObj);roadMeshObj.geometry.dispose()}
  const pos=[],col=[],nrm=[],idx=[],C=new THREE.Color(),CC={};for(const k in ROADC)CC[k]=new THREE.Color(ROADC[k]).convertSRGBToLinear();
  const others=(ri,x,z)=>{for(let q=0;q<ROADS.length;q++){if(q===ri)continue;for(const p of ROADS[q].p){const dx=p[0]-x,dz=p[1]-z;if(dx*dx+dz*dz<16)return true}}return false};
- const joined=(ri,end)=>{const r=ROADS[ri],k=end?r.b:r.a;if(ROAD_NODES[k])return true;const p=end?r.p[r.p.length-1]:r.p[0];return others(ri,p[0],p[1])};
+ const joined=(ri,end)=>{const r=ROADS[ri],p=end?r.p[r.p.length-1]:r.p[0];return others(ri,p[0],p[1])};   /* 72차: 다른 길과 만나는 끝만 '이어진 끝'(예전엔 항구·보급지 이름이 붙은 끝도 이어진 걸로 쳐서 뚝 잘렸어요) */
  ROADS.forEach((r,ri)=>{const P=r.p,n=P.length,ja=joined(ri,0),jb=joined(ri,1),base=pos.length/3;
   for(let i=0;i<n;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(n-1,i+1)];let tx=b[0]-a[0],tz=b[1]-a[1];const tl=Math.hypot(tx,tz)||1;tx/=tl;tz/=tl;const nx=-tz,nz=tx,[x,z]=P[i];
-   // 끝: 이어지지 않은 끝(항구·보급지 문 안)은 8m에 걸쳐 좁아지며 흐려져요
-   const ea=ja?1:Math.min(1,i/4),eb=jb?1:Math.min(1,(n-1-i)/4),e=Math.min(ea,eb),wk=.45+.55*e,fade=.25+.75*e;
+   // 끝: 이어지지 않은 끝(항구·보급지 문 안)은 약 14m(짧은 길은 길이만큼, 이어진 끝은 그대로 진하게)에 걸쳐 좁아지며 끝에서 완전히 사라져요(72차, 기획자: '길 끊어질 때 잘라 버리면 안 되지, 자연스럽게 사라지게')
+   const sm=t=>{t=Math.min(1,Math.max(0,t));return t*t*(3-2*t)},FL=Math.max(1,Math.min(7,(ja||jb)?n-1:(n-1)/2)),ea=ja?1:sm(i/FL),eb=jb?1:sm((n-1-i)/FL),e=Math.min(ea,eb),wk=.3+.7*e,fade=e;
    const wl=(1.38+(noise(x*.09+3,z*.09,77)-.5)*.42)*wk,wr=(1.38+(noise(x*.09,z*.09+5,78)-.5)*.42)*wk,mixed=others(ri,x,z);
    const M1=mixed?'base':'mid',prof=[[-wl-1.05,'edge',0],[-wl-.4,'edge',.32],[-wl+.15,'base',.82],[-1.0*wk,'base',1],[-.72*wk,'base',1],[-.42*wk,'base',1],[0,M1,1],[.42*wk,'base',1],[.72*wk,'base',1],[1.0*wk,'base',1],[wr-.15,'base',.82],[wr+.4,'edge',.32],[wr+1.05,'edge',0]];
    for(const [o,ck,al] of prof){const X=x+nx*o,Z=z+nz*o;pos.push(X,roadTriH(X,Z)+.035,Z);nrm.push(0,1,0);C.copy(CC[ck]).multiplyScalar(.95+hash(X*3|0,Z*3|0,91)*.06+(noise(X*.045,Z*.045,93)-.5)*.1);col.push(C.r,C.g,C.b,al*fade)}}

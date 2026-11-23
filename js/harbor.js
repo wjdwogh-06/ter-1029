@@ -63,7 +63,10 @@ placeFishBuyer=function(p){const v=structs.find(q=>q.t==='vend'&&q.pi===p.i),rc=
 {const _rp=renderPanel;renderPanel=function(){_rp();if(panel==='fishbuy'){const t=$('ptabs').querySelector('.tab');if(t)t.textContent='🐟 생선 자판기'}}}
 
 /* ---------------- ② 항구 지형지물 ---------------- */
-const HB_PLAN={0:['hb_bluff','hb_knoll'],1:['hb_knoll','hb_shore'],2:['hb_bluff','hb_shore'],3:['hb_terrace','hb_shore'],4:['hb_knoll','hb_terrace'],5:['hb_bluff','hb_terrace'],6:['hb_terrace','hb_knoll'],7:['hb_bluff','hb_shore']};
+/* 72차(기획자 11-23 20:08: '항구 근처에 추가했던 장벽·언덕 다 없애, 내가 임의로 다 지정해 줄게'): 자동 배치는 끔(비어 있음).
+   모양·종류(바위 언덕·풀 둔덕·풀 언덕·해안 바위, 눈 모양 포함)는 관리자 [구조물 배치] 목록 '🌿 …'에 그대로 있어요. 기획자가 자리를 주면 여기에 적거나 배치 도구로 놓기.
+   예전(71차) 자동 배치: {0:['hb_bluff','hb_knoll'],1:['hb_knoll','hb_shore'],2:['hb_bluff','hb_shore'],3:['hb_terrace','hb_shore'],4:['hb_knoll','hb_terrace'],5:['hb_bluff','hb_terrace'],6:['hb_terrace','hb_knoll'],7:['hb_bluff','hb_shore']} */
+const HB_PLAN={};
 const HB_T={
  hb_bluff:{n:'바위 언덕',fx:4.6,fz:2.3,blk:1},
  hb_terrace:{n:'풀 둔덕',fx:3.45,fz:2.95},
@@ -170,3 +173,6 @@ function hbPlace(){HB.list.length=0;HB.miss.length=0;
 {const _bp=buildPorts;buildPorts=function(){_bp();try{hbPlace()}catch(e){console.error('harbor 배치',e)}}}
 /* 항구 설치 금지 원(= 안전 구역 표 PORT_SAFE)은 지형지물·수달섬 다리(nobx)를 셈에서 빼요 */
 {const _nb=buildNoBuild;buildNoBuild=function(){const hide=structs.filter(s=>s.hb||s.nobx);for(const s of hide)structs.splice(structs.indexOf(s),1);try{_nb()}finally{structs.push(...hide)}}}
+/* 72차(기획자 11-23 20:08: '등대 주변에 가운데 기준으로 원형 설치 금지 구역'): 등대 원(예전엔 바위섬 땅 끝 + 3m = 13~14m)을 등대 가운데에서 반지름 LH_NOB_R로 넓혀요(땅·물 위 설치 모두 막힘, 설치 모드에서 빨간 원) */
+const LH_NOB_R=30;
+{const _nb=buildNoBuild;buildNoBuild=function(){_nb();for(const n of NOB)if(n.k==='lh'){const s=structs.find(q=>q.t==='lighthouse'&&Math.hypot(q.x-n.x,q.z-n.z)<6);if(s){n.x=s.x;n.z=s.z}n.r=Math.max(n.r,LH_NOB_R)}}}
