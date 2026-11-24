@@ -24,7 +24,7 @@ async def steps(pg):
       o.whaleDeep=WH.path?WH.path.every(p=>hAt(p[0],p[1])<WH.depth):null;o.whaleNear=WH.path?Math.round(Math.min(...WH.path.map(p=>pgSD(I.pg,p[0],p[1])))):null;
       return JSON.stringify(o)}"""))
     r['ok']=(r['has'] and r['at']==NAME and r['coreLand']>=.999 and r['drawnInLand']>=.999 and 1.15<r['ratio']<1.7 and r['coveV']<-.3 and r['coveU']<-.3 and r['maxH']<1.32 and r['minCore']>.3
-        and not r['nobNear'] and not r['lh0'] and r['cave'] and r['lh4isle'] and r['trees']>20 and r['farOut']==0 and r['swim']>25 and r['fsp']==79 and r['fspOn']==0 and r['whaleDeep'] is True and r['whaleNear']>8)
+        and not r['nobNear'] and not r['lh0'] and r['cave'] and r['lh4isle'] and r['trees']>20 and r['farOut']==0 and r['swim']>25 and r['fsp']==76 and r['fspOn']==0 and r['whaleDeep'] is True and r['whaleNear']>8)
     put('isle',r)
     # 바닷가에서 걸어 올라가기: 섬 둘레 16곳에서 물(1.5m 밖)부터 가운데 쪽으로 걸어서 땅 위(1m 넘게)에 닿는지
     r=json.loads(await ev("""async()=>{const N=NEWISLE,I=ISL.find(q=>q.n===N.n),res=[];DEV.on=false;

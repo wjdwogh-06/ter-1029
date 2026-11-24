@@ -19,3 +19,13 @@ function tidy57(){let done=false;try{done=!!localStorage.getItem(TIDY57_KEY)}cat
  try{localStorage.setItem(TIDY57_KEY,String(Date.now()))}catch(e){}
  return st.ops.length}
 {const _ci=creInit;creInit=function(){const was=CRV.inited;_ci.apply(this,arguments);if(!was&&CRV.inited)tidy57()}}
+/* 76차(디자인) — 땅을 덧붙일 때 그린 블록도 한 번 지워요(57·59차와 같은 방식, 기획자가 예전에 '다 만들었으면 블럭은 없애야 해').
+   core.js ADDLAND(동북섬 동쪽·바람섬 남쪽) 선 안쪽 + 2m 안 블록만. 표시 'frontisle_tidy76', 크리에이티브 ↩로 한 번 되돌릴 수 있어요. */
+function tidy76(){let done=false;try{done=!!localStorage.getItem('frontisle_tidy76')}catch(e){}if(done||typeof ADDLAND==='undefined'||!CRV.map.size)return 0;
+ const L=ADDLAND.map(N=>N.pg),st={ops:[]};
+ for(const [key,c] of CRV.map){const [x,z]=key.split(',').map(Number);if(L.some(pg=>pgSD(pg,x+.5,z+.5)<2))st.ops.push({key,prev:c,c:null})}
+ for(const o of st.ops)CRV.map.delete(o.key);
+ if(st.ops.length){CRV.undo.push(st);crvRebuild();creSave();toast(`🧱 땅을 덧붙일 때 그린 블록 ${st.ops.length}개를 지웠어요 (크리에이티브 ↩로 되돌릴 수 있어요)`)}
+ try{localStorage.setItem('frontisle_tidy76',String(Date.now()))}catch(e){}
+ return st.ops.length}
+{const _ci=creInit;creInit=function(){const was=CRV.inited;_ci.apply(this,arguments);if(!was&&CRV.inited)tidy76()}}

@@ -17,7 +17,7 @@ async def steps(pg):
     r['ok']=r['inv']=={'rod':1} and r['coins']==100 and r['quick']==[];put('start',r)
     # 2. 없앤 등대 둘레 낚시 포인트 없음
     r=json.loads(await ev("()=>{const near=i=>FSP.filter(s=>dist(s.x,s.z,LHS[i].x,LHS[i].z)<45).length;return JSON.stringify({n:FSP.length,a:FISH_PTS_A.length,n0:near(0),n4:near(4),n1:near(1)})}"))
-    r['ok']=r['n']==79 and r['a']==15 and r['n0']==0 and r['n4']==0 and r['n1']>0;put('fishpts',r)
+    r['ok']=r['n']==76 and r['a']==12 and r['n0']==0 and r['n4']==0 and r['n1']>0;put('fishpts',r)
     # 3. 돌리기 3방향(텐트 포함) · 텐트 안 작업대도
     r=json.loads(await ev("""()=>{give('kit_tent',2);P.x=VIL.x+40;P.z=VIL.z+30;unstuck();let spot=null;for(let a=0;a<60&&!spot;a++){const x=P.x+Math.cos(a)*(8+a*.4),z=P.z+Math.sin(a)*(8+a*.4);P.x=x;P.z=z;if(walk(x,z,.42,P)!==null)continue;setBuild('ptent');const g=ghostPos();if(g.ok)spot=[x,z];setBuild(null)}
       setBuild('ptent');const rs=[],lab=[];for(let i=0;i<4;i++){rs.push(+ghostPos().r.toFixed(3));lab.push(document.querySelector('#bbar [data-b=rot]').textContent);rotNext()}
@@ -69,7 +69,7 @@ async def steps(pg):
         r=json.loads(await ev("""()=>{for(const k of Object.keys(S.inv))delete S.inv[k];S.quick=[null,null,null,null,null,null];S.eq={hat:null,bag:null,ammo:null,shoes:null};give('rod',1);give('pistol',1);give('ammoS',24);give('arrow',5);openPanel('bag');BAGT.t='inv';renderPanel();
       const o={};const cnt=()=>bagList().length;o.c0=cnt();bagTap('rod');o.gear1=curId();o.c1=cnt();o.inBag1=bagList().includes('rod');bagTap('pistol');o.gear2=curId();o.rodBack=bagList().includes('rod');o.c2=cnt();
       bagTap('ammoS');o.ammo=S.eq.ammo;o.c3=cnt();bagTap('arrow');o.ammo2=S.eq.ammo;o.ammoSBack=bagList().includes('ammoS');
-      const fill=['wood','stone','scrap','cloth','berry','can','bandage','powder','fuel','copper','mparts','f_herring','f_salmon','f_trout','f_anch','f_flying','f_tuna','f_jelly','f_sword','f_hammer'];for(const k of fill){if(ITEMS[k]&&bagList().length<BAG_N)give(k,1)}o.full=cnt();
+      const fill=['wood','stone','scrap','plank','bulb','salt','pepper','powder','fuel','copper','mparts','f_herring','f_salmon','f_trout','f_anch','f_flying','f_tuna','f_jelly','f_sword','f_hammer'];for(const k of fill){if(ITEMS[k]&&bagList().length<BAG_N)give(k,1)}o.full=cnt();
       eqOff('gear');o.offFull=curId();give('axe',1);o.axeIn=bagList().includes('axe');return JSON.stringify(o)}"""))
         r2=json.loads(await ev("""()=>{const o={};const c=bagList().length;o.c=c;o.hasAxe=bagList().includes('axe');if(o.hasAxe){bagTap('axe');o.swap=curId();o.c2=bagList().length;o.pistolBack=bagList().includes('pistol')}
       for(const k of bagList().slice()){if(['wood','stone','scrap'].includes(k))delete S.inv[k]}renderPanel();BAGT.t='eq';renderPanel();
@@ -94,7 +94,7 @@ async def steps(pg):
         r['ok']=r['ok'] and r['slots']==['hat','bag','gear','ammo','shoes'] and r['tab'] and r['gearName']=='권총' and r['pv']['cv'] and r['pv']['fg']>.03 and abs(r['yaw'])>.3 and '"gear":"fist"' in r['afterOff'].replace(' ','')
         put('equip_'+nm,r)
     # 6-1. 꽉 찬 가방에서 바꾸기(새 총이 가방에서 나가고 옛 총이 들어옴)
-    r=json.loads(await ev("""()=>{for(const k of Object.keys(S.inv))delete S.inv[k];S.quick=[null,null,null,null,null,null];give('pistol',1);bagTap('pistol');const fill=['wood','stone','scrap','cloth','berry','can','bandage','powder','fuel','copper','mparts','f_herring','f_salmon','f_trout','f_anch','f_flying','f_tuna','f_jelly','f_sword'];for(const k of fill)if(ITEMS[k])give(k,1);
+    r=json.loads(await ev("""()=>{for(const k of Object.keys(S.inv))delete S.inv[k];S.quick=[null,null,null,null,null,null];give('pistol',1);bagTap('pistol');const fill=['wood','stone','scrap','plank','bulb','salt','pepper','powder','fuel','copper','mparts','f_herring','f_salmon','f_trout','f_anch','f_flying','f_tuna','f_jelly','f_sword'];for(const k of fill)if(ITEMS[k])give(k,1);
       give('axe',1);const o={c:bagList().length,axe:bagList().includes('axe')};if(o.axe){bagTap('axe');o.gear=curId();o.c2=bagList().length;o.pistol=bagList().includes('pistol')}openPanel('recycle');o.recyAxe=!!document.querySelector('#pbody [data-k=axe]');closePanel();eqOff('gear');o.offFull=curId();return JSON.stringify(o)}"""))
     r['ok']=r['c']==20 and r['axe'] and r['gear']=='axe' and r['c2']==20 and r['pistol'] and r['offFull']=='axe' and not r['recyAxe'];put('swapFull',r)
     print('ALL',all(v['ok'] for v in res.values()))

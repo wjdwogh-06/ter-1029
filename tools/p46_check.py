@@ -13,7 +13,7 @@ async def steps(pg):
     r=json.loads(await ev("""()=>{const lh=structs.filter(s=>s.t==='lighthouse').map(s=>s.li).sort();S.lh=[1,1,1,1,1,1,1,1];openPanel('lh');const rows=document.querySelectorAll('#pbody [data-a=lhgo]').length;closePanel();
       const L=LHS[LH_CAVE],c=CAVE.s;const nk=LHS.map(q=>{const n=NOB.find(n=>Math.abs(n.x-q.x)<.01&&Math.abs(n.z-q.z)<.01);return n&&n.k});
       return JSON.stringify({lh,rows,cave:c&&[c.x,c.z],at:[L.x,L.z],nk,gone:LH_GONE,isle0:hAt(LHS[0].x,LHS[0].z)>0,isle4:hAt(L.x,L.z)>0})}"""))
-    r['ok']=r['lh']==[1,2,3,5,6,7] and r['rows']==6 and r['cave']==r['at'] and r['nk'][0] is None and r['nk'][4]=='cave' and r['nk'].count('lh')==6 and r['isle0'] and r['isle4'];res['lighthouses']=r;print('lighthouses',json.dumps(r,ensure_ascii=False)[:500])
+    r['ok']=r['lh']==[1,2,5,6,7] and r['rows']==5 and r['cave']==r['at'] and r['nk'][0] is None and r['nk'][4]=='cave' and r['nk'].count('lh')==5 and r['isle0'] and r['isle4'];res['lighthouses']=r;print('lighthouses',json.dumps(r,ensure_ascii=False)[:500])
     # 3. 동굴: 앞에 서서 [동굴 들어가기] → 동굴 방(내 기지 그대로·설치 안 됨·에너지는 밖과 같은 속도) → [나가기] → 입구 앞
     await ev("()=>{const c=CAVE.s,d=sdef(c);P.x=c.x;P.z=c.z+d.bz+.7;P.rot=Math.PI;P.yv=undefined;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(700)

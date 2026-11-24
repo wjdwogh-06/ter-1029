@@ -7,7 +7,7 @@
    - 수상 텐트 wtent: 물에 뜨는 판자 마루(파란 부표 넷) 위 청록 텐트. 마루 전체 + 0.5m가 모두 깊은 바다(seaDeep)이고 땅·얕은 물·부두와
      하나도 안 겹칠 때만 놓아요. 마루는 걸을 수 있고(물 높이 + 0.22라 헤엄치다 바로 올라와요), 문 앞(+z) 마루에서 나와요.
      업그레이드(낚시가옥·석유시추기지)는 기획자가 정할 때 — BUILDS.wtent.upg를 붙이면 작업대 창에 저절로 떠요.
-   - 채굴 텐트 minetent: 땅에 치는 국방색 텐트 + 곡괭이·광석 상자·랜턴. 텐트 안 작업대에서 돌 80·나무 40(임시)을 넣고
+   - 채굴 텐트 minetent: 땅에 치는 벽돌색 텐트 + 갱도 문틀·광차·광석 상자(76차).  텐트 안 작업대에서 돌 80·나무 40(임시)을 넣고
      [업그레이드] → 채굴 기지 minebase(함석 창고 + 작은 권양탑 + 광석 통, 사라지지 않음, 안은 집 방). 광물 캐기는 나중에.
    - 키트 가격·재료는 임시. 키트는 랜덤 자판기에 저절로 나와요. 멀티 서버는 아직 새 텐트를 몰라요(서버 마무리 때). */
 Object.assign(ITEMS,{
@@ -50,11 +50,34 @@ function t74models(){
   {const coil=new THREE.TorusGeometry(.22,.05,6,14);for(let k=0;k<3;k++)p.push(pt(coil,CR,[1.0,TOP+.05+k*.05,z1-.5],[Math.PI/2,0,0],[1-k*.15,1-k*.15,1]));p.push(RB(.32,.14,.14,DK,[1.6,TOP+.07,z1-.2]))}
   p.push(RB(.56,.5,.5,W[2],[-1.2,TOP+.25,z1-.6]),RB(.58,.08,.52,WD,[-1.2,TOP+.46,z1-.6]));
   GEO.t74_wtent=mg(p);GEO.t74_wtent_glow=mg(gl)}
- /* 채굴 텐트: 땅 텐트 그대로(노란 텐트 1.45배) + 광석 상자·곡괭이·작은 등·곡괭이 그림 표지판 */
- {const p=[],gl=[];const tg=G('mtent',[0,0,0],[0,0,0],1.45);if(tg)p.push(tg);
-  p.push(...oreBox(1.45,1.62,0));const pk=pick(-1.55,.4,1.55,.4,.3);if(pk)p.push(pk);
-  {const g=lampP(-1.7,-1.6,1.2,Math.PI*.25);p.push(g);gl.push(glass(-1.7+Math.sin(Math.PI*.25)*.49,1.25,-1.6+Math.cos(Math.PI*.25)*.49))}
-  if(typeof plBoardGeo==='function'){const b=pt(plBoardGeo(1.2,.5),null,[1.62,0,-1.5],[0,-.3,0],[.55,.55,.55]);p.push(b);for(const s of[-1,1])p.push(pt(lkRb(.05,.26,.03,.01,.005),DK,[1.62+s*.03,.73,-1.46],[0,-.3,s*.75]))}
+ /* 채굴 텐트(76차, 기획자: '채굴 텐트 좀 바꾸자' — 땅 텐트와 똑같아 보였음): 같은 텐트 틀(lkTent)이지만 색·모양을 바꿔 한눈에 달라 보이게 —
+    벽돌색 캔버스 + 크림 띠 + 짙은 나무 테두리, 자갈 바닥 깔개, 앞에 갱도 입구 같은 나무 문틀(기둥 둘·갓 보, 보 위 곡괭이·삽 그림 판, 걸린 등),
+    옆에 청록 광차(짧은 레일 위), 광석 상자·곡괭이, 뒤에 버팀목 더미. 꼭대기 깃발은 노랑. 크기는 땅 텐트 깔개(foot) 안. */
+ {const p=[],gl=[];const SX=1.3,SY=1.3,SZ=1.42,TCV=0xc8643c,STR=0xeee3cc,GRV=0x9c968f,PEN=0xf2c94c;
+  if(!GEO.t74_mtent_c)GEO.t74_mtent_c=t74tentGeo([['0xf2b33a',String(TCV)],['0xe39a26',String(STR)],['0xc9702a',String(WD)],['0x6f7a52',String(GRV)],['0xd9483e',String(PEN)],['[0,yb+ht,L/2+.22,0,L/2+.55],','']]);
+  p.push(pt(GEO.t74_mtent_c,null,[0,0,-.12],[0,0,0],[SX,SY,SZ]));
+  /* 자갈 깔개 위 돌멩이 */
+  for(let k=0;k<9;k++){const a=k*2.4,r=1.55+(k%3)*.12;p.push(pt(new THREE.IcosahedronGeometry(.07+(k%2)*.03,0),k%3?0x8a8a94:0xb0aca6,[Math.cos(a)*r*.95,.05,Math.sin(a)*r*1.05-.1],[k,k*.7,0]))}
+  /* 갱도 문틀: 기둥 둘 + 갓 보(끝 나이테) + 버팀 + 보 위 곡괭이·삽 판 */
+  const FZ=1.98,PX=1.02,PH=1.6;
+  for(const sd of[-1,1]){p.push(pt(lkRb(.2,PH,.2,.05,.03),W[sd<0?1:0],[sd*PX,PH/2,FZ]),pt(lkRb(.26,.1,.26,.04,.02),WD,[sd*PX,.05,FZ]));
+   p.push(lkBeam([sd*PX,PH-.42,FZ-.02],[sd*(PX-.38),PH-.04,FZ-.02],.09,.09,W[2]))}
+  p.push(pt(lkRb(2.5,.2,.24,.05,.03),W[2],[0,PH+.07,FZ]));for(const sd of[-1,1])p.push(pt(cyl(.1,.1,.02,12),END,[sd*1.26,PH+.07,FZ],[0,0,Math.PI/2]));
+  {const by=PH+.38,bz=FZ+.02;p.push(pt(lkRb(.98,.4,.06,.04,.02),WD,[0,by,bz]),pt(lkRb(.88,.31,.04,.03,.015),STR,[0,by,bz+.025]));
+   for(const sd of[-1,1])p.push(pt(lkRb(.05,.18,.04,.01,.005),DK,[sd*.36,PH+.24,bz-.01]));
+   const fz=bz+.05;p.push(pt(lkRb(.035,.3,.012,.01,.004),WD,[-.05,by-.01,fz],[0,0,.72]),pt(lkRb(.035,.3,.012,.01,.004),WD,[.05,by-.01,fz],[0,0,-.72]));
+   p.push(pt(lkRb(.26,.045,.014,.015,.006),0x7d8794,[.1,by+.1,fz+.004],[0,0,-.3]),pt(lkRb(.1,.12,.014,.03,.006),0x9aa3ad,[-.12,by+.1,fz+.004],[0,0,.72]))}
+  /* 보 오른쪽 끝에 걸린 등 */
+  {const lx=.86,lz=FZ+.06;p.push(lkRod([lx,PH-.03,lz],[lx,PH-.2,lz],.012,DK),pt(cyl(.07,.09,.05,10),DK,[lx,PH-.22,lz]),pt(cyl(.085,.085,.04,10),DK,[lx,PH-.44,lz]));
+   for(const sd of[-1,1])p.push(pt(cyl(.012,.012,.2,4),DK,[lx+sd*.06,PH-.33,lz]));gl.push(pt(new THREE.SphereGeometry(.07,12,8),0xffe2a0,[lx,PH-.33,lz],[0,0,0],[1,1.3,1]))}
+  /* 앞 오른쪽: 짧은 레일 위 청록 광차 + 광석 */
+  {const x=1.72,z=1.5;for(const sd of[-1,1])p.push(pt(lkRb(.05,.05,1.5,.01,.005),DK,[x+sd*.2,.03,z]));for(let k=0;k<5;k++)p.push(pt(lkRb(.56,.04,.09,.01,.005),W[k%3],[x,.015,z-.62+k*.31]));
+   p.push(pt(lkRb(.5,.32,.66,.07,.03),TEAL,[x,.36,z]),pt(lkRb(.55,.06,.71,.03,.02),CR,[x,.53,z]));for(const sd of[-1,1])for(const e of[-1,1])p.push(pt(cyl(.09,.09,.05,12),DK2,[x+sd*.2,.17,z+e*.22],[0,0,Math.PI/2]));
+   for(let k=0;k<5;k++)p.push(pt(new THREE.IcosahedronGeometry(.09+(k%2)*.02,0),ORE[k%4],[x-.13+(k%3)*.13,.6,z-.15+Math.floor(k/3)*.25],[k,k,0]))}
+  /* 앞 왼쪽: 광석 상자 + 기댄 곡괭이 */
+  p.push(...oreBox(-1.72,2.0,.2));{const pk=pick(-1.3,.42,2.25,.3,.32);if(pk)p.push(pk)}
+  /* 뒤 왼쪽: 버팀목 더미 */
+  for(const [y,dz] of[[.1,-.11],[.1,.11],[.29,0]])p.push(pt(cyl(.1,.1,1.15,10),W[y>.2?2:1],[-1.0,y,-2.15+dz],[0,0,Math.PI/2]),pt(cyl(.085,.085,1.17,10),END,[-1.0,y,-2.15+dz],[0,0,Math.PI/2]));
   GEO.t74_minetent=mg(p);GEO.t74_minetent_glow=mg(gl)}
  /* 채굴 기지: 집(통나무 집) 그대로 0.78배 + 뒤 왼쪽 작은 권양탑(나무 기둥·빨간 도르래) + 앞 오른쪽 광차·광석 + 등 */
  {const p=[],gl=[],K=.78;const hg=G('phouse',[0,0,.05],[0,0,0],K);if(hg)p.push(hg);if(GEO.phouse_glow)gl.push(pt(GEO.phouse_glow,null,[0,0,.05],[0,0,0],[K,K,K]));
@@ -69,7 +92,7 @@ function t74models(){
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{t74models()}catch(e){console.error('tents74 모델',e)}try{lkAOnew(b0)}catch(e){}}}
 /* 불빛 조각 + 밤 등불 */
 {const _as=addStruct;addStruct=function(s){const r=_as(s);try{if(r&&r.m&&GEO[sdef(r).g+'_glow']&&/^(wtent|minetent|minebase)$/.test(r.t)){const k=sdef(r).s||1,g=GEO[sdef(r).g+'_glow'];r.m.children[0].add(mesh(g,HGLOW,false));
-  const lp={wtent:[2.5,2.06,3.41],minetent:[-1.35,1.25,-1.25],minebase:[-1.75,1.95,2.24]}[r.t];if(lp&&typeof PLAMPS!=='undefined'){const l=glow(0xffc46a,2.2,.6);l.position.set(lp[0]*k,lp[1]*k,lp[2]*k);l.visible=false;r.m.add(l);PLAMPS.push(l)}}
+  const lp={wtent:[2.5,2.06,3.41],minetent:[.86,1.27,2.04],minebase:[-1.75,1.95,2.24]}[r.t];if(lp&&typeof PLAMPS!=='undefined'){const l=glow(0xffc46a,2.2,.6);l.position.set(lp[0]*k,lp[1]*k,lp[2]*k);l.visible=false;r.m.add(l);PLAMPS.push(l)}}
   if(r&&r.own&&T74_LIFE.includes(r.t)&&!r.at)r.at=Date.now()}catch(e){console.error(e)}return r}}
 
 /* ---------- 수상 텐트: 깊은 바다에만 ---------- */

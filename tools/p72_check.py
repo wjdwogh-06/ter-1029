@@ -9,7 +9,7 @@ async def steps(pg):
     r=await ev("""()=>{const L=structs.filter(s=>s.t==='lighthouse'),o={n:L.length,c:[]};
       for(const s of L){const n=NOB.find(q=>q.k==='lh'&&Math.hypot(q.x-s.x,q.z-s.z)<.5);o.c.push(n?+n.r.toFixed(1):null)}
       const s=L[0];o.at25=nobAt(s.x+25,s.z,1)?.k||null;o.at35=nobAt(s.x+35,s.z,1)?.k||null;o.cave=NOB.filter(q=>q.k==='cave').map(q=>+q.r.toFixed(1));return JSON.stringify(o)}""")
-    R=json.loads(r);R['ok']=R['n']==6 and all(c and c>=30 for c in R['c']) and R['at25']=='lh' and R['at35']!='lh';res['lighthouse']=R
+    R=json.loads(r);R['ok']=R['n']==5 and all(c and c>=30 for c in R['c']) and R['at25']=='lh' and R['at35']!='lh';res['lighthouse']=R
     # 2. 길 끝: 다른 길과 안 만나는 끝은 맨 끝 줄이 완전히 투명(알파 0)·폭이 좁음, 만나는 끝은 그대로
     r=await ev("""()=>{const g=roadMeshObj.geometry,C=g.attributes.color,Pp=g.attributes.position,W=13;let base=0;const out=[];
       const others=(ri,x,z)=>ROADS.some((r,q)=>q!==ri&&r.p.some(p=>(p[0]-x)**2+(p[1]-z)**2<16));

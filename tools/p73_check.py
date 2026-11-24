@@ -20,7 +20,7 @@ async def steps(pg):
     # 2. 겨울: 동북섬·띠섬·해달섬 물건 모두 '_w', 다른 섬 0
     r=await ev("""()=>{const L=wntIsls().map(i=>i.n);let on=0,onW=0,off=0;objs.forEach(o=>{const I=islAt(o.x,o.z);if(!I||OBJT[o.t].berry)return;if(L.includes(I.n)){on++;if(o.gk&&o.gk.endsWith('_w'))onW++}else if(o.gk&&o.gk.endsWith('_w'))off++});
       const per={};for(const n of L){per[n]=0}objs.forEach(o=>{const I=islAt(o.x,o.z);if(I&&per[I.n]!=null&&o.gk&&o.gk.endsWith('_w'))per[I.n]++});return JSON.stringify({L,on,onW,off,per,nv:WNT.nv})}""")
-    R=json.loads(r);R['ok']=len(R['L'])==3 and R['on']==R['onW'] and R['off']==0 and all(v>0 for v in R['per'].values());res['winter']=R
+    R=json.loads(r);R['ok']=len(R['L'])==4 and R['on']==R['onW'] and R['off']==0 and all(v>0 for v in R['per'].values());res['winter']=R
     # 3. 특수 보급섬: 상자 6·초소 4·설치 금지 원이 섬을 다 덮음·빠진 것 0
     r=await ev("""()=>JSON.stringify(SI73.map(Q=>{const n=NOB.find(q=>q.k===Q.k);let out=0;for(let x=Q.cx-60;x<=Q.cx+60;x+=2)for(let z=Q.cz-60;z<=Q.cz+60;z+=2)if(hAt(x,z)>0&&islAt(x,z)===Q.I&&Math.hypot(x-n.x,z-n.z)>n.r)out++;
       const nb=nobAt(Q.cx,Q.cz,1);return{n:Q.isl,cr:structs.filter(s=>s.t==='spsupply'&&s.si===Q.k).length,g:Q.g.length,miss:Q.miss,r:n&&n.r,out,nob:nb&&nb.k}}))""")

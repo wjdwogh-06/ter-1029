@@ -12,7 +12,7 @@
 const WNT={I:null,ice:null,snow:null,map:0,iceT:0,k:0};
 function wntIsl(){return WNT.I||(WNT.I=ISL.find(i=>i.n==='동북섬')||null)}
 /* 73차(디자인, 기획자 11-23 21:07: '동북섬 대각선 위로 가는 섬들은 전부 겨울 테마로'): 동북섬 + 띠섬 + 해달섬. 항구 둘레 살짝(wntPortK)은 동북섬 항구만 */
-const WNT_NAMES=['동북섬','띠섬','해달섬'];
+const WNT_NAMES=['동북섬','띠섬','해달섬','동북섬 동쪽'];   /* 76차: 동북섬 동쪽에 덧붙인 땅도 겨울 */
 function wntIsls(){return WNT.L||(WNT.L=WNT_NAMES.map(n=>ISL.find(i=>i.n===n)).filter(Boolean))}
 const wntC=(hex)=>new THREE.Color(hex).convertSRGBToLinear();
 const WNTC={snow:wntC(0xf3f7fb),shade:wntC(0xcfdcea),blue:wntC(0xbcd0e6),sand:wntC(0xdde3e4),sand2:wntC(0xc6d1d6),shal:wntC(0xa8c9d6),rock:wntC(0x8d96a0),frost:wntC(0xc3d6dc),ice:wntC(0xe4f3f8),ice2:wntC(0xb7dbe8)};
