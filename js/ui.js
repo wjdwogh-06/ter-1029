@@ -244,7 +244,7 @@ function drawFx(dt){const c=fctx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0
  c.font=`900 ${15*k}px ${UIF}`;c.lineWidth=3.5;for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.t+=dt;if(f.t>1.1){floats.splice(i,1);continue}const s=scr(f.x,f.y+f.t*1.2,f.z);c.globalAlpha=1-f.t/1.1;c.strokeStyle=UIC.ink;c.strokeText(f.s,s[0],s[1]);c.fillStyle=f.col;c.fillText(f.s,s[0],s[1])}c.globalAlpha=1;
  if(raid.on){let b=null,bd=1e9;for(const e of enemies)if(e.raid&&!e.dead){const d=dist(e.x,e.z,P.x,P.z);if(d<bd){bd=d;b=e}}if(b&&bd>16){const a=Math.atan2(b.z-P.z,b.x-P.x),r=Math.min(innerWidth,innerHeight)*.36,x=innerWidth/2+Math.cos(a)*r,y=innerHeight*.46+Math.sin(a)*r;c.fillStyle='#FF6B5E';c.beginPath();c.moveTo(x+Math.cos(a)*18*k,y+Math.sin(a)*18*k);c.lineTo(x+Math.cos(a+2.5)*12*k,y+Math.sin(a+2.5)*12*k);c.lineTo(x+Math.cos(a-2.5)*12*k,y+Math.sin(a-2.5)*12*k);c.fill()}}}
 /* ---- save / flow ---- */
-function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,hk:s.in?s.hk:undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,at:s.at||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
+function save(){if(mode!=='play'||!S)return;try{S.built=structs.filter(s=>s.own).map(s=>({t:s.t,x:s.x,z:s.z,r:s.r,in:s.in||undefined,hk:s.in?s.hk:undefined,yo:s.yo||undefined,kit:s.kit||undefined,upc:s.upc||undefined,upTo:s.upTo||undefined,at:s.at||undefined,hp:Math.round(s.hp),ammo:s.ammo||0,fuel:Math.round(s.fuel||0)}));S.dep={};depSet.forEach(k=>{const o=objs.get(k);if(o.re>0)S.dep[k]=Math.round(o.re)});localStorage.setItem(SAVE,JSON.stringify({S,opt}))}catch(e){}}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE));if(d&&d.S&&d.S.seed){S=d.S;if(!S.cx){S.coins=Math.round((S.coins||0)*10);S.cx=1}   /* 동전 10배 단위(6차) */if(d.opt)opt=d.opt;return true}}catch(e){}return false}
 function startPlay(){windInit();mode='play';if(titleT!==null){S.time=titleT;titleT=null}$('title').classList.add('hide');$('ui').classList.remove('hide');updCamera(0,P.x,groundY(P.x,P.z),P.z,true);hudDirty=true;hud();buildUI();sfx(600,.1);if(innerHeight>innerWidth)toast('폰을 가로로 돌리면 훨씬 편해요')}
 let titleT=null;function toTitle(){mode='title';fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fx.width,fx.height);   /* no stale world labels behind the title */
@@ -672,7 +672,7 @@ $('pbody').addEventListener('click',e=>{const t=e.target.closest('[data-a="dext"
    ① 텐트·집마다 구역 네 모서리에 '못 박은 말뚝' + 모서리 꺾쇠(바닥 줄 두 개)가 늘 보여요(내 것 초록, 남의 텐트 주황, 남의 집 빨강).
    ② 설치 모드에선 구역 테두리 전체가 보여요: 텐트를 들고 있으면 놓을 자리의 구역(놓을 수 있으면 초록, 아니면 빨강)과 둘레 구역들. */
 const ZMK={mats:{},geo:{},pre:null};
-const ZCOL={me:0x1f9a3a,tent:0xe07a00,house:0xd23a28,bad:0xd23a28};const zoneCol=s=>s.own?ZCOL.me:s.t==='phouse'?ZCOL.house:ZCOL.tent;
+const ZCOL={me:0x1f9a3a,tent:0xe07a00,house:0xd23a28,bad:0xd23a28};const zoneCol=s=>s.own?ZCOL.me:isHouseT(s.t)?ZCOL.house:ZCOL.tent;
 /* 41차(기획자 11-20 20:10: '그 선 표시는 지워 버려, 설치되었으면 그냥 꼭짓점만, 꼭짓점 못 같은 거나 입체 같은 거 너무 티 나게 하지 말고'):
    말뚝·꺾쇠 줄·설치 모드 테두리를 없애고, 네 모서리에 땅에 붙은 얇은 ㄱ자 표시만(반투명). 텐트를 들고 있을 땐 놓을 자리의 네 모서리만 조금 또렷하게(초록/빨강). */
 function zmMat(c,o){const k=c+'/'+o;return ZMK.mats[k]||(ZMK.mats[k]=(()=>{const m=new THREE.MeshBasicMaterial({fog:false,transparent:true,opacity:o,depthWrite:false});m.color.setHex(c).convertSRGBToLinear();return m})())}   /* 빛·안개를 안 받아서 색이 그대로 */
@@ -681,7 +681,7 @@ function zoneCornerGeo(big){const k=big?'b':'s';if(ZMK.geo[k])return ZMK.geo[k];
 const ZCOL_SOFT={[ZCOL.me]:0xeefbe6,[ZCOL.tent]:0xffc27a,[ZCOL.house]:0xff8a72};   /* 놓인 구역 표시는 옅은 색(내 것은 거의 흰색 — 잔디 위에서 은은하게 보이게) */
 const ZC_ROT=[0,-Math.PI/2,Math.PI,Math.PI/2];   /* 뒤 왼쪽·뒤 오른쪽·앞 오른쪽·앞 왼쪽 모서리: 팔이 안쪽을 보게 */
 const zcY=(x,z,r,i)=>{const a=r+ZC_ROT[i],c=Math.cos(a),n=Math.sin(a);let y=groundY(x,z);for(const[u,v]of[[.8,0],[0,.8]]){const px=x+u*c+v*n,pz=z-u*n+v*c;y=Math.max(y,groundY(px,pz))}return Math.max(y,-.05)};   /* 팔 끝까지 땅에 묻히지 않게 */
-function zoneMark(s){zoneUnmark(s);if(!isZoneT(s.t)||s.in)return;const q=zoneRect(s.x,s.z,s.r),g=new THREE.Group(),cs=zoneCorners(q),geo=zoneCornerGeo(0),mat=zmMat(ZCOL_SOFT[zoneCol(s)]||0xffffff,.62);
+function zoneMark(s){zoneUnmark(s);if(!isZoneT(s.t)||s.in)return;const q=zoneRect(s.x,s.z,s.r,s.t),g=new THREE.Group(),cs=zoneCorners(q),geo=zoneCornerGeo(0),mat=zmMat(ZCOL_SOFT[zoneCol(s)]||0xffffff,.62);
  cs.forEach(([x,z],i)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,zcY(x,z,q.r,i),z);m.rotation.y=q.r+ZC_ROT[i];m.renderOrder=3;g.add(m)});scene.add(g);s.zg=g}
 function zoneUnmark(s){if(s.zg){scene.remove(s.zg);s.zg=null}}
 {const _a=addStruct;addStruct=function(o){const s=_a(o);if(s&&isZoneT(s.t)&&!s.in)zoneMark(s);return s}}
@@ -690,7 +690,7 @@ function zoneUnmark(s){if(s.zg){scene.remove(s.zg);s.zg=null}}
 function zoneEdgesUpd(){const on=!!bmode&&bmode!=='demo'&&!INT.on&&mode==='play';
  const pre=on&&isZoneT(bmode)&&ghost&&ghost.userData.g;if(pre){const gg=ghost.userData.g;if(!ZMK.pre){ZMK.pre=new THREE.Group();const geo=zoneCornerGeo(1);
    ZMK.pre.userData.pegs=[0,1,2,3].map(i=>{const m=new THREE.Mesh(geo,zmMat(ZCOL.me,.9));m.renderOrder=3;ZMK.pre.add(m);return m});scene.add(ZMK.pre)}
-  const q=zoneRect(gg.x,gg.z,gg.r),mat=zmMat(gg.ok?ZCOL.me:ZCOL.bad,.9);ZMK.pre.visible=true;
+  const q=zoneRect(gg.x,gg.z,gg.r,bmode),mat=zmMat(gg.ok?ZCOL.me:ZCOL.bad,.9);ZMK.pre.visible=true;
   zoneCorners(q).forEach(([x,z],i)=>{const m=ZMK.pre.userData.pegs[i];m.material=mat;m.position.set(x,zcY(x,z,q.r,i),z);m.rotation.y=q.r+ZC_ROT[i]})}
  else if(ZMK.pre)ZMK.pre.visible=false}
 {const _u=updNoBuild;updNoBuild=function(){_u();zoneEdgesUpd()}}
@@ -802,7 +802,7 @@ const HKM={s:null};
 intShow=function(on){const k=curHK();for(const s of structs)if(s.in&&s.m)s.m.visible=on&&s.hk===k};
 function inRefund(q){const d=BUILDS[q.t];if(!d)return;if(d.kit&&ITEMS[d.kit])give(d.kit,1);else for(const k in d.c||{})give(k,d.c[k])}
 {const _r=removeStruct;removeStruct=function(s){_r(s);if(!s||!isZoneT(s.t)||!s.own||(typeof HUP!=='undefined'&&HUP.on)||(typeof NET!=='undefined'&&NET.applying))return;const k=homeKey(s),its=structs.filter(q=>q.in&&q.own&&q.hk===k);if(!its.length)return;
-  for(const q of its){inRefund(q);_r(q)}const nm=[...new Set(its.map(q=>BUILDS[q.t]?BUILDS[q.t].n:q.t))].join('·');setTimeout(()=>toast(`🎒 ${s.t==='phouse'?'집':'텐트'} 안에 있던 ${jo(nm,'을','를')} 가방에 넣었어요`),900);hudDirty=true}}
+  for(const q of its){inRefund(q);_r(q)}const nm=[...new Set(its.map(q=>BUILDS[q.t]?BUILDS[q.t].n:q.t))].join('·');setTimeout(()=>toast(`🎒 ${BUILDS[s.t]&&BUILDS[s.t].hide?BUILDS[s.t].n:'텐트'} 안에 있던 ${jo(nm,'을','를')} 가방에 넣었어요`),900);hudDirty=true}}
 function hkMigrate(){const homes=new Set(structs.filter(s=>isZoneT(s.t)&&s.own&&!s.in).map(homeKey)),its=structs.filter(q=>q.in&&q.own&&(!q.hk||!homes.has(q.hk)));if(!its.length)return;
  for(const q of its){inRefund(q);removeStruct(q)}const nm=[...new Set(its.map(q=>BUILDS[q.t]?BUILDS[q.t].n:q.t))].join('·');setTimeout(()=>toast(`🎒 텐트 안에 남아 있던 ${jo(nm,'을','를')} 가방에 넣었어요 — 이제 텐트마다 안이 따로예요`),1600);hudDirty=true;save()}
 /* ===== 44차 ② 항구 안전 구역 표시(규칙은 core.js PORT_SAFE·server.js) — 안에 있으면 에너지 칸 아래에 '🛡 안전 구역' ===== */

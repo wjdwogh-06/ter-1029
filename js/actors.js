@@ -279,10 +279,10 @@ function waterSpotWhy(x,z,r,b){const c=Math.cos(r),sn=Math.sin(r);for(let ax=-1;
   if(onDock(px,pz))return'부두와 겹쳐요';if(hAt(px,pz)>-.25)return'물이 얕거나 땅에 걸려요. 조금 더 물 쪽에 놓아요'}
  for(const rr of[3,5,7])for(let k=0;k<16;k++){const a=k/16*Math.PI*2;if(hAt(x+Math.cos(a)*rr,z+Math.sin(a)*rr)>.3)return''}return'바닷가 가까운 물에만 띄울 수 있어요'}
 /* 39차: 구역 규칙 — 텐트·집의 구역끼리는 겹칠 수 없고(내 것끼리도), 남의 '집' 구역 안에는 아무것도 못 놓아요. 남의 '텐트' 구역에는 놓아도 돼요 */
-function zoneWhy(t,x,z,r,R0){if(isZoneT(t)){const q=zoneRect(x,z,r);for(const s of structs){if(!isZoneT(s.t)||s.in)continue;if(zoneOverlap(q,zoneRect(s.x,s.z,s.r)))return s.own?'내 구역과 겹쳐요. 텐트 구역끼리는 겹칠 수 없어요':'다른 사람 구역과 겹쳐요'}return''}
- if(INT.on)return'';for(const s of structs){if(s.t!=='phouse'||s.own||s.in)continue;if(zoneIn(zoneRect(s.x,s.z,s.r),x,z,R0))return'다른 사람 집 구역이에요. 집 주인만 설치할 수 있어요'}return''}
+function zoneWhy(t,x,z,r,R0){if(isZoneT(t)){const q=zoneRect(x,z,r,t);for(const s of structs){if(!isZoneT(s.t)||s.in)continue;if(zoneOverlap(q,zoneRect(s.x,s.z,s.r,s.t)))return s.own?'내 구역과 겹쳐요. 텐트 구역끼리는 겹칠 수 없어요':'다른 사람 구역과 겹쳐요'}return''}
+ if(INT.on)return'';for(const s of structs){if(!isHouseT(s.t)||s.own||s.in)continue;if(zoneIn(zoneRect(s.x,s.z,s.r,s.t),x,z,R0))return'다른 사람 집 구역이에요. 집 주인만 설치할 수 있어요'}return''}
 /* 철거: 내 것은 어디서든. 남이 지은 것(멀티, s.by)은 누군가의 '텐트' 구역 안에 있을 때만 — '집' 구역 안이면 못 해요. 텐트·집 자체는 남이 못 없애요 */
-function canDemo(s){if(s.in&&s.hk!==curHK())return false;   /* 44차: 다른 텐트 안의 것은 안 보이니 철거도 안 돼요 */if(s.own)return true;if(!BUILDS[s.t]||isZoneT(s.t)||!s.by||s.in)return false;let inT=false;for(const h of structs){if(!isZoneT(h.t)||h.in)continue;if(zoneIn(zoneRect(h.x,h.z,h.r),s.x,s.z,0)){if(h.t==='phouse')return false;inT=true}}return inT}
+function canDemo(s){if(s.in&&s.hk!==curHK())return false;   /* 44차: 다른 텐트 안의 것은 안 보이니 철거도 안 돼요 */if(s.own)return true;if(!BUILDS[s.t]||isZoneT(s.t)||!s.by||s.in)return false;let inT=false;for(const h of structs){if(!isZoneT(h.t)||h.in)continue;if(zoneIn(zoneRect(h.x,h.z,h.r,h.t),s.x,s.z,0)){if(isHouseT(h.t))return false;inT=true}}return inT}
 function placeBuild(){if(bmode==='demo'){let b=null,bd=3.6;for(const s of structs)if(canDemo(s)){const d=dist(P.x,P.z,s.x,s.z);if(d<bd){bd=d;b=s}}if(!b){toast('가까이에 철거할 수 있는 건물이 없어요');return}const c=BUILDS[b.t].c;if(!b.own)b.zdemo=1;if(b.kit&&b.own)give(BUILDS[b.t].kit,1);if(!b.kit||BUILDS[b.t].hide||!b.own)for(const k in c)give(k,Math.ceil(c[k]*.5));if(b.upc)for(const k in b.upc)give(k,b.upc[k]);removeStruct(b);sfx(200,.1,'square',.05);toast(b.kit?'걷어서 가방에 넣었어요':'철거했어요 (재료 절반 반환)');hudDirty=true;return}
  const g=ghostPos(),b=BUILDS[bmode];if(!g.ok){toast(g.why||'여기엔 놓을 수 없어요');sfx(160,.1,'square',.04);return}const kit=payBuild(bmode);const s=addStruct({t:bmode,x:g.x,z:g.z,r:g.r,own:1,fresh:1,kit,in:g.in,yo:g.yo});const k='b_'+bmode;if(S.st[k]!==undefined)S.st[k]++;if(b.tur){S.st.b_tur++;sfx(180,.25,'sawtooth',.04,2.2);if(DEV.on)s.ammo=b.tur.cap}
  if(b.home){S.home={x:g.x,z:g.z+b.bz+1.1};toast('텐트를 쳤어요. 여기가 내 기지예요')}puff(g.x,groundY(g.x,g.z)+.6,g.z,0xffffff,8);sfx(300,.08,'square',.05);P.a.play('Interact',{once:1,lock:.3,force:1,speed:1.5});hudDirty=true;if(!canBuild(bmode)){toast(kit?'키트를 다 썼어요':'재료를 다 썼어요');setBuild(null)}}
@@ -381,9 +381,9 @@ function nearWarm(){for(const s of lightsrc)if(s.t==='fire'&&dist(s.x,s.z,P.x,P.
 function updStats(dt){const dk=dark(),nw=nearWarm(),h=hAt(P.x,P.z);S.time+=dt/DAYLEN;if(S.time>=1){S.time-=1;S.day++}S.hunger=100;S.warm=100;if(DEV.on){S.hp=100;return}
  /* 27차(기획자: '체력바만, 에너지 개념 10칸, 수영할 때도 계속 소비되고 맞아도 소비'): 배고픔·체온은 없어요(값은 100으로 묶어 둠).
     에너지 = S.hp(10 = 1칸). 헤엄치는 동안 NRG.swim/초씩 줄고, 맞으면 줄어요. 물 밖에서 5초 안 맞으면 천천히 차요(텐트·집 안은 빨리, 불 옆은 조금 빨리). 숫자는 임시 */
- if(WTR.st==='swim'){hurtSoft(dt*NRG.swim);if((P.nrgT=(P.nrgT||0)-dt)<=0&&S.hp<30&&!P.dead){P.nrgT=12;toast('⚡ 에너지가 얼마 안 남았어요! 물 밖으로 나가요')}}
+ if(WTR.st==='swim'){const dp=typeof seaDeep==='function'&&seaDeep(P.x,P.z);hurtSoft(dt*NRG.swim*(dp?NRG.deep:1));P.dpT=(P.dpT||0)-dt;if(dp&&P.dpT<=0){P.dpT=60;toast('🌊 깊은 바다예요 — 헤엄치면 에너지가 두 배로 빨리 닳아요')}   /* 78차(기획자: '깊은 바다에서는 수영할 때 에너지가 두 배 더 빨리 닳아') */if((P.nrgT=(P.nrgT||0)-dt)<=0&&S.hp<30&&!P.dead){P.nrgT=12;toast('⚡ 에너지가 얼마 안 남았어요! 물 밖으로 나가요')}}
  else if(P.lastHurt>5&&!P.dead)S.hp=Math.min(100,S.hp+dt*(INT.on&&INT.kind!=='cave'?NRG.rest:nw?NRG.fire:NRG.idle))}
-const NRG={swim:2,idle:.25,fire:.8,rest:2.5};   /* 에너지(0~100)가 1초에 줄거나 차는 양: 헤엄 1칸/5초, 쉬기(밖) 1칸/40초, 불 옆 1칸/12초, 텐트·집 안 1칸/4초 */
+const NRG={deep:2,swim:2,idle:.25,fire:.8,rest:2.5};   /* 78차: deep = 깊은 바다(seaDeep) 헤엄 배율. 에너지(0~100)가 1초에 줄거나 차는 양: 헤엄 1칸/5초, 쉬기(밖) 1칸/40초, 불 옆 1칸/12초, 텐트·집 안 1칸/4초 */
 function hurtSoft(d){if(P.dead)return;S.hp-=d;if(S.hp<=0)die()}
 /* ===== 46차(규칙, 기획자 11-21 13:14) 나무·바위 더 단단하게 · 뭉친 나무 따로따로 =====
    - 체력(OBJT_HP): 나무 7·8, 바위 9. 손도끼·맨손은 한 번에 1(0.42초마다) → 나무 7~8번, 바위 9번. 전기톱은 한 번에 2(0.3초마다) → 나무 4번(약 1초).

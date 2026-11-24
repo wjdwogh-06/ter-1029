@@ -83,7 +83,7 @@ async def steps(pg):
     await pg.wait_for_timeout(1200)
     await pg.screenshot(path=os.path.join(OUT,'p74_minetent.jpg'),type='jpeg',quality=82)
     await ev("()=>{intEnter(T74m)}");await pg.wait_for_timeout(1600)
-    r=await ev("""()=>{const s=T74m;S.inv.stone=200;S.inv.wood=200;upPut('stone',999);upPut('wood',999);const I=upInfo();const h=upCard();return JSON.stringify({in:INT.on,ok:I&&I.ok,to:I&&I.to&&I.to.n,card:/채굴 기지/.test(h)&&!/나무를 다 넣으면/.test(h),btn:/data-a="upgo"(?![^>]*disabled)/.test(h)})}""")
+    r=await ev("""()=>{const s=T74m;S.inv.bar_iron=20;S.inv.bar_ti=20;S.inv.pick_elec=1;for(const k in BUILDS.minetent.upg.c)upPut(k,999);   /* 78차: 채굴 기지 재료 = 철 주괴·티타늄 주괴·전기 곡괭이 */const I=upInfo();const h=upCard();return JSON.stringify({in:INT.on,ok:I&&I.ok,to:I&&I.to&&I.to.n,card:/채굴 기지/.test(h)&&!/나무를 다 넣으면/.test(h),btn:/data-a="upgo"(?![^>]*disabled)/.test(h)})}""")
     res['upg']=json.loads(r)
     await ev("()=>upGo()")
     await pg.wait_for_timeout(5500)
