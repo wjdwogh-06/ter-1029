@@ -8,11 +8,15 @@ async def steps(pg):
     await ev("""()=>{window.walkPath=(pts)=>{P.x=pts[0][0];P.z=pts[0][1];let blocked=null,maxRise=0,prevY=stepY(P.x,P.z),minY=9;for(let k=1;k<pts.length;k++){const [tx,tz]=pts[k];let n=Math.ceil(Math.hypot(tx-P.x,tz-P.z)/.1);const dx=(tx-P.x)/n,dz=(tz-P.z)/n,L=Math.hypot(dx,dz)||1;
         for(let i=0;i<n;i++){const nx=P.x+dx,nz=P.z+dz;if(!canStep(P,nx,nz,dx/L,dz/L)||walk(nx,nz,.42,P)!==null){blocked=[+P.x.toFixed(2),+P.z.toFixed(2)];return{blocked,maxRise:+maxRise.toFixed(2),minY:+minY.toFixed(2)}}P.x=nx;P.z=nz;const y=stepY(P.x,P.z);maxRise=Math.max(maxRise,y-prevY);minY=Math.min(minY,y);prevY=y}}
         return{blocked,maxRise:+maxRise.toFixed(2),minY:+minY.toFixed(2)}}}""")
-    # 1. 깊은 바다: 해안 9m 안 물은 모두 얕음, 20m 넘는 넓은 바다는 거의 깊음, 좁은 물길(띠섬↔해달섬)은 얕음, 셰이더에 붙음, 맵 밖 깊음
-    r=await ev("""()=>{let sh=0,shBad=0,far=0,farDeep=0;for(let x=2;x<WS;x+=3)for(let z=2;z<WS;z+=3){if(hAt(x,z)>=-.05)continue;const d=seaShore(x,z),dp=seaDeep(x,z);if(d<=9){sh++;if(dp)shBad++}if(d>=22){far++;if(dp)farDeep++}}
-      return JSON.stringify({nd:SEA73.nd,n0:SEA73.n0,sh,shBad,far,farPct:+(farDeep/far*100).toFixed(1),chan:seaDeep(844.7,68.6),edge:seaDeep(-5,500),
+    # 1. 깊은 바다(74차): 섬 해안 28m 안 물은 모두 얕음(등대에서 60m 넘는 곳), 등대 바위섬은 둘레 10m 뒤부터 깊음(24m 고리 대부분 깊음),
+    #    해안 9m 안은 어디든 얕음, 40m 넘는 넓은 바다는 거의 깊음, 좁은 물길(띠섬↔해달섬)은 얕음, 셰이더에 붙음, 맵 밖 깊음
+    r=await ev("""()=>{const LH=LH_SITES.filter((L,i)=>!LH_GONE.includes(i)&&!LH_ISLE.includes(i));let sh=0,shBad=0,mid=0,midBad=0,far=0,farDeep=0;
+      for(let x=2;x<WS;x+=3)for(let z=2;z<WS;z+=3){if(hAt(x,z)>=-.05)continue;const d=seaShore(x,z),dp=seaDeep(x,z);if(d<=9){sh++;if(dp)shBad++}
+        if(d<=28&&LH.every(L=>Math.hypot(x-L[0],z-L[1])>60)){mid++;if(dp)midBad++}if(d>=40){far++;if(dp)farDeep++}}
+      const ring=LH.map(L=>{let n=0,k=0;for(let a=0;a<48;a++){const x=L[0]+Math.cos(a/48*6.283)*24,z=L[1]+Math.sin(a/48*6.283)*24;if(hAt(x,z)>-.05)continue;n++;if(seaDeep(x,z))k++}return +(k/Math.max(1,n)*100).toFixed(0)});
+      return JSON.stringify({nd:SEA73.nd,n0:SEA73.n0,sh,shBad,mid,midBad,far,farPct:+(farDeep/far*100).toFixed(1),ring,chan:seaDeep(844.7,68.6),edge:seaDeep(-5,500),
         open:seaDeep(500,985),shader:water.material.fragmentShader.includes('tDp')&&!!water.material.uniforms.tDp})}""")
-    R=json.loads(r);R['ok']=R['nd']>0 and R['shBad']==0 and R['farPct']>97 and not R['chan'] and R['edge'] and R['shader'];res['deep']=R
+    R=json.loads(r);R['ok']=R['nd']>0 and R['shBad']==0 and R['midBad']==0 and R['farPct']>97 and min(R['ring'])>=70 and not R['chan'] and R['edge'] and R['shader'];res['deep']=R
     # 2. 겨울: 동북섬·띠섬·해달섬 물건 모두 '_w', 다른 섬 0
     r=await ev("""()=>{const L=wntIsls().map(i=>i.n);let on=0,onW=0,off=0;objs.forEach(o=>{const I=islAt(o.x,o.z);if(!I||OBJT[o.t].berry)return;if(L.includes(I.n)){on++;if(o.gk&&o.gk.endsWith('_w'))onW++}else if(o.gk&&o.gk.endsWith('_w'))off++});
       const per={};for(const n of L){per[n]=0}objs.forEach(o=>{const I=islAt(o.x,o.z);if(I&&per[I.n]!=null&&o.gk&&o.gk.endsWith('_w'))per[I.n]++});return JSON.stringify({L,on,onW,off,per,nv:WNT.nv})}""")

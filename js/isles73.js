@@ -7,6 +7,8 @@
    ② 깊은 바다(기획자: '해안가에서 대략 10m, 10캐릭터 정도. 가다가 다른 섬과 애매하게 만나면 깊은 바다는 만들되 얕은 바다 판정을 후하게'):
       땅(높이 0 위)에서 10m 넘게 떨어진 바다 = 깊은 바다. 좁은 물길에서 생기는 폭 12m 아래 깊은 띠는 얕은 바다로 쳐요(열림 연산, 반지름 6m)
       → 섬 사이 물길이 약 32m보다 좁으면 다 얕은 바다. 강·작은 만은 저절로 얕은 바다.
+      74차(기획자 11-23 22:16: '등대 주변 제외하고 나머지 모든 섬들 해안가 기준으로 깊은 바다를 10m에서 30m로'): 섬 해안에서 30m,
+      등대가 서 있는 바위섬(등대 6곳) 둘레만 10m. 섬 사이 물길이 약 72m보다 좁으면 다 얕은 바다.
       기획자 결정(물어봄): **색으로만 구분** — 얕은 바다는 밝게, 깊은 바다는 진한 파랑 + 경계에 옅은 테두리. 규칙(헤엄·에너지 등)은 그대로.
       규칙 담당이 쓸 수 있게: seaDeep(x,z) = 깊은 바다면 true, seaShore(x,z) = 가장 가까운 땅까지 m(255까지).
    ③ 겨울: winter.js가 동북섬 + 띠섬 + 해달섬(WNT_NAMES)을 겨울로 칠해요.
@@ -14,7 +16,7 @@
       걷는 바닥은 보이지 않는 부두(addDock), 양옆은 보이지 않는 벽(떨어지지 않음) — 69차 수달섬 나무 다리와 같은 방식. */
 
 /* ---------- ② 깊은 바다 ---------- */
-const SEA73={N:1000,R:10,open:6,m:null,d:null,tex:null,nd:0,n0:0,map:0};
+const SEA73={N:1000,R:30,RL:10,LHR:26,open:6,m:null,d:null,tex:null,nd:0,n0:0,map:0};   /* 74차(기획자 11-23 22:16): 해안 30m(R), 등대 바위섬 둘레만 10m(RL) — 등대 가운데 LHR 안 땅 = 등대 바위섬 */
 function sea73EDT1(f,n,d,v,zz){let k=0;v[0]=0;zz[0]=-1e30;zz[1]=1e30;
  for(let q=1;q<n;q++){let s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k]);while(s<=zz[k]){k--;s=((f[q]+q*q)-(f[v[k]]+v[k]*v[k]))/(2*q-2*v[k])}k++;v[k]=q;zz[k]=s;zz[k+1]=1e30}
  k=0;for(let q=0;q<n;q++){while(zz[k+1]<q)k++;const dq=q-v[k];d[q]=dq*dq+f[v[k]]}}
@@ -22,10 +24,13 @@ function sea73EDT(g,N){const f=new Float64Array(N),d=new Float64Array(N),v=new I
  for(let x=0;x<N;x++){for(let y=0;y<N;y++)f[y]=g[y*N+x];sea73EDT1(f,N,d,v,zz);for(let y=0;y<N;y++)g[y*N+x]=d[y]}
  for(let y=0;y<N;y++){const o=y*N;for(let x=0;x<N;x++)f[x]=g[o+x];sea73EDT1(f,N,d,v,zz);for(let x=0;x<N;x++)g[o+x]=d[x]}}
 function sea73Build(){const N=SEA73.N,c=WS/N,INF=1e20,NN=N*N,g=new Float64Array(NN),land=new Uint8Array(NN);
- for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i;land[k]=hAt((i+.5)*c,(j+.5)*c)>0?1:0;g[k]=land[k]?0:INF}
- sea73EDT(g,N);
- const d=new Uint8Array(NN),deep0=new Uint8Array(NN),R=SEA73.R/c;let n0=0;
- for(let k=0;k<NN;k++){const v=Math.sqrt(g[k]);d[k]=Math.min(255,Math.round(v*c));if(!land[k]&&v>R){deep0[k]=1;n0++}}
+ /* 등대가 서 있는 바위섬(등대 가운데 LHR 안의 땅)은 따로: 둘레 10m만, 나머지 섬 해안은 30m */
+ const LH=LH_SITES.map((L,i)=>i).filter(i=>!LH_GONE.includes(i)&&!LH_ISLE.includes(i)).map(i=>LH_SITES[i]),lhr2=SEA73.LHR**2,lhl=new Uint8Array(NN);
+ for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i,x=(i+.5)*c,z=(j+.5)*c;land[k]=hAt(x,z)>0?1:0;if(land[k])for(const L of LH)if((x-L[0])**2+(z-L[1])**2<lhr2){lhl[k]=1;break}}
+ const gl=new Float64Array(NN);for(let k=0;k<NN;k++){g[k]=land[k]?0:INF;gl[k]=lhl[k]?0:INF}sea73EDT(g,N);sea73EDT(gl,N);
+ const gm=new Float64Array(NN);for(let k=0;k<NN;k++)gm[k]=land[k]&&!lhl[k]?0:INF;sea73EDT(gm,N);
+ const d=new Uint8Array(NN),deep0=new Uint8Array(NN),R2=(SEA73.R/c)**2,RL2=(SEA73.RL/c)**2;let n0=0;
+ for(let k=0;k<NN;k++){const v=Math.sqrt(g[k]);d[k]=Math.min(255,Math.round(v*c));if(!land[k]&&gm[k]>R2&&gl[k]>RL2){deep0[k]=1;n0++}}
  /* 얕은 바다 후하게: 깊은 띠 중 폭이 좁은 것(반지름 open 원이 안 들어가는 곳)은 얕은 바다로 */
  const r2=(SEA73.open/c)**2;for(let k=0;k<NN;k++)g[k]=deep0[k]?INF:0;sea73EDT(g,N);
  for(let k=0;k<NN;k++)g[k]=g[k]>r2?0:INF;sea73EDT(g,N);
