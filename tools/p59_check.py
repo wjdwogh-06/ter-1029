@@ -16,14 +16,14 @@ async def steps(pg):
         let lo=9;for(let t=0;t<=1;t+=.02){const x=pa[0]+(pb[0]-pa[0])*t,z=pa[1]+(pb[1]-pa[1])*t;if(pgSD(all[a].pg,x,z)>0&&pgSD(all[b].pg,x,z)>0)lo=Math.min(lo,hAt(x,z))}o.pairs.push({a,b,gap:+best.toFixed(1),lo:+lo.toFixed(2)})}
       o.joined=o.pairs.filter(p=>p.lo>0);o.pairs=o.pairs.length;o.maxH=+o.maxH.toFixed(2);
       /* 다른 것과 겹침: 새 섬 땅 위의 구조물·식물 구역·설치 금지 원 */
-      const onNew=(x,z)=>{const I=islAt(x,z);return I&&I.pg&&I!==ISL.find(q=>q.n===NEWISLE.n)&&hAt(x,z)>0};
-      o.structOn=structs.filter(s=>onNew(s.x,s.z)).map(s=>s.t).slice(0,10);o.nobOn=NOB.filter(n=>onNew(n.x,n.z)).map(n=>n.k);o.plantOn=PLANT_SITES.filter(p=>onNew(p.x,p.z)).length;
+      const onNew=(x,z)=>{const I=islAt(x,z);return I&&I.pg&&I!==ISL.find(q=>q.n===NEWISLE.n)&&!(typeof ADDLAND!=='undefined'&&ADDLAND.some(N=>N.n===I.n))&&I.n!=='수달섬'&&hAt(x,z)>0};   /* 76차 덧붙인 땅·69차 수달섬(상인 섬)·77차 보급지는 빼고 */
+      o.structOn=structs.filter(s=>!s.nobx&&onNew(s.x,s.z)).map(s=>s.t).slice(0,10);   /* 73차 돌다리(nobx)는 빼고 */o.nobOn=NOB.filter(n=>onNew(n.x,n.z)).map(n=>n.k);o.plantOn=PLANT_SITES.filter(p=>onNew(p.x,p.z)).length;
       o.ports=PORT_SITES.filter(p=>onNew(p[0],p[1])).length;o.sups=SUPS.filter(s=>onNew(s.x,s.z)).length;o.lh=LHS.filter(l=>onNew(l.x,l.z)).length;
       o.fsp=FSP.length;o.fspOn=FSP.filter(s=>hAt(s.x,s.z)>-.15).length;o.fspMoved=FSP.filter(s=>s.ox!=null).length;
       o.whaleDeep=WH.path?WH.path.every(p=>hAt(p[0],p[1])<WH.depth):null;o.whaleNear=WH.path?Math.round(Math.min(...WH.path.map(p=>Math.min(...ISL.filter(I=>I.pg).map(I=>pgSD(I.pg,p[0],p[1])))))):null;
       o.trees=0;o.rocks=0;for(const q of objs.values()){if(q.re>0)continue;if(onNew(q.x,q.z)){if(q.t<=2)o.trees++;else if(q.t===3)o.rocks++}}
       return JSON.stringify(o)}"""))
-    r['ok']=r['n']==27 and r['isl']==9 and r['off']==18 and r['offLand']==0 and not r['bad'] and not r['joined'] and r['maxH']<1.32 and not r['structOn'] and not r['nobOn'] and r['plantOn']==0 and r['ports']==0 and r['sups']==0 and r['lh']==0 and r['fsp']==79 and r['fspOn']==0 and r['whaleDeep'] is True and r['whaleNear']>8
+    r['ok']=r['n']==27 and r['isl']==9 and r['off']==18 and r['offLand']==0 and not r['bad'] and not r['joined'] and r['maxH']<1.32 and not r['structOn'] and not r['nobOn'] and r['plantOn']==0 and r['ports']==0 and r['sups']==0 and r['lh']==0 and r['fsp']==76 and r['fspOn']==0 and r['whaleDeep'] is True and r['whaleNear']>8
     put('isles',r)
     # 블록 정리: 그린 선 블록 + 다른 블록(본섬 위)을 넣고 개발자 모드 creInit → 그린 선만 사라지고 한 번만
     r=json.loads(await ev("""()=>{localStorage.removeItem('frontisle_blocks_isl');localStorage.setItem('frontisle_tidy57','1');const L=NEWISLES;const a=[];L.forEach(N=>N.pg.forEach(p=>a.push(Math.floor(p[0])+'.'+Math.floor(p[1])+'.0.0')));

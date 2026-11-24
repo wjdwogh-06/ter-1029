@@ -93,6 +93,10 @@ function spSurf(x,z){const S=SPSUP,R=S.rp,T=S.st,ex=x-S.x,ez=z-S.z;if(ex>S.AX+1|
 const SUPPLY_SITES=[[103,754],[158,162],[822,266],[684,174],[687,843],[905,682],[486,708],[448,726],[451,703],[236,619],[216,401],[463,263],[402,608],[741,547]],SUPS=[];
 /* 70차(디자인, 기획자 11-23 15:54): 남쪽 가까운 보급지 셋(6·7·8)을 큰 보급지 하나로 — 6번을 셋 가운데로 옮기고 7·8번은 비워요(번호·다른 보급지는 그대로, forEach가 빈 칸을 건너뜀). 모양은 js/supply.js */
 const SUP_BIG={i:6,x:464,z:710,hx:16,hz:10.5,gone:[7,8]};SUPPLY_SITES[6]=[SUP_BIG.x,SUP_BIG.z];for(const k of SUP_BIG.gone)delete SUPPLY_SITES[k];
+/* 77차(규칙, 기획자 11-24 20:09): 새 보급지 5곳 — 14 (619,668)·15 (720,509) 초승달 본섬, 16 (96,885) 바람섬 남쪽, 17·18 동북섬 동쪽 특수 보급지(기획자가 두 점씩 가깝게 찍은 곳의 가운데, 크게).
+   SUP_SPECIAL = 특수 보급지 울타리 반폭(정면 +z), SUP_WIDE = 보급 창고(울타리만큼 큰 창고) 자리 — 둘 다 그만큼 땅을 넓게 다져요(rawH). 모양은 js/supply77.js */
+SUPPLY_SITES.push([619,668],[720,509],[96,885],[922.5,177.5],[898.5,222]);
+const SUP_SPECIAL={17:{hx:15,hz:11},18:{hx:15,hz:11}},SUP_WIDE={5:12.6,10:12.6,13:12.6};
 function findSupply(sd){SUPS.length=0;SUPPLY_SITES.forEach((q,i)=>{let x=q[0],z=q[1];if(rawH(x,z,sd,1)<1){let ok=false;for(let r=2;r<40&&!ok;r+=2)for(let a=0;a<24;a++){const X=q[0]+Math.cos(a*.262)*r,Z=q[1]+Math.sin(a*.262)*r;if(rawH(X,Z,sd,1)>1.2){x=X;z=Z;ok=true;break}}if(!ok)return}
   let h=0;for(const[ox,oz]of[[0,0],[3,0],[-3,0],[0,3],[0,-3]])h+=rawH(x+ox,z+oz,sd,1)/5;SUPS.push({i,x,z,h:Math.max(1.05,h)})})}
 const supD=(x,z)=>{let b=1e9;for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>30||ex<-30||ez>30||ez<-30)continue;const d=Math.hypot(ex,ez);if(d<b)b=d}return b};
@@ -144,6 +148,7 @@ function rawH(x,z,sd,noVil){let land=0,bi=-1;for(let i=0;i<ISL.length;i++){const
    if(al<0&&dd<p.R)h=lerp(h,1.15,(1-sm(p.R*.6,p.R,dd))*sm(-3,-6.5,al));const Lb=p.town?27:(p.L||22)+3,Wb=p.town?22:11;
    if(al>-6&&al<Lb+8&&la<Wb+6){const cap=al<-3?lerp(1.15,.5,(al+6)/3):al<1?lerp(.5,-.15,(al+3)/4):al<5?lerp(-.15,-1.6,(al-1)/4):-1.6;if(h>cap)h=lerp(h,cap,(1-sm(Wb,Wb+6,la))*(1-sm(Lb,Lb+8,al)))}}
   for(const s of SUPS){const ex=x-s.x,ez=z-s.z;if(ex>10||ex<-10||ez>10||ez<-10)continue;h=lerp(h,s.h,1-sm(4.5,9.5,Math.hypot(ex,ez)))}
+  for(const s of SUPS){const Q=SUP_SPECIAL[s.i],W=SUP_WIDE[s.i];if(!Q&&!W)continue;const ex=x-s.x,ez=z-s.z,d=Q?rbox2(ex,ez,Q.hx+1.5,Q.hz+1.5,3):Math.hypot(ex,ez)-W;if(d<6)h=lerp(h,s.h,(1-sm(0,6,d))*sm(.3,.95,h))}   /* 77차: 특수 보급지·보급 창고는 넓게(땅만) */
   {const F=FISHISLE,ex=x-F.x-F.cx,ez=z-F.z-F.cz;if(ex<F.rx+5&&ex>-F.rx-5&&ez<F.rz+5&&ez>-F.rz-5){const d=rbox2(ex,ez,F.rx,F.rz,4);if(d<4)h=lerp(h,F.h,(1-sm(0,4,d))*sm(.3,.95,h))}}   /* 땅만 다져요(바닷가 선은 그대로) */
   {const S=SPSUP,ex=x-S.x,ez=z-S.z;if(ex<S.AX+14&&ex>-S.AX-14&&ez<S.AZ+14&&ez>-S.AZ-14){h=lerp(h,S.h,1-sm(6,11,rbox2(ex,ez,S.AX,S.AZ,S.ac)));h=lerp(h,S.h-S.dig,1-sm(.6,1.4,rbox2(ex,ez,S.BX,S.BZ,S.bc)))}}}
  return lhRock(x,z,h,sd)}

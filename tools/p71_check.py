@@ -24,13 +24,13 @@ async def steps(pg):
     # 3. 보급 창고: S5·S10·S13, 상자가 안에, 문 밖에서 걸어서 모든 상자에 닿음(0.25m 칸 채우기), 벽으로는 못 들어감, 들어가면 지붕 사라지고 앞벽 반투명
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const out=[];
       for(const w of SPWH){const b=w.b,r0=b.rotation.y,c=Math.cos(r0),sn=Math.sin(r0),WL=(lx,lz)=>[b.position.x+lx*c+lz*sn,b.position.z-lx*sn+lz*c],q={i:w.s.i,cr:w.s.cr.length};
-        q.inside=w.s.cr.every(o=>{const dx=o.x-b.position.x,dz=o.z-b.position.z,lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<4.1&&lz>-3.1&&lz<3.1});
-        const st=WL(0,6.0),G=.25,seen=new Set(),Q=[[Math.round(st[0]/G),Math.round(st[1]/G)]];seen.add(Q[0].join());let n=0;
-        while(Q.length&&n<60000){const [i,j]=Q.pop();n++;for(const [a,bb] of [[1,0],[-1,0],[0,1],[0,-1]]){const I=i+a,J=j+bb,k=I+','+J;if(seen.has(k))continue;const x=I*G,z=J*G;if(Math.hypot(x-b.position.x,z-b.position.z)>13)continue;if(walk(x,z,.42,P)!==null)continue;seen.add(k);Q.push([I,J])}}
+        q.inside=w.s.cr.every(o=>{const dx=o.x-b.position.x,dz=o.z-b.position.z,lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<w.hx-1&&Math.abs(lz)<w.hz-1});   /* 77차: 창고 = 예전 울타리 크기(w.hx·w.hz), 가운데에 */
+        const st=WL(0,w.hz+2.2),G=.25,seen=new Set(),Q=[[Math.round(st[0]/G),Math.round(st[1]/G)]];seen.add(Q[0].join());let n=0;
+        while(Q.length&&n<60000){const [i,j]=Q.pop();n++;for(const [a,bb] of [[1,0],[-1,0],[0,1],[0,-1]]){const I=i+a,J=j+bb,k=I+','+J;if(seen.has(k))continue;const x=I*G,z=J*G;if(Math.hypot(x-b.position.x,z-b.position.z)>w.hx+w.hz+4)continue;if(walk(x,z,.42,P)!==null)continue;seen.add(k);Q.push([I,J])}}
         q.reach=w.s.cr.map(o=>{let best=9;for(const k of seen){const [I,J]=k.split(',').map(Number),g=sGap(I*G,J*G,o);if(g<best)best=g}return +best.toFixed(2)});
-        q.wall=walkPath([WL(-6,-1.5),WL(-2,-1.5)]).blocked!==null&&walkPath([WL(0,-7),WL(0,-3)]).blocked!==null;
-        const [ix,iz]=WL(0,0);P.x=ix;P.z=iz;await sl(2500);q.inOp=[+w.op.toFixed(2),w.roof.visible,+w.front.userData.mt.opacity.toFixed(2)];
-        const [ox,oz]=WL(0,8);P.x=ox;P.z=oz;await sl(2500);q.outOp=[+w.op.toFixed(2),w.roof.visible];out.push(q)}
+        q.wall=walkPath([WL(-w.hx-2,0),WL(-w.hx+2,0)]).blocked!==null&&walkPath([WL(0,-w.hz-2),WL(0,-w.hz+1.6)]).blocked!==null;
+        const [ix,iz]=WL(0,0);P.x=ix;P.z=iz;await sl(2500);const fz={front:c,back:-c,left:sn,right:-sn},camW=Object.keys(fz).sort((a,bb)=>fz[bb]-fz[a])[0];q.inOp=[+w.op.toFixed(2),w.roof.visible,+w.parts[camW].userData.mt.opacity.toFixed(2)];   /* 77차: 카메라 쪽을 보는 벽이 반투명 */
+        const [ox,oz]=WL(0,w.hz+6);P.x=ox;P.z=oz;await sl(2500);q.outOp=[+w.op.toFixed(2),w.roof.visible];out.push(q)}
       return JSON.stringify(out)}""")
     TR=await ev("()=>TREACH");R=json.loads(r);res['warehouse']={'list':R,'ok':len(R)==3 and all(q['inside'] and max(q['reach'])<=TR and q['wall'] and q['inOp'][0]<.06 and q['inOp'][2]<.25 and q['outOp'][0]>.88 and q['outOp'][1] for q in R)}
     # 사진: 창고 밖·안
