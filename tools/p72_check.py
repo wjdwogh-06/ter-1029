@@ -72,7 +72,7 @@ async def steps(pg):
     await ev(f"()=>{{P.x={e[0]-3};P.z={e[1]+2};window.__cam=[{e[0]},26,{e[1]+20},{e[0]},0,{e[1]}]}}");await pg.wait_for_timeout(1500)
     await pg.screenshot(path=os.path.join(OUT,'p72_road_end.jpg'),type='jpeg',quality=80)
     l=json.loads(await ev("()=>{const s=structs.find(q=>q.t==='lighthouse');return JSON.stringify([s.x,s.z])}"))
-    await ev(f"()=>{{DEV.on=true;P.x={l[0]+20};P.z={l[1]+20};S.inv.kit_baitbuoy=2;setBuild('baitbuoy');window.__cam=[{l[0]},70,{l[1]+60},{l[0]},0,{l[1]}]}}");await pg.wait_for_timeout(1500)
+    await ev(f"()=>{{DEV.on=true;P.x={l[0]+20};P.z={l[1]+20};S.inv.kit_fnet=2;setBuild('fnet');window.__cam=[{l[0]},70,{l[1]+60},{l[0]},0,{l[1]}]}}");await pg.wait_for_timeout(1500)
     await pg.screenshot(path=os.path.join(OUT,'p72_lh_nob.jpg'),type='jpeg',quality=80)
     res['errs']={'list':errs[:5],'ok':not errs}
     print(json.dumps(res,ensure_ascii=False))

@@ -382,7 +382,7 @@ function updStats(dt){const dk=dark(),nw=nearWarm(),h=hAt(P.x,P.z);S.time+=dt/DA
  /* 27차(기획자: '체력바만, 에너지 개념 10칸, 수영할 때도 계속 소비되고 맞아도 소비'): 배고픔·체온은 없어요(값은 100으로 묶어 둠).
     에너지 = S.hp(10 = 1칸). 헤엄치는 동안 NRG.swim/초씩 줄고, 맞으면 줄어요. 물 밖에서 5초 안 맞으면 천천히 차요(텐트·집 안은 빨리, 불 옆은 조금 빨리). 숫자는 임시 */
  if(WTR.st==='swim'){const dp=typeof seaDeep==='function'&&seaDeep(P.x,P.z);hurtSoft(dt*NRG.swim*(dp?NRG.deep:1));P.dpT=(P.dpT||0)-dt;if(dp&&P.dpT<=0){P.dpT=60;toast('🌊 깊은 바다예요 — 헤엄치면 에너지가 두 배로 빨리 닳아요')}   /* 78차(기획자: '깊은 바다에서는 수영할 때 에너지가 두 배 더 빨리 닳아') */if((P.nrgT=(P.nrgT||0)-dt)<=0&&S.hp<30&&!P.dead){P.nrgT=12;toast('⚡ 에너지가 얼마 안 남았어요! 물 밖으로 나가요')}}
- else if(P.lastHurt>5&&!P.dead)S.hp=Math.min(100,S.hp+dt*(INT.on&&INT.kind!=='cave'?NRG.rest:nw?NRG.fire:NRG.idle))}
+ else if(P.lastHurt>5&&!P.dead&&!(typeof COLD!=='undefined'&&COLD.on))S.hp=Math.min(100,S.hp+dt*(INT.on&&INT.kind!=='cave'?NRG.rest:nw?NRG.fire:NRG.idle))}   /* 79차: 겨울 땅 밖(추위, r79.js COLD)에서는 쉬어도 안 차요 */
 const NRG={deep:2,swim:2,idle:.25,fire:.8,rest:2.5};   /* 78차: deep = 깊은 바다(seaDeep) 헤엄 배율. 에너지(0~100)가 1초에 줄거나 차는 양: 헤엄 1칸/5초, 쉬기(밖) 1칸/40초, 불 옆 1칸/12초, 텐트·집 안 1칸/4초 */
 function hurtSoft(d){if(P.dead)return;S.hp-=d;if(S.hp<=0)die()}
 /* ===== 46차(규칙, 기획자 11-21 13:14) 나무·바위 더 단단하게 · 뭉친 나무 따로따로 =====
