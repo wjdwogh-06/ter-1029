@@ -7,12 +7,14 @@ const AUT={L:null,map:0,leaf:null,k:0};
 const AUT_NAMES=['바람섬','바람섬 남쪽'];
 function autIsls(){return AUT.L||(AUT.L=AUT_NAMES.map(n=>ISL.find(i=>i.n===n)).filter(Boolean))}
 const autC=h=>new THREE.Color(h).convertSRGBToLinear();
-const AUTC={g1:autC(0xc9b45a),g2:autC(0xd8a447),g3:autC(0xb39548),lf1:autC(0xd2763a),lf2:autC(0xb8532e),lf3:autC(0xe2a443),sand:autC(0xe6cfa3),sand2:autC(0xd6b98a),moss:autC(0x9c9a4a)};
+const AUTC={g1:autC(0xc9b45a),g2:autC(0xd8a447),g3:autC(0xb39548),lf1:autC(0xd2763a),lf2:autC(0xb8532e),lf3:autC(0xe2a443),sand:autC(0xe6cfa3),sand2:autC(0xd6b98a),moss:autC(0x9c9a4a),gl:autC(0xdcc672)};
 LEAFC[3]=[0xc8452e,0xd2553a,0xb93c2a];   /* 빨간 단풍(world.js 잎 색 표에 하나 더) */
 /* ① 땅 */
-function autGround(C,x,z,h){const n=fbm(x*.04+71,z*.04+23,81),lf=sm(.52,.74,noise(x*.11+9,z*.11+31,82)),n2=noise(x*.35,z*.35,83);
- if(h>=.95){C.copy(AUTC.g1).lerp(AUTC.g2,sm(.3,.75,n)).lerp(AUTC.g3,sm(.6,.9,noise(x*.025+3,z*.025+7,84))*.5);
-  const L=n2<.33?AUTC.lf1:n2<.66?AUTC.lf2:AUTC.lf3;C.lerp(L,lf*.75);C.multiplyScalar(.96+n2*.06);return .88}
+function autGround(C,x,z,h){const n=fbm(x*.05+71,z*.05+23,81),n2=noise(x*.35,z*.35,83);
+ if(h>=.95){   /* 80차: 넓고 어두운 주황 얼룩이 언덕 그늘처럼 보여서(기획자: '땅이 평평하지가 않아') → 밝기는 거의 같게, 색만 살짝 바뀌는 잔무늬로 */
+  C.copy(AUTC.g1).lerp(AUTC.g2,sm(.25,.8,n)*.55).lerp(AUTC.gl,n2*.22);
+  const lf=sm(.6,.74,noise(x*.23+9,z*.23+31,82)),q=noise(x*.07+5,z*.07+17,84);C.lerp(q<.5?AUTC.lf3:AUTC.lf1,lf*.38);
+  C.multiplyScalar(.98+n2*.04);return .95}
  if(h>=.25){C.copy(AUTC.sand).lerp(AUTC.sand2,n*.8);return sm(.25,.5,h)*.5+.35}
  return 0}
 function autTerrain(){let nv=0;const C=new THREE.Color(),L=autIsls();for(const I of L){for(const t of tchunks){if(Math.abs(t.cx-I.x)>I.br+REG||Math.abs(t.cz-I.z)>I.br+REG)continue;const g=t.m.geometry,P=g.attributes.position.array,A=g.attributes.color.array;let ch=0;
