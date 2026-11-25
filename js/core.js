@@ -82,7 +82,7 @@ const FISHISLE={x:137,z:135,h:1.12,hw:8.75,hd:7.5,cx:-3,cz:-6.5,rx:23,rz:20.5}; 
    계단은 분지 뒤(−z) 벽에 붙어 x 방향으로 내려가요(st.x0~x1 꼭대기 마루 → st.x2에서 바닥). 둘 다 카메라에서 옆모습이 보여요.
    땅은 둘레를 평평하게 + 분지 안만 파고, 테두리·경사로·계단의 걷는 높이는 spSurf(모양은 places.js 메시).
    AX/AZ/ac=바깥 반폭(x·z)·모서리, BX/BZ/bc=안쪽 반폭·모서리, rp.z0·w=경사로 띠(AZ+z0 ~ AZ+z0+w), st.w=계단 띠(−BZ ~ −BZ+w) */
-const SPSUP={x:718,z:845,h:1.12,top:1.9,dig:.6,AX:14,AZ:11,ac:3,BX:10.5,BZ:7.5,bc:2,rp:{x0:-12.6,x1:-1.2,x2:2.6,z0:.15,w:3.6},st:{x0:-8.4,x1:-5.8,x2:1.4,w:3}};
+const SPSUP={x:719.5,z:841,h:1.12,top:2.5,dig:.6,AX:17.5,AZ:13,ac:3.6,BX:14,BZ:9.5,bc:2.4,rp:{x0:-16.4,x1:-2.6,x2:1.6,z0:.15,w:3.6},st:{x0:-11,x1:-8.2,x2:1.6,w:3.1}};   /* 82차: 바깥 35×26m · 분지 28×19m · 테두리 2.5m로 키움(예전 x718 z845, AX14 AZ11, BX10.5 BZ7.5, top1.9) */
 function rbox2(ex,ez,ax,az,c){const qx=Math.abs(ex)-(ax-c),qz=Math.abs(ez)-(az-c);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-c}   /* 모서리 둥근 직사각형까지 거리(안쪽 음수) */
 const spOut=(x,z)=>rbox2(x-SPSUP.x,z-SPSUP.z,SPSUP.AX,SPSUP.AZ,SPSUP.ac),spIn=(x,z)=>rbox2(x-SPSUP.x,z-SPSUP.z,SPSUP.BX,SPSUP.BZ,SPSUP.bc);
 function spSurf(x,z){const S=SPSUP,R=S.rp,T=S.st,ex=x-S.x,ez=z-S.z;if(ex>S.AX+1||ex<-S.AX-1||ez<-S.AZ-1||ez>S.AZ+R.z0+R.w+1)return null;
@@ -158,7 +158,8 @@ function buildHeights(sd){SEED=sd;layout(sd);const A=ISL[0],B=ISL[1];
  const N=WS+1;HG=new Float32Array(N*N);IG=new Uint8Array(IGN*IGN);for(let z=0;z<=WS;z++)for(let x=0;x<=WS;x++){HG[z*N+x]=rawH(x,z,sd);if(x%IGS===0&&z%IGS===0)IG[(z/IGS)*IGN+x/IGS]=_bi+1}}
 function hAt(x,z){x=clamp(x,0,WS-.001);z=clamp(z,0,WS-.001);const xi=x|0,zi=z|0,fx=x-xi,fz=z-zi,i=zi*(WS+1)+xi;return (HG[i]*(1-fx)+HG[i+1]*fx)*(1-fz)+(HG[i+WS+1]*(1-fx)+HG[i+WS+2]*fx)*fz}
 const islAt=(x,z)=>{const v=IG[clamp(Math.round(z/IGS),0,IGN-1)*IGN+clamp(Math.round(x/IGS),0,IGN-1)];return v?ISL[v-1]:null};
-const tundraAt=(x,z,h)=>sm(.5,.68,noise(x*.03+3,z*.03+9,2))*sm(5,2.5,h)*sm(.9,1.4,h);
+const TUNDRA_OFF=[];   /* 82차: [x,z,반지름] 안은 마른 풀 띠 없음(수달섬처럼 고르게 푸른 곳) — 보이는 색만 */
+const tundraAt=(x,z,h)=>{for(const q of TUNDRA_OFF)if(Math.abs(x-q[0])<q[2]&&Math.abs(z-q[1])<q[2]&&Math.hypot(x-q[0],z-q[1])<q[2])return 0;return sm(.5,.68,noise(x*.03+3,z*.03+9,2))*sm(5,2.5,h)*sm(.9,1.4,h)};
 /* ===== data ===== */
 const ITEMS={
  wood:{n:'나무',ic:'resource_lumber',ty:'res',p:20,d:'건설과 제작의 기본 재료'},stone:{n:'돌',ic:'resource_stone',ty:'res',p:20,d:'바위에서 캐는 재료'},
@@ -268,8 +269,8 @@ Object.assign(BUILDS,{
    집으로 업그레이드해도 구역 크기는 그대로. 텐트일 때는 남도 내 구역에 물건을 설치하거나 없앨 수 있고, 집이면 남이 설치·철거 못 해')
    구역 = 텐트·집(ptent·phouse) 가운데 기준 직사각형. 텐트를 돌리면 같이 돌아요(지금 텐트는 fixR이라 늘 정면 +z). 숫자만 고치면 크기가 바뀌어요(임시). */
 const ZONE={hw:6.3,back:4.2,front:8.4};   /* 40차(기획자 11-20: '텐트보다 아홉 배 큰 정도, 딱 정사각형'): 12.6×12.6m 정사각형 = 텐트 한 변(4.2m)의 3배 → 깔개(4.1×4.2m)의 약 9배. 텐트는 뒤에서 4.2m, 앞은 8.4m(앞이 더 길게). 39차엔 15×16m */
-const isZoneT=t=>t==='ptent'||t==='phouse'||t==='wtent'||t==='minetent'||t==='minebase'||t==='fhouse'||t==='oilbase';   /* 74차: 수상 텐트·채굴 텐트·채굴 기지도 내 기지(구역) */
-const isHouseT=t=>t==='phouse'||t==='minebase'||t==='fhouse'||t==='oilbase';   /* 78차: 집 구역 규칙(남이 설치·철거 못 함) = 집·채굴 기지·낚시집·석유 시추 기지 */
+const isZoneT=t=>t==='ptent'||t==='phouse'||t==='phouse2'||t==='wtent'||t==='minetent'||t==='minebase'||t==='fhouse'||t==='oilbase';   /* 74차: 수상 텐트·채굴 텐트·채굴 기지도 내 기지(구역) */
+const isHouseT=t=>t==='phouse'||t==='phouse2'||t==='minebase'||t==='fhouse'||t==='oilbase';   /* 78차: 집 구역 규칙(남이 설치·철거 못 함) = 집·채굴 기지·낚시집·석유 시추 기지 */
 const ZONE_K={fhouse:Math.sqrt(1.3),oilbase:Math.sqrt(1.3)};   /* 78차(기획자: '집 바깥 구역 넓이도 1.3배'): 낚시집·석유 시추 기지는 구역 넓이 1.3배(한 변 √1.3배) */
 /* 44차(기획자 11-20 22:25: '항구마다 표시해 둔 동그란 빨간 지역은 안전 구역. 안에 들어가면 서로 때려도 데미지를 안 입고, 거기서 누가 총을 쏘거나 근접 무기로 사람을 때리면
    투명 포탑이 데미지를 입혀. 퍼뎀 — 실수로 한 번이면 20% 한 번, 계속 때리면 계속 쌓이게'): 항구 8곳의 설치 금지 원(actors.js NOB의 항구 원과 같은 자리·반지름, 새 게임 때 계산되는 값을 적어 둠 —

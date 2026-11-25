@@ -36,16 +36,16 @@ async def steps(pg):
     Q=json.loads(r);Q['ok']=Q['same'] and Q['wood']==w0 and '옮길 수 없어요' in Q['msg'];res['noPutBack']=Q
     # 4. 가방이 꽉 차면: 새 종류는 안 가져와짐 / 이미 있는 종류는 가져와짐
     r=await ev("""()=>{const b=S.box[_bx36.li];closePanel();
-      b.c=Array(20).fill(null);b.c[3]=['powder',4];b.c[11]=['scrap',5];b.c[17]=['coin',50];   /* 시험용으로 상자 내용을 정해요 */
-      for(const k of Object.keys(S.inv))if(S.inv[k]>0&&k!=='scrap')delete S.inv[k];S.inv.scrap=1;const pool=Object.keys(ITEMS).filter(k=>!['powder','scrap','coin'].includes(k)&&ITEMS[k].ty!=='kit');
+      b.c=Array(20).fill(null);b.c[3]=['ore_iron',4];b.c[11]=['coal',5];b.c[17]=['coin',50];   /* 시험용으로 상자 내용을 정해요 */
+      for(const k of Object.keys(S.inv))if(S.inv[k]>0&&k!=='coal')delete S.inv[k];S.inv.coal=1;const pool=Object.keys(ITEMS).filter(k=>!['ore_iron','coal','coin'].includes(k)&&ITEMS[k].ty!=='kit');
       for(const k of pool){if(bagList().length>=BAG_N)break;S.inv[k]=1}target=findTarget();inp.actEdge=true;interact();inp.actEdge=false;return JSON.stringify({kinds:bagList().length,panel})}""")
     F=json.loads(r)
     await tapSel("#pbody [data-a=boxget][data-i='3']")
-    r1=await ev("()=>JSON.stringify({powder:invN('powder'),slot:!!S.box[_bx36.li].c[3],msg:document.querySelector('#pbody .bxm').textContent})")
+    r1=await ev("()=>JSON.stringify({ore_iron:invN('ore_iron'),slot:!!S.box[_bx36.li].c[3],msg:document.querySelector('#pbody .bxm').textContent})")
     c0=await ev("()=>S.coins");await tapSel("#pbody [data-a=boxget][data-i='11']");await tapSel("#pbody [data-a=boxget][data-i='17']")
-    r2=await ev(f"()=>JSON.stringify({{scrap:invN('scrap'),coins:S.coins-{c0},left:S.box[_bx36.li].c.filter(Boolean).map(e=>e[0]),panel}})")
+    r2=await ev(f"()=>JSON.stringify({{coal:invN('coal'),coins:S.coins-{c0},left:S.box[_bx36.li].c.filter(Boolean).map(e=>e[0]),panel}})")
     A=json.loads(r1);B=json.loads(r2)
-    res['full']={'kinds':F['kinds'],'newKind':A,'same+coin':B,'ok':F['kinds']==20 and A['powder']==0 and A['slot'] and '꽉 찼어요' in A['msg'] and B['scrap']==6 and B['coins']==50 and B['left']==['powder'] and B['panel']=='box'}
+    res['full']={'kinds':F['kinds'],'newKind':A,'same+coin':B,'ok':F['kinds']==20 and A['ore_iron']==0 and A['slot'] and '꽉 찼어요' in A['msg'] and B['coal']==6 and B['coins']==50 and B['left']==['ore_iron'] and B['panel']=='box'}
     await pg.screenshot(path=O('p36_full.jpg'),type='jpeg',quality=88)
     # 5. 모두 가져가기(꽉 찬 채) → 남은 것 그대로 + 안내 / 닫고 다시 열면 그대로 / 라벨은 [열기]
     await tapSel("#pbody [data-a=boxall]")
@@ -56,12 +56,12 @@ async def steps(pg):
     await tapSel('#rjoy');await pg.wait_for_timeout(500)
     re=await ev("()=>JSON.stringify({panel,left:S.box[_bx36.li].c.filter(Boolean).map(e=>e[0])})")
     B=json.loads(re)
-    res['allFull']={'after':A,'lab':lab,'reopen':B,'ok':A['left']==['powder'] and '남았어요' in A['msg'] and lab=='열기' and B['panel']=='box' and B['left']==['powder']}
+    res['allFull']={'after':A,'lab':lab,'reopen':B,'ok':A['left']==['ore_iron'] and '남았어요' in A['msg'] and lab=='열기' and B['panel']=='box' and B['left']==['ore_iron']}
     # 6. 칸을 비우고 모두 가져가기 → 다 가져오고 창이 닫힘, 라벨 없음, 열린 상자 모양
-    await ev("()=>{delete S.inv[bagList().find(k=>k!=='scrap'&&k!=='wood')];renderPanel()}");await pg.wait_for_timeout(200)
+    await ev("()=>{delete S.inv[bagList().find(k=>k!=='coal'&&k!=='wood')];renderPanel()}");await pg.wait_for_timeout(200)
     await tapSel("#pbody [data-a=boxall]");await pg.wait_for_timeout(300)
-    r=await ev("()=>{target=findTarget();return JSON.stringify({panel,powder:invN('powder'),left:S.box[_bx36.li]?S.box[_bx36.li].c.filter(Boolean).length:-1,lab:target&&target.s===_bx36?target.lab:null,openGeo:_bx36.m.children[0].geometry===GEO[sdef(_bx36).og||'crate_open'],toast:document.getElementById('toast').textContent})}")
-    Q=json.loads(r);Q['ok']=Q['panel'] is None and Q['powder']==4 and Q['left']==0 and Q['lab'] is None and Q['openGeo'];res['takeAll']=Q
+    r=await ev("()=>{target=findTarget();return JSON.stringify({panel,ore_iron:invN('ore_iron'),left:S.box[_bx36.li]?S.box[_bx36.li].c.filter(Boolean).length:-1,lab:target&&target.s===_bx36?target.lab:null,openGeo:_bx36.m.children[0].geometry===GEO[sdef(_bx36).og||'crate_open'],toast:document.getElementById('toast').textContent})}")
+    Q=json.loads(r);Q['ok']=Q['panel'] is None and Q['ore_iron']==4 and Q['left']==0 and Q['lab'] is None and Q['openGeo'];res['takeAll']=Q
     # 7. 저장에 남은 상자 / 3일 뒤 다시 채워짐(새 내용)
     r=await ev("""()=>{S.box[_bx36.li].c[5]=['wood',2];save();const d=JSON.parse(localStorage.getItem(SAVE));const kept=!!(d.S.box&&d.S.box[_bx36.li]&&d.S.box[_bx36.li].c[5]);
       S.box[_bx36.li].c[5]=null;S.day+=3;target=findTarget();const lab=target&&target.s===_bx36?target.lab:null;inp.actEdge=true;interact();inp.actEdge=false;const b=S.box[_bx36.li];return JSON.stringify({kept,lab,panel,fresh:b&&b.d===S.day&&b.c.filter(Boolean).length>0})}""")
@@ -70,7 +70,7 @@ async def steps(pg):
     # 8. 특수 보급 상자·보물 상자도 같은 창(바로 안 먹음)
     out={}
     for t in ['spsupply','chest']:
-        r=await ev(f"""async()=>{{const sl=ms=>new Promise(r=>setTimeout(r,ms));for(const k of Object.keys(S.inv))if(!['wood','scrap'].includes(k))delete S.inv[k];const s=structs.find(q=>q.t==='{t}');if(!s)return null;
+        r=await ev(f"""async()=>{{const sl=ms=>new Promise(r=>setTimeout(r,ms));for(const k of Object.keys(S.inv))if(!['wood','coal'].includes(k))delete S.inv[k];const s=structs.find(q=>q.t==='{t}');if(!s)return null;
           let mg=9,mx=0,mz=0;for(let x=s.x-3;x<=s.x+3;x+=.15)for(let z=s.z-3;z<=s.z+3;z+=.15){{if(walk(x,z,.42,P)!==null||waterDepth(x,z)>DEEP-.05)continue;const g=sGap(x,z,s);if(g<mg){{mg=g;mx=x;mz=z}}}}
           P.x=mx;P.z=mz;P.rot=Math.atan2(s.x-mx,s.z-mz);P.yv=undefined;await sl(200);target=findTarget();const lab=target&&target.lab,c0=S.coins,i0=JSON.stringify(S.inv);inp.actEdge=true;interact();inp.actEdge=false;
           const b=S.box[s.li];const r={{lab,panel,same:c0===S.coins&&i0===JSON.stringify(S.inv),kinds:b?b.c.filter(Boolean).length:0,title:document.getElementById('ptabs').textContent}};document.querySelector('#pbody [data-a=boxall]').click();await sl(200);r.after=panel;r.coins=S.coins-c0;r.got=bagList().length;return JSON.stringify(r)}}""")
@@ -78,7 +78,7 @@ async def steps(pg):
     sp=out['spsupply'];ch=out['chest']
     res['others']={'spsupply':sp,'chest':ch,'ok':bool(sp) and sp['lab']=='열기' and sp['panel']=='box' and sp['same'] and sp['kinds']>=4 and sp['after'] is None and sp['coins']>=400 and (ch is None or (ch['panel']=='box' and ch['same'] and ch['after'] is None))}
     # 9. 세로 화면 사진
-    await ev("()=>{const s=_bx36;S.box[s.li]={d:S.day,c:Array(20).fill(null)};S.box[s.li].c[2]=['ammoS',12];S.box[s.li].c[9]=['powder',1];S.box[s.li].c[14]=['scrap',4];P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI}")
+    await ev("()=>{const s=_bx36;S.box[s.li]={d:S.day,c:Array(20).fill(null)};S.box[s.li].c[2]=['ammoS',12];S.box[s.li].c[9]=['ore_iron',1];S.box[s.li].c[14]=['coal',4];P.x=s.x;P.z=s.z+sdef(s).bz+.7;P.rot=Math.PI}")
     await pg.set_viewport_size({'width':400,'height':860});await pg.wait_for_timeout(1000)
     await ev("()=>{target=findTarget();inp.actEdge=true;interact();inp.actEdge=false}");await pg.wait_for_timeout(500)
     r=await ev("()=>{const p=document.getElementById('panel').getBoundingClientRect(),g=[...document.querySelectorAll('#pbody .bxg')].map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)]}),bt=document.querySelector('[data-a=boxall]').getBoundingClientRect();return JSON.stringify({panel,g,btnVisible:bt.bottom<=innerHeight&&bt.top>=0,stack:g.length==2&&g[1][1]>g[0][1]+g[0][3]-4})}")

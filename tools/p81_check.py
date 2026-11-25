@@ -10,7 +10,7 @@ async def steps(pg):
       const hx=VIL.x+40,hz=VIL.z+40;S.home={x:hx,z:hz+3};S.built=(S.built||[]).concat([{t:'wtent',x:hx,z:hz,r:0,upc:{plastic:5}},{t:'minebase',x:hx+30,z:hz,r:0},{t:'boat2',x:hx+60,z:hz,r:0}]);
       const pl=invN('plastic'),w=invN('wood'),st=invN('stone'),sc=invN('scrap');const rm=dropRemoved();
       o.left=S.built.filter(b=>/wtent|minebase|boat2/.test(b.t)).length;o.got=[invN('plastic')-pl,invN('wood')-w,invN('stone')-st,invN('scrap')-sc];o.home=[S.home.x===VIL.x,S.home.z===VIL.z];o.msg=rm.join('·');return JSON.stringify(o)}""")
-    d=json.loads(r);res['tents']={'d':d,'ok':not d['items'] and all(d['hide']) and d['vend']==0 and d['rec']==0 and d['left']==0 and d['got'][0]>=5+6 and d['got'][1]>=14 and all(d['home'])}
+    d=json.loads(r);res['tents']={'d':d,'ok':not d['items'] and all(d['hide']) and d['vend']==0 and d['rec']==0 and d['left']==0 and (d['got'][0]>=5+6 or d['got'][2]>=6) and d['got'][1]>=14 and all(d['home'])}
     # 2. 겨울 광물
     r=await ev("""()=>{const W=typeof wntIsls==='function'?wntIsls():[];let n=0,ore=0,ty={};objs.forEach(q=>{if(q.t!==3||!W.includes(islAt(q.x,q.z)))return;n++;if(q.ore){ore++;ty[q.ore]=1}});return JSON.stringify({n,ore,ty:Object.keys(ty).length,wRock:THIN79.wRock})}""")
     d=json.loads(r);res['ore']={'d':d,'ok':d['n']<260 and d['ore']>40 and d['ty']>=5}

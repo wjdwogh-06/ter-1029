@@ -24,8 +24,8 @@ async def steps(pg):
     r['walk']=json.loads(await ev("""()=>{const o={},b=OTB;DEV.on=0;const g=structs.find(s=>s.t==='cgate'&&Math.hypot(s.x-b.G[0],s.z-b.G[1])<1);g.open=false;
       const main=[b.S1[0]+b.dx*4,b.S1[1]+b.dz*4],in1=[b.G[0]-b.dx*3.5,b.G[1]-b.dz*3.5];
       o.closed=goWalk([main,b.S1,b.S0,b.G,in1]);g.open=true;g.ot=performance.now()+1e9;o.open=goWalk([main,b.S1,b.S0,b.G,in1]);
-      const c=OTN.cook,h=OTN.hunt,W=(s,v)=>otW(s,v);o.toCook=goWalk([in1,W(26,0),W(14,-7),W(8,-13),[c.x,c.z+2.2]]);o.toHunt=goWalk([in1,W(26,0),W(14,7),W(2,12),W(-8,16),W(-12.5,17),[h.x,h.z+2.2]]);
-      o.toFarm=goWalk([in1,W(26,0),W(14,-7),W(4,-5),W(-10,-6),W(-22,-6)]);o.toRange=goWalk([in1,W(26,0),W(14,7),W(2,12),W(-10,9),W(-22,7),W(-27,4)]);o.back=goWalk([in1,b.G,b.S0,b.S1,main]);
+      const c=OTN.cook,h=OTN.hunt,W=(s,v)=>otW(s,v);o.toCook=goWalk([in1,W(20,0),W(9,-1),[c.x+.3,c.z+7.6],[c.x+.3,c.z+2.2]]);o.toHunt=goWalk([in1,W(20,0),W(9,-1),[h.x+2.9,h.z+.98-12.5],[h.x+2.4,h.z+.98-2],[h.x+2.3,h.z+.98+1.3],[h.x,h.z+.98+2.4]]);   /* 82차: 길 = 문 → 가운데 마당 → 두 상인 */
+      o.toFarm=goWalk([in1,W(20,0),W(9,-1),W(-4,-5),W(-16,-6),W(-24,-5)]);o.toRange=goWalk([in1,W(20,0),W(9,-1),[h.x+2.9,h.z+.98-12.5],W(-6,7),W(-16,6),W(-26,4)]);o.back=goWalk([in1,b.G,b.S0,b.S1,main]);
       /* 다리 옆으로 떨어지기 */const mid=[b.S0[0]+b.dx*b.len*.5,b.S0[1]+b.dz*b.len*.5];o.side=goWalk([mid,[mid[0]+b.px*3,mid[1]+b.pz*3]]);o.midY=+groundY(mid[0],mid[1]).toFixed(2);
       /* 문 닫고 안에서 바깥으로 나가 보기(24방향) */g.open=false;let esc=[];for(let i=0;i<24;i++){const a=i/24*Math.PI*2,tx=OTR.x+Math.cos(a)*62,tz=OTR.z+Math.sin(a)*62;const w=goWalk([[OTR.x,OTR.z],[tx,tz]]);if(!w.stuck)esc.push(i)}o.escape=esc;
       return JSON.stringify(o)}"""))
