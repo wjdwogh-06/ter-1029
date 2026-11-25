@@ -12,7 +12,7 @@ async def steps(pg):
       const flood=(sx,sz)=>{const seen=new Uint8Array(N*N),q=[];const i0=Math.round((sx-X0)/st),j0=Math.round((sz-Z0)/st);seen[j0*N+i0]=1;q.push([i0,j0]);let leak=null,n=0;
         while(q.length){const [i,j]=q.pop();n++;const x=X0+i*st,z=Z0+j*st;if(Math.hypot(x-PIS.x,z-PIS.z)>PIS.nr+3)leak=leak||[+x.toFixed(1),+z.toFixed(1)];
           for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const a=i+di,b=j+dj;if(a<0||b<0||a>=N||b>=N||seen[b*N+a])continue;const nx=X0+a*st,nz=Z0+b*st;if(!pass(nx,nz))continue;if(!canStep({x,z,pl:1},nx,nz,di,dj))continue;seen[b*N+a]=1;q.push([a,b])}}return {n,leak,seen}};
-      g.open=false;const A=flood(PIS.plaza[0]+2.5,PIS.plaza[1]);let pockets=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=X0+i*st,z=Z0+j*st;if(piInside(x,z,1.2)&&pass(x,z)&&!A.seen[j*N+i])pockets++}
+      g.open=false;const A=flood(PIS.plaza[0]+2.5,PIS.plaza[1]);let pockets=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=X0+i*st,z=Z0+j*st;if(piInside(x,z,1.2)&&pass(x,z)&&!A.seen[j*N+i]&&!(groundY(x,z)>hAt(x,z)+3))pockets++}   /* 81차: 52차 배치용 건물(오두막 등) 몸채 = 벽 높이(PRF)라 칸으로 세지 않아요 */
       g.open=true;const B=flood(PIS.plaza[0]+2.5,PIS.plaza[1]);g.open=false;const C=flood(PIS.x,PIS.z-40);let seaIn=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++)if(C.seen[j*N+i]&&piInside(X0+i*st,Z0+j*st,1.5))seaIn++;
       return {closedLeak:A.leak,inside:A.n,pockets,openReachesOut:!!B.leak,seaStartWater:hAt(PIS.x,PIS.z-40)<-.3,seaIn}}""")
     res['gate']=await ev("""()=>{const g=structs.find(s=>s.t==='pgate'),r={};S.pdex={};r.closedBlocks=walk(g.x,g.z,.42,P)!==null;

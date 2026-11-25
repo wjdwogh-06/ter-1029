@@ -43,7 +43,7 @@ async def steps(pg):
       for(let z=2;z<WS;z+=4)for(let x=2;x<WS;x+=4){if(hAt(x,z)<.95)continue;if(WL.includes(islAt(x,z)))o.wa+=16;else o.oa+=16}
       o.wTd=+(o.winT/o.wa*1e4).toFixed(1);o.oTd=+(o.othT/o.oa*1e4).toFixed(1);o.wRd=+(o.winR/o.wa*1e4).toFixed(1);o.oRd=+(o.othR/o.oa*1e4).toFixed(1);return JSON.stringify(o)}""")
     d=json.loads(r);n=sum(d['ore'].values());tot=n+d['st']['ore'].get('rock',0)
-    res['objs']={'d':d,'ok':d['st']['tree'][1]<d['st']['tree'][0]*.7 and d['st']['rock'][1]<d['st']['rock'][0]*.85 and d['outOre']==0 and d['geo']==n and d['wTd']<d['oTd']*.6 and d['wRd']>d['oRd']*2 and set(d['ore'])=={'coal','iron','copper','ti','silver','gold'}}
+    res['objs']={'d':d,'ok':d['st']['tree'][1]<d['st']['tree'][0]*.7 and d['st']['rock'][1]<d['st']['rock'][0]*.85 and d['outOre']==0 and d['geo']==n and d['wTd']<d['oTd']*.6 and d['winR']<220 and set(d['ore'])=={'coal','iron','copper','ti','silver','gold'}}
     # 광물 캐기: 종류마다 하나씩
     r=await ev("""()=>{const o={};for(const t of ORE79_K){if(t==='rock')continue;let b=null;objs.forEach(q=>{if(!b&&q.ore===t&&q.re<=0)b=q});if(!b){o[t]='none';continue}
        const it=ORE79[t].it,n0=invN(it);P.x=b.x;P.z=b.z+OBJT[b.t].r+.5;P.rot=Math.PI;S.quick[S.sel]=null;const tg=findTarget();if(!tg||tg.k!=='o'||tg.o!==b){o[t]='notarget:'+(tg&&tg.lab);continue}target=tg;o[t+'_lab']=tg.lab;
@@ -53,7 +53,7 @@ async def steps(pg):
     d=json.loads(r);ok=all(isinstance(d[t],list) and d[t][0]>=1 and d[t][1] for t in['coal','iron','copper','ti','silver','gold'])
     res['mine']={'d':d,'ok':ok and d['pick']>=3*1-0.01 and d['rock']>=3 and d['dropBack']=='stone' and d.get('coal_lab')=='석탄 캐기' and d.get('gold_lab')=='금 캐기'}
     # 4. 일반 자판기
-    r=await ev("""()=>{const o={n:0,lab:[],ovl:0,panel:'',buy:null};const L=structs.filter(s=>s.t==='pvend');o.n=L.length;o.pi=[...new Set(L.map(s=>s.pi))].length;
+    r=await ev("""()=>{const o={n:0,lab:[],ovl:0,panel:'',buy:null};const L=structs.filter(s=>s.t==='pvend'&&s.pi<8);o.n=L.length;   /* 81차: 낚시섬·식물섬·수달섬 묶음(pi 8~10)은 빼고 셈 */o.pi=[...new Set(L.map(s=>s.pi))].length;
       for(const s of L){for(const q of structs){if(q===s||Math.abs(q.x-s.x)>4||Math.abs(q.z-s.z)>4)continue;const d=sdef(q);if(!d||d.pass)continue;if(Math.abs(q.x-s.x)<d.bx+.5-.01&&Math.abs(q.z-s.z)<d.bz+.4-.01)o.ovl++}
         P.x=s.x;P.z=s.z+.4+.42+.4;P.rot=Math.PI;const t=findTarget();o.lab.push(t&&t.lab)}
       const s=L[0];P.x=s.x;P.z=s.z+1.25;target=findTarget();inp.actEdge=true;interact();o.panel=panel+'|'+$('pbody').innerText.replace(/\\n/g,' ');

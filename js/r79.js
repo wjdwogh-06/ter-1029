@@ -27,7 +27,7 @@ function coldNow(){if(mode!=='play'||!P||P.dead||INT.on||(typeof DEV!=='undefine
   const sp=$('safeP'),so=sp&&sp.classList.contains('on');e.style.top=so?'66px':'40px';if(on){const b=document.getElementById('bufP');if(b)b.style.top=so?'118px':'92px'}}}
 
 /* ---------- ③ 나무·바위 줄이기 · 겨울 광물 ---------- */
-const THIN79={tree:.62,rock:.66,wTree:.22,wAdd:.032,gap:3.4};
+const THIN79={tree:.62,rock:.66,wTree:.22,wAdd:0,wRock:.2,gap:3.4};   /* 81차(기획자 11-25 '겨울 광물이 왜 이렇게 많냐, 많이 줄여'): 겨울 섬 바위·광물은 20%만, 빈 칸에 더 넣기 없음 */
 const ORE79={rock:{w:25},coal:{w:25,n:'석탄',it:'coal',d:2,c:[0x26282d,0x383b42,0x4b4f57],k:'chunk'},iron:{w:20,n:'철',it:'ore_iron',d:2,c:[0x9c4a32,0x7a3626,0xc06a42],k:'chunk'},
  copper:{w:10,n:'구리',it:'copper',d:2,c:[0xd07a3c,0xe39552,0x6fa58a],k:'nug'},ti:{w:10,n:'티타늄',it:'ore_ti',d:1,c:[0x46a6c9,0x86d2e6,0x2f7896],k:'xtal'},
  silver:{w:7,n:'은',it:'ore_silver',d:1,c:[0xc9d1db,0x8d98a6,0xeef2f6],k:'nug'},gold:{w:3,n:'금',it:'ore_gold',d:1,c:[0xf2c230,0xffdc5e,0xd9a420],k:'nug'}};
@@ -35,7 +35,7 @@ const ORE79_K=Object.keys(ORE79);
 function ore79Pick(r){let a=0;for(const k of ORE79_K){a+=ORE79[k].w;if(r*100<a)return k}return'rock'}
 function thin79(sd){const WL=typeof wntIsls==='function'?wntIsls():[],st={tree:[0,0],rock:[0,0],add:0,ore:{}},del=[];
  objs.forEach((o,k)=>{if(o.t>3)return;const w=WL.includes(islAt(o.x,o.z)),r=hash(o.x*7.3|0,o.z*9.1|0,sd+791);
-  if(o.t<3){st.tree[0]++;if(r>(w?THIN79.wTree:THIN79.tree))del.push(k)}else{st.rock[0]++;if(!w&&r>THIN79.rock)del.push(k)}});
+  if(o.t<3){st.tree[0]++;if(r>(w?THIN79.wTree:THIN79.tree))del.push(k)}else{st.rock[0]++;if(w?r>THIN79.wRock:r>THIN79.rock)del.push(k)}});
  for(const k of del)objs.delete(k);
  /* 겨울 섬: 빈 칸에 광물 바위 더(둘레 3.4m 안에 다른 나무·바위가 없을 때만 → 사이로 지나갈 수 있어요) */
  const far=(x,z)=>{const cx=(x/CELL)|0,cz=(z/CELL)|0;for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const o=objs.get((cz+j)*CN+cx+i);if(o&&dist(o.x,o.z,x,z)<THIN79.gap)return false}return true};
