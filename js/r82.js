@@ -83,7 +83,7 @@ Object.assign(ITEMS,{
  kit_floor2:{n:'2층 증축 키트',ic:'h82_kit_floor2',ty:'res',p:8000,d:'집 안 작업대에 넣고 업그레이드하면 2층 집이 돼요. 안이 더 넓어지고 바깥 구역도 넓어져요 (가격 임시)'},
  kit_wiring:{n:'전기 배선 키트',ic:'h82_kit_wiring',ty:'res',p:4000,d:'집 안 작업대에 넣고 업그레이드하면 집 구역 안 발전기의 전기를 받아 가로등·전기 장식을 켤 수 있어요 (가격 임시)'},
  kit_power:{n:'전력 증설 키트',ic:'h82_kit_power',ty:'res',p:6000,d:'전기 배선한 집에 넣으면 받을 수 있는 전력이 30 → 최대 100. 작업대 기름 칸에 기름을 넣어 둬야 해요(1통 = 4시간) (가격 임시)'}});
-BUILDS.phouse2={n:'2층 집',g:'phouse2',s:1,bx:3.0,bz:3.2,hp:900,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.9,2.6],tilt:.1,room:'house2',hide:1,d:'2층으로 증축한 통나무 집. 안이 더 넓고 바깥 구역도 넓어요'};   /* 83차(기획자: '외부는 집이 엄청 이상해'): 집보다 넓은 약 6×6.4m 2층 통나무 집(앞 발코니·현관), 모델은 미터 그대로(s 1) */
+BUILDS.phouse2={n:'2층 집',g:'phouse2',s:.88,bx:2.64,bz:2.82,hp:900,c:{wood:120},kit:'kit_tent',home:1,fixR:1,foot:[2.55,2.29],tilt:.1,room:'house2',hide:1,d:'2층으로 증축한 통나무 집. 안이 더 넓고 바깥 구역도 넓어요'};   /* 84차(기획자: '집 크기가 좀 크다, 살짝만 줄이면'): 모델 0.88배(약 5.3×5.6m), 부딪힘·깔개도 같이 줄임. 83차(기획자: '외부는 집이 엄청 이상해'): 집보다 넓은 약 6×6.4m 2층 통나무 집(앞 발코니·현관), 모델은 미터 그대로(s 1) */
 /* 83차 2층 집 모양 치수: 몸채 반폭 W·반깊이 D·가운데 z ZC, 기단 Y0, 통나무 반지름 LR·간격 LS, 1층 N1·2층 N2 줄, 층 사이 띠 BAND, 앞 현관 끝 PZ */
 const H83={W:2.7,D:2.05,ZC:-.45,Y0:.42,LR:.15,LS:.285,N1:8,N2:6,BAND:.16,PZ:2.95,BD:.95};   /* BD: 발코니 깊이(얕게 해서 1층 문이 보이게) */
 ZONE_K.phouse2=Math.sqrt(1.5);
@@ -136,7 +136,7 @@ function h82Floor2(s){closePanel();joyEnd();P.auto=null;HUP.on=true;busy=true;co
    ftext(cx,y+(ix?2.6:7.2),cz,'🏠 2층 집 완성!','#ffe08a');jingle([523,659,784,1047,1319]);toast(ix?'🏠 2층 집이 됐어요! 방이 더 넓어졌고, 바깥 구역도 넓어졌어요':'🏠 2층 집이 됐어요! 안이 더 넓고 바깥 구역도 넓어졌어요');hudDirty=true;setTimeout(()=>f.classList.remove('house'),700)},700)};
  requestAnimationFrame(step)}
 /* 2층 집: 문 옆 등불(밤), 창 불빛 */
-{const _as=addStruct;addStruct=function(s){const r=_as.apply(this,arguments);try{if(r&&r.t==='phouse2'&&r.m&&GEO.phouse2_glow){r.m.children[0].add(mesh(GEO.phouse2_glow,HGLOW,false));const l=glow(0xffc46a,2.4,.6);l.position.set(.88,H83.Y0+1.54,(H83.ZF||1.76)+.3);l.visible=false;r.m.add(l);PLAMPS.push(l)}}catch(e){console.error(e)}return r}}
+{const _as=addStruct;addStruct=function(s){const r=_as.apply(this,arguments);try{if(r&&r.t==='phouse2'&&r.m&&GEO.phouse2_glow){r.m.children[0].add(mesh(GEO.phouse2_glow,HGLOW,false));const l=glow(0xffc46a,2.4,.6);l.position.set(.88*BUILDS.phouse2.s,(H83.Y0+1.54)*BUILDS.phouse2.s,((H83.ZF||1.76)+.3)*BUILDS.phouse2.s);l.visible=false;r.m.add(l);PLAMPS.push(l)}}catch(e){console.error(e)}return r}}
 /* 2층 집 안: 집 방(28차)을 더 넓게 + 왼쪽 벽 계단(위층으로) */
 {const _ib=intBuild;intBuild=function(){const was=!!INT.g;_ib();if(was||!INT.g)return;try{const o=INT.gr.house,R0=INT_ROOM.house;INT_ROOM.house=INT_ROOM.house2;intHouseRoom(INT.g);INT.gr.house2=INT.gr.house;INT.gr.house=o;INT_ROOM.house=R0;
   const H=INT.gr.house2;H.visible=false;H.add(mesh(h82StairGeo()));const R=INT_ROOM.house2;INT.dock.hl=Math.max(INT.dock.hl,R.hd+R.cor[1]+.8);INT.full=Math.max(INT.full,R.hw+1.2)}catch(e){console.error('82차 2층 집 방',e)}}}

@@ -8,7 +8,7 @@ async def steps(pg):
     await ev("()=>{WX.t=1e9;WX.on=false;WX.b=0;S.time=.42;enemies.slice().forEach(dropEnemy);DEV.god=true;window.updSpawns=()=>{}}")
     # 1. 모양·정의
     r=await ev("""()=>{const g=GEO.phouse2;g.computeBoundingBox();const b=g.boundingBox,d=BUILDS.phouse2;return JSON.stringify({tri:g.attributes.position.count/3|0,w:+(b.max.x-b.min.x).toFixed(2),dz:[+b.min.z.toFixed(2),+b.max.z.toFixed(2)],h:+b.max.y.toFixed(2),s:d.s,bx:d.bx,bz:d.bz,glow:!!GEO.phouse2_glow,stair:H82.stair})}""")
-    R=json.loads(r);R['ok']=R['s']==1 and 5.5<R['w']<7.6 and R['dz'][0]>-3.4 and R['dz'][1]<3.8 and 5.5<R['h']<8 and R['tri']<60000 and R['glow'];res['model']=R
+    R=json.loads(r);R['ok']=abs(R['s']-.88)<1e-6 and 5.5<R['w']<7.6 and R['dz'][0]>-3.4 and R['dz'][1]<3.8 and 5.5<R['h']<8 and R['tri']<60000 and R['glow'];res['model']=R   # 84차: 2층 집 0.88배
     # 2. 자리 찾기 → 텐트 → 안에 작업대
     r=await ev("""()=>{let site=null;for(let r=40;r<200&&!site;r+=6)for(let a=0;a<6.28&&!site;a+=.21){const x=VIL.x+Math.cos(a)*r,z=VIL.z+Math.sin(a)*r;S.inv.kit_tent=(S.inv.kit_tent||0)+1;P.x=x;P.z=z+6;setBuild('ptent');BPIN.on=true;BPIN.x=x;BPIN.z=z;const g=ghostPos();
         if(g.ok&&!h83Why({x,z,r:0})&&!h82Hit({x,z,r:0},'phouse2')){const big=zoneRect(x,z,0,'phouse2');let ok=true;for(const s of structs){if(s.own&&isZoneT(s.t)&&zoneOverlap(big,zoneRect(s.x,s.z,s.r,s.t)))ok=false}if(ok){placeBuild();site=[x,z]}}BPIN.on=false;setBuild(null)}

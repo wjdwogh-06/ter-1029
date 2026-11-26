@@ -1,5 +1,5 @@
 # 7·8차 특별한 곳 검사: 까마귀섬 낚시 캠프(철조망·문·데크·잔교·주인)와 물개섬 바위 분지(경사로로 올라가 계단으로 내려가는 특수 보급)
-# 기대: 문 닫힘=막힘, 열림=지나감, 4초 뒤 닫힘, 문 안에 서 있으면 안 닫힘 / 주인 [말 걸기] → 말풍선 / 데크·잔교 위 높이 = deckY
+# 기대: 문 닫힘=막힘, 열림=지나감, 4초 뒤 닫힘, 문 안에 서 있으면 안 닫힘 / 84차: 주인은 낚시 가게 안([낚시 가게 들어가기], p84_check) · 데크 없음
 #       분지: 테두리 ≈ 둘레+1.9, 바닥 ≈ 둘레-0.6, 경사로→테두리→계단→바닥 길이 전부 걸을 수 있음(path=[]), 바깥에서 절벽으로 못 들어옴(cliffOpen=[]),
 #       분지 안에서 계단 말고는 못 나감(innerOpen=[]) / 특수 보급 열기
 async def steps(pg):
@@ -16,10 +16,10 @@ async def steps(pg):
     await pg.wait_for_timeout(4200)
     print('gate later',await ev("()=>{const g=structs.find(s=>s.t==='cgate');return JSON.stringify({open:g.open,leaf:g.lk&&+g.lk.parts.leaf.rotation.y.toFixed(2)})}"))
     print('gate stand',await ev("""()=>new Promise(res=>{const g=structs.find(s=>s.t==='cgate');openGate(g);P.x=g.x;P.z=g.z;setTimeout(()=>{const a=g.open;P.x=g.x;P.z=g.z-1.8;setTimeout(()=>res(JSON.stringify({stillOpenWhileStanding:a,closedAfterLeave:!g.open})),1500)},5000)})"""))
-    # 주인
-    await ev("()=>{const f=structs.find(s=>s.t==='fstall');P.x=f.x+.4;P.z=f.z+sdef(f).bz+.6;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
+    # 주인 → 84차: 낚시 가게 안(문 앞 [낚시 가게 들어가기])
+    await ev("()=>{const f=SH84.fish.door;P.x=f.x;P.z=f.z+.9;P.rot=Math.PI;P.auto=null;updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}")
     await pg.wait_for_timeout(900)
-    print('npc',await ev("()=>{const t=findTarget();const r={label:t&&t.lab,actor:!!(FNPC&&FNPC.a),py:+P.a.root.position.y.toFixed(2)};target=t;inp.actEdge=true;interact();inp.actEdge=false;r.bubble=CHAT.b.has('fisher');return JSON.stringify(r)}"))
+    print('npc',await ev("()=>{const t=findTarget();return JSON.stringify({label:t&&t.lab})}"))
     await pg.wait_for_timeout(700);await pg.screenshot(path=O('pl_fish_npc.jpg'),type='jpeg',quality=85)
     for n,x,z,zk in [('pl_fish_wide','FISHISLE.x-8','FISHISLE.z+10',1.05),('pl_fish_deck','FISHISLE.x-15','FISHISLE.z+4.5',.8),('pl_fish_gate','FISHISLE.x-2','FISHISLE.z+11',.85),('pl_fish_far','FISHISLE.x-8','FISHISLE.z+12',1.35)]:
         await ev(f"()=>{{P.x={x};P.z={z};P.rot=Math.PI;zoomK={zk};updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}}");await pg.wait_for_timeout(1000)

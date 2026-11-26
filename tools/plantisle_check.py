@@ -21,8 +21,7 @@ async def steps(pg):
       g.open=false;S.pdex={};P.x=g.x;P.z=g.z-sdef(g).bz-.7;P.rot=0;t=findTarget();r.inLabel=t&&t.lab;target=t;inp.actEdge=true;interact();inp.actEdge=false;r.insideOpens=g.open;return r}""")
     await pg.wait_for_timeout(5600)
     res['gateCloses']=await ev("()=>{const g=structs.find(s=>s.t==='pgate');P.x=g.x;P.z=g.z-4;return {closedAfter:!g.open,leafL:g.lk&&+g.lk.parts.l.rotation.y.toFixed(2)}}")
-    res['npc']=await ev("""()=>{const s=structs.find(q=>q.t==='pstall');P.x=s.x;P.z=s.z+sdef(s).bz+.75;P.rot=Math.PI;const t=findTarget();target=t;inp.actEdge=true;interact();inp.actEdge=false;
-      return {label:t&&t.lab,actor:!!(GNPC&&GNPC.a),said:typeof CHAT!=='undefined'&&CHAT.b?CHAT.b.has('gardener'):null}}""")
+    res['npc']=await ev("""()=>{const s=SH84.plant.door;P.x=s.x;P.z=s.z+.9;P.rot=Math.PI;const t=findTarget();return {label:t&&t.lab}}""")   # 84차: 주인은 식물 가게 안
     await ev("()=>{S.pdex={};$('ui').style.visibility='hidden'}")
     L=[('pi_over','PIS.x','PIS.z+14',3.2,.42),('pi_gate','PIS.gx+2','PIS.gzo+5',1.2,.42),('pi_plaza','PIS.plaza[0]+1','PIS.plaza[1]+4',1.15,.42),('pi_garden','70.5','669.5',1.15,.42),
        ('pi_glass','88.6','658.5',1.1,.42),('pi_pond','105','668',1.15,.42),('pi_stall','93.8','673',.8,.42),('pi_night','PIS.x-3','PIS.z+9',2.0,.9)]
@@ -31,8 +30,8 @@ async def steps(pg):
         await pg.screenshot(path=O(n+'.jpg'),type='jpeg',quality=85)
     await ev("()=>{$('ui').style.visibility=''}")
     b,s,g,c,n=res['basic'],res['seal'],res['gate'],res['gateCloses'],res['npc']
-    res['ok']={'basic':b['objsIn']==0 and b['nob']==b['nr'] and b['nobAt'] and b['map'] and b['gate']==1 and b['stall']==1,
+    res['ok']={'basic':b['objsIn']==0 and b['nob']==b['nr'] and b['nobAt'] and b['map'] and b['gate']==1 and b['stall']==0,
       'seal':s['closedLeak'] is None and s['pockets']==0 and s['openReachesOut'] and s['seaStartWater'] and s['seaIn']==0,
       'gate':g['closedBlocks'] and str(g['outLocked']).startswith('🔒') and g['lockedStaysShut'] and g['outDone']=='문 열기' and g['openedWithDex'] and g['openPass'] and g['inLabel']=='문 열기' and g['insideOpens'] and c['closedAfter'],
-      'npc':n['label']=='말 걸기' and n['actor']}
+      'npc':n['label']=='식물 가게 들어가기'}
     print(json.dumps(res,ensure_ascii=False))

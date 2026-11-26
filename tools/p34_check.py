@@ -86,7 +86,7 @@ async def steps(pg):
        const ax=mx+(mx-s.x)/Math.hypot(mx-s.x,mz-s.z)*1.2,az=mz+(mz-s.z)/Math.hypot(mx-s.x,mz-s.z)*1.2;S.quick[S.sel]=null;P.x=ax;P.z=az;await sl(120);q.back=(target&&target.s===s)?target.lab:null;out.push(q)}S.quick[S.sel]=null;return JSON.stringify(out)}""")
     R=json.loads(r);res['ferry']={'list':R,'ok':len(R)==8 and all(q['hand']=='배 타기' and q['rod']=='배 타기' and q['back'] is None for q in R)}
     # 9. 이름표가 뜨는 모든 것(가게·자판기·쓰레기통·보급 상자·등대·낚시섬 문·판매대·특수 보급·모닥불·보관 상자): 닿을 만큼 가면 그 대상이 잡혀요
-    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const T=['market','vend','recycle','lighthouse','supply','spsupply','cgate','fstall','fire','stash','chest'];const bad=[],cnt={};
+    r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const T=['market','vend','recycle','lighthouse','supply','spsupply','cgate','sh84_door','fire','stash','chest'];const bad=[],cnt={};
       for(const s of structs){if(!T.includes(s.t)||!sLabel(s))continue;const d=sdef(s),Rr=Math.max(d.bx,d.bz)+3;let mg=9,mx=0,mz=0;for(let x=s.x-Rr;x<=s.x+Rr;x+=.15)for(let z=s.z-Rr;z<=s.z+Rr;z+=.15){const dk=onDock(x,z);if(!dk&&waterDepth(x,z)>DEEP-.05)continue;if(walk(x,z,.42,P)!==null)continue;const g=sGap(x,z,s);if(g<mg){mg=g;mx=x;mz=z}}
        P.x=mx;P.z=mz;P.rot=Math.atan2(s.x-mx,s.z-mz);const t=findTarget();cnt[s.t]=(cnt[s.t]||0)+1;if(!t||t.s!==s)bad.push([s.t,+mg.toFixed(2),t&&t.lab])}return JSON.stringify({cnt,bad})}""")
     R=json.loads(r);R['ok']=not R['bad'];res['allReach']=R
