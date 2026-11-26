@@ -48,9 +48,9 @@ async def steps(pg):
     # 5. 2층 증축
     await ev("()=>{renderPanel();document.querySelector('[data-a=\"h82up\"][data-k=\"floor2\"]').click();return 1}");await pg.wait_for_timeout(5600)
     r=await ev("""()=>{const h=structs.find(s=>s.own&&s.t==='phouse2');const z1=zoneRect(0,0,0,'phouse'),z2=zoneRect(0,0,0,'phouse2'),A=q=>2*q.hw*(q.b+q.f);window.HS82=h;
-      return JSON.stringify({h2:!!h,old:structs.filter(s=>s.own&&s.t==='phouse').length,el:h&&h.el,busy,zone:+(A(z2)/A(z1)).toFixed(3),isH:isHouseT('phouse2'),geo:!!GEO.phouse2&&GEO.phouse2.attributes.position.count/3|0,home:S.home&&Math.hypot(S.home.x-h.x,S.home.z-h.z)<4,kit:S.inv.kit_floor2||0})}""")
-    R=json.loads(r);R['ok']=R.get('h2') and R.get('old')==0 and R.get('el')==1 and not R.get('busy') and abs(R.get('zone')-1.5)<.01 and R.get('isH') and R.get('home') and R.get('kit')==0;res['floor2']=R
-    await ev("()=>{P.x=HS82.x+.6;P.z=HS82.z+5.4;P.rot=Math.PI;zoomK=1.05;updCamera(0,P.x,groundY(P.x,P.z),P.z,true);return 1}");await shot('p82_house2.jpg',1500)
+      return JSON.stringify({h2:!!h,old:structs.filter(s=>s.own&&s.t==='phouse').length,el:h&&h.el,busy,zone:+(A(z2)/A(z1)).toFixed(3),isH:isHouseT('phouse2'),geo:!!GEO.phouse2&&GEO.phouse2.attributes.position.count/3|0,home:S.home&&Math.hypot(S.home.x-h.x,S.home.z-h.z)<5,inside:INT.on&&INT.kind==='house2'&&INT.s===h,kit:S.inv.kit_floor2||0})}""")
+    R=json.loads(r);R['ok']=R.get('h2') and R.get('old')==0 and R.get('el')==1 and not R.get('busy') and abs(R.get('zone')-1.5)<.01 and R.get('isH') and R.get('home') and R.get('inside') and R.get('kit')==0;res['floor2']=R
+    await ev("()=>{intOut();P.x=HS82.x+.6;P.z=HS82.z+5.4;P.rot=Math.PI;zoomK=1.05;updCamera(0,P.x,groundY(P.x,P.z),P.z,true);return 1}");await shot('p82_house2.jpg',1500)   # 83차: 2층으로 올려도 안에 그대로 있어서 먼저 나와요
     await ev("()=>{intEnter(HS82);return 1}");await pg.wait_for_timeout(1700)
     r=await ev("""()=>{const o={kind:INT.kind,hw:INT.hw,hd:INT.hd};const [sx,sz]=H82.stair;o.stairBlock=intWalk(INT.x+sx,INT.z+sz,.42)===true;o.free=intWalk(INT.x+1,INT.z,.42)===null;o.room=+(4*INT_ROOM.house2.hw*INT_ROOM.house2.hd/(4*INT_ROOM.house.hw*INT_ROOM.house.hd)).toFixed(2);
       openPanel('bench');const q=k=>document.querySelector(`[data-a="h82up"][data-k="${k}"]`);q('power').click();o.el2=HS82.el;renderPanel();o.oilRow=!!document.querySelector('[data-a="h82oil"]');document.querySelector('[data-a="h82oil"][data-n="1"]').click();

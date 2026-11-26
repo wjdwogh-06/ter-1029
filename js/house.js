@@ -59,11 +59,17 @@ function upGo(){const I=upInfo();if(!I||!I.u||HUP.on)return;if(!I.ok){toast('나
  f.classList.add('house','on');f.querySelector('.rsT').textContent='🏠 집을 짓는 중…';f.querySelector('.rsH').textContent='넣어 둔 나무로 통나무 집을 지어요';bar.style.width='0%';st.textContent='';
  const msgs=[[0,'텐트를 걷어요'],[.28,'통나무를 쌓는 중…'],[.62,'지붕을 올려요'],[.88,'문을 달아요']];sfx(180,.12,'square',.04);let t0=0,k0=-1;
  const step=now=>{if(!t0)t0=now;const k=Math.min(1,(now-t0)/T);bar.style.width=(k*100).toFixed(1)+'%';let m='',mi=0;msgs.forEach(([a,q],i)=>{if(k>=a){m=q;mi=i}});if(mi!==k0){k0=mi;sfx(220+mi*60,.07,'square',.035)}if(st.textContent!==m)st.textContent=m;if(k<1){requestAnimationFrame(step);return}
-  intOut();const ns=addStruct({t:to,x:s.x,z:s.z,r:s.r,own:1,kit:s.kit,hp:BUILDS[to].hp});removeStruct(s);
-  S.home={x:ns.x,z:ns.z+BUILDS[to].bz+1.1};P.x=S.home.x;P.z=S.home.z;P.rot=0;P.auto=null;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true);st.textContent='다 지었어요!';save();
-  setTimeout(()=>{f.classList.remove('on');busy=false;HUP.on=false;const y=groundY(ns.x,ns.z);for(let i=0;i<9;i++){const a=i/9*Math.PI*2;puff(ns.x+Math.cos(a)*2.2,y+.5,ns.z+Math.sin(a)*2.1,0xd8c6a2,5,.8)}
-   ftext(ns.x,y+4.8,ns.z,'🏠 집 완성!','#ffe08a');jingle([523,659,784,1047]);toast('🏠 텐트가 집이 됐어요! 들어가 보면 안이 더 넓어요');hudDirty=true;setTimeout(()=>f.classList.remove('house'),700)},700)};
+  const inn=INT.on&&INT.s===s;if(!inn)intOut();const ns=addStruct({t:to,x:s.x,z:s.z,r:s.r,own:1,kit:s.kit,hp:BUILDS[to].hp});ns.hk=homeKey(s);removeStruct(s);   /* 83차: 안에서 올리면 밖으로 안 나가요(upStay) */
+  if(!inn||!upStay(s,ns)){S.home={x:ns.x,z:ns.z+BUILDS[to].bz+1.1};P.x=S.home.x;P.z=S.home.z;P.rot=0;P.auto=null;unstuck();updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}st.textContent='다 지었어요!';save();
+  setTimeout(()=>{f.classList.remove('on');busy=false;HUP.on=false;const ix=inn&&INT.on,cx=ix?P.x:ns.x,cz=ix?P.z:ns.z,y=groundY(cx,cz),rr=ix?1.2:2.2;for(let i=0;i<9;i++){const a=i/9*Math.PI*2;puff(cx+Math.cos(a)*rr,y+.5,cz+Math.sin(a)*rr,0xd8c6a2,5,.8)}
+   ftext(cx,y+(ix?2.6:4.8),cz,'🏠 집 완성!','#ffe08a');jingle([523,659,784,1047]);toast(ix?'🏠 텐트가 집이 됐어요! 방이 더 넓어졌어요':'🏠 텐트가 집이 됐어요! 들어가 보면 안이 더 넓어요');hudDirty=true;setTimeout(()=>f.classList.remove('house'),700)},700)};
  requestAnimationFrame(step)}
+/* 83차(기획자: '업그레이드할 때마다 집 밖에 나가지는데 안에 계속 그 자리에 있게'): 안에서 업그레이드하면 방만 새 건물 방으로 바꾸고 그 자리에 그대로 서 있어요(텐트 → 집, 집 → 2층 집) */
+function upStay(s,ns){if(!(INT.on&&INT.s===s))return false;const df=sdef(ns),px=P.x,pz=P.z,pr=P.rot;
+ intRoom(df.room);INT.s=ns;INT.ret={x:ns.x+Math.sin(ns.r||0)*(df.bz+1.1),z:ns.z+Math.cos(ns.r||0)*(df.bz+1.1)};S.home={x:INT.ret.x,z:INT.ret.z};
+ INT.it.forEach(removeStruct);INT.it=[addStruct({t:'int_exit',x:INT.x,z:INT.z+INT.door-.2,yo:INT.y-hAt(INT.x,INT.z+INT.door-.2),hp:1e9})];INT.dock.hw=INT.full;INT.g.visible=true;intShow(true);
+ P.x=px;P.z=pz;P.rot=pr;P.auto=null;for(let k=0;k<40&&intWalk(P.x,P.z,.42)===true;k++)P.z+=.12;   /* 새 방의 계단 자리에 서 있었으면 앞으로 비켜요 */
+ return true}
 function houseIcon(){if(HOUSE_IC===undefined){try{HOUSE_IC=typeof lkIconFrom==='function'&&GEO.phouse?lkIconFrom(GEO.phouse,[.42,-.55,0],'build'):null}catch(e){HOUSE_IC=null}}return HOUSE_IC}
 /* the upgrade column of the workbench window (ui.js renderPanel 'bench') */
 function upCard(){const I=upInfo(),hd='<div class="sec" style="margin-top:0">⬆ 업그레이드</div>',hi=houseIcon(),him=hi?`<img src="${hi}">`:'<span class="upe">🏠</span>';
