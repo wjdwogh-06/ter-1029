@@ -50,7 +50,11 @@ function sh85At(k,x,z){const q=SH84[k];let h=null;for(const L of q.lots)if(x>=L[
  if(h==null)return null;for(const w of q.walls)if(Math.abs(x-w[0])<w[2]+.18&&Math.abs(z-w[1])<w[3]+.18)return PRW;return h}   /* 벽은 0.18m 넉넉히(몸이 소품에 덜 박히게) */
 DECO.sh84_door={g:'nil',s:1,bx:1.05,bz:.32,pass:1,hp:1e9};DECO.sh84_ctr={g:'nil',s:1,bx:1.9,bz:.5,pass:1,hp:1e9};
 /* 일반 자판기 셋(색깔별) — 파는 물건: [아이템 id, 묶음 개수, 가격] (가격 없으면 원래 가격 × 묶음). 기획자가 정해 주면 채우기 */
-const PV84={items:{r:[],b:[],g:[]},free:0,col:'r',nm:{r:'빨간',b:'파란',g:'초록'},
+ITEMS.kit_gwhite={n:'흰 울타리 문',ic:'lk_gate_white',ty:'kit',b:'gate_white',p:80,d:'흰 울타리에 이어 놓아요. 가까이 가면 문이 열려요.'};
+BUILDS.gate_white={...BUILDS.gate_wood,n:'흰 울타리 문',g:'lk_gate_white',kit:'kit_gwhite',c:{kit_gwhite:1}};
+const basicVendStock=[['axe'],['kit_stash'],['kit_bench'],['kit_gen',1,800],['kit_fwhite'],['kit_gwhite']];
+PV79.items=basicVendStock;
+const PV84={items:{r:basicVendStock,b:[],g:[]},free:0,col:'r',nm:{r:'빨간',b:'파란',g:'초록'},
  pal:{r:{B:0xe0533f,S:0xc8463a,T:0xf7f0e3,L:0xe0533f},b:{B:0x3f7fd0,S:0x356fb8,T:0xf7f0e3,L:0xf7c948},g:{B:0x5bae5f,S:0x4c9a52,T:0xf7f0e3,L:0xffffff}}};
 for(const c of['r','b','g'])DECO['pv84'+c]={g:'pv84_'+c,s:1,bx:.5,bz:.4,hp:1e9,n:PV84.nm[c]+' 일반 자판기'};
 

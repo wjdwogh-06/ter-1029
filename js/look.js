@@ -1156,8 +1156,12 @@ function lkItems47(){const K=LK47,R=(w,h,d,c,b)=>lkRb(w,h,d,c===undefined?.03:c,
   put('lk_fnet',p,40)}
  /* 흰 울타리(길이 2): 끝이 뾰족한 흰 말뚝 + 가로대 둘 + 둥근 갓 기둥(23차 널 울타리처럼 촘촘하게) */
  {const p=[],WH=[0xf7f5ef,0xf1eee6,0xfbfaf6];for(const sx of[-1,1]){p.push(pt(R(.14,1.12,.14,.04,.03),0xf4f2ec,[sx*1.0,.56,0]),pt(R(.18,.05,.18,.03,.02),0xe9e5dc,[sx*1.0,1.14,0]),pt(S(.06,12,8),0xf7f5ef,[sx*1.0,1.2,0]))}
+  const posts=p.slice();
   for(const y of[.3,.74])p.push(pt(R(1.9,.07,.05,.02,.015),0xe6e1d6,[0,y,-.05]));
   for(let k=0;k<9;k++){const x=-.8+k*.2,h=.86+(k%2)*.03;p.push(pt(R(.13,h,.04,.03,.015),WH[k%3],[x,h/2+.04,.0]),pt(cone(.066,.12,4),WH[k%3],[x,h+.1,0],[0,Math.PI/4,0],[1,1,.32]))}
+  const door=p.slice(posts.length).map(part=>part.clone().scale(.92,1,1).translate(.88,0,0));
+  door.push(pt(R(.13,.055,.06,.015,.01),0x595857,[1.56,.65,.055]));
+  lkModel('lk_gate_white',posts,{door:{g:door,pv:[-.88,0,0]}});
   for(let k=0;k<4;k++)p.push(pt(IC(.05,0),LF[k%3],[-.7+k*.5,.06,.05],[k,k,0],[1.4,.7,1.2]));put('lk_fence_white',p,40)}
 }
 {const _bg=lkBuildGeo;lkBuildGeo=function(){_bg();const b0=Object.assign({},GEO);try{lkItems47()}catch(e){console.error('look: 47차 모델 실패',e)}try{lkAOnew(b0)}catch(e){}}}

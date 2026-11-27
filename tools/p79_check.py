@@ -57,9 +57,9 @@ async def steps(pg):
       for(const s of L){for(const q of structs){if(q===s||Math.abs(q.x-s.x)>4||Math.abs(q.z-s.z)>4)continue;const d=sdef(q);if(!d||d.pass)continue;if(Math.abs(q.x-s.x)<d.bx+.5-.01&&Math.abs(q.z-s.z)<d.bz+.4-.01)o.ovl++}
         P.x=s.x;P.z=s.z+.4+.42+.4;P.rot=Math.PI;const t=findTarget();o.lab.push(t&&t.lab)}
       const s=L[0];P.x=s.x;P.z=s.z+1.25;target=findTarget();inp.actEdge=true;interact();o.panel=panel+'|'+$('pbody').innerText.replace(/\\n/g,' ');
-      PV79.items=[['axe',1],['ammoS',12,50]];renderPanel();o.rows=document.querySelectorAll('[data-a=pv79buy]').length;S.coins=1000;delete S.inv.axe;const c0=S.coins,a0=invN('ammoS');
-      document.querySelector('[data-a=pv79buy][data-k=ammoS]').click();o.buy=[c0-S.coins,invN('ammoS')-a0];PV79.items=[];closePanel();return JSON.stringify(o)}""")
-    d=json.loads(r);res['pvend']={'d':d,'ok':d['n']==8 and d['pi']==8 and d['ovl']==0 and all(l=='일반 자판기' for l in d['lab']) and d['panel'].startswith('pvend|아직 파는 물건이 없어요') and d['rows']==2 and d['buy']==[50,12]}
+      const stock=PV79.items;PV79.items=[['axe',1],['ammoS',12,50]];renderPanel();o.rows=document.querySelectorAll('[data-a=pv79buy]').length;S.coins=1000;delete S.inv.axe;const c0=S.coins,a0=invN('ammoS');
+      document.querySelector('[data-a=pv79buy][data-k=ammoS]').click();o.buy=[c0-S.coins,invN('ammoS')-a0];PV79.items=stock;closePanel();return JSON.stringify(o)}""")
+    d=json.loads(r);res['pvend']={'d':d,'ok':d['n']==8 and d['pi']==8 and d['ovl']==0 and all(l=='일반 자판기' for l in d['lab']) and d['panel'].startswith('pvend|손도끼') and d['rows']==2 and d['buy']==[50,12]}
     r=await ev("()=>{const P2=NOB.filter(n=>n.k==='port');return JSON.stringify(P2.map((n,i)=>{const q=PORT_SAFE[i];return +(Math.abs(n.x-q[0])+Math.abs(n.z-q[1])+Math.abs(n.r-q[2])).toFixed(2)}))}")
     d=json.loads(r);res['safeTable']={'d':d,'ok':max(d)<.3}
     # 5. 산장

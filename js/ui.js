@@ -619,7 +619,11 @@ const DEXT=[['fish','🐟 물고기'],['cook','🍳 요리'],['plant','🌱 식�
 const HUNT_IC={bandit:'🗡',gunner:'🎯',rgolem:'🪨',wgolem:'🌳',wraith:'👻',plant:'🌿',brute:'💀'};
 const dexCard=(img,on,name,sub,col,tag)=>`<div style="text-align:center;font-size:11.5px;line-height:1.3;font-weight:700"><div class="slot" style="width:58px;height:58px;margin:0 auto 3px;${col?'border-color:'+col:''}">${img}</div>${tag||''}<div>${on?name:'???'}</div><div style="color:var(--mut);font-weight:600;font-size:10.5px">${sub||''}</div></div>`;
 const dexGrid=h=>`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px 4px">${h}</div>`;
-function fishDexHtml(){const n=FISH_LIST.filter(f=>S.caught[f.id]).length;return `<div class="sec">물고기 도감 ${n} / ${FISH_LIST.length}</div>`+['B','A'].map(zk=>`<div style="font-weight:800;font-size:12px;margin:6px 2px 4px">${zk==='A'?'🗼':'🏝'} ${FISH_ZONES[zk].n}</div>`+dexGrid(FISH_LIST.filter(f=>FISH_ZONES[zk].t.some(q=>q[0]===f.id)).map(f=>{const c=S.caught[f.id],G=FGRADE[f.g];
+function fishPointGuide(){
+ const rows=Object.values(FISH_ZONES).map(zone=>zone.n+' · '+zone.t.map(([id])=>FISHD[id].n).join(', '));
+ return '<details><summary>낚시 포인트별 어종 보기</summary><p>물고기 떼가 도는 곳에 찌를 던져요.</p>'+rows.map(row=>'<p>'+row+'</p>').join('')+'</details>';
+}
+function fishDexHtml(){const n=FISH_LIST.filter(f=>S.caught[f.id]).length;return `<div class="sec">물고기 도감 ${n} / ${FISH_LIST.length}</div>`+fishPointGuide()+['B','A'].map(zk=>`<div style="font-weight:800;font-size:12px;margin:6px 2px 4px">${zk==='A'?'🗼':'🏝'} ${FISH_ZONES[zk].n}</div>`+dexGrid(FISH_LIST.filter(f=>FISH_ZONES[zk].t.some(q=>q[0]===f.id)).map(f=>{const c=S.caught[f.id],G=FGRADE[f.g];
   return dexCard(`<img src="${ICON[f.id]}" style="${c?'':'filter:brightness(0) opacity(.35)'}">`,c,f.n,c?`최대 ${S.best[f.id]||0}cm`:'',G[1],`<span style="display:inline-block;background:${G[1]};color:#fff;border-radius:9px;padding:0 6px;font-size:10px;font-weight:800">${G[0]}</span>`)}).join(''))).join('')}
 function cookDexHtml(){
  const known=S.cdex||{},ids=DISHES.map(([id])=>id);
