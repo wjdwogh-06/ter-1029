@@ -348,7 +348,7 @@ function updPlayer(dt){const a=P.a;P.cd-=dt;P.inv-=dt;P.rollCd-=dt;P.lastHurt+=d
   if(P.tapT>0){P.tapT-=dt;if(!P.tapE||P.tapE.dead)P.tapT=0}
   if(firing){if(inp.fire&&inp.aiming){P.adx=inp.ax;P.adz=inp.az}else{const e=!inp.fire&&P.tapE?P.tapE:nearestEnemy(P.x,P.z,w.melee?4:w.range);if(e){const d=dist(P.x,P.z,e.x,e.z)||1;P.adx=(e.x-P.x)/d;P.adz=(e.z-P.z)/d}else{P.adx=Math.sin(P.rot);P.adz=Math.cos(P.rot)}}
    P.rot=turn(P.rot,Math.atan2(P.adx,P.adz),dt*22);attack()}else if(P.moving&&!P.auto)P.rot=turn(P.rot,Math.atan2(mx,mz),dt*(swim?6:12));
-  if(P.hitT>0){P.hitT-=dt;if(P.hitT<=0){const fx=Math.sin(P.rot),fz=Math.cos(P.rot);for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<P.hitW.range+(e.big?.5:0)&&(dx*fx+dz*fz)/(d||1)>.3)hurtEnemy(e,P.hitW.dmg,dx/(d||1),dz/(d||1))}}}
+  if(P.hitT>0){P.hitT-=dt;if(P.hitT<=0){const fx=Math.sin(P.rot),fz=Math.cos(P.rot);for(const e of enemies.slice()){if(e.dead)continue;const dx=e.x-P.x,dz=e.z-P.z,d=Math.hypot(dx,dz);if(d<P.hitW.range+(e.hr!=null?e.hr:e.big?.5:0)&&(dx*fx+dz*fz)/(d||1)>.3)hurtEnemy(e,P.hitW.dmg,dx/(d||1),dz/(d||1))}}}
   if(w.rod&&!bmode&&!swim)updFishing(dt,press);else if(fishing)endFish();
   if(bmode){if(inp.actEdge)placeBuild()}else if((inp.act||inp.actEdge)&&!P.auto&&!swim)interact();
   if(a.lock<=0){if(swim)a.play('T-Pose',{fade:.3});else if(fishing)a.play('1H_Ranged_Aiming',{fade:.2});

@@ -44,7 +44,7 @@ async def steps(pg):
     # 요리 도감: 모닥불에서 굽기 → 기록 / 사냥 도감: 적을 쓰러뜨리면 기록
     r=await ev("""async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));give('f_trout',3);openPanel('cook');await sl(100);document.querySelector('[data-a=cook][data-k=f_trout][data-n="1"]').click();await sl(50);const t1=document.getElementById('toast').textContent;
       document.querySelector('[data-a=cook][data-k=f_trout][data-n="99"]').click();closePanel();const c=S.cdex&&S.cdex.cf_trout;
-      const e=enemies.find(q=>!q.dead)||null;let k0=null,hk=0;if(typeof spawnEnemy==='function'){spawnEnemy('bandit',P.x+6,P.z)}const b=enemies.find(q=>!q.dead);if(b){k0=b.kind;killEnemy(b);hk=S.hdex[b.kind]}
+      const e=enemies.find(q=>!q.dead)||null;let k0=null,hk=0;if(typeof spawnEnemy==='function'){spawnEnemy('m86_toad',P.x+6,P.z)}const b=enemies.find(q=>!q.dead);if(b){k0=b.kind;killEnemy(b);hk=S.hdex[b.kind]}
       BAGT.t='dex';BAGT.d='cook';openPanel('bag');BAGT.t='dex';renderPanel();await sl(100);const cookSec=document.querySelector('#pbody .sec').textContent;BAGT.d='hunt';renderPanel();const huntSec=document.querySelector('#pbody .sec').textContent;closePanel();
       return JSON.stringify({c,t1,k0,hk,cookSec,huntSec})}""")
     Q=json.loads(r);Q['ok']=Q['c']==3 and '새 요리' in Q['t1'] and Q['cookSec'].startswith('요리 도감 1') and (Q['k0'] is None or (Q['hk']==1 and Q['huntSec'].startswith('사냥 도감 1')));res['records']=Q

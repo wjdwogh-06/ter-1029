@@ -23,7 +23,7 @@ async def steps(pg):
       window.TQt=t;return JSON.stringify({cur:curId(),held:P.a.holder.children.length,lab:tg&&tg.lab,dHp:hp0-t.hp})}"""))
     await ev("()=>{updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await shot('ni_chainsaw.jpg',700)
     # 석궁: 화살로 적 맞히기
-    print('crossbow',await ev("""()=>{S.quick[S.sel]='crossbow';P.a.weapon(curId());P.x=VIL.x+40;P.z=VIL.z+30;unstuck();spawnEnemy('bandit',P.x,P.z-8);const e=enemies[enemies.length-1];P.adx=0;P.adz=-1;P.rot=Math.PI;
+    print('crossbow',await ev("""()=>{S.quick[S.sel]='crossbow';P.a.weapon(curId());P.x=VIL.x+40;P.z=VIL.z+30;unstuck();spawnEnemy('m86_toad',P.x,P.z-8);const e=enemies[enemies.length-1];P.adx=0;P.adz=-1;P.rot=Math.PI;
       const a0=invN('arrow'),h0=e.hp;P.cd=0;attack();const r={cur:curId(),held:P.a.holder.children.length,used:a0-invN('arrow'),dmg:h0-e.hp,pill:document.getElementById('pills').innerHTML.includes('lk_arrow')||true};enemies.slice().forEach(dropEnemy);return JSON.stringify(r)}"""))
     await ev("()=>{updCamera(0,P.x,groundY(P.x,P.z),P.z,true)}");await shot('ni_crossbow.jpg',500)
     await ev("()=>{S.quick[S.sel]=null;P.a.weapon('fist')}")
