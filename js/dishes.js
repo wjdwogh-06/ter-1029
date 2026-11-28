@@ -193,7 +193,49 @@ function cookCounts(){
  for(const id of cookSlots)if(id)counts[id]=(counts[id]||0)+1;
  return counts;
 }
+// 모바일 조리 시간(초). 창을 떠나기 전 완성한 음식만 가방에 넣는다.
+function cookSeconds(slots){
+ const n=slots.filter(Boolean).length;
+ if(n===1)return 3;
+ return n<=4?5:8;
+}
+let cookJob=null;
+function stopCooking(){
+ if(!cookJob)return false;
+ clearInterval(cookJob.timer);cookJob=null;
+ return true;
+}
+function cookCanFinish(result,counts){
+ if(Object.entries(counts).some(([id,n])=>invN(id)<n))return false;
+ const remaining=bagList().filter(id=>invN(id)>(counts[id]||0));
+ if(!remaining.includes(result)&&remaining.length>=BAG_N){bagFullMsg();return false}
+ return true;
+}
+function updateCooking(job){
+ if(job!==cookJob)return;
+ if(panel!=='cook'||job.state!==S||P.dead||busy||mode!=='play'||document.hidden){
+  stopCooking();if(panel==='cook')renderPanel();return;
+ }
+ const left=Math.ceil((job.end-performance.now())/1000);
+ if(left>0){
+  const label=$('cookTime');
+  if(label&&label.textContent!==String(left))label.textContent=String(left);
+  return;
+ }
+ stopCooking();
+ if(cookCanFinish(job.result,job.counts)){
+  for(const [id,n] of Object.entries(job.counts))take(id,n);
+  give(job.result,1);cookSlots.fill(null);S.st.cook++;
+  S.cdex??={};S.cdex[job.result]=(S.cdex[job.result]||0)+1;
+  sfx(420,.18,'sawtooth',.03,.7);toast(ITEMS[job.result].n+' 완성!');save();
+ }
+ renderPanel();hudDirty=true;
+}
 function cookPanelHtml(){
+ if(cookJob){
+  const sec=Math.max(0,Math.ceil((cookJob.end-performance.now())/1000));
+  return `<div class="row"><div class="tx">${ITEMS[cookJob.result].n} 조리 중 · <span id="cookTime">${sec}</span>초<small>창을 닫으면 조리를 취소하고 재료를 보관해요.</small></div></div>`;
+ }
  const result=cookResult(cookSlots),counts=cookCounts(),full=cookSlots.every(Boolean);
  const slots=cookSlots.map((id,i)=>id
   ? `<button class="slot" aria-label="${ITEMS[id].n} 빼기" data-a="cookRemove" data-i="${i}">${invIcon(id)}</button>`
@@ -204,10 +246,10 @@ function cookPanelHtml(){
  }).join('');
  return `<div class="sec">조리 재료 · ${cookSlots.filter(Boolean).length}/8</div><div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">${slots}</div>
  <div class="row"><div class="tx">${result?ITEMS[result].n:full||Object.keys(counts).length?'맞는 요리 조합이 없어요':'가방에서 재료를 골라 주세요'}<small>한 칸에 1개 · 넣은 재료를 누르면 빼요</small></div>
- <button class="btn" data-a="cookFinish" ${result?'':'disabled'}>요리하기</button></div>${rows||'<div class="sec">가방에 조리 재료가 없어요</div>'}`;
+ <button class="btn" data-a="cookFinish" ${result?'':'disabled'}>${result?'요리하기 · '+cookSeconds(cookSlots)+'초':'요리하기'}</button></div>${rows||'<div class="sec">가방에 조리 재료가 없어요</div>'}`;
 }
 function cookAction(action,b){
- if(panel!=='cook')return;
+ if(panel!=='cook'||cookJob||P.dead||busy||mode!=='play')return;
  if(action==='cookRemove'){cookSlots[Number(b.dataset.i)]=null;return}
  const counts=cookCounts();
  if(action==='cookAdd'){
@@ -216,11 +258,8 @@ function cookAction(action,b){
   return;
  }
  const result=cookResult(cookSlots);
- if(!result||Object.entries(counts).some(([id,n])=>invN(id)<n))return;
- const remaining=bagList().filter(id=>invN(id)>(counts[id]||0));
- if(!remaining.includes(result)&&remaining.length>=BAG_N){bagFullMsg();return}
- for(const [id,n] of Object.entries(counts))take(id,n);
- give(result,1);cookSlots.fill(null);S.st.cook++;
- S.cdex??={};S.cdex[result]=(S.cdex[result]||0)+1;
- sfx(420,.18,'sawtooth',.03,.7);toast(ITEMS[result].n+' 완성!');save();
+ if(action!=='cookFinish'||!result||!cookCanFinish(result,counts))return;
+ const job={result,counts,state:S,end:performance.now()+1000*cookSeconds(cookSlots)};
+ cookJob=job;
+ job.timer=setInterval(()=>updateCooking(job),200);
 }
