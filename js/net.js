@@ -45,7 +45,11 @@ function zapFx(p,me){if(!p)return;const y=groundY(p.x,p.z);for(let i=0;i<2;i++)t
  if(me){toast(`🛡 안전 구역에서는 사람을 공격할 수 없어요 — 포탑이 쐈어요 (-${Math.round(SAFE_PCT*100)}%)`);buzz(120)}}
 const NAMEC=['#F0A23A','#45B864','#E8609E','#7C6FE0','#4A9BE0','#E5534B','#2FB3A6'];
 /* ---- hooks into the single-player code ---- */
-{const _attack=attack;attack=function(){const was=P.cd;_attack();if(NET.on&&was<=0&&P.cd>0){const w=WEAP[curId()];if(w&&!w.rod&&!w.nade)NET.send(w.melee?{t:'f',dx:Math.sin(P.rot),dz:Math.cos(P.rot)}:{t:'f',dx:P.adx,dz:P.adz})}};
+{const _attack=attack;attack=function(){
+  const w=WEAP[curId()], fired=_attack.apply(this,arguments);
+  if(fired&&NET.on)NET.send(w.melee?{t:'f',dx:Math.sin(P.rot),dz:Math.cos(P.rot)}:{t:'f',dx:P.adx,dz:P.adz});
+  return fired
+ };
  const _place=placeBuild;placeBuild=function(){const n=structs.length;_place();if(NET.on&&structs.length>n){const s=structs[structs.length-1];s.ref=Math.random().toString(36).slice(2);NET.send({t:'b',k:s.t,x:s.x,z:s.z,r:s.r||0,ref:s.ref})}};
  const _rm=removeStruct;removeStruct=function(s){_rm(s);if(NET.on&&!NET.applying&&s.nid&&(s.own||s.zdemo))NET.send({t:'rb',id:s.nid})};
  const _die=die;die=function(){const was=P.dead;_die();if(NET.on&&!was&&P.dead){NET.send({t:'dead'});const iv=setInterval(()=>{if(!P.dead){clearInterval(iv);NET.send({t:'up'})}},250)}};

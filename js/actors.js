@@ -136,7 +136,7 @@ function portSpawn(only){const order=only!=null?[only]:PORTS.map((p,i)=>i).sort(
  return{x:VIL.x,z:VIL.z,p:PORTS[0]}}
 function placeBag(){if(bagM){scene.remove(bagM);bagM=null}if(!S.bag)return;bagM=new THREE.Group();const m=mesh(GEO.sack);m.scale.setScalar(9);bagM.add(m);const g=glow(0x6cb8ff,3,.5);g.position.y=1.2;bagM.add(g);bagM.position.set(S.bag.x,surfY(S.bag.x,S.bag.z)+.1,S.bag.z);scene.add(bagM)}
 function attack(){const id=curId(),w=WEAP[id];if(P.cd>0)return;const y=groundY(P.x,P.z);
- if(w.melee){P.cd=w.cd;if(id==='fist')P.a.punchLeft=!P.a.punchLeft;P.a.play(toolSwing(id),{once:1,lock:.36,force:1,speed:1.5});P.hitT=.16;P.hitW=w;sfx(260,.08,'triangle',.03,.6);return}
+ if(w.melee){P.cd=w.cd;if(id==='fist')P.a.punchLeft=!P.a.punchLeft;P.a.play(toolSwing(id),{once:1,lock:.36,force:1,speed:1.5});P.hitT=.16;P.hitW=w;sfx(260,.08,'triangle',.03,.6);return true}
  if(invN(w.ammo)<=0){P.cd=.4;sfx(900,.03,'square',.03);toast(ITEMS[w.ammo].n+'이 없어요! 제작하거나 상인에게 사요');return}
  P.cd=w.cd;take(w.ammo,1);shotSfx(id);shake=Math.min(.5,shake+(id==='smg'?.1:id==='pistol'?.14:.32));const shot=beginWeaponShot(P.a,id,P.adx,P.adz);
  for(let i=0;i<(w.pel||1);i++){
@@ -144,7 +144,7 @@ function attack(){const id=curId(),w=WEAP[id];if(P.cd>0)return;const y=groundY(P
   const distance=hitscan(P.x,P.z,dx,dz,w.range,w.dmg);
   shot.ends.push(new THREE.Vector3(P.x+dx*distance,y+1.3,P.z+dz*distance));
  }
- if(!P.moving)P.a.play(w.h1?'1H_Ranged_Shoot':'2H_Ranged_Shoot',{once:1,lock:Math.min(.22,w.cd*.9),force:1,speed:1.6,fade:.04});hudDirty=true}
+ if(!P.moving)P.a.play(w.h1?'1H_Ranged_Shoot':'2H_Ranged_Shoot',{once:1,lock:Math.min(.22,w.cd*.9),force:1,speed:1.6,fade:.04});hudDirty=true;return true}
 function throwNade(){if(!take('grenade',1))return;const e=nearestEnemy(P.x,P.z,16);let dx=Math.sin(P.rot),dz=Math.cos(P.rot),d=9;if(e){d=dist(P.x,P.z,e.x,e.z);dx=(e.x-P.x)/d;dz=(e.z-P.z)/d;P.rot=Math.atan2(dx,dz)}
  P.a.play('Throw',{once:1,lock:.5,force:1,speed:1.4});const m=mesh(GEO.grenade);m.scale.setScalar(.8);scene.add(m);nades.push({m,x:P.x,z:P.z,dx,dz,d,t:0,T:.75,y0:groundY(P.x,P.z)+1.6})}
 function explode(x,z,r,dmg){shake=.8;boom(x,groundY(x,z)+.6,z,r);for(const e of enemies.slice()){const d=dist(x,z,e.x,e.z);if(!e.dead&&d<r)hurtEnemy(e,dmg*(1-d/r*.6),(e.x-x)/(d||1),(e.z-z)/(d||1))}if(dist(x,z,P.x,P.z)<r*.7)hurtPlayer(18)}

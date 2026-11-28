@@ -92,8 +92,8 @@ function layoutPanel(){const el=$('panel'),side=sidePanel(),port=VW<=VH;$('toast
  if(side){if(port){const h=Math.round(clamp(VH*.5,300,560));Object.assign(el.style,{width:(VW-20)+'px',height:h+'px',left:'10px',top:(VH-h-10)+'px',transform:'none'})}
   else{const w=Math.round(clamp(VW*.48,360,540));Object.assign(el.style,{width:w+'px',height:(VH-24)+'px',left:(VW-w-12)+'px',top:'12px',transform:'none'})}}
  else Object.assign(el.style,{width:Math.min(panel==='bench'?720:1060,VW-20)+'px',height:Math.min(panel==='bench'?(port?500:342):640,VH-24)+'px',left:'',top:'',transform:''})}
-function openPanel(k){if(k==='cook')cookSlots.fill(null);panel=k;if(k!=='bag'){inp.fire=inp.act=false;inp.aiming=false;joyEnd()}   /* 31차: 가방은 쏘기·낚시·걷기를 끊지 않아요 */$('panel').classList.remove('hide');layoutPanel();renderPanel()}
-function closePanel(){if(fmap)fmap.style.display='none';panel=null;selItem=null;$('shade').classList.add('hide');$('panel').classList.add('hide');$('panel').classList.remove('side');$('toast').style.left='';$('title').style.zIndex=20;hudDirty=true}
+function openPanel(k){if(panel==='cook')stopCooking();if(k==='cook')cookSlots.fill(null);panel=k;if(k!=='bag'){inp.fire=inp.act=false;inp.aiming=false;joyEnd()}   /* 31차: 가방은 쏘기·낚시·걷기를 끊지 않아요 */$('panel').classList.remove('hide');layoutPanel();renderPanel()}
+function closePanel(){if(panel==='cook')stopCooking();if(fmap)fmap.style.display='none';panel=null;selItem=null;$('shade').classList.add('hide');$('panel').classList.add('hide');$('panel').classList.remove('side');$('toast').style.left='';$('title').style.zIndex=20;hudDirty=true}
 const nearBench=()=>structs.some(s=>s.t==='bench'&&(!s.in||s.hk===curHK())&&dist(s.x,s.z,P.x,P.z)<7);   /* 44차: 들어와 있는 텐트의 작업대만 */
 const craftRows=(nb,nf)=>RECIPES.map((r,i)=>{const it=ITEMS[r.id],has=it.one&&invN(r.id),ok=canPay(r.c)&&(!r.bench||nb||nf)&&(!r.forge||nf)&&!has;return`<div class="row">${invIcon(r.id)}<div class="tx">${it.n}${r.n>1?' ×'+r.n:''}${r.bench?' <span style="font-size:14px;color:var(--blu)">작업대</span>':r.forge?' <span style="font-size:14px;color:var(--amb)">대장간</span>':''}<small>${it.d}</small><div>${costHtml(r.c)}</div></div><button class="btn" data-a="craft" data-i="${i}" ${ok?'':'disabled'}>${has?'보유 중':'만들기'}</button></div>`}).join('');   /* 제작 목록: 가방의 제작 탭과 작업대 창(15차: 왼쪽 제작 + 오른쪽 업그레이드)이 같이 써요 */
 const buyP=id=>SHOP.free?0:Math.ceil(ITEMS[id].p*1.7*((VEND.pack[id]||1))),sellP=id=>sellPrice(id);   /* 팔기는 어디서든 원래 가격의 20% (core.js ECON) */
@@ -146,7 +146,24 @@ function renderPanel(){const B=$('pbody');$('pcoin').innerHTML=mode==='play'?`<s
  else if(panel==='menu'){h=`<div style="max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px"><button class="btn" data-a="save">저장하기</button><button class="btn g" data-a="dev" style="border:2px solid #4fc3ff">🛠 관리자 모드: ${DEV.on?'켜짐 (무적 · 빠른 이동 · 위치 표시)':'꺼짐'}</button><button class="btn g" data-a="snd">소리: ${opt.snd?'켜짐':'꺼짐'}</button><button class="btn g" data-a="gfx">그래픽: ${['절전','높음','균형'][opt.gfx]}</button><button class="btn g" data-a="stuck">끼었을 때: 기지로 순간이동</button><button class="btn g" data-a="help">조작법</button><button class="btn r" data-a="title">저장하고 타이틀로</button>
   <div class="sec">${S.day}일째 · 처치 ${S.st.kills} · 막아낸 습격 ${S.st.raids}</div>
   <div class="sec">물고기 도감 ${FISH_LIST.filter(f=>S.caught[f.id]).length} / ${FISH_LIST.length}</div>${['B','A'].map(zk=>`<div style="font-weight:800;font-size:12.5px;margin:6px 2px 4px">${zk==='A'?'🗼':'🏝'} ${FISH_ZONES[zk].n}</div><div class="grid" style="grid-template-columns:repeat(auto-fill,96px)">${FISH_LIST.filter(f=>FISH_ZONES[zk].t.some(q=>q[0]===f.id)).map(f=>{const c=S.caught[f.id],G=FGRADE[f.g];return`<div style="text-align:center;font-size:12px;line-height:1.3"><div class="slot" style="width:70px;height:70px;margin:0 auto 4px;border-color:${G[1]}"><img src="${ICON[f.id]}" style="${c?'':'filter:brightness(0) opacity(.35)'}"></div><span style="display:inline-block;background:${G[1]};color:#fff;border-radius:9px;padding:0 7px;font-size:10.5px;font-weight:800;margin-bottom:2px">${G[0]}</span><br>${c?f.n:'???'}<br><span style="color:var(--mut);font-weight:500">${c?`최대 ${S.best[f.id]||0}cm`:''}</span></div>`}).join('')}</div>`).join('')}${typeof plantDexHtml==='function'?plantDexHtml():''}</div>`}
- else if(panel==='help'){h=[(opt.leftHand?'오른쪽':'왼쪽')+' 아래 조이스틱을 밀면 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요 (PC: WASD)',(opt.leftHand?'왼쪽':'오른쪽')+' 아래 조이스틱은 쓰기예요. 가운데를 톡 누르면 가까운 대상과 상호작용(베기·캐기·열기·거래·들어가기). 총·석궁·수류탄은 끌어서 조준하고 떼면 쏴요(가운데로 돌아와 떼면 취소). 손도끼·전기톱은 끝까지 당기고 있으면 계속 휘둘러요. 낚싯대는 톡(꾹 누르면 감기). 조이스틱 둘 말고 화면을 눌러도 아무 일도 없어요','나무는 손도끼를 손에 들어야 벨 수 있어요(가방에서 장착). 낚싯대를 들고 있을 땐 던지기만 돼요','항구마다 랜덤 자판기와 재활용 쓰레기통이 있어요. 자판기는 1시간마다 물건 5개가 바뀌고, 쓰레기통에서는 무엇이든 원래 가격의 20%로 팔 수 있어요','쓰러지면 가방을 그 자리에 떨어뜨리고, 잠시 뒤 무작위 항구 앞에서 깨어나요','상호작용은 대상에 바짝 붙어야 돼요. 맨손일 땐 조준이 없고, 톡 = 상호작용(가까이 적이 있으면 주먹) (PC: E 상호작용, 스페이스 공격)','짓기는 🎒 가방의 [건설] 탭에서 골라요. 고른 뒤 놓을 곳을 누르거나, 앞에 들고 오른쪽 조이스틱을 톡 눌러요 (PC: B)','물에 들어갈 수 있어요. 얕은 물에선 느려지고, 깊은 물에선 헤엄쳐요. 오래 헤엄치면 몸이 식어요','낚시는 물고기 그림자가 맴도는 곳에서만 돼요. 낚싯대를 들고 8m 안에서 오른쪽 조이스틱을 톡 눌러 던져요. 물 안에서는 못 해요. ! 가 뜨면 바로 누르고, 꾹 눌러 감다가 물고기가 요동치면 손을 떼요. 등대 앞바다에서는 영웅·전설 물고기가 나와요','잡은 생선은 모닥불에서 구우면 훨씬 든든해요','🎒 가방에서 도구·무기를 골라 장착하고, 음식·붕대·수류탄을 써요. 가방이 열려 있어도 왼쪽 화면으로 움직일 수 있지만, 낚시·채집·공격은 가방을 닫아야 해요 (PC: Tab)','초승달 본섬에는 약탈자 무리 셋이 낮이고 밤이고 자기 구역을 돌아다녀요. 한 명이 나를 보면 무리가 다 같이 덤벼요. 항구 안전 구역 안으로는 쫓아오지 않아요','한 무리를 모두 쓰러뜨리면 얼마 뒤 그 구역 어딘가에 새 무리가 나타나요','가운데 바다의 바위섬에는 동굴이 있어요. 들어가면 동굴 안으로 옮겨져요','강은 산에서 시작해 바다로 갈수록 넓어져요. 위쪽 좁은 곳은 걸어서 건널 수 있어요','자동 포탑은 권총탄을 넣어야 움직여요. 사거리 안의 적을 스스로 찾아 쏴요','발전기에 나무를 넣으면 주변 탐조등이 밤에 켜져요. 빛에 비친 적은 피해를 더 받고 악령은 타요','바다 위 바위섬에 등대 8개가 있어요. 헤엄쳐 가서 불을 켜면 등대끼리 빠르게 오갈 수 있어요','성문은 나만 지나가요. 가시 함정과 지뢰를 길목에 깔면 습격이 훨씬 쉬워져요','권총·소총·산탄총·기관단총·수류탄과 탄약은 작업대 근처의 제작 창에서 만들어요','가끔 비바람이 와요. 앞이 잘 안 보이고 몸이 식으니 불 곁에서 기다려요','쓰러지면 무작위 항구 앞에서 다시 태어나요. 가방은 쓰러진 자리에 떨어져요. 지도의 보라색 점으로 가서 되찾아요','⚡ 에너지는 10칸이에요. 헤엄치거나 맞으면 줄고, 먹으면 차요. 텐트·집 안에서 쉬면 빨리 차요','자동 저장돼요 (이 기기의 브라우저에만)'].map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')}
+ else if(panel==='help'){
+  const moveSide=opt.leftHand?'오른쪽':'왼쪽',useSide=opt.leftHand?'왼쪽':'오른쪽';
+  const lines=[
+   moveSide+' 조이스틱으로 이동해요. 살짝 밀면 걷고 끝까지 밀면 달려요. PC에서는 WASD를 써요.',
+   useSide+' 조이스틱 가운데를 톡 누르면 가까운 상자나 자판기, 배를 이용해요. PC에서는 E를 눌러요.',
+   '권총·반자동 소총·저격총·샷건·석궁은 끌어서 조준하고 떼면 쏴요. 가운데로 돌아와 떼면 취소해요. 수류탄은 끈 길이로 던질 거리를 정해요.',
+   '현대 소총과 기관단총은 조준을 유지하면 연사해요. 점사 소총은 한 묶음에 3발을 쏴요. 손도끼·전기톱은 끝까지 당기면 계속 휘둘러요.',
+   '가방에서 도구나 무기를 눌러 장착해요. 가방을 열어도 화면에 드러난 조이스틱을 쓸 수 있어요.',
+   '물 밖에서 물고기 떼에 8m 안으로 다가가 낚싯대를 써요. 느낌표가 뜨면 누르고, 꾹 눌러 감다가 물고기가 요동치면 놓아요. 항구의 생선 자판기는 일반·희귀 생선을 제값에 사요.',
+   '생선 한 마리를 모닥불에 넣으면 구울 수 있어요. 재료를 더해 다른 요리를 만들 수도 있어요. 조리 창을 닫으면 재료가 가방에 남아요.',
+   '항구의 랜덤 자판기는 1시간마다 물건 5개가 바뀌어요. 재활용 쓰레기통에는 물건을 기준가의 20%에 팔아요.',
+   '가방에서 텐트 키트를 누르고 놓을 땅을 골라요. 텐트 안에 작업대를 놓으면 집으로 업그레이드할 수 있어요.',
+   '에너지는 100이에요. 헤엄치거나 피해를 받으면 줄고 음식을 먹으면 차요. 항구 안전 구역에서 사람을 맞히면 공격자가 에너지 20을 잃어요.',
+   '쓰러지면 무작위 항구에서 에너지 70으로 깨어나요. 동전과 도감은 가지고 있어요. 떨어뜨린 가방 위치는 지도에 표시돼요.',
+   '본섬 숲에서는 독두꺼비와 파수꾼을 만날 수 있어요. 바다 가운데 동굴에는 미니 동굴게와 거대 동굴게가 살아요.'
+  ];
+  h=lines.map(s=>`<div class="row"><div class="tx" style="font-size:17px;font-weight:600">${s}</div></div>`).join('')
+ }
  B.innerHTML=h;if(panel==='map')drawMap($('bigmap').getContext('2d'),WS,640)}
 const devGrid=()=>{const q=DEV.q.trim().toLowerCase(),ks=Object.keys(ITEMS).filter(k=>!q||ITEMS[k].n.toLowerCase().includes(q)||k.toLowerCase().includes(q));return ks.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,86px)">${ks.map(k=>`<div data-a="dgive" data-k="${k}" style="text-align:center;font-size:11.5px;line-height:1.25;font-weight:700"><div class="slot" style="width:66px;height:66px;margin:0 auto 3px">${invIcon(k)}${invN(k)?`<b>${invN(k)}</b>`:''}</div>${ITEMS[k].n}</div>`).join('')}</div>`:'<div class="row"><div class="tx">그런 이름의 아이템이 없어요</div></div>'};
 let devArm=false;$('pbody').addEventListener('input',e=>{if(e.target.id==='devQ'){DEV.q=e.target.value;$('devGrid').innerHTML=devGrid()}});$('pbody').addEventListener('input',e=>{const i=e.target.dataset.memo;if(i!==undefined&&DEV.marks[+i]){DEV.marks[+i].memo=e.target.value.slice(0,80);devSave();const o=$('devOut');if(o)o.value=markText()}});$('pbody').addEventListener('click',e=>{if(e.target.id==='bigmap'&&DEV.on&&mode==='play'){const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*WS,z=(e.clientY-r.top)/r.height*WS;if(DEV.mapMark){addMark(x,z);renderPanel()}else devTp(x,z)}});
@@ -229,7 +246,7 @@ $('bbar').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!
 addEventListener('keydown',e=>{keys[e.code]=1;if(mode!=='play')return;if(e.code==='Escape'){panel?closePanel():setBuild(null)}if(panel)return;if(e.code==='KeyE'&&!e.repeat){inp.act=true;inp.actEdge=true}if(e.code==='Space'){inp.fire=true;inp.aiming=false;e.preventDefault()}
  if(e.code==='Tab'||e.code==='KeyI'){e.preventDefault();openPanel('bag')}if(e.code==='KeyB')openPanel('build');if(e.code==='KeyR'&&bmode)rotNext()});
 addEventListener('keyup',e=>{keys[e.code]=0;if(e.code==='KeyE')inp.act=false;if(e.code==='Space')inp.fire=false});
-addEventListener('blur',()=>{for(const k in keys)keys[k]=0;inp.fire=inp.act=false;joyEnd()});document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('gesturestart',e=>e.preventDefault());
 function readKeys(){if(joy.id!==null)return;const x=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),z=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);inp.mx=x;inp.mz=z}
 /* ---- overlay ---- */
 function scr(x,y,z){_v.set(x,y,z).project(cam);return[(_v.x*.5+.5)*innerWidth,(-_v.y*.5+.5)*innerHeight,_v.z<1]}
@@ -738,6 +755,18 @@ function rjUp(e){if(e.pointerId!==RJ.id)return;const up=e.type==='pointerup',md=
  if(md==='aim')rjHint(w.nade?'끌어서 던질 곳을 정하고 떼면 던져요':'끌어서 조준하고 떼면 쏴요');else if(md==='melee')rjHint('끝까지 당기고 있으면 계속 휘둘러요')}
 function rjCancel(){if(RJ.id!==null&&(RJ.md==='rod'||RJ.mf)){inp.fire=false;inp.aiming=false}RJ.id=null;RJ.aim=RJ.full=RJ.mf=0;RJ.q=null;rjKnob(0,0);rjEl().classList.remove('on','full')}
 {const _o=openPanel;openPanel=function(k){if(k!=='bag')rjCancel();return _o(k)}}
+// 모바일 앱을 떠나면 pointerup이 오지 않을 수 있다.
+function releasePlayControls(){
+ for(const k in keys)keys[k]=0;
+ joyEnd();actCancel();rjCancel();RJ.rel=0;P.tapT=0;aimP.id=null;
+ for(const id in taps)delete taps[id];
+ ZOOM.pts={};ZOOM.on=0;thCancel();
+ if(typeof GUN!=='undefined'){GUN.bl=0;GUN.hold=0}
+}
+addEventListener('blur',releasePlayControls);
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){releasePlayControls();if(panel==='cook'&&stopCooking())renderPanel()}
+});
 /* 놓는 자리: 왼쪽 조이스틱과 마주 보게. 42차(기획자: '가방 누를 때마다 오른쪽 조이스틱이 이상한 데 가'): 가방을 열어도 옮기지 않고, 가방에 가려지는 동안은 숨겨요 */
 function rjFix(){const j=rjEl(),port=VW<=VH,side=sidePanel()&&mode==='play';Object.assign(j.style,{right:(port?22:34)+'px',bottom:(port?58:30)+'px',visibility:side?'hidden':''});if(side&&RJ.id!==null)rjCancel()}
 {const _l=layoutPanel;layoutPanel=function(){_l();rjFix()}}
